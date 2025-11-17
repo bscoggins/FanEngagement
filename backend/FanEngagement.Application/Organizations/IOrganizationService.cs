@@ -1,0 +1,10 @@
+using FanEngagement.Domain.Entities;
+
+namespace FanEngagement.Application.Organizations;
+
+public interface IOrganizationService
+{
+    Task<Organization> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Organization>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<Organization?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+}

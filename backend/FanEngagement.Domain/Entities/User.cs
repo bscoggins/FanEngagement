@@ -1,0 +1,15 @@
+namespace FanEngagement.Domain.Entities;
+
+public class User
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = default!;
+    public string DisplayName { get; set; } = default!;
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public ICollection<OrganizationMembership> Memberships { get; set; } = new List<OrganizationMembership>();
+    public ICollection<ShareIssuance> ShareIssuances { get; set; } = new List<ShareIssuance>();
+    public ICollection<ShareBalance> ShareBalances { get; set; } = new List<ShareBalance>();
+    public ICollection<Vote> Votes { get; set; } = new List<Vote>();
+    public ICollection<Proposal> CreatedProposals { get; set; } = new List<Proposal>();
+}
