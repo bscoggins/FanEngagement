@@ -13,8 +13,17 @@ var app = builder.Build();
 // Apply pending migrations on startup (best-effort; keep controllers thin)
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while applying database migrations.");
+        // Optionally: rethrow or exit, depending on requirements
+    }
 }
 
 if (app.Environment.IsDevelopment())
