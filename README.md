@@ -1,27 +1,78 @@
-# FanEngagement\\Runtime: .NET 9
+# FanEngagement – Runtime: .NET 9
 
-# TODO: Add readme content for the application
+## Overview
 
-an application that allows users to acquire "shares" of an actual entity, such as a football or soccer team. This should allow voting on the direction of the actual entity by the users/shareholders.
+FanEngagement is a multi-tenant fan governance platform. Organizations issue share types to users for voting on proposals. The backend is a layered ASP.NET Core Web API using EF Core with PostgreSQL.
 
-## Backend Architecture Overview
+## Projects (under `/backend`)
 
-API: ASP.NET Core Web API (controllers or minimal APIs; we’ll structure so you can choose)
+- FanEngagement.Api – HTTP endpoints, DI wiring
+- FanEngagement.Application – use cases, DTOs, validation
+- FanEngagement.Domain – entities, value objects
+- FanEngagement.Infrastructure – EF Core DbContext, migrations, repositories
+- FanEngagement.Tests – unit + integration tests
 
-Data: PostgreSQL (via Docker Compose)
+## Prerequisites
 
-ORM: EF Core
+- .NET 9 SDK
+- Docker (for PostgreSQL)
 
-Auth: JWT-based (stubbed initially; structure ready for real auth later)
+## Start PostgreSQL with Docker Compose
 
-Architecture style: layered / clean-ish:
+From the repo root:
 
-FanEngagement.Api – HTTP endpoints, filters, DI wiring
+```bash
+docker compose up -d db
+```
+Default credentials (from `docker-compose.yml`): `fanengagement`/`fanengagement`, database `fanengagement`. Port `5432`.
 
-FanEngagement.Application – use cases / services, DTOs, validation
+## Database migrations
 
-FanEngagement.Domain – entities, value objects, domain services
+1) Ensure Postgres is running (`docker compose up -d db`).
+2) From `/backend`, apply the initial migration:
 
-FanEngagement.Infrastructure – EF Core DbContext, migrations, repositories
+```bash
+dotnet ef database update -p FanEngagement.Infrastructure -s FanEngagement.Api
+```
 
-FanEngagement.Tests – unit + integration tests
+## Run the API
+
+From `/backend`:
+
+```bash
+dotnet run --project FanEngagement.Api
+```
+
+Key endpoints (current):
+
+- `GET /health`
+- `POST /organizations`
+- `GET /organizations`
+- `GET /organizations/{id}`
+- `POST /organizations/{orgId}/share-types`
+- `GET /organizations/{orgId}/share-types`
+
+## Run everything with Docker Compose
+
+Build the API image and start API + Postgres from the repo root:
+
+```bash
+docker compose up --build
+```
+
+API is available at `http://localhost:8080` and uses the `db` service connection string automatically.
+The API applies EF Core migrations on startup.
+
+## Tests
+
+Run all tests from `/backend`:
+
+```bash
+dotnet test
+```
+
+Or run tests in a container (requires Docker):
+
+```bash
+docker compose run --rm tests
+```

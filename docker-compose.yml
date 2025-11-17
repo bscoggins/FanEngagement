@@ -10,6 +10,35 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fanengagement"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    build:
+      context: .
+      dockerfile: backend/FanEngagement.Api/Dockerfile
+    container_name: fanengagement-api
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fanengagement;Username=fanengagement;Password=fanengagement
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+  tests:
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    working_dir: /src/backend
+    volumes:
+      - ./:/src
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fanengagement;Username=fanengagement;Password=fanengagement
+    command: ["dotnet", "test"]
 
 volumes:
   db_data:
