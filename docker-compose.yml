@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: fanengagement-db
+    environment:
+      POSTGRES_USER: fanengagement
+      POSTGRES_PASSWORD: fanengagement
+      POSTGRES_DB: fanengagement
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
