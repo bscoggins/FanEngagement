@@ -72,7 +72,7 @@ FanEngagement is a multi-tenant fan governance platform. Organizations (teams, c
 
 ## Tech Stack
 
-- Runtime: .NET 8
+- Runtime: .NET 9
 - Web: ASP.NET Core Web API
 - Database: PostgreSQL (via Docker Compose)
 - ORM: EF Core
