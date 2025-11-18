@@ -1,5 +1,6 @@
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
+using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Application.ShareTypes;
 using FanEngagement.Application.Users;
 using FanEngagement.Infrastructure.Persistence;
@@ -24,6 +25,7 @@ public static class DependencyInjection
 
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IShareTypeService, ShareTypeService>();
+        services.AddScoped<IShareIssuanceService, ShareIssuanceService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IMembershipService, MembershipService>();
 
