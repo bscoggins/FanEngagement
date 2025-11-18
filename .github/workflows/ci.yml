@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  compose-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start database (docker compose)
+        run: |
+          docker compose -f docker-compose.yml up -d db
+          # Wait for postgres healthcheck to be healthy using compose-resolved container ID
+          cid=""
+          for i in {1..30}; do
+            cid=$(docker compose -f docker-compose.yml ps -q db || true)
+            [ -n "$cid" ] && break || sleep 1
+          done
+          if [ -z "$cid" ]; then
+            echo "Failed to resolve db container id" && exit 1
+          fi
+          for i in {1..30}; do
+            status=$(docker inspect -f '{{json .State.Health.Status}}' "$cid" 2>/dev/null || echo '"starting"')
+            echo "db health: $status"
+            if [ "$status" = '"healthy"' ]; then
+              break
+            fi
+            sleep 2
+          done
+          [ "$status" = '"healthy"' ] || (echo "Database failed to become healthy" && exit 1)
+
+      - name: Run tests in container
+        run: |
+          # Ensure a host-mounted results directory and pass it to dotnet
+          mkdir -p test-results
+          RESULTS_DIR=$(pwd)/test-results
+          docker compose -f docker-compose.yml run --rm -v "$RESULTS_DIR:/results" tests dotnet test FanEngagement.Tests/FanEngagement.Tests.csproj \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory /results
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: 'test-results/**/*.trx'
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f docker-compose.yml down -v
