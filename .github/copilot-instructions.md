@@ -287,7 +287,7 @@ public async Task GetOrganizationById_ReturnsOrganization_WhenExists()
 - Solution file: `backend/FanEngagement.sln`
 - Docker Compose: `docker-compose.yml`
 - Architecture docs: `docs/architecture.md`
-- Agent guide: `docs/copilot-agent.md`
+- Coding agent guide: `.github/copilot-coding-agent-instructions.md`
 
 ---
 This instruction file helps GitHub Copilot Chat provide contextually relevant, accurate suggestions for the FanEngagement codebase.
