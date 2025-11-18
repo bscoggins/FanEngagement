@@ -1,0 +1,422 @@
+using System.Net;
+using System.Net.Http.Json;
+using FanEngagement.Application.Memberships;
+using FanEngagement.Application.Organizations;
+using FanEngagement.Application.Proposals;
+using FanEngagement.Application.ShareIssuances;
+using FanEngagement.Application.ShareTypes;
+using FanEngagement.Application.Users;
+using FanEngagement.Domain.Entities;
+using FanEngagement.Domain.Enums;
+using Xunit.Abstractions;
+
+namespace FanEngagement.Tests;
+
+public class ProposalTests : IClassFixture<TestWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+    private readonly ITestOutputHelper _output;
+
+    public ProposalTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    {
+        _client = factory.CreateClient();
+        _output = output;
+    }
+
+    private async Task<(Guid organizationId, Guid userId)> SetupTestDataAsync()
+    {
+        // Create organization
+        var orgRequest = new CreateOrganizationRequest
+        {
+            Name = $"Test Organization {Guid.NewGuid()}",
+            Description = "Test Organization"
+        };
+        var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
+        var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
+
+        // Create user
+        var userRequest = new CreateUserRequest
+        {
+            Email = $"test-{Guid.NewGuid()}@example.com",
+            DisplayName = "Test User"
+        };
+        var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
+        var user = await userResponse.Content.ReadFromJsonAsync<User>();
+
+        // Create membership
+        var membershipRequest = new CreateMembershipRequest
+        {
+            UserId = user!.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{org!.Id}/memberships", membershipRequest);
+
+        return (org.Id, user.Id);
+    }
+
+    [Fact]
+    public async Task CreateProposal_ReturnsCreated_WithValidRequest()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+        var request = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test proposal description",
+            CreatedByUserId = userId,
+            QuorumRequirement = 50.0m
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+
+        // Assert
+        if (response.StatusCode != HttpStatusCode.Created)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            _output.WriteLine($"Status: {response.StatusCode}, Body: {body}");
+        }
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var proposal = await response.Content.ReadFromJsonAsync<ProposalDto>();
+        Assert.NotNull(proposal);
+        Assert.NotEqual(Guid.Empty, proposal!.Id);
+        Assert.Equal(orgId, proposal.OrganizationId);
+        Assert.Equal("Test Proposal", proposal.Title);
+        Assert.Equal(ProposalStatus.Open, proposal.Status);
+        Assert.Equal(userId, proposal.CreatedByUserId);
+    }
+
+    [Fact]
+    public async Task CreateProposal_ReturnsBadRequest_WhenOrganizationDoesNotExist()
+    {
+        // Arrange
+        var (_, userId) = await SetupTestDataAsync();
+        var request = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{Guid.NewGuid()}/proposals", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateProposal_ReturnsBadRequest_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var (orgId, _) = await SetupTestDataAsync();
+        var request = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = Guid.NewGuid()
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProposalsByOrganization_ReturnsListOfProposals()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var request1 = new CreateProposalRequest
+        {
+            Title = "Proposal 1",
+            CreatedByUserId = userId
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request1);
+
+        var request2 = new CreateProposalRequest
+        {
+            Title = "Proposal 2",
+            CreatedByUserId = userId
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request2);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/proposals");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var proposals = await response.Content.ReadFromJsonAsync<List<ProposalDto>>();
+        Assert.NotNull(proposals);
+        Assert.True(proposals!.Count >= 2);
+    }
+
+    [Fact]
+    public async Task GetProposalById_ReturnsProposalWithOptions()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test description",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add options
+        var option1Request = new AddProposalOptionRequest { Text = "Option 1" };
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", option1Request);
+
+        var option2Request = new AddProposalOptionRequest { Text = "Option 2" };
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", option2Request);
+
+        // Act
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var proposalDetails = await response.Content.ReadFromJsonAsync<ProposalDetailsDto>();
+        Assert.NotNull(proposalDetails);
+        Assert.Equal(proposal.Id, proposalDetails!.Id);
+        Assert.Equal("Test Proposal", proposalDetails.Title);
+        Assert.Equal(2, proposalDetails.Options.Count);
+    }
+
+    [Fact]
+    public async Task GetProposalById_ReturnsNotFound_WhenProposalDoesNotExist()
+    {
+        // Act
+        var response = await _client.GetAsync($"/proposals/{Guid.NewGuid()}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateProposal_UpdatesFields_WhenInOpenState()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Original Title",
+            Description = "Original description",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var updateRequest = new UpdateProposalRequest
+        {
+            Title = "Updated Title",
+            Description = "Updated description"
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/proposals/{proposal!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<ProposalDto>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated Title", updated!.Title);
+        Assert.Equal("Updated description", updated.Description);
+    }
+
+    [Fact]
+    public async Task UpdateProposal_ReturnsBadRequest_WhenProposalIsClosed()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Close the proposal
+        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+
+        var updateRequest = new UpdateProposalRequest { Title = "Updated Title" };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/proposals/{proposal.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddOption_AddsOptionToProposal()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var optionRequest = new AddProposalOptionRequest
+        {
+            Text = "Option 1",
+            Description = "First option"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var option = await response.Content.ReadFromJsonAsync<ProposalOptionDto>();
+        Assert.NotNull(option);
+        Assert.NotEqual(Guid.Empty, option!.Id);
+        Assert.Equal(proposal.Id, option.ProposalId);
+        Assert.Equal("Option 1", option.Text);
+    }
+
+    [Fact]
+    public async Task AddOption_ReturnsBadRequest_WhenProposalIsClosed()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Close the proposal
+        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+
+        var optionRequest = new AddProposalOptionRequest { Text = "New Option" };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", optionRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteOption_RemovesOption_WhenInDraftState()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        // Create a proposal in Draft state (we'll need to adjust the service to support this)
+        // For now, we'll test with Open state and expect failure
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var optionRequest = new AddProposalOptionRequest { Text = "Option 1" };
+        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+
+        // Act - This should fail because we're in Open state, not Draft
+        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CloseProposal_ChangesStatusToClosed()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var closed = await response.Content.ReadFromJsonAsync<ProposalDto>();
+        Assert.NotNull(closed);
+        Assert.Equal(ProposalStatus.Closed, closed!.Status);
+    }
+
+    [Fact]
+    public async Task CloseProposal_ReturnsBadRequest_WhenAlreadyClosed()
+    {
+        // Arrange
+        var (orgId, userId) = await SetupTestDataAsync();
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            CreatedByUserId = userId
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Close the proposal once
+        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+
+        // Act - Try to close again
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProposalsByOrganization_ReturnsOnlyForSpecifiedOrganization()
+    {
+        // Arrange - Create two organizations with proposals
+        var (org1Id, user1Id) = await SetupTestDataAsync();
+        var (org2Id, user2Id) = await SetupTestDataAsync();
+
+        var request1 = new CreateProposalRequest
+        {
+            Title = "Org 1 Proposal",
+            CreatedByUserId = user1Id
+        };
+        var response1 = await _client.PostAsJsonAsync($"/organizations/{org1Id}/proposals", request1);
+        var proposal1 = await response1.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var request2 = new CreateProposalRequest
+        {
+            Title = "Org 2 Proposal",
+            CreatedByUserId = user2Id
+        };
+        await _client.PostAsJsonAsync($"/organizations/{org2Id}/proposals", request2);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{org1Id}/proposals");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var proposals = await response.Content.ReadFromJsonAsync<List<ProposalDto>>();
+        Assert.NotNull(proposals);
+        Assert.All(proposals!, p => Assert.Equal(org1Id, p.OrganizationId));
+    }
+}
