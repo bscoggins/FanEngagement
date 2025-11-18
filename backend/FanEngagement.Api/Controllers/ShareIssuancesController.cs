@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
-[Route("organizations/{organizationId:guid}/share-issuances")]
+[Route("organizations/{organizationId:guid}")]
 public class ShareIssuancesController(IShareIssuanceService shareIssuanceService) : ControllerBase
 {
-    [HttpPost]
+    [HttpPost("share-issuances")]
     public async Task<ActionResult<ShareIssuanceDto>> Create(
         Guid organizationId,
         [FromBody] CreateShareIssuanceRequest request,
@@ -24,7 +24,7 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
         }
     }
 
-    [HttpGet]
+    [HttpGet("share-issuances")]
     public async Task<ActionResult<IReadOnlyList<ShareIssuanceDto>>> GetByOrganization(
         Guid organizationId,
         CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
         return Ok(issuances);
     }
 
-    [HttpGet("users/{userId:guid}")]
+    [HttpGet("users/{userId:guid}/share-issuances")]
     public async Task<ActionResult<IReadOnlyList<ShareIssuanceDto>>> GetByUser(
         Guid organizationId,
         Guid userId,

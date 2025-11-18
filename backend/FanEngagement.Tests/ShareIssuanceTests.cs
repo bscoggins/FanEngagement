@@ -352,7 +352,7 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
         await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", request2);
 
         // Act
-        var response = await _client.GetAsync($"/organizations/{orgId}/share-issuances/users/{userId}");
+        var response = await _client.GetAsync($"/organizations/{orgId}/users/{userId}/share-issuances");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
