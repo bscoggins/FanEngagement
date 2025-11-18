@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  compose-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start database (docker compose)
+        run: |
+          docker compose -f docker-compose.yml up -d db
+          # Wait for postgres healthcheck to be healthy
+          for i in {1..30}; do
+            status=$(docker inspect -f '{{json .State.Health.Status}}' fanengagement-db || echo "\"starting\"")
+            echo "db health: $status"
+            if [ "$status" = '"healthy"' ]; then
+              break
+            fi
+            sleep 2
+          done
+          [ "$status" = '"healthy"' ] || (echo "Database failed to become healthy" && exit 1)
+
+      - name: Run tests in container
+        run: |
+          docker compose -f docker-compose.yml run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f docker-compose.yml down -v
