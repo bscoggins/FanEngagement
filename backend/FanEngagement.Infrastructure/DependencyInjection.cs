@@ -1,5 +1,7 @@
+using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.ShareTypes;
+using FanEngagement.Application.Users;
 using FanEngagement.Infrastructure.Persistence;
 using FanEngagement.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +24,8 @@ public static class DependencyInjection
 
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IShareTypeService, ShareTypeService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IMembershipService, MembershipService>();
 
         return services;
     }

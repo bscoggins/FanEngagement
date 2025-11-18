@@ -1,17 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
-using FanEngagement.Api;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit.Abstractions;
 
 namespace FanEngagement.Tests;
 
-public class HealthCheckTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthCheckTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
     private readonly ITestOutputHelper _output;
 
-    public HealthCheckTests(WebApplicationFactory<Program> factory, ITestOutputHelper output)
+    public HealthCheckTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
         _client = factory.CreateClient();
         _output = output;
