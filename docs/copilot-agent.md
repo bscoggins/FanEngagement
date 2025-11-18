@@ -16,7 +16,7 @@ This document tells GitHub Copilot Agent exactly how to work on this repository 
 - Runtime:
    - Target framework: .NET `net9.0`
    - Database: EF Core (migrations under `backend/FanEngagement.Infrastructure/Persistence/Migrations`)
-   - OpenAPI in Development (`/swagger` when dev)
+   - OpenAPI in Development (`/swagger` when in Development mode)
 
 ## Local Build, Test, and Run
 
