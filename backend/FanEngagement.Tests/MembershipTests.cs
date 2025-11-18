@@ -268,12 +268,6 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
         return org!.Id;
     }
 
-    private class OrganizationDto
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-    }
-
     private async Task<Guid> CreateUser()
     {
         var response = await _client.PostAsJsonAsync("/users", new CreateUserRequest
