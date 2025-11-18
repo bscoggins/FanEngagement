@@ -189,6 +189,67 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
         Assert.All(memberships2!, m => Assert.Equal(organization2Id, m.OrganizationId));
     }
 
+    [Fact]
+    public async Task CreateMembership_ReturnsInternalServerError_WhenMembershipAlreadyExists()
+    {
+        // Arrange
+        var (organizationId, userId) = await SetupOrganizationAndUser();
+
+        var request = new CreateMembershipRequest
+        {
+            UserId = userId,
+            Role = OrganizationRole.Member
+        };
+
+        // Act
+        var response1 = await _client.PostAsJsonAsync($"/organizations/{organizationId}/memberships", request);
+        var response2 = await _client.PostAsJsonAsync($"/organizations/{organizationId}/memberships", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response1.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, response2.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateMembership_ReturnsInternalServerError_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var organizationId = await CreateOrganization();
+        var nonExistentUserId = Guid.NewGuid();
+
+        var request = new CreateMembershipRequest
+        {
+            UserId = nonExistentUserId,
+            Role = OrganizationRole.Member
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{organizationId}/memberships", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateMembership_ReturnsInternalServerError_WhenOrganizationDoesNotExist()
+    {
+        // Arrange
+        var nonExistentOrgId = Guid.NewGuid();
+        var userId = await CreateUser();
+
+        var request = new CreateMembershipRequest
+        {
+            UserId = userId,
+            Role = OrganizationRole.Member
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{nonExistentOrgId}/memberships", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+    }
+
     private async Task<(Guid organizationId, Guid userId)> SetupOrganizationAndUser()
     {
         var organizationId = await CreateOrganization();

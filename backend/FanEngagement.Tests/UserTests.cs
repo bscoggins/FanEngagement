@@ -198,4 +198,63 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task CreateUser_ReturnsInternalServerError_WhenEmailAlreadyExists()
+    {
+        // Arrange
+        var email = $"duplicate-{Guid.NewGuid()}@example.com";
+        var request1 = new CreateUserRequest
+        {
+            Email = email,
+            DisplayName = "Test User 1"
+        };
+        var request2 = new CreateUserRequest
+        {
+            Email = email,
+            DisplayName = "Test User 2"
+        };
+
+        // Act
+        var response1 = await _client.PostAsJsonAsync("/users", request1);
+        var response2 = await _client.PostAsJsonAsync("/users", request2);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response1.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, response2.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateUser_ReturnsInternalServerError_WhenEmailAlreadyExists()
+    {
+        // Arrange
+        var user1Request = new CreateUserRequest
+        {
+            Email = $"user1-{Guid.NewGuid()}@example.com",
+            DisplayName = "User 1"
+        };
+        var user2Request = new CreateUserRequest
+        {
+            Email = $"user2-{Guid.NewGuid()}@example.com",
+            DisplayName = "User 2"
+        };
+
+        var user1Response = await _client.PostAsJsonAsync("/users", user1Request);
+        var user1 = await user1Response.Content.ReadFromJsonAsync<UserDto>();
+
+        var user2Response = await _client.PostAsJsonAsync("/users", user2Request);
+        var user2 = await user2Response.Content.ReadFromJsonAsync<UserDto>();
+
+        var updateRequest = new UpdateUserRequest
+        {
+            Email = user2!.Email, // Try to use user2's email
+            DisplayName = "Updated User 1"
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/users/{user1!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+    }
 }

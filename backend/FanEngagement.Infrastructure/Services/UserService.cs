@@ -9,6 +9,15 @@ public class UserService(FanEngagementDbContext dbContext) : IUserService
 {
     public async Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
+        var existing = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+
+        if (existing != null)
+        {
+            throw new InvalidOperationException($"A user with email {request.Email} already exists");
+        }
+
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -50,10 +59,31 @@ public class UserService(FanEngagementDbContext dbContext) : IUserService
             return null;
         }
 
+        // Check if email is changing and if the new email is already taken
+        if (user.Email != request.Email)
+        {
+            var emailExists = await dbContext.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Email == request.Email && u.Id != id, cancellationToken);
+
+            if (emailExists)
+            {
+                throw new InvalidOperationException($"A user with email {request.Email} already exists");
+            }
+        }
+
         user.Email = request.Email;
         user.DisplayName = request.DisplayName;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Concurrency conflict detected; return null or handle as needed
+            return null;
+        }
 
         return MapToDto(user);
     }

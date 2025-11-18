@@ -9,6 +9,36 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
 {
     public async Task<MembershipDto> CreateAsync(Guid organizationId, CreateMembershipRequest request, CancellationToken cancellationToken = default)
     {
+        // Validate organization exists
+        var organizationExists = await dbContext.Organizations
+            .AsNoTracking()
+            .AnyAsync(o => o.Id == organizationId, cancellationToken);
+
+        if (!organizationExists)
+        {
+            throw new InvalidOperationException($"Organization {organizationId} not found");
+        }
+
+        // Validate user exists
+        var userExists = await dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == request.UserId, cancellationToken);
+
+        if (!userExists)
+        {
+            throw new InvalidOperationException($"User {request.UserId} not found");
+        }
+
+        // Check if membership already exists
+        var existing = await dbContext.OrganizationMemberships
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == request.UserId, cancellationToken);
+
+        if (existing != null)
+        {
+            throw new InvalidOperationException($"User {request.UserId} is already a member of organization {organizationId}");
+        }
+
         var membership = new OrganizationMembership
         {
             Id = Guid.NewGuid(),

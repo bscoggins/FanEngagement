@@ -10,7 +10,7 @@ namespace FanEngagement.Tests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private static readonly string _databaseName = $"TestDb_{Guid.NewGuid()}";
+    private readonly string _databaseName = $"TestDb_{Guid.NewGuid()}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
