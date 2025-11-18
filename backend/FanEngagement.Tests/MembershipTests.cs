@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.Users;
+using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit.Abstractions;
@@ -264,7 +265,7 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
             Name = $"Test Org {Guid.NewGuid()}",
             Description = "Test Organization"
         });
-        var org = await response.Content.ReadFromJsonAsync<OrganizationDto>();
+        var org = await response.Content.ReadFromJsonAsync<Organization>();
         return org!.Id;
     }
 
