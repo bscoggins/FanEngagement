@@ -42,79 +42,109 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext) : IShareIssu
             throw new InvalidOperationException($"User {request.UserId} is not a member of organization {organizationId}");
         }
 
-        // Check MaxSupply constraint
-        if (shareType.MaxSupply.HasValue)
+        // Use transaction for relational databases to prevent race conditions
+        // In-memory database doesn't support transactions but automatically handles atomicity
+        var isInMemory = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+        var transaction = isInMemory ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        
+        try
         {
-            var totalIssued = await dbContext.ShareIssuances
-                .Where(si => si.ShareTypeId == request.ShareTypeId)
-                .SumAsync(si => si.Quantity, cancellationToken);
-
-            if (totalIssued + request.Quantity > shareType.MaxSupply.Value)
+            // Check MaxSupply constraint
+            if (shareType.MaxSupply.HasValue)
             {
-                throw new InvalidOperationException($"Issuance would exceed MaxSupply of {shareType.MaxSupply.Value} for ShareType {shareType.Name}");
+                var totalIssued = await dbContext.ShareIssuances
+                    .Where(si => si.ShareTypeId == request.ShareTypeId)
+                    .SumAsync(si => si.Quantity, cancellationToken);
+
+                if (totalIssued + request.Quantity > shareType.MaxSupply.Value)
+                {
+                    throw new InvalidOperationException($"Issuance would exceed MaxSupply of {shareType.MaxSupply.Value} for ShareType {shareType.Name}");
+                }
             }
-        }
 
-        // Create issuance
-        var issuance = new ShareIssuance
-        {
-            Id = Guid.NewGuid(),
-            ShareTypeId = request.ShareTypeId,
-            UserId = request.UserId,
-            Quantity = request.Quantity,
-            IssuedAt = DateTimeOffset.UtcNow
-        };
-
-        dbContext.ShareIssuances.Add(issuance);
-
-        // Update or create ShareBalance
-        var balance = await dbContext.ShareBalances
-            .FirstOrDefaultAsync(sb => sb.ShareTypeId == request.ShareTypeId && sb.UserId == request.UserId, cancellationToken);
-
-        if (balance is null)
-        {
-            balance = new ShareBalance
+            // Create issuance
+            var issuance = new ShareIssuance
             {
                 Id = Guid.NewGuid(),
                 ShareTypeId = request.ShareTypeId,
                 UserId = request.UserId,
-                Balance = request.Quantity,
-                UpdatedAt = DateTimeOffset.UtcNow
+                Quantity = request.Quantity,
+                IssuedAt = DateTimeOffset.UtcNow
             };
-            dbContext.ShareBalances.Add(balance);
-        }
-        else
-        {
-            balance.Balance += request.Quantity;
-            balance.UpdatedAt = DateTimeOffset.UtcNow;
-        }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+            dbContext.ShareIssuances.Add(issuance);
 
-        return new ShareIssuanceDto
+            // Update or create ShareBalance
+            var balance = await dbContext.ShareBalances
+                .FirstOrDefaultAsync(sb => sb.ShareTypeId == request.ShareTypeId && sb.UserId == request.UserId, cancellationToken);
+
+            if (balance is null)
+            {
+                balance = new ShareBalance
+                {
+                    Id = Guid.NewGuid(),
+                    ShareTypeId = request.ShareTypeId,
+                    UserId = request.UserId,
+                    Balance = request.Quantity,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                dbContext.ShareBalances.Add(balance);
+            }
+            else
+            {
+                balance.Balance += request.Quantity;
+                balance.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            return new ShareIssuanceDto
+            {
+                Id = issuance.Id,
+                ShareTypeId = issuance.ShareTypeId,
+                UserId = issuance.UserId,
+                Quantity = issuance.Quantity,
+                IssuedAt = issuance.IssuedAt
+            };
+        }
+        catch
         {
-            Id = issuance.Id,
-            ShareTypeId = issuance.ShareTypeId,
-            UserId = issuance.UserId,
-            Quantity = issuance.Quantity,
-            IssuedAt = issuance.IssuedAt
-        };
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+            throw;
+        }
+        finally
+        {
+            transaction?.Dispose();
+        }
     }
 
     public async Task<IReadOnlyList<ShareIssuanceDto>> GetByOrganizationAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
         var issuances = await dbContext.ShareIssuances
             .AsNoTracking()
-            .Include(si => si.ShareType)
-            .Where(si => si.ShareType!.OrganizationId == organizationId)
-            .OrderByDescending(si => si.IssuedAt)
-            .Select(si => new ShareIssuanceDto
+            .Join(
+                dbContext.ShareTypes,
+                si => si.ShareTypeId,
+                st => st.Id,
+                (si, st) => new { si, st }
+            )
+            .Where(x => x.st.OrganizationId == organizationId)
+            .OrderByDescending(x => x.si.IssuedAt)
+            .Select(x => new ShareIssuanceDto
             {
-                Id = si.Id,
-                ShareTypeId = si.ShareTypeId,
-                UserId = si.UserId,
-                Quantity = si.Quantity,
-                IssuedAt = si.IssuedAt
+                Id = x.si.Id,
+                ShareTypeId = x.si.ShareTypeId,
+                UserId = x.si.UserId,
+                Quantity = x.si.Quantity,
+                IssuedAt = x.si.IssuedAt
             })
             .ToListAsync(cancellationToken);
 
@@ -125,16 +155,21 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext) : IShareIssu
     {
         var issuances = await dbContext.ShareIssuances
             .AsNoTracking()
-            .Include(si => si.ShareType)
-            .Where(si => si.UserId == userId && si.ShareType!.OrganizationId == organizationId)
-            .OrderByDescending(si => si.IssuedAt)
-            .Select(si => new ShareIssuanceDto
+            .Join(
+                dbContext.ShareTypes,
+                si => si.ShareTypeId,
+                st => st.Id,
+                (si, st) => new { si, st }
+            )
+            .Where(x => x.si.UserId == userId && x.st.OrganizationId == organizationId)
+            .OrderByDescending(x => x.si.IssuedAt)
+            .Select(x => new ShareIssuanceDto
             {
-                Id = si.Id,
-                ShareTypeId = si.ShareTypeId,
-                UserId = si.UserId,
-                Quantity = si.Quantity,
-                IssuedAt = si.IssuedAt
+                Id = x.si.Id,
+                ShareTypeId = x.si.ShareTypeId,
+                UserId = x.si.UserId,
+                Quantity = x.si.Quantity,
+                IssuedAt = x.si.IssuedAt
             })
             .ToListAsync(cancellationToken);
 

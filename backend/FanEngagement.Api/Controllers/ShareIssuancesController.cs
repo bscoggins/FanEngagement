@@ -20,7 +20,7 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return BadRequest(new { Error = ex.Message });
         }
     }
 
