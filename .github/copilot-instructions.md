@@ -289,7 +289,7 @@ dotnet ef database update \
 - Use `ITestOutputHelper` in tests to log details
 - Check Docker logs: `docker compose logs api` or `docker compose logs db`
 - Inspect container: `docker exec -it fanengagement-db psql -U fanengagement`
- - Frontend dev: run `npm run dev` in `frontend/`, check browser console/network
+- Frontend dev: run `npm run dev` in `frontend/`, check browser console/network
 
 ## CI/CD
 
