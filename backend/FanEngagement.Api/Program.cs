@@ -109,11 +109,11 @@ if (app.Environment.IsDevelopment())
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
         var authService = scope.ServiceProvider.GetRequiredService<FanEngagement.Application.Authentication.IAuthService>();
         
-        // Check if admin user already exists
+        // Check if admin user already exists and ensure it has Admin role
         var adminEmail = "admin@example.com";
-        var adminExists = await dbContext.Users.AnyAsync(u => u.Email == adminEmail);
+        var existingUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
         
-        if (!adminExists)
+        if (existingUser == null)
         {
             var adminUser = new FanEngagement.Domain.Entities.User
             {
@@ -129,9 +129,15 @@ if (app.Environment.IsDevelopment())
             await dbContext.SaveChangesAsync();
             logger.LogInformation("Initial admin user created: {Email}", adminEmail);
         }
+        else if (existingUser.Role != FanEngagement.Domain.Enums.UserRole.Admin)
+        {
+            existingUser.Role = FanEngagement.Domain.Enums.UserRole.Admin;
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("Existing user elevated to Admin role: {Email}", adminEmail);
+        }
         else
         {
-            logger.LogInformation("Admin user already exists: {Email}", adminEmail);
+            logger.LogInformation("Admin user already exists with Admin role: {Email}", adminEmail);
         }
     }
     catch (Exception ex)
