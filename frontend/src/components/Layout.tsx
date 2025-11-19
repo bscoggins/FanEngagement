@@ -1,10 +1,16 @@
 import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="layout">
@@ -17,9 +23,9 @@ export const Layout: React.FC = () => {
             <>
               <Link to="/users">Users</Link>
               <span className="user-info">
-                Welcome, {user?.displayName || user?.email}
+                Logged in as {user?.email}
               </span>
-              <button onClick={logout} className="logout-button">
+              <button onClick={handleLogout} className="logout-button">
                 Logout
               </button>
             </>
