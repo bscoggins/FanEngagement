@@ -21,8 +21,13 @@ services:
       dockerfile: backend/FanEngagement.Api/Dockerfile
     container_name: fanengagement-api
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fanengagement;Username=fanengagement;Password=fanengagement
+      # JWT configuration (override via .env or CI secrets)
+      Jwt__Issuer: FanEngagement
+      Jwt__Audience: FanEngagement
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-ChangeThisDevKey_GenerateAStrongRandomValueBeforeProd}
     ports:
       - "8080:8080"
     depends_on:
