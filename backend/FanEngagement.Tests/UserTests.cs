@@ -24,7 +24,8 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         var request = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
+            DisplayName = "Test User",
+            Password = "TestPassword123!"
         };
 
         // Act
@@ -50,29 +51,27 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetUserById_ReturnsUser_WhenExists()
     {
         // Arrange
-        var createRequest = new CreateUserRequest
-        {
-            Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
-        };
-        var createResponse = await _client.PostAsJsonAsync("/users", createRequest);
-        var createdUser = await createResponse.Content.ReadFromJsonAsync<UserDto>();
+        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
 
         // Act
-        var response = await _client.GetAsync($"/users/{createdUser!.Id}");
+        var response = await _client.GetAsync($"/users/{user.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var user = await response.Content.ReadFromJsonAsync<UserDto>();
-        Assert.NotNull(user);
-        Assert.Equal(createdUser.Id, user!.Id);
-        Assert.Equal(createdUser.Email, user.Email);
+        var retrievedUser = await response.Content.ReadFromJsonAsync<UserDto>();
+        Assert.NotNull(retrievedUser);
+        Assert.Equal(user.Id, retrievedUser!.Id);
+        Assert.Equal(user.Email, retrievedUser.Email);
     }
 
     [Fact]
     public async Task GetUserById_ReturnsNotFound_WhenDoesNotExist()
     {
         // Arrange
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+        
         var nonExistentId = Guid.NewGuid();
 
         // Act
@@ -89,15 +88,21 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         var request1 = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User 1"
+            DisplayName = "Test User 1",
+            Password = "TestPassword123!"
         };
         var request2 = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User 2"
+            DisplayName = "Test User 2",
+            Password = "TestPassword123!"
         };
         await _client.PostAsJsonAsync("/users", request1);
         await _client.PostAsJsonAsync("/users", request2);
+
+        // Get authentication token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
 
         // Act
         var response = await _client.GetAsync("/users");
@@ -113,13 +118,8 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateUser_ReturnsUpdatedUser_WhenExists()
     {
         // Arrange
-        var createRequest = new CreateUserRequest
-        {
-            Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
-        };
-        var createResponse = await _client.PostAsJsonAsync("/users", createRequest);
-        var createdUser = await createResponse.Content.ReadFromJsonAsync<UserDto>();
+        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
 
         var updateRequest = new UpdateUserRequest
         {
@@ -128,7 +128,7 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/users/{createdUser!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/users/{user.Id}", updateRequest);
 
         // Assert
         if (response.StatusCode != HttpStatusCode.OK)
@@ -140,7 +140,7 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var updatedUser = await response.Content.ReadFromJsonAsync<UserDto>();
         Assert.NotNull(updatedUser);
-        Assert.Equal(createdUser.Id, updatedUser!.Id);
+        Assert.Equal(user.Id, updatedUser!.Id);
         Assert.Equal(updateRequest.Email, updatedUser.Email);
         Assert.Equal(updateRequest.DisplayName, updatedUser.DisplayName);
     }
@@ -149,6 +149,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateUser_ReturnsNotFound_WhenDoesNotExist()
     {
         // Arrange
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         var nonExistentId = Guid.NewGuid();
         var updateRequest = new UpdateUserRequest
         {
@@ -167,22 +170,17 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task DeleteUser_ReturnsNoContent_WhenExists()
     {
         // Arrange
-        var createRequest = new CreateUserRequest
-        {
-            Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
-        };
-        var createResponse = await _client.PostAsJsonAsync("/users", createRequest);
-        var createdUser = await createResponse.Content.ReadFromJsonAsync<UserDto>();
+        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
 
         // Act
-        var deleteResponse = await _client.DeleteAsync($"/users/{createdUser!.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/users/{user.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         // Verify user is deleted
-        var getResponse = await _client.GetAsync($"/users/{createdUser.Id}");
+        var getResponse = await _client.GetAsync($"/users/{user.Id}");
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -190,6 +188,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task DeleteUser_ReturnsNotFound_WhenDoesNotExist()
     {
         // Arrange
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         var nonExistentId = Guid.NewGuid();
 
         // Act
@@ -207,12 +208,14 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         var request1 = new CreateUserRequest
         {
             Email = email,
-            DisplayName = "Test User 1"
+            DisplayName = "Test User 1",
+            Password = "TestPassword123!"
         };
         var request2 = new CreateUserRequest
         {
             Email = email,
-            DisplayName = "Test User 2"
+            DisplayName = "Test User 2",
+            Password = "TestPassword123!"
         };
 
         // Act
@@ -231,12 +234,14 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         var user1Request = new CreateUserRequest
         {
             Email = $"user1-{Guid.NewGuid()}@example.com",
-            DisplayName = "User 1"
+            DisplayName = "User 1",
+            Password = "TestPassword123!"
         };
         var user2Request = new CreateUserRequest
         {
             Email = $"user2-{Guid.NewGuid()}@example.com",
-            DisplayName = "User 2"
+            DisplayName = "User 2",
+            Password = "TestPassword123!"
         };
 
         var user1Response = await _client.PostAsJsonAsync("/users", user1Request);
@@ -244,6 +249,10 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
 
         var user2Response = await _client.PostAsJsonAsync("/users", user2Request);
         var user2 = await user2Response.Content.ReadFromJsonAsync<UserDto>();
+
+        // Get authentication token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
 
         var updateRequest = new UpdateUserRequest
         {

@@ -10,6 +10,7 @@ namespace FanEngagement.Api.Controllers;
 public class UsersController(IUserService userService) : ControllerBase
 {
     [HttpPost]
+    [AllowAnonymous]
     public async Task<ActionResult> Create([FromBody] CreateUserRequest request, CancellationToken cancellationToken)
     {
         var user = await userService.CreateAsync(request, cancellationToken);
