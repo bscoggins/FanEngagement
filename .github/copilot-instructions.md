@@ -4,7 +4,7 @@ This file provides context and guidelines for GitHub Copilot Chat when assisting
 
 ## Project Overview
 
-FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database, designed for fan engagement and organization management with share-based voting capabilities.
+FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a React + TypeScript frontend, designed for fan engagement and organization management with share-based voting capabilities.
 
 ### Architecture
 
@@ -12,13 +12,14 @@ FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database, desig
 - **Application Layer** (`backend/FanEngagement.Application`): Service interfaces, DTOs, request/response models
 - **Domain Layer** (`backend/FanEngagement.Domain`): Entities, enums, business logic primitives
 - **Infrastructure Layer** (`backend/FanEngagement.Infrastructure`): EF Core DbContext, migrations, service implementations
-- **Tests** (`backend/FanEngagement.Tests`): xUnit integration and unit tests using `WebApplicationFactory<Program>`
+- **Frontend** (`frontend/`): React 19 + TypeScript app (Vite dev, Nginx in production)
+- **Tests** (`backend/FanEngagement.Tests`, `frontend/`): xUnit for backend; Vitest + Testing Library for frontend
 
 ### Tech Stack
 
-- Runtime: .NET 9 (`net9.0`)
+- Runtime: .NET 9 (`net9.0`) backend; Node 20 for frontend build
 - Database: PostgreSQL 16 via EF Core with Npgsql
-- Testing: xUnit with integration tests
+- Testing: xUnit with integration tests (backend), Vitest + Testing Library (frontend)
 - Container orchestration: Docker Compose
 - API Documentation: OpenAPI (Development mode)
 
@@ -30,16 +31,26 @@ FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database, desig
 - Auto-apply: Migrations run automatically on API startup
 - Connection string: Configured via `appsettings.json` or environment variable `ConnectionStrings__DefaultConnection`
 
+### Frontend
+
+- Framework: React 19 + TypeScript
+- Build tool: Vite 7
+- Router: React Router v7
+- API client: Axios with JWT via `Authorization: Bearer <token>`
+- Auth: `AuthContext` persists token/user in `localStorage`; login via `POST /auth/login`
+- Env: `VITE_API_BASE_URL` controls API base URL. Bare backend default is `http://localhost:5049`; with Docker Compose use `http://localhost:8080`.
+
 ## Development Environment
 
 ### Running the Application
 
 **Preferred method (Docker Compose):**
 ```bash
-# Start API and database
-docker compose up --build api
+# Start API + DB + Frontend
+docker compose up --build
 
 # API available at http://localhost:8080
+# Frontend available at http://localhost:3000
 ```
 
 **Alternative (bare dotnet):**
@@ -48,6 +59,16 @@ docker compose up --build api
 dotnet run --project backend/FanEngagement.Api/FanEngagement.Api.csproj --launch-profile http
 
 # API available at http://localhost:5049
+```
+
+**Frontend (bare Vite dev server):**
+```bash
+cd frontend
+npm ci
+echo "VITE_API_BASE_URL=http://localhost:5049" > .env.development
+npm run dev
+
+# Frontend available at http://localhost:5173
 ```
 
 ### Running Tests
@@ -64,6 +85,13 @@ docker compose down -v
 dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
 ```
 
+**Frontend (Vitest):**
+```bash
+cd frontend
+npm ci
+npm test           # or: npm run test:watch
+```
+
 ### Building
 
 ```bash
@@ -72,6 +100,11 @@ dotnet restore backend/FanEngagement.sln
 
 # Build solution
 dotnet build backend/FanEngagement.sln --configuration Release
+
+# Build frontend
+cd frontend
+npm ci
+npm run build
 ```
 
 ## Code Organization Patterns
@@ -90,6 +123,13 @@ When implementing a new feature or endpoint:
 8. **Add migration** (if schema changes) via `dotnet ef migrations add`
 9. **Write tests** in `backend/FanEngagement.Tests/`
 
+### Frontend Patterns
+
+- **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
+- **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
+- **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages.
+- **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
+
 ### Current Entities
 
 - `Organization`: Top-level organization entity
@@ -106,12 +146,49 @@ When implementing a new feature or endpoint:
 
 ### Current API Endpoints
 
-- `GET /health` → Health check
-- `POST /organizations` → Create organization
-- `GET /organizations` → List organizations
-- `GET /organizations/{id}` → Get organization by ID
-- `POST /organizations/{organizationId}/share-types` → Create share type
-- `GET /organizations/{organizationId}/share-types` → List share types
+- Health:
+    - `GET /health` → Health check
+- Auth & Users:
+    - `POST /auth/login` → JWT login
+    - `POST /users` → Create user
+    - `GET /users` → List users
+    - `GET /users/{id}` → Get user by ID
+    - `PUT /users/{id}` → Update user
+    - `DELETE /users/{id}` → Delete user
+- Organizations & Memberships:
+    - `POST /organizations` → Create organization
+    - `GET /organizations` → List organizations
+    - `GET /organizations/{id}` → Get organization by ID
+    - `GET /organizations/{organizationId}/memberships` → List memberships
+    - `POST /organizations/{organizationId}/memberships` → Add membership
+    - `GET /organizations/{organizationId}/memberships/{userId}` → Get membership by user
+    - `DELETE /organizations/{organizationId}/memberships/{userId}` → Remove membership
+- Share Types & Issuances:
+    - `POST /organizations/{organizationId}/share-types` → Create share type
+    - `GET /organizations/{organizationId}/share-types` → List share types
+    - `POST /organizations/{organizationId}/share-issuances` → Create share issuance
+    - `GET /organizations/{organizationId}/share-issuances` → List share issuances
+    - `GET /organizations/{organizationId}/users/{userId}/share-issuances` → List user share issuances
+    - `GET /organizations/{organizationId}/users/{userId}/balances` → Get user share balances
+- Proposals & Voting:
+    - `POST /organizations/{organizationId}/proposals` → Create proposal
+    - `GET /organizations/{organizationId}/proposals` → List proposals by organization
+    - `GET /proposals/{proposalId}` → Get proposal by ID
+    - `PUT /proposals/{proposalId}` → Update proposal
+    - `POST /proposals/{proposalId}/close` → Close proposal
+    - `POST /proposals/{proposalId}/options` → Add proposal option
+    - `DELETE /proposals/{proposalId}/options/{optionId}` → Delete proposal option
+    - `POST /proposals/{proposalId}/votes` → Cast vote
+    - `GET /proposals/{proposalId}/results` → Get results
+- Webhooks & Outbound Events:
+    - `POST /organizations/{organizationId}/webhooks` → Create webhook endpoint
+    - `GET /organizations/{organizationId}/webhooks` → List webhook endpoints
+    - `GET /organizations/{organizationId}/webhooks/{webhookId}` → Get webhook endpoint
+    - `PUT /organizations/{organizationId}/webhooks/{webhookId}` → Update webhook endpoint
+    - `DELETE /organizations/{organizationId}/webhooks/{webhookId}` → Delete webhook endpoint
+    - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status/type)
+    - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details
+    - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry outbound event
 
 ## Coding Conventions
 
@@ -212,6 +289,7 @@ dotnet ef database update \
 - Use `ITestOutputHelper` in tests to log details
 - Check Docker logs: `docker compose logs api` or `docker compose logs db`
 - Inspect container: `docker exec -it fanengagement-db psql -U fanengagement`
+ - Frontend dev: run `npm run dev` in `frontend/`, check browser console/network
 
 ## CI/CD
 
@@ -219,6 +297,8 @@ dotnet ef database update \
 - Workflow: `.github/workflows/ci.yml`
 - Uses Docker Compose to run tests against Postgres
 - Uploads test results as artifacts
+
+Note: Frontend builds as a static site in the `frontend` container (Nginx). Frontend tests run locally (`npm test` in `frontend/`).
 
 ## When Suggesting Code
 
