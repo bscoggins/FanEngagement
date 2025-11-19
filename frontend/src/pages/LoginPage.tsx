@@ -28,10 +28,24 @@ export const LoginPage: React.FC = () => {
       navigate('/users');
     } catch (err) {
       // Handle login errors
+      console.error('Login error:', err);
+      
       if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status: number } };
+        const axiosError = err as { response?: { status: number; data?: unknown } };
         if (axiosError.response?.status === 401) {
           setError('Invalid email or password');
+        } else if (axiosError.response?.status === 400) {
+          setError('Invalid request. Please check your email and password format.');
+        } else if (axiosError.response?.status && axiosError.response.status >= 500) {
+          setError('Server error. Please try again later.');
+        } else {
+          setError('An error occurred. Please try again.');
+        }
+      } else if (err && typeof err === 'object' && 'message' in err) {
+        // Network or other error
+        const errorMessage = (err as { message: string }).message.toLowerCase();
+        if (errorMessage.includes('network') || errorMessage.includes('econnrefused')) {
+          setError('Cannot connect to server. Please ensure the API is running.');
         } else {
           setError('An error occurred. Please try again.');
         }

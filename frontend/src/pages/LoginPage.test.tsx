@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
@@ -17,6 +17,13 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // Suppress console.error for cleaner test output
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
   });
 
   const renderLoginPage = (initialRoute = '/login') => {
@@ -112,9 +119,9 @@ describe('LoginPage', () => {
     // Submit the form
     await user.click(screen.getByRole('button', { name: /log in/i }));
 
-    // Wait for error message (generic error message is now shown for all non-401 errors)
+    // Wait for error message - the improved error handling now shows a specific message for network errors
     await waitFor(() => {
-      expect(screen.getByText(/an error occurred/i)).toBeInTheDocument();
+      expect(screen.getByText(/cannot connect to server/i)).toBeInTheDocument();
     });
   });
 
