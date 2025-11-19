@@ -1,3 +1,4 @@
+using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
@@ -5,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class UserService(FanEngagementDbContext dbContext) : IUserService
+public class UserService(FanEngagementDbContext dbContext, IAuthService authService) : IUserService
 {
     public async Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
@@ -23,6 +24,7 @@ public class UserService(FanEngagementDbContext dbContext) : IUserService
             Id = Guid.NewGuid(),
             Email = request.Email,
             DisplayName = request.DisplayName,
+            PasswordHash = authService.HashPassword(request.Password),
             CreatedAt = DateTimeOffset.UtcNow
         };
 

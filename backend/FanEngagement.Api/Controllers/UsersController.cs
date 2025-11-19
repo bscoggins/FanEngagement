@@ -1,10 +1,12 @@
 using FanEngagement.Application.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("users")]
+[Authorize]
 public class UsersController(IUserService userService) : ControllerBase
 {
     [HttpPost]

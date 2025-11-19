@@ -1,10 +1,12 @@
 using FanEngagement.Application.Memberships;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("organizations/{organizationId:guid}/memberships")]
+[Authorize]
 public class MembershipsController(IMembershipService membershipService) : ControllerBase
 {
     [HttpPost]

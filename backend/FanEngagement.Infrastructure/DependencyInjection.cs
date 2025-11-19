@@ -1,3 +1,4 @@
+using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.OutboundEvents;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IProposalService, ProposalService>();
         services.AddScoped<IWebhookEndpointService, WebhookEndpointService>();
         services.AddScoped<IOutboundEventService, OutboundEventService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         services.AddHttpClient();
         services.AddHostedService<WebhookDeliveryBackgroundService>();
