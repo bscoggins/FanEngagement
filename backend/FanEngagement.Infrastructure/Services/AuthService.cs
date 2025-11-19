@@ -50,7 +50,7 @@ public class AuthService : IAuthService
 
     public string HashPassword(string password)
     {
-        // Use BCrypt-style hashing with PBKDF2
+        // Use PBKDF2-SHA256 for password hashing
         const int saltSize = 16;
         const int hashSize = 32;
         const int iterations = 100000;
