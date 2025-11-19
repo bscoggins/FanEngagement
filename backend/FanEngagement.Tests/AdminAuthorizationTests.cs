@@ -8,7 +8,6 @@ using FanEngagement.Application.Users;
 using FanEngagement.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Xunit.Abstractions;
 
 namespace FanEngagement.Tests;
 
@@ -16,13 +15,11 @@ public class AdminAuthorizationTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
     private readonly TestWebApplicationFactory _factory;
-    private readonly ITestOutputHelper _output;
 
-    public AdminAuthorizationTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public AdminAuthorizationTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]

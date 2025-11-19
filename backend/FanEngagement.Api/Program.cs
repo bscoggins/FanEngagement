@@ -103,11 +103,11 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
         var authService = scope.ServiceProvider.GetRequiredService<FanEngagement.Application.Authentication.IAuthService>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         
         // Check if admin user already exists
         var adminEmail = "admin@example.com";
@@ -136,7 +136,6 @@ if (app.Environment.IsDevelopment())
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while seeding the admin user.");
     }
 }
