@@ -37,7 +37,7 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,
-            WebhookEndpointId = null, // Will be set by delivery service
+            WebhookEndpointId = null,
             EventType = eventType,
             Payload = payloadJson,
             Status = OutboundEventStatus.Pending,

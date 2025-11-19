@@ -41,6 +41,9 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             throw new ArgumentException("At least one subscribed event type is required.", nameof(request.SubscribedEvents));
         }
 
+        // NOTE: Webhook secrets are stored in plain text in the database.
+        // If the database is compromised, attackers would have access to all webhook secrets.
+        // Consider implementing encryption at rest for sensitive data in production environments.
         var webhookEndpoint = new WebhookEndpoint
         {
             Id = Guid.NewGuid(),
@@ -165,6 +168,9 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
 
     /// <summary>
     /// Checks if a URI points to private network ranges or localhost to prevent SSRF attacks.
+    /// WARNING: This method does NOT perform DNS resolution for hostnames. A hostname that resolves
+    /// to a private IP address will NOT be blocked. For production use, consider implementing
+    /// DNS resolution and IP validation, or use a whitelist/blacklist approach for hostnames.
     /// </summary>
     private static bool IsPrivateOrLocalhost(Uri uri)
     {
@@ -182,8 +188,8 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
                 return true;
             }
             // For hostnames that aren't IP addresses, we can't easily determine
-            // if they resolve to private IPs without DNS lookup, which could be slow.
-            // Consider this acceptable for now, but in production you might want to resolve and check.
+            // if they resolve to private IPs without DNS lookup, which could be slow
+            // and could itself be exploited. This is a known limitation.
             return false;
         }
 
@@ -211,6 +217,23 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             
             // 169.254.0.0/16 (link-local)
             if (bytes[0] == 169 && bytes[1] == 254)
+                return true;
+        }
+        // IPv6 checks
+        else if (bytes.Length == 16)
+        {
+            // ::1/128 (loopback)
+            if (ipAddress.Equals(IPAddress.IPv6Loopback))
+                return true;
+
+            // fc00::/7 (unique local addresses)
+            // First 7 bits are 1111110 (0xfc or 0xfd)
+            if ((bytes[0] & 0xfe) == 0xfc)
+                return true;
+
+            // fe80::/10 (link-local)
+            // First 10 bits are 1111111010 (0xfe80)
+            if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80)
                 return true;
         }
 

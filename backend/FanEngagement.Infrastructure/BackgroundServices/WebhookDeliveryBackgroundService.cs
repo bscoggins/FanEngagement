@@ -17,7 +17,7 @@ namespace FanEngagement.Infrastructure.BackgroundServices;
 /// <remarks>
 /// <para>Retry Strategy: Events are retried up to 3 times before being marked as Failed.</para>
 /// <para>HMAC Signature: Sent in X-Webhook-Signature header as hex-encoded HMAC-SHA256 of the payload.</para>
-/// <para>Behavior: If no matching endpoints exist for an event, it's marked as Delivered.</para>
+/// <para>Behavior: If no matching endpoints exist for an event, it remains Pending to allow for future subscriptions.</para>
 /// </remarks>
 public class WebhookDeliveryBackgroundService(
     IServiceProvider serviceProvider,
@@ -26,6 +26,7 @@ public class WebhookDeliveryBackgroundService(
 {
     private const int MaxRetries = 3;
     private const int PollingIntervalSeconds = 30;
+    private const int MaxEventsPerBatch = 100;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -71,7 +72,7 @@ public class WebhookDeliveryBackgroundService(
         var pendingEvents = await dbContext.OutboundEvents
             .Where(e => e.Status == OutboundEventStatus.Pending)
             .OrderBy(e => e.CreatedAt)
-            .Take(100) // Process in batches
+            .Take(MaxEventsPerBatch)
             .ToListAsync(cancellationToken);
 
         if (pendingEvents.Count == 0)
@@ -86,6 +87,8 @@ public class WebhookDeliveryBackgroundService(
             try
             {
                 await ProcessEventAsync(dbContext, outboundEvent, cancellationToken);
+                // Save changes after each event to isolate failures
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (HttpRequestException ex)
             {
@@ -105,8 +108,6 @@ public class WebhookDeliveryBackgroundService(
                 logger.LogError(ex, "Unexpected error processing event {EventId}", outboundEvent.Id);
             }
         }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task ProcessEventAsync(
@@ -120,23 +121,21 @@ public class WebhookDeliveryBackgroundService(
                      && w.IsActive)
             .ToListAsync(cancellationToken);
 
-        // Filter by subscribed events
+        // Filter by subscribed events - use exact case-sensitive matching for consistency
         var matchingEndpoints = webhookEndpoints
             .Where(w => w.SubscribedEvents.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Any(e => e.Trim().Equals(outboundEvent.EventType, StringComparison.OrdinalIgnoreCase)))
+                .Any(e => e.Trim().Equals(outboundEvent.EventType, StringComparison.Ordinal)))
             .ToList();
 
         if (matchingEndpoints.Count == 0)
         {
             logger.LogWarning(
-                "No active webhook endpoints found for organization {OrganizationId} and event type {EventType}",
+                "No active webhook endpoints found for organization {OrganizationId} and event type {EventType}. Event remains Pending.",
                 outboundEvent.OrganizationId,
                 outboundEvent.EventType);
             
-            // Mark as delivered since there are no endpoints to deliver to
-            outboundEvent.Status = OutboundEventStatus.Delivered;
-            outboundEvent.AttemptCount++;
-            outboundEvent.LastAttemptAt = DateTimeOffset.UtcNow;
+            // Keep event as Pending to allow for future webhook subscriptions
+            // This prevents losing events when endpoints are added later
             return;
         }
 
