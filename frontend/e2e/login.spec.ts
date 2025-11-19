@@ -47,8 +47,7 @@ test.describe('Login Flow', () => {
     // Submit the form
     await page.getByRole('button', { name: 'Log In' }).click();
 
-    // Wait a bit for the error to appear
-    await page.waitForTimeout(1000);
+    // Wait for error message to appear (handled by expect below)
 
     // Verify error message is displayed
     await expect(page.getByText(/invalid email or password/i)).toBeVisible();
