@@ -161,6 +161,7 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
         var subscribedEvents = webhook.SubscribedEvents
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Where(e => !string.IsNullOrWhiteSpace(e))
             .Select(e => e.Trim())
             .ToList();
 
