@@ -24,6 +24,10 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<(Guid organizationId, Guid userId, Guid shareTypeId)> SetupTestDataAsync()
     {
+        // Get authentication token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         // Create organization
         var orgRequest = new CreateOrganizationRequest
         {
@@ -37,7 +41,8 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
         var userRequest = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
+            DisplayName = "Test User",
+            Password = "TestPassword123!"
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var user = await userResponse.Content.ReadFromJsonAsync<User>();
@@ -185,7 +190,8 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
         var userRequest = new CreateUserRequest
         {
             Email = $"outsider-{Guid.NewGuid()}@example.com",
-            DisplayName = "Outsider User"
+            DisplayName = "Outsider User",
+            Password = "TestPassword123!"
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var outsiderUser = await userResponse.Content.ReadFromJsonAsync<User>();
@@ -322,7 +328,8 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
         var user2Request = new CreateUserRequest
         {
             Email = $"test2-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User 2"
+            DisplayName = "Test User 2",
+            Password = "TestPassword123!"
         };
         var user2Response = await _client.PostAsJsonAsync("/users", user2Request);
         var user2 = await user2Response.Content.ReadFromJsonAsync<User>();

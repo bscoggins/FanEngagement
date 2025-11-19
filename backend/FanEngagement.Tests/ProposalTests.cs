@@ -25,6 +25,10 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<(Guid organizationId, Guid userId)> SetupTestDataAsync()
     {
+        // Get authentication token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         // Create organization
         var orgRequest = new CreateOrganizationRequest
         {
@@ -38,7 +42,8 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var userRequest = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
+            DisplayName = "Test User",
+            Password = "TestPassword123!"
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var user = await userResponse.Content.ReadFromJsonAsync<User>();

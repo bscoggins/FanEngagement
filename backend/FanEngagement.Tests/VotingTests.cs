@@ -25,6 +25,10 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<(Guid organizationId, Guid userId, Guid shareTypeId, Guid proposalId, Guid optionId)> SetupTestDataAsync()
     {
+        // Get authentication token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         // Create organization
         var orgRequest = new CreateOrganizationRequest
         {
@@ -38,7 +42,8 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
         var userRequest = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
+            DisplayName = "Test User",
+            Password = "TestPassword123!"
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var user = await userResponse.Content.ReadFromJsonAsync<User>();
@@ -231,7 +236,8 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
         var userRequest = new CreateUserRequest
         {
             Email = $"nopower-{Guid.NewGuid()}@example.com",
-            DisplayName = "No Power User"
+            DisplayName = "No Power User",
+            Password = "TestPassword123!"
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var user = await userResponse.Content.ReadFromJsonAsync<User>();
@@ -307,7 +313,8 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
         var user2Request = new CreateUserRequest
         {
             Email = $"voter2-{Guid.NewGuid()}@example.com",
-            DisplayName = "Voter 2"
+            DisplayName = "Voter 2",
+            Password = "TestPassword123!"
         };
         var user2Response = await _client.PostAsJsonAsync("/users", user2Request);
         var user2 = await user2Response.Content.ReadFromJsonAsync<User>();

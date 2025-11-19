@@ -215,6 +215,9 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
     public async Task CreateMembership_ReturnsInternalServerError_WhenUserDoesNotExist()
     {
         // Arrange
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         var organizationId = await CreateOrganization();
         var nonExistentUserId = Guid.NewGuid();
 
@@ -235,6 +238,9 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
     public async Task CreateMembership_ReturnsInternalServerError_WhenOrganizationDoesNotExist()
     {
         // Arrange
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         var nonExistentOrgId = Guid.NewGuid();
         var userId = await CreateUser();
 
@@ -253,6 +259,10 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<(Guid organizationId, Guid userId)> SetupOrganizationAndUser()
     {
+        // Get authentication token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
         var organizationId = await CreateOrganization();
         var userId = await CreateUser();
         return (organizationId, userId);
@@ -274,7 +284,8 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PostAsJsonAsync("/users", new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
-            DisplayName = "Test User"
+            DisplayName = "Test User",
+            Password = "TestPassword123!"
         });
         var user = await response.Content.ReadFromJsonAsync<UserDto>();
         return user!.Id;
