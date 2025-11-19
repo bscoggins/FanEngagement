@@ -4,6 +4,7 @@ import { ProtectedRoute } from '../components/ProtectedRoute';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { UsersPage } from '../pages/UsersPage';
+import { UserCreatePage } from '../pages/UserCreatePage';
 import { UserEditPage } from '../pages/UserEditPage';
 
 export const router = createBrowserRouter([
@@ -24,6 +25,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <UsersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'users/new',
+        element: (
+          <ProtectedRoute>
+            <UserCreatePage />
           </ProtectedRoute>
         ),
       },
