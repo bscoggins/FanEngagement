@@ -240,7 +240,7 @@ public class WebhookEndpointTests : IClassFixture<TestWebApplicationFactory>
     private async Task<Organization> CreateOrganizationAsync()
     {
         var createOrgResponse = await _client.PostAsJsonAsync("/organizations",
-            new CreateOrganizationRequest { Name = "Test Organization" });
+            new CreateOrganizationRequest("Test Organization"));
         Assert.Equal(HttpStatusCode.Created, createOrgResponse.StatusCode);
         var org = await createOrgResponse.Content.ReadFromJsonAsync<Organization>();
         Assert.NotNull(org);
