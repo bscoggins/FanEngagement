@@ -8,7 +8,6 @@ interface AuthContextType {
   login: (request: LoginRequest) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
-  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,7 +63,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     isAuthenticated: !!authState.token,
-    isLoading: false, // Loading from localStorage is synchronous, so no loading state needed
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

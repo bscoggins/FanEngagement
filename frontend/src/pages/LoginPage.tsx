@@ -35,8 +35,6 @@ export const LoginPage: React.FC = () => {
         } else {
           setError('An error occurred. Please try again.');
         }
-      } else if (err instanceof Error) {
-        setError(err.message || 'An error occurred. Please try again.');
       } else {
         setError('An error occurred. Please try again.');
       }

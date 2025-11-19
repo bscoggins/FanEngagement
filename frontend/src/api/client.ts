@@ -26,15 +26,13 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && error.config?.url !== '/auth/login') {
           // Clear auth data
           localStorage.removeItem('authToken');
           localStorage.removeItem('authUser');
           
-          // Redirect to login if not already there
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
+          // Dispatch a custom event that AuthContext can listen to
+          window.dispatchEvent(new CustomEvent('auth:logout'));
         }
         return Promise.reject(error);
       }

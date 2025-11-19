@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
 import { LoginPage } from '../pages/LoginPage';
-import * as authApi from '../api/authApi';
+import { authApi } from '../api/authApi';
 
 // Mock the authApi
 vi.mock('../api/authApi', () => ({
@@ -48,7 +48,7 @@ describe('LoginPage', () => {
       displayName: 'Test User',
     };
 
-    vi.mocked(authApi.authApi.login).mockResolvedValueOnce(mockResponse);
+    vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
 
     renderLoginPage();
     const user = userEvent.setup();
@@ -77,7 +77,7 @@ describe('LoginPage', () => {
       },
     };
 
-    vi.mocked(authApi.authApi.login).mockRejectedValueOnce(mockError);
+    vi.mocked(authApi.login).mockRejectedValueOnce(mockError);
 
     renderLoginPage();
     const user = userEvent.setup();
@@ -99,7 +99,7 @@ describe('LoginPage', () => {
   });
 
   it('displays error message for network errors', async () => {
-    vi.mocked(authApi.authApi.login).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(authApi.login).mockRejectedValueOnce(new Error('Network error'));
 
     renderLoginPage();
     const user = userEvent.setup();
@@ -111,9 +111,9 @@ describe('LoginPage', () => {
     // Submit the form
     await user.click(screen.getByRole('button', { name: /log in/i }));
 
-    // Wait for error message (the actual error message from the Error object is displayed)
+    // Wait for error message (generic error message is now shown for all non-401 errors)
     await waitFor(() => {
-      expect(screen.getByText(/network error/i)).toBeInTheDocument();
+      expect(screen.getByText(/an error occurred/i)).toBeInTheDocument();
     });
   });
 
@@ -136,7 +136,7 @@ describe('LoginPage', () => {
   });
 
   it('disables submit button while logging in', async () => {
-    vi.mocked(authApi.authApi.login).mockImplementation(() => {
+    vi.mocked(authApi.login).mockImplementation(() => {
       return new Promise(resolve => setTimeout(resolve, 100));
     });
 
