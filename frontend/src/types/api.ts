@@ -24,6 +24,6 @@ export interface CreateUserRequest {
 }
 
 export interface UpdateUserRequest {
-  email?: string;
-  displayName?: string;
+  email: string;
+  displayName: string;
 }

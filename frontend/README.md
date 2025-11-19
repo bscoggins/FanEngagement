@@ -1,73 +1,90 @@
-# React + TypeScript + Vite
+# FanEngagement Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the React + TypeScript frontend for the FanEngagement platform. It interacts with the ASP.NET Core backend API to provide organization management, share-based voting, and member engagement features.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework:** React 19 + TypeScript
+- **Build Tool:** Vite
+- **Router:** React Router v7
+- **API Client:** Axios with JWT authentication
+- **Testing:** Vitest + Testing Library
+- **Authentication:** JWT-based, stored in localStorage, sent via `Authorization: Bearer` header
 
-## React Compiler
+## Available Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `npm run dev` — Start development server (default: http://localhost:5173)
+- `npm run build` — Build for production
+- `npm run preview` — Preview production build
+- `npm run test` — Run tests
+- `npm run test:watch` — Run tests in watch mode
+- `npm run lint` — Run ESLint
 
-## Expanding the ESLint configuration
+## Environment Configuration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Create `.env.development` (or `.env.local`) in this directory.
+- Set the API base URL:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+  ```
+  VITE_API_BASE_URL=http://localhost:5049
+  ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- The frontend expects the backend API to be running and accessible at this URL.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
+
+```
+src/
+  api/         # API client and service modules (authApi, usersApi)
+  auth/        # Authentication context with login/logout and localStorage persistence
+  components/  # Reusable UI components (Layout)
+  pages/       # Route-level pages (Home, Login, Users, UserEdit)
+  routes/      # React Router configuration
+  types/       # TypeScript interfaces for API models
+  test/        # Test setup files
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Authentication
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Users log in via the `/login` page, which sends credentials to the backend API at `POST /auth/login`.
+- On success, a JWT token is stored in `localStorage` and attached to all subsequent API requests.
+- The `AuthContext` provides `useAuth()` hook for accessing authentication state and methods.
+- Protected routes can check `isAuthenticated` and redirect to login if needed.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Available Routes
+
+- `/` — Home page with welcome message
+- `/login` — Login page (placeholder, implementation pending)
+- `/users` — Users list page (placeholder)
+- `/users/:id/edit` — User edit page (placeholder)
+
+## Development Workflow
+
+1. Start backend API (see root README for instructions)
+2. Set `VITE_API_BASE_URL` in `.env.development`
+3. Run `npm install` then `npm run dev`
+4. Access frontend at http://localhost:5173
+
+## API Integration
+
+The API client (`src/api/client.ts`) is configured to:
+- Read the base URL from `VITE_API_BASE_URL` environment variable
+- Automatically attach JWT tokens from localStorage as `Authorization: Bearer <token>` headers
+- Provide type-safe API methods in separate service modules
+
+## Testing
+
+Tests are written with Vitest and Testing Library. Run tests with:
+
+```bash
+npm test          # Run once
+npm run test:watch # Watch mode
 ```
+
+## Notes
+
+- The frontend expects the backend API to be running and accessible.
+- If you change API endpoints, update the API client in `src/api/`.
+- For new pages, add a route in `src/routes/` and a component in `src/pages/`.
+
+For more details, see the root `README.md` and backend documentation.
