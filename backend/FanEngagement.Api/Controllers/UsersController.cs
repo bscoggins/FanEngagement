@@ -59,4 +59,17 @@ public class UsersController(IUserService userService) : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("admin/stats")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> GetAdminStats(CancellationToken cancellationToken)
+    {
+        var users = await userService.GetAllAsync(cancellationToken);
+        var stats = new
+        {
+            TotalUsers = users.Count,
+            Message = "This endpoint is only accessible to administrators"
+        };
+        return Ok(stats);
+    }
 }

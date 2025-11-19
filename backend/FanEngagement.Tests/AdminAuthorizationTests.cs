@@ -106,4 +106,73 @@ public class AdminAuthorizationTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(roleClaim);
         Assert.Equal("User", roleClaim!.Value);
     }
+
+    [Fact]
+    public async Task AdminEndpoint_ReturnsOk_ForAdminUser()
+    {
+        // Arrange - Create an admin user directly in the database
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
+        var adminPassword = "AdminPass123!";
+        var adminUser = new FanEngagement.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = adminEmail,
+            DisplayName = "Admin User",
+            PasswordHash = authService.HashPassword(adminPassword),
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var loginRequest = new LoginRequest
+        {
+            Email = adminEmail,
+            Password = adminPassword
+        };
+
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        
+        _client.AddAuthorizationHeader(loginResult!.Token);
+
+        // Act
+        var response = await _client.GetAsync("/users/admin/stats");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("totalUsers", content);
+        Assert.Contains("This endpoint is only accessible to administrators", content);
+    }
+
+    [Fact]
+    public async Task AdminEndpoint_ReturnsForbidden_ForRegularUser()
+    {
+        // Arrange - Create a regular user and get a token
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        _client.AddAuthorizationHeader(token);
+
+        // Act
+        var response = await _client.GetAsync("/users/admin/stats");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AdminEndpoint_ReturnsUnauthorized_WithoutToken()
+    {
+        // Act
+        var response = await _client.GetAsync("/users/admin/stats");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

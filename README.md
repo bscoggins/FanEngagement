@@ -61,12 +61,28 @@ Key endpoints (current):
 - `POST /auth/login` – Authenticate and get JWT token
 - `GET /users` – List all users (requires authentication)
 - `GET /users/{id}` – Get user by ID (requires authentication)
+- `GET /users/admin/stats` – Admin-only endpoint (requires Admin role)
 - `POST /users` – Create new user
 - `POST /organizations`
 - `GET /organizations`
 - `GET /organizations/{id}`
 - `POST /organizations/{orgId}/share-types`
 - `GET /organizations/{orgId}/share-types`
+
+### Authentication & Authorization
+
+The API uses JWT bearer authentication. In development mode, an initial admin user is automatically created on startup:
+
+**Development Admin Credentials:**
+- Email: `admin@example.com`
+- Password: `Admin123!`
+
+The admin user has access to admin-only endpoints (marked with `[Authorize(Roles = "Admin")]`). Regular users are created with the `User` role by default.
+
+To authenticate:
+1. Send a POST request to `/auth/login` with email and password
+2. Use the returned JWT token in the `Authorization: Bearer <token>` header for subsequent requests
+3. The JWT includes a role claim that is used for role-based authorization
 
 ## Run the Frontend
 
