@@ -118,8 +118,8 @@ public class WebhookEndpointTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange
         var org = await CreateOrganizationAsync();
-        var webhook1 = await CreateWebhookAsync(org.Id, "https://example.com/webhook1");
-        var webhook2 = await CreateWebhookAsync(org.Id, "https://example.com/webhook2");
+        await CreateWebhookAsync(org.Id, "https://example.com/webhook1");
+        await CreateWebhookAsync(org.Id, "https://example.com/webhook2");
 
         // Act
         var response = await _client.GetAsync($"/organizations/{org.Id}/webhooks");

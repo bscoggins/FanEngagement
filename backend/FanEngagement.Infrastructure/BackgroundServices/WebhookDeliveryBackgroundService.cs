@@ -9,6 +9,16 @@ using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.BackgroundServices;
 
+/// <summary>
+/// Background service that processes pending webhook delivery events.
+/// Polls for pending OutboundEvents every 30 seconds (configurable), finds matching
+/// webhook endpoints, and delivers events via HTTP POST with HMAC-SHA256 signatures.
+/// </summary>
+/// <remarks>
+/// <para>Retry Strategy: Events are retried up to 3 times before being marked as Failed.</para>
+/// <para>HMAC Signature: Sent in X-Webhook-Signature header as hex-encoded HMAC-SHA256 of the payload.</para>
+/// <para>Behavior: If no matching endpoints exist for an event, it's marked as Delivered.</para>
+/// </remarks>
 public class WebhookDeliveryBackgroundService(
     IServiceProvider serviceProvider,
     IHttpClientFactory httpClientFactory,
@@ -27,12 +37,25 @@ public class WebhookDeliveryBackgroundService(
             {
                 await ProcessPendingEventsAsync(stoppingToken);
             }
-            catch (Exception ex)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // Graceful cancellation, exit loop
+                break;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
             {
                 logger.LogError(ex, "Error processing pending webhook events");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(PollingIntervalSeconds), stoppingToken);
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(PollingIntervalSeconds), stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                // Graceful cancellation during delay
+                break;
+            }
         }
 
         logger.LogInformation("WebhookDeliveryBackgroundService stopped");
@@ -43,7 +66,8 @@ public class WebhookDeliveryBackgroundService(
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
 
-        // Get pending events
+        // Get pending events - Note: In production with multiple workers, consider using
+        // database-level locking (e.g., FOR UPDATE SKIP LOCKED) to prevent duplicate processing
         var pendingEvents = await dbContext.OutboundEvents
             .Where(e => e.Status == OutboundEventStatus.Pending)
             .OrderBy(e => e.CreatedAt)
@@ -63,9 +87,22 @@ public class WebhookDeliveryBackgroundService(
             {
                 await ProcessEventAsync(dbContext, outboundEvent, cancellationToken);
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                logger.LogError(ex, "Error processing event {EventId}", outboundEvent.Id);
+                logger.LogError(ex, "HTTP error processing event {EventId}", outboundEvent.Id);
+            }
+            catch (DbUpdateException ex)
+            {
+                logger.LogError(ex, "Database update error processing event {EventId}", outboundEvent.Id);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Graceful cancellation
+                break;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
+            {
+                logger.LogError(ex, "Unexpected error processing event {EventId}", outboundEvent.Id);
             }
         }
 
@@ -121,11 +158,24 @@ public class WebhookDeliveryBackgroundService(
                     allSucceeded = false;
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
                 logger.LogError(
                     ex,
-                    "Failed to deliver event {EventId} to endpoint {EndpointId}",
+                    "HTTP error delivering event {EventId} to endpoint {EndpointId}",
+                    outboundEvent.Id,
+                    endpoint.Id);
+                allSucceeded = false;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw; // Re-throw to propagate cancellation
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
+            {
+                logger.LogError(
+                    ex,
+                    "Unexpected error delivering event {EventId} to endpoint {EndpointId}",
                     outboundEvent.Id,
                     endpoint.Id);
                 allSucceeded = false;
@@ -173,7 +223,7 @@ public class WebhookDeliveryBackgroundService(
             var signature = GenerateHmacSignature(outboundEvent.Payload, endpoint.Secret);
 
             // Prepare request
-            var request = new HttpRequestMessage(HttpMethod.Post, endpoint.Url)
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint.Url)
             {
                 Content = new StringContent(outboundEvent.Payload, Encoding.UTF8, "application/json")
             };
@@ -208,11 +258,28 @@ public class WebhookDeliveryBackgroundService(
                 return false;
             }
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             logger.LogError(
                 ex,
-                "Exception delivering event {EventId} to endpoint {EndpointUrl}",
+                "HTTP error delivering event {EventId} to endpoint {EndpointUrl}",
+                outboundEvent.Id,
+                endpoint.Url);
+            return false;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                "Delivery of event {EventId} to endpoint {EndpointUrl} was cancelled",
+                outboundEvent.Id,
+                endpoint.Url);
+            return false;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
+        {
+            logger.LogError(
+                ex,
+                "Unexpected error delivering event {EventId} to endpoint {EndpointUrl}",
                 outboundEvent.Id,
                 endpoint.Url);
             return false;

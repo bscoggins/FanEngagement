@@ -6,6 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FanEngagement.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
+    /// <remarks>
+    /// This migration adds OrganizationId to OutboundEvents for better organization-scoped queries.
+    /// Note: This migration assumes no existing OutboundEvents data exists. If applying to a database
+    /// with existing OutboundEvents, the default empty GUID will violate the foreign key constraint.
+    /// In that case, manually populate OrganizationId from WebhookEndpoint.OrganizationId before
+    /// adding the foreign key constraint.
+    /// </remarks>
     public partial class AddOrganizationIdToOutboundEvents : Migration
     {
         /// <inheritdoc />
@@ -23,6 +30,9 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 oldClrType: typeof(Guid),
                 oldType: "uuid");
 
+            // Add OrganizationId column with default empty GUID
+            // WARNING: This assumes no existing OutboundEvents data.
+            // For existing data, populate OrganizationId from WebhookEndpoint.OrganizationId first.
             migrationBuilder.AddColumn<Guid>(
                 name: "OrganizationId",
                 table: "OutboundEvents",

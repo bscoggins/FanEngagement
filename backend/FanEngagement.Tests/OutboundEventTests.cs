@@ -63,7 +63,7 @@ public class OutboundEventTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         var org = await CreateOrganizationAsync();
         var event1Id = await EnqueueEventAsync(org.Id, "ProposalCreated", "{\"proposalId\":\"123\"}");
-        var event2Id = await EnqueueEventAsync(org.Id, "ProposalFinalized", "{\"proposalId\":\"456\"}");
+        await EnqueueEventAsync(org.Id, "ProposalFinalized", "{\"proposalId\":\"456\"}");
         
         // Mark one as delivered
         await MarkEventAsDeliveredAsync(event1Id);

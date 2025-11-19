@@ -1,3 +1,4 @@
+using System.Net;
 using FanEngagement.Application.WebhookEndpoints;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
@@ -21,10 +22,17 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             throw new InvalidOperationException($"Organization with ID {organizationId} not found.");
         }
 
-        // Validate URL
-        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
+        // Validate URL - must be HTTP/HTTPS and not point to private networks (SSRF prevention)
+        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != "http" && uri.Scheme != "https"))
         {
-            throw new ArgumentException("URL must be a valid absolute URL.", nameof(request.Url));
+            throw new ArgumentException("URL must be a valid HTTP or HTTPS URL.", nameof(request.Url));
+        }
+
+        // Prevent SSRF attacks by blocking private IP ranges
+        if (IsPrivateOrLocalhost(uri))
+        {
+            throw new ArgumentException("URL cannot point to private networks or localhost.", nameof(request.Url));
         }
 
         // Validate subscribed events
@@ -89,10 +97,17 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             return null;
         }
 
-        // Validate URL
-        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
+        // Validate URL - must be HTTP/HTTPS and not point to private networks (SSRF prevention)
+        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != "http" && uri.Scheme != "https"))
         {
-            throw new ArgumentException("URL must be a valid absolute URL.", nameof(request.Url));
+            throw new ArgumentException("URL must be a valid HTTP or HTTPS URL.", nameof(request.Url));
+        }
+
+        // Prevent SSRF attacks by blocking private IP ranges
+        if (IsPrivateOrLocalhost(uri))
+        {
+            throw new ArgumentException("URL cannot point to private networks or localhost.", nameof(request.Url));
         }
 
         // Validate subscribed events
@@ -134,6 +149,8 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
     {
         var subscribedEvents = webhook.SubscribedEvents
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Select(e => e.Trim())
             .ToList();
 
         return new WebhookEndpointDto(
@@ -144,5 +161,59 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             webhook.IsActive,
             webhook.CreatedAt
         );
+    }
+
+    /// <summary>
+    /// Checks if a URI points to private network ranges or localhost to prevent SSRF attacks.
+    /// </summary>
+    private static bool IsPrivateOrLocalhost(Uri uri)
+    {
+        if (uri.IsLoopback)
+        {
+            return true;
+        }
+
+        if (!IPAddress.TryParse(uri.Host, out var ipAddress))
+        {
+            // If it's a hostname, check for localhost variations
+            var host = uri.Host.ToLowerInvariant();
+            if (host == "localhost" || host.EndsWith(".localhost"))
+            {
+                return true;
+            }
+            // For hostnames that aren't IP addresses, we can't easily determine
+            // if they resolve to private IPs without DNS lookup, which could be slow.
+            // Consider this acceptable for now, but in production you might want to resolve and check.
+            return false;
+        }
+
+        // Check for private IP ranges
+        var bytes = ipAddress.GetAddressBytes();
+        
+        // IPv4 checks
+        if (bytes.Length == 4)
+        {
+            // 10.0.0.0/8
+            if (bytes[0] == 10)
+                return true;
+            
+            // 172.16.0.0/12
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                return true;
+            
+            // 192.168.0.0/16
+            if (bytes[0] == 192 && bytes[1] == 168)
+                return true;
+            
+            // 127.0.0.0/8 (loopback)
+            if (bytes[0] == 127)
+                return true;
+            
+            // 169.254.0.0/16 (link-local)
+            if (bytes[0] == 169 && bytes[1] == 254)
+                return true;
+        }
+
+        return false;
     }
 }
