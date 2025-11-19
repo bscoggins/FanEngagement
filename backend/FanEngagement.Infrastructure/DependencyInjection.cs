@@ -1,5 +1,6 @@
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
+using FanEngagement.Application.Proposals;
 using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Application.ShareTypes;
 using FanEngagement.Application.Users;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IShareIssuanceService, ShareIssuanceService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IMembershipService, MembershipService>();
+        services.AddScoped<IProposalService, ProposalService>();
 
         return services;
     }
