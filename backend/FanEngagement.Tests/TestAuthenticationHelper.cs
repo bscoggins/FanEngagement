@@ -54,6 +54,8 @@ public static class TestAuthenticationHelper
 
     public static void AddAuthorizationHeader(this HttpClient client, string token)
     {
+        // Remove any existing Authorization header to avoid cross-test contamination
+        client.DefaultRequestHeaders.Remove("Authorization");
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
     }
 }
