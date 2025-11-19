@@ -116,17 +116,19 @@ public class WebhookDeliveryBackgroundService(
         CancellationToken cancellationToken)
     {
         // Find active webhook endpoints for this organization subscribed to this event type
-        var webhookEndpoints = await dbContext.WebhookEndpoints
-            .Where(w => w.OrganizationId == outboundEvent.OrganizationId 
-                     && w.IsActive)
+        // Filter endpoints in the database by organization, active status, and subscribed event type
+        var matchingEndpoints = await dbContext.WebhookEndpoints
+            .Where(w => w.OrganizationId == outboundEvent.OrganizationId
+                     && w.IsActive
+                     && EF.Functions.ILike(
+                         // Use PostgreSQL string_to_array to split SubscribedEvents and check for event type
+                         // This translates to: outboundEvent.EventType ILIKE ANY(string_to_array(w.SubscribedEvents, ','))
+                         outboundEvent.EventType,
+                         // Use raw SQL to split SubscribedEvents
+                         $"ANY(string_to_array({nameof(w.SubscribedEvents)}, ','))"
+                     )
+            )
             .ToListAsync(cancellationToken);
-
-        // Filter by subscribed events - use exact case-sensitive matching for consistency
-        var matchingEndpoints = webhookEndpoints
-            .Where(w => w.SubscribedEvents.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Any(e => e.Trim().Equals(outboundEvent.EventType, StringComparison.Ordinal)))
-            .ToList();
-
         if (matchingEndpoints.Count == 0)
         {
             logger.LogWarning(
