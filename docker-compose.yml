@@ -28,6 +28,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fanengagement-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
   tests:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     working_dir: /src/backend
