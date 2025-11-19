@@ -12,8 +12,8 @@ RUN npm ci
 # Copy source files
 COPY . .
 
-# Accept build argument for API base URL
-ARG VITE_API_BASE_URL=http://localhost:8080
+# Accept build argument for API base URL (default to same-origin reverse proxy)
+ARG VITE_API_BASE_URL=/api
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 # Build the application
