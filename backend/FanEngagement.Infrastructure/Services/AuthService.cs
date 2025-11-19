@@ -40,14 +40,15 @@ public class AuthService : IAuthService
             return null;
         }
 
-        var token = GenerateJwtToken(user.Id, user.Email);
+        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString());
 
         return new LoginResponse
         {
             Token = token,
             UserId = user.Id,
             Email = user.Email,
-            DisplayName = user.DisplayName
+            DisplayName = user.DisplayName,
+            Role = user.Role.ToString()
         };
     }
 
@@ -110,7 +111,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private string GenerateJwtToken(Guid userId, string email)
+    private string GenerateJwtToken(Guid userId, string email, string role)
     {
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
         var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
@@ -123,6 +124,7 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

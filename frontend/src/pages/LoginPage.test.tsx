@@ -46,6 +46,7 @@ describe('LoginPage', () => {
       userId: 'user-123',
       email: 'test@example.com',
       displayName: 'Test User',
+      role: 'User',
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -125,6 +126,7 @@ describe('LoginPage', () => {
       userId: 'user-123',
       email: 'test@example.com',
       displayName: 'Test User',
+      role: 'User',
     }));
 
     renderLoginPage();
@@ -141,7 +143,8 @@ describe('LoginPage', () => {
         token: 'test-token',
         userId: 'user-123',
         email: 'test@example.com',
-        displayName: 'Test User'
+        displayName: 'Test User',
+        role: 'User',
       }), 100));
     });
 

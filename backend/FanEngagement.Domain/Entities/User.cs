@@ -1,3 +1,5 @@
+using FanEngagement.Domain.Enums;
+
 namespace FanEngagement.Domain.Entities;
 
 public class User
@@ -6,6 +8,7 @@ public class User
     public string Email { get; set; } = default!;
     public string DisplayName { get; set; } = default!;
     public string PasswordHash { get; set; } = default!;
+    public UserRole Role { get; set; } = UserRole.User;
     public DateTimeOffset CreatedAt { get; set; }
 
     public ICollection<OrganizationMembership> Memberships { get; set; } = new List<OrganizationMembership>();

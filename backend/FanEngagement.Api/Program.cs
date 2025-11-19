@@ -70,7 +70,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
+        RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
 });
 
@@ -95,6 +96,53 @@ using (var scope = app.Services.CreateScope())
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while applying database migrations.");
         // Optionally: rethrow or exit, depending on requirements
+    }
+}
+
+// Seed initial admin user in development
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<FanEngagement.Application.Authentication.IAuthService>();
+        
+        // Check if admin user already exists and ensure it has Admin role
+        var adminEmail = "admin@example.com";
+        var existingUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+        
+        if (existingUser == null)
+        {
+            var adminUser = new FanEngagement.Domain.Entities.User
+            {
+                Id = Guid.NewGuid(),
+                Email = adminEmail,
+                DisplayName = "Admin User",
+                PasswordHash = authService.HashPassword("Admin123!"),
+                Role = FanEngagement.Domain.Enums.UserRole.Admin,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            
+            dbContext.Users.Add(adminUser);
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("Initial admin user created: {Email}", adminEmail);
+        }
+        else if (existingUser.Role != FanEngagement.Domain.Enums.UserRole.Admin)
+        {
+            existingUser.Role = FanEngagement.Domain.Enums.UserRole.Admin;
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("Existing user elevated to Admin role: {Email}", adminEmail);
+        }
+        else
+        {
+            logger.LogInformation("Admin user already exists with Admin role: {Email}", adminEmail);
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while seeding the admin user.");
     }
 }
 
