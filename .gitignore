@@ -52,3 +52,16 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+# Node.js / Frontend
+node_modules/
+dist/
+*.local
+.env.local
+.env.*.local
+
+# Frontend build artifacts
+frontend/dist/
+frontend/node_modules/
+
+# Test coverage
+coverage/
