@@ -8,10 +8,10 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
     /// <inheritdoc />
     /// <remarks>
     /// This migration adds OrganizationId to OutboundEvents for better organization-scoped queries.
-    /// Note: This migration assumes no existing OutboundEvents data exists. If applying to a database
-    /// with existing OutboundEvents, the default empty GUID will violate the foreign key constraint.
-    /// In that case, manually populate OrganizationId from WebhookEndpoint.OrganizationId before
-    /// adding the foreign key constraint.
+    /// The migration safely handles existing data by:
+    /// 1. Adding OrganizationId as nullable
+    /// 2. Populating it from WebhookEndpoint.OrganizationId for existing rows
+    /// 3. Making it non-nullable with foreign key constraint
     /// </remarks>
     public partial class AddOrganizationIdToOutboundEvents : Migration
     {
@@ -30,15 +30,30 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 oldClrType: typeof(Guid),
                 oldType: "uuid");
 
-            // Add OrganizationId column with default empty GUID
-            // WARNING: This assumes no existing OutboundEvents data.
-            // For existing data, populate OrganizationId from WebhookEndpoint.OrganizationId first.
+            // Step 1: Add OrganizationId column as nullable
             migrationBuilder.AddColumn<Guid>(
                 name: "OrganizationId",
                 table: "OutboundEvents",
                 type: "uuid",
+                nullable: true);
+
+            // Step 2: Populate OrganizationId for existing rows from WebhookEndpoint
+            migrationBuilder.Sql(@"
+                UPDATE ""OutboundEvents"" oe
+                SET ""OrganizationId"" = we.""OrganizationId""
+                FROM ""WebhookEndpoints"" we
+                WHERE oe.""WebhookEndpointId"" = we.""Id"" AND oe.""OrganizationId"" IS NULL;
+            ");
+
+            // Step 3: Make OrganizationId non-nullable
+            migrationBuilder.AlterColumn<Guid>(
+                name: "OrganizationId",
+                table: "OutboundEvents",
+                type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                oldClrType: typeof(Guid),
+                oldType: "uuid",
+                oldNullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OutboundEvents_OrganizationId_Status_CreatedAt",
