@@ -50,12 +50,20 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             OrganizationId = organizationId,
             Url = request.Url,
             Secret = request.Secret,
-            SubscribedEvents = string.Join(",", request.SubscribedEvents),
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
         dbContext.WebhookEndpoints.Add(webhookEndpoint);
+        // Add subscriptions for each event type
+        foreach (var eventType in request.SubscribedEvents)
+        {
+            dbContext.WebhookEndpointSubscriptions.Add(new WebhookEndpointSubscription
+            {
+                WebhookEndpointId = webhookEndpoint.Id,
+                EventType = eventType
+            });
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapToDto(webhookEndpoint);
