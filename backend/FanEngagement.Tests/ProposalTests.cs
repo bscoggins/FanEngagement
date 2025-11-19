@@ -400,8 +400,7 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
             Title = "Org 1 Proposal",
             CreatedByUserId = user1Id
         };
-        var response1 = await _client.PostAsJsonAsync($"/organizations/{org1Id}/proposals", request1);
-        var proposal1 = await response1.Content.ReadFromJsonAsync<ProposalDto>();
+        await _client.PostAsJsonAsync($"/organizations/{org1Id}/proposals", request1);
 
         var request2 = new CreateProposalRequest
         {

@@ -17,7 +17,7 @@ public class OrganizationProposalsController(IProposalService proposalService) :
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return BadRequest(new { Error = ex.Message });
         }
     }
 

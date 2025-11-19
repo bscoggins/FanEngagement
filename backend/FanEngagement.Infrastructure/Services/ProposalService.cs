@@ -201,7 +201,6 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         }
 
         var option = await dbContext.ProposalOptions
-            .Include(o => o.Votes)
             .FirstOrDefaultAsync(o => o.Id == optionId && o.ProposalId == proposalId, cancellationToken);
 
         if (option is null)
@@ -210,7 +209,10 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         }
 
         // Check if any votes exist for this option
-        if (option.Votes.Any())
+        var hasVotes = await dbContext.Votes
+            .AnyAsync(v => v.ProposalOptionId == optionId, cancellationToken);
+        
+        if (hasVotes)
         {
             throw new InvalidOperationException("Cannot delete option that has votes.");
         }
@@ -225,7 +227,6 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
     {
         var proposal = await dbContext.Proposals
             .Include(p => p.Options)
-            .Include(p => p.Votes)
             .FirstOrDefaultAsync(p => p.Id == proposalId, cancellationToken);
 
         if (proposal is null)
@@ -246,7 +247,10 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         }
 
         // Check if user has already voted
-        if (proposal.Votes.Any(v => v.UserId == request.UserId))
+        var hasVoted = await dbContext.Votes
+            .AnyAsync(v => v.ProposalId == proposalId && v.UserId == request.UserId, cancellationToken);
+        
+        if (hasVoted)
         {
             throw new InvalidOperationException("User has already voted on this proposal.");
         }

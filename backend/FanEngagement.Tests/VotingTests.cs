@@ -132,7 +132,7 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
     public async Task CastVote_CalculatesVotingPower_BasedOnShareBalances()
     {
         // Arrange
-        var (orgId, userId, shareTypeId, proposalId, optionId) = await SetupTestDataAsync();
+        var (orgId, userId, _, proposalId, optionId) = await SetupTestDataAsync();
 
         // Create another share type with different voting weight
         var shareType2Request = new CreateShareTypeRequest
