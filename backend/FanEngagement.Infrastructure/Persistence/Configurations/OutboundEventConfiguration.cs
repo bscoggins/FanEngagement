@@ -19,9 +19,16 @@ public class OutboundEventConfiguration : IEntityTypeConfiguration<OutboundEvent
         builder.Property(x => x.LastAttemptAt);
         builder.Property(x => x.CreatedAt).IsRequired();
 
+        builder.HasOne(x => x.Organization)
+            .WithMany(o => o.OutboundEvents)
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasOne(x => x.WebhookEndpoint)
             .WithMany(wh => wh.OutboundEvents)
             .HasForeignKey(x => x.WebhookEndpointId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(x => new { x.OrganizationId, x.Status, x.CreatedAt });
     }
 }

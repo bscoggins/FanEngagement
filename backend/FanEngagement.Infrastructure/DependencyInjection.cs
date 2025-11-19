@@ -1,9 +1,12 @@
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
+using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Application.ShareTypes;
 using FanEngagement.Application.Users;
+using FanEngagement.Application.WebhookEndpoints;
+using FanEngagement.Infrastructure.BackgroundServices;
 using FanEngagement.Infrastructure.Persistence;
 using FanEngagement.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +33,11 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IMembershipService, MembershipService>();
         services.AddScoped<IProposalService, ProposalService>();
+        services.AddScoped<IWebhookEndpointService, WebhookEndpointService>();
+        services.AddScoped<IOutboundEventService, OutboundEventService>();
+
+        services.AddHttpClient();
+        services.AddHostedService<WebhookDeliveryBackgroundService>();
 
         return services;
     }
