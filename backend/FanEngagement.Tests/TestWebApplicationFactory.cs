@@ -16,12 +16,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration((context, config) =>
-        {
-            // Override environment to ensure test behavior
-            context.HostingEnvironment.EnvironmentName = "Testing";
-        });
-
         builder.ConfigureServices(services =>
         {
             // Remove background service that accesses database
@@ -33,37 +27,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(hostedServiceDescriptor);
             }
 
-            // Remove all DbContext-related registrations completely
-            // We need to do this before any service provider is built
+            // Remove the existing DbContext registration
             services.RemoveAll<DbContextOptions<FanEngagementDbContext>>();
-            services.RemoveAll<DbContextOptions>();
             services.RemoveAll<FanEngagementDbContext>();
 
-            // Add in-memory database for testing
-            services.AddDbContext<FanEngagementDbContext>((sp, options) =>
+            // Add in-memory database for testing - use a shared database name per factory instance
+            services.AddDbContext<FanEngagementDbContext>(options =>
             {
                 options.UseInMemoryDatabase(_databaseName);
             });
+
+            // Build the service provider and ensure database is created
+            var serviceProvider = services.BuildServiceProvider();
+            using var scope = serviceProvider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+            db.Database.EnsureCreated();
         });
-
-        builder.UseEnvironment("Testing");
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            try
-            {
-                using var scope = Services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-                db.Database.EnsureDeleted();
-            }
-            catch
-            {
-                // Ignore cleanup errors in tests
-            }
-        }
-        base.Dispose(disposing);
     }
 }
