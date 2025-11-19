@@ -221,23 +221,23 @@ public class WebhookDeliveryBackgroundService(
             // Create HMAC signature
             var signature = GenerateHmacSignature(outboundEvent.Payload, endpoint.Secret);
 
-            // Prepare request
+            // Prepare and send request
             using var request = new HttpRequestMessage(HttpMethod.Post, endpoint.Url)
             {
                 Content = new StringContent(outboundEvent.Payload, Encoding.UTF8, "application/json")
             };
 
-            // Add headers
-            request.Headers.Add("X-Webhook-Signature", signature);
-            request.Headers.Add("X-Event-Type", outboundEvent.EventType);
-            request.Headers.Add("X-Event-Id", outboundEvent.Id.ToString());
-            request.Headers.Add("X-Organization-Id", outboundEvent.OrganizationId.ToString());
+                // Add headers
+                request.Headers.Add("X-Webhook-Signature", signature);
+                request.Headers.Add("X-Event-Type", outboundEvent.EventType);
+                request.Headers.Add("X-Event-Id", outboundEvent.Id.ToString());
+                request.Headers.Add("X-Organization-Id", outboundEvent.OrganizationId.ToString());
 
-            // Send request with timeout
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(TimeSpan.FromSeconds(30));
+                // Send request with timeout
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(30));
 
-            var response = await httpClient.SendAsync(request, cts.Token);
+                var response = await httpClient.SendAsync(request, cts.Token);
 
             if (response.IsSuccessStatusCode)
             {
