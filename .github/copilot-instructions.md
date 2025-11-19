@@ -38,7 +38,7 @@ FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a 
 - Router: React Router v7
 - API client: Axios with JWT via `Authorization: Bearer <token>`
 - Auth: `AuthContext` persists token/user in `localStorage`; login via `POST /auth/login`
-- Env: `VITE_API_BASE_URL` controls API base URL. Bare backend default is `http://localhost:5049`; with Docker Compose use `http://localhost:8080`.
+- Env: `VITE_API_BASE_URL` controls API base URL. Default is `/api` (same-origin). For bare dotnet development with Vite dev server, the proxy automatically forwards `/api` requests to `http://localhost:5049`. To bypass the proxy, set `VITE_API_BASE_URL=http://localhost:5049`. With Docker Compose, use `/api` (same-origin).
 
 ### Security & JWT Configuration
 
