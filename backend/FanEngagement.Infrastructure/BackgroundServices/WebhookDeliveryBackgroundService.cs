@@ -139,7 +139,8 @@ public class WebhookDeliveryBackgroundService(
             return;
         }
 
-        var httpClient = httpClientFactory.CreateClient();
+        // Use a named HttpClient configured in DI with timeout and retry policies (see DependencyInjection.cs)
+        var httpClient = httpClientFactory.CreateClient("webhook-delivery");
         var allSucceeded = true;
 
         foreach (var endpoint in matchingEndpoints)
