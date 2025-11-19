@@ -21,6 +21,22 @@ class ApiClient {
       }
       return config;
     });
+
+    // Add response interceptor to handle 401 responses
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 && error.config?.url !== '/auth/login') {
+          // Clear auth data
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          
+          // Dispatch a custom event that AuthContext can listen to
+          window.dispatchEvent(new CustomEvent('auth:logout'));
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   getInstance(): AxiosInstance {

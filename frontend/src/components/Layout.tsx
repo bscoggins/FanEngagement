@@ -1,10 +1,27 @@
-import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // Listen for auth:logout events from the API client
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      logout();
+      navigate('/login');
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, [logout, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="layout">
@@ -17,9 +34,9 @@ export const Layout: React.FC = () => {
             <>
               <Link to="/users">Users</Link>
               <span className="user-info">
-                Welcome, {user?.displayName || user?.email}
+                Logged in as {user?.email}
               </span>
-              <button onClick={logout} className="logout-button">
+              <button onClick={handleLogout} className="logout-button">
                 Logout
               </button>
             </>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { LoginRequest, LoginResponse } from '../types/api';
 import { authApi } from '../api/authApi';
 
@@ -12,53 +12,57 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<LoginResponse | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  // Load token and user from localStorage on mount
-  useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-    
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        // Clear invalid data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
-        console.error('Failed to parse stored user data:', error);
-      }
+// Helper function to load auth data from localStorage
+const loadAuthFromStorage = (): { token: string | null; user: LoginResponse | null } => {
+  const storedToken = localStorage.getItem('authToken');
+  const storedUser = localStorage.getItem('authUser');
+  
+  if (storedToken && storedUser) {
+    try {
+      return {
+        token: storedToken,
+        user: JSON.parse(storedUser),
+      };
+    } catch (error) {
+      // Clear invalid data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      console.error('Failed to parse stored user data:', error);
     }
-  }, []);
+  }
+  
+  return { token: null, user: null };
+};
 
-  const login = async (request: LoginRequest) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [authState, setAuthState] = useState<{ token: string | null; user: LoginResponse | null }>(() => {
+    // Initialize state from localStorage synchronously
+    return loadAuthFromStorage();
+  });
+
+  const login = useCallback(async (request: LoginRequest) => {
     const response = await authApi.login(request);
     
     // Store token and user in state
-    setToken(response.token);
-    setUser(response);
+    setAuthState({ token: response.token, user: response });
     
     // Persist to localStorage
     localStorage.setItem('authToken', response.token);
     localStorage.setItem('authUser', JSON.stringify(response));
-  };
+  }, []);
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
+  const logout = useCallback(() => {
+    setAuthState({ token: null, user: null });
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
-  };
+  }, []);
 
   const value = {
-    user,
-    token,
+    user: authState.user,
+    token: authState.token,
     login,
     logout,
-    isAuthenticated: !!token,
+    isAuthenticated: !!authState.token,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

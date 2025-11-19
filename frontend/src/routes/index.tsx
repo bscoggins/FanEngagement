@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from '../components/Layout';
+import { ProtectedRoute } from '../components/ProtectedRoute';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { UsersPage } from '../pages/UsersPage';
@@ -20,11 +21,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'users',
-        element: <UsersPage />,
+        element: (
+          <ProtectedRoute>
+            <UsersPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'users/:id/edit',
-        element: <UserEditPage />,
+        element: (
+          <ProtectedRoute>
+            <UserEditPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
