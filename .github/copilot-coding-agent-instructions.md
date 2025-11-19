@@ -67,7 +67,8 @@ Notes:
 - The Development HTTP URL (bare dotnet) is `http://localhost:5049` (see `backend/FanEngagement.Api/Properties/launchSettings.json`).
 - The Docker Compose API URL is `http://localhost:8080` (see `docker-compose.yml`).
 - On startup the API applies pending EF Core migrations automatically.
-- The Docker Compose frontend URL is `http://localhost:3000`. Ensure the frontend build uses `VITE_API_BASE_URL=http://localhost:8080`.
+- The Docker Compose frontend URL is `http://localhost:3000`. The frontend build uses `VITE_API_BASE_URL=/api` (see line 41 of `docker-compose.yml`). The frontend container proxies `/api` requests to the backend, enabling same-origin API calls and avoiding CORS issues.
+- JWT settings must be provided: set `Jwt__Issuer`, `Jwt__Audience`, and `Jwt__SigningKey` (secure, non-empty). Compose uses env vars; override `JWT_SIGNING_KEY` in `.env` or CI secrets.
 
 ## Current API Endpoints
 
