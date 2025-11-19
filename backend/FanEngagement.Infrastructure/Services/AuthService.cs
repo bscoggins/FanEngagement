@@ -6,6 +6,7 @@ using FanEngagement.Application.Authentication;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FanEngagement.Infrastructure.Services;
@@ -14,11 +15,13 @@ public class AuthService : IAuthService
 {
     private readonly FanEngagementDbContext _dbContext;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(FanEngagementDbContext dbContext, IConfiguration configuration)
+    public AuthService(FanEngagementDbContext dbContext, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _dbContext = dbContext;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -100,8 +103,9 @@ public class AuthService : IAuthService
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Password verification failed due to exception. This may indicate a corrupted password hash or invalid data format.");
             return false;
         }
     }

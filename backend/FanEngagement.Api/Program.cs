@@ -16,9 +16,19 @@ var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 var jwtSigningKey = builder.Configuration["Jwt:SigningKey"];
 
-if (string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience) || string.IsNullOrEmpty(jwtSigningKey))
+if (string.IsNullOrEmpty(jwtIssuer))
 {
-    throw new InvalidOperationException("JWT configuration is missing. Please ensure Jwt:Issuer, Jwt:Audience, and Jwt:SigningKey are configured.");
+    throw new InvalidOperationException("JWT Issuer is not configured. Please set Jwt:Issuer in appsettings.json or environment variables.");
+}
+
+if (string.IsNullOrEmpty(jwtAudience))
+{
+    throw new InvalidOperationException("JWT Audience is not configured. Please set Jwt:Audience in appsettings.json or environment variables.");
+}
+
+if (string.IsNullOrEmpty(jwtSigningKey))
+{
+    throw new InvalidOperationException("JWT SigningKey is not configured or is empty. Please set a valid Jwt:SigningKey in appsettings.json or environment variables. This key is required to sign and validate JWT tokens.");
 }
 
 builder.Services.AddAuthentication(options =>
