@@ -12,11 +12,24 @@ builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure CORS to allow frontend access
+var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"];
+string[] origins;
+if (!string.IsNullOrWhiteSpace(allowedOrigins))
+{
+    origins = allowedOrigins
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}
+else
+{
+    // Default to localhost for development if not set
+    origins = new[] { "http://localhost:3000", "http://localhost:5173" };
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
+        policy.WithOrigins(origins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

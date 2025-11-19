@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { LoginRequest, LoginResponse } from '../types/api';
 import { authApi } from '../api/authApi';
 
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return loadAuthFromStorage();
   });
 
-  const login = async (request: LoginRequest) => {
+  const login = useCallback(async (request: LoginRequest) => {
     const response = await authApi.login(request);
     
     // Store token and user in state
@@ -49,13 +49,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Persist to localStorage
     localStorage.setItem('authToken', response.token);
     localStorage.setItem('authUser', JSON.stringify(response));
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setAuthState({ token: null, user: null });
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
-  };
+  }, []);
 
   const value = {
     user: authState.user,

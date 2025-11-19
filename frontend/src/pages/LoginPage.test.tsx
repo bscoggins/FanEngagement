@@ -137,7 +137,12 @@ describe('LoginPage', () => {
 
   it('disables submit button while logging in', async () => {
     vi.mocked(authApi.login).mockImplementation(() => {
-      return new Promise(resolve => setTimeout(resolve, 100));
+      return new Promise(resolve => setTimeout(() => resolve({
+        token: 'test-token',
+        userId: 'user-123',
+        email: 'test@example.com',
+        displayName: 'Test User'
+      }), 100));
     });
 
     renderLoginPage();
