@@ -116,19 +116,17 @@ public class WebhookDeliveryBackgroundService(
         CancellationToken cancellationToken)
     {
         // Find active webhook endpoints for this organization subscribed to this event type
-        // Filter endpoints in the database by organization, active status, and subscribed event type
-        var matchingEndpoints = await dbContext.WebhookEndpoints
-            .Where(w => w.OrganizationId == outboundEvent.OrganizationId
-                     && w.IsActive
-                     && EF.Functions.ILike(
-                         // Use PostgreSQL string_to_array to split SubscribedEvents and check for event type
-                         // This translates to: outboundEvent.EventType ILIKE ANY(string_to_array(w.SubscribedEvents, ','))
-                         outboundEvent.EventType,
-                         // Use raw SQL to split SubscribedEvents
-                         $"ANY(string_to_array({nameof(w.SubscribedEvents)}, ','))"
-                     )
-            )
+        var webhookEndpoints = await dbContext.WebhookEndpoints
+            .Where(w => w.OrganizationId == outboundEvent.OrganizationId 
+                     && w.IsActive)
             .ToListAsync(cancellationToken);
+
+        // Filter by subscribed events - use exact case-sensitive matching for consistency
+        var matchingEndpoints = webhookEndpoints
+            .Where(w => w.SubscribedEvents.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Any(e => e.Trim().Equals(outboundEvent.EventType, StringComparison.Ordinal)))
+            .ToList();
+
         if (matchingEndpoints.Count == 0)
         {
             logger.LogWarning(
@@ -141,8 +139,7 @@ public class WebhookDeliveryBackgroundService(
             return;
         }
 
-        // Use a named HttpClient configured in DI with timeout and retry policies (see DependencyInjection.cs)
-        var httpClient = httpClientFactory.CreateClient("webhook-delivery");
+        var httpClient = httpClientFactory.CreateClient();
         var allSucceeded = true;
 
         foreach (var endpoint in matchingEndpoints)
@@ -224,23 +221,23 @@ public class WebhookDeliveryBackgroundService(
             // Create HMAC signature
             var signature = GenerateHmacSignature(outboundEvent.Payload, endpoint.Secret);
 
-            // Prepare and send request
+            // Prepare request
             using var request = new HttpRequestMessage(HttpMethod.Post, endpoint.Url)
             {
                 Content = new StringContent(outboundEvent.Payload, Encoding.UTF8, "application/json")
             };
 
-                // Add headers
-                request.Headers.Add("X-Webhook-Signature", signature);
-                request.Headers.Add("X-Event-Type", outboundEvent.EventType);
-                request.Headers.Add("X-Event-Id", outboundEvent.Id.ToString());
-                request.Headers.Add("X-Organization-Id", outboundEvent.OrganizationId.ToString());
+            // Add headers
+            request.Headers.Add("X-Webhook-Signature", signature);
+            request.Headers.Add("X-Event-Type", outboundEvent.EventType);
+            request.Headers.Add("X-Event-Id", outboundEvent.Id.ToString());
+            request.Headers.Add("X-Organization-Id", outboundEvent.OrganizationId.ToString());
 
-                // Send request with timeout
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(30));
+            // Send request with timeout
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(30));
 
-                var response = await httpClient.SendAsync(request, cts.Token);
+            var response = await httpClient.SendAsync(request, cts.Token);
 
             if (response.IsSuccessStatusCode)
             {

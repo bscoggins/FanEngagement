@@ -18,7 +18,7 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
             var webhook = await webhookEndpointService.CreateAsync(organizationId, request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { organizationId, webhookId = webhook.Id }, webhook);
         }
-        catch (EntityNotFoundException ex)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
             return NotFound(new { error = ex.Message });
         }

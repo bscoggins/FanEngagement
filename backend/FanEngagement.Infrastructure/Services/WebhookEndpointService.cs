@@ -50,20 +50,12 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             OrganizationId = organizationId,
             Url = request.Url,
             Secret = request.Secret,
+            SubscribedEvents = string.Join(",", request.SubscribedEvents),
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
         dbContext.WebhookEndpoints.Add(webhookEndpoint);
-        // Add subscriptions for each event type
-        foreach (var eventType in request.SubscribedEvents)
-        {
-            dbContext.WebhookEndpointSubscriptions.Add(new WebhookEndpointSubscription
-            {
-                WebhookEndpointId = webhookEndpoint.Id,
-                EventType = eventType
-            });
-        }
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapToDto(webhookEndpoint);
@@ -161,9 +153,13 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
         var subscribedEvents = webhook.SubscribedEvents
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Where(e => !string.IsNullOrWhiteSpace(e))
-            .Where(e => !string.IsNullOrWhiteSpace(e))
             .Select(e => e.Trim())
             .ToList();
+
+        // Create a masked version of the secret for display purposes
+        var maskedSecret = webhook.Secret.Length > 6
+            ? $"{webhook.Secret.Substring(0, 3)}***{webhook.Secret.Substring(webhook.Secret.Length - 3)}"
+            : "***";
 
         return new WebhookEndpointDto(
             webhook.Id,
@@ -171,7 +167,8 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             webhook.Url,
             subscribedEvents,
             webhook.IsActive,
-            webhook.CreatedAt
+            webhook.CreatedAt,
+            maskedSecret
         );
     }
 

@@ -48,24 +48,6 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
             // Step 3: Make OrganizationId non-nullable
             migrationBuilder.AlterColumn<Guid>(
                 name: "OrganizationId",
-            // 1. Add OrganizationId as nullable
-            migrationBuilder.AddColumn<Guid>(
-                name: "OrganizationId",
-                table: "OutboundEvents",
-                type: "uuid",
-                nullable: true);
-
-            // 2. Populate OrganizationId for existing rows using WebhookEndpoint.OrganizationId
-            migrationBuilder.Sql(@"
-                UPDATE ""OutboundEvents"" oe
-                SET ""OrganizationId"" = we.""OrganizationId""
-                FROM ""WebhookEndpoints"" we
-                WHERE oe.""WebhookEndpointId"" = we.""Id"";
-            ");
-
-            // 3. Alter OrganizationId to be non-nullable
-            migrationBuilder.AlterColumn<Guid>(
-                name: "OrganizationId",
                 table: "OutboundEvents",
                 type: "uuid",
                 nullable: false,
@@ -73,7 +55,6 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 oldType: "uuid",
                 oldNullable: true);
 
-            // 4. Add index and foreign key
             migrationBuilder.CreateIndex(
                 name: "IX_OutboundEvents_OrganizationId_Status_CreatedAt",
                 table: "OutboundEvents",
