@@ -157,4 +157,34 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
         var users = await response.Content.ReadFromJsonAsync<List<UserDto>>();
         Assert.NotNull(users);
     }
+
+    [Fact]
+    public async Task Login_ReturnsRoleInResponse_ForRegularUser()
+    {
+        // Arrange - Create a test user first
+        var password = "TestPassword123!";
+        var createRequest = new CreateUserRequest
+        {
+            Email = $"test-{Guid.NewGuid()}@example.com",
+            DisplayName = "Test User",
+            Password = password
+        };
+        
+        await _client.PostAsJsonAsync("/users", createRequest);
+
+        var loginRequest = new LoginRequest
+        {
+            Email = createRequest.Email,
+            Password = password
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        Assert.NotNull(loginResponse);
+        Assert.Equal("User", loginResponse!.Role);
+    }
 }
