@@ -11,12 +11,16 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 // Apply pending migrations on startup (best-effort; keep controllers thin)
+// Skip migrations for InMemory database (used in tests)
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-        dbContext.Database.Migrate();
+        if (dbContext.Database.IsRelational())
+        {
+            dbContext.Database.Migrate();
+        }
     }
     catch (Exception ex)
     {

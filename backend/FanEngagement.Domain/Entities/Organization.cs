@@ -11,4 +11,5 @@ public class Organization
     public ICollection<ShareType> ShareTypes { get; set; } = new List<ShareType>();
     public ICollection<Proposal> Proposals { get; set; } = new List<Proposal>();
     public ICollection<WebhookEndpoint> WebhookEndpoints { get; set; } = new List<WebhookEndpoint>();
+    public ICollection<OutboundEvent> OutboundEvents { get; set; } = new List<OutboundEvent>();
 }
