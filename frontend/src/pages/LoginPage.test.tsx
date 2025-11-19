@@ -17,7 +17,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    // Suppress console.error for cleaner test output
+    // Suppress console.error from LoginPage error logging for cleaner test output
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
   
