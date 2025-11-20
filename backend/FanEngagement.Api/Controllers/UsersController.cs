@@ -40,6 +40,19 @@ public class UsersController(IUserService userService, IMembershipService member
     [HttpGet("{id:guid}/memberships")]
     public async Task<ActionResult> GetUserMemberships(Guid id, CancellationToken cancellationToken)
     {
+        // Only allow access if the requesting user is the target user or has Admin role
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var requestingUserId))
+        {
+            return Forbid();
+        }
+
+        // Allow if user is viewing their own memberships or is an Admin
+        if (requestingUserId != id && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
         var memberships = await membershipService.GetByUserIdAsync(id, cancellationToken);
         return Ok(memberships);
     }
