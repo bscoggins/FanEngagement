@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Listen for auth:logout events from the API client
@@ -33,6 +33,7 @@ export const Layout: React.FC = () => {
           ) : (
             <>
               <Link to="/users">Users</Link>
+              {isAdmin && <Link to="/admin/dev-tools">Dev Tools</Link>}
               <span className="user-info">
                 Logged in as {user?.email}
               </span>
