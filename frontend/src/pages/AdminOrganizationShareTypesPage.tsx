@@ -26,17 +26,40 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchData = async () => {
-    if (!orgId) {
-      setError('Invalid organization ID');
-      setIsLoading(false);
-      return;
-    }
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!orgId) {
+        setError('Invalid organization ID');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const [orgData, shareTypesData] = await Promise.all([
+          organizationsApi.getById(orgId),
+          shareTypesApi.getByOrganization(orgId),
+        ]);
+        
+        setOrganization(orgData);
+        setShareTypes(shareTypesData);
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        setError('Failed to load data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [orgId]);
+
+  const refetchData = async () => {
+    if (!orgId) return;
 
     try {
-      setIsLoading(true);
-      setError(null);
-      
       const [orgData, shareTypesData] = await Promise.all([
         organizationsApi.getById(orgId),
         shareTypesApi.getByOrganization(orgId),
@@ -46,15 +69,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       setShareTypes(shareTypesData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
-      setError('Failed to load data. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [orgId]);
 
   const handleCreateNew = () => {
     setEditingId(null);
@@ -134,7 +150,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       });
       
       // Refresh share types
-      await fetchData();
+      await refetchData();
     } catch (err) {
       console.error('Failed to save share type:', err);
       if (err && typeof err === 'object' && 'response' in err) {

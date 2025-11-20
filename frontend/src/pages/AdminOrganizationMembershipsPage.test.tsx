@@ -232,7 +232,7 @@ describe('AdminOrganizationMembershipsPage', () => {
     vi.mocked(membershipsApi.delete).mockResolvedValueOnce(undefined);
     
     // Mock confirm dialog
-    global.confirm = vi.fn(() => true);
+    window.confirm = vi.fn(() => true);
     
     renderPage();
     

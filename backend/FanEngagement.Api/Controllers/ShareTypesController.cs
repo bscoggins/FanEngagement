@@ -1,10 +1,12 @@
 using FanEngagement.Application.ShareTypes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("organizations/{organizationId:guid}/share-types")]
+[Authorize]
 public class ShareTypesController(IShareTypeService shareTypeService) : ControllerBase
 {
     [HttpPost]
@@ -36,14 +38,7 @@ public class ShareTypesController(IShareTypeService shareTypeService) : Controll
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> Update(Guid organizationId, Guid id, [FromBody] UpdateShareTypeRequest request, CancellationToken cancellationToken)
     {
-        // Verify the share type exists and belongs to the organization
-        var existing = await shareTypeService.GetByIdAsync(id, cancellationToken);
-        if (existing is null || existing.OrganizationId != organizationId)
-        {
-            return NotFound();
-        }
-
-        var shareType = await shareTypeService.UpdateAsync(id, request, cancellationToken);
+        var shareType = await shareTypeService.UpdateAsync(organizationId, id, request, cancellationToken);
         if (shareType is null)
         {
             return NotFound();

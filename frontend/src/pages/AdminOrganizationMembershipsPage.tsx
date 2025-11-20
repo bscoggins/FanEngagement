@@ -28,17 +28,42 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
     }
   };
 
-  const fetchData = async () => {
-    if (!orgId) {
-      setError('Invalid organization ID');
-      setIsLoading(false);
-      return;
-    }
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!orgId) {
+        setError('Invalid organization ID');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const [orgData, membershipsData, usersData] = await Promise.all([
+          organizationsApi.getById(orgId),
+          membershipsApi.getByOrganizationWithUserDetails(orgId),
+          usersApi.getAll(),
+        ]);
+        
+        setOrganization(orgData);
+        setMemberships(membershipsData);
+        setUsers(usersData);
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        setError('Failed to load data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [orgId]);
+
+  const refetchData = async () => {
+    if (!orgId) return;
 
     try {
-      setIsLoading(true);
-      setError(null);
-      
       const [orgData, membershipsData, usersData] = await Promise.all([
         organizationsApi.getById(orgId),
         membershipsApi.getByOrganizationWithUserDetails(orgId),
@@ -50,15 +75,8 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       setUsers(usersData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
-      setError('Failed to load data. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [orgId]);
 
   const handleAddMembership = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +98,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       setSelectedRole('Member');
       
       // Refresh memberships
-      await fetchData();
+      await refetchData();
     } catch (err) {
       console.error('Failed to add membership:', err);
       if (err && typeof err === 'object' && 'response' in err) {
@@ -113,7 +131,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       setSuccessMessage('Membership removed successfully!');
       
       // Refresh memberships
-      await fetchData();
+      await refetchData();
     } catch (err) {
       console.error('Failed to remove membership:', err);
       setError('Failed to remove membership. Please try again.');
