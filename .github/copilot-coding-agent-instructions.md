@@ -110,9 +110,9 @@ Notes:
 - Auth & Users:
    - `POST /auth/login` → JWT login
    - `POST /users` → Create user
-   - `GET /users` → List users
-   - `GET /users/{id}` → Get user by ID
-   - `PUT /users/{id}` → Update user
+   - `GET /users` → List users (returns User objects with role field: User or Admin)
+   - `GET /users/{id}` → Get user by ID (returns User object with role field)
+   - `PUT /users/{id}` → Update user (accepts optional role field for role changes)
    - `DELETE /users/{id}` → Delete user
 - Organizations & Memberships:
    - `POST /organizations` → Create organization
@@ -244,8 +244,10 @@ When implementing a frontend feature:
    - Add/update route in `frontend/src/routes/`.
    - Add/update page components in `frontend/src/pages/` and shared components in `frontend/src/components/`.
    - For admin features, use the `/admin` route tree with `AdminLayout` and `AdminRoute` for access control.
+   - Current admin routes: `/admin` (dashboard), `/admin/users` (user list), `/admin/users/:userId` (user detail/edit), `/admin/organizations`, `/admin/dev-tools`
 2. API Integration
    - Add/update `frontend/src/api/*Api.ts` using the shared `apiClient` (Axios).
+   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`
    - Ensure backend endpoints exist and are documented.
 3. Auth
    - Use `AuthContext` and `ProtectedRoute` for protected pages.

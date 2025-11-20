@@ -143,15 +143,17 @@ When implementing a new feature or endpoint:
 
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
 - **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
+  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`
 - **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages.
 - **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Only users with Admin role can access.
+  - Admin routes: `/admin` (dashboard), `/admin/users` (user list), `/admin/users/:userId` (user detail/edit), `/admin/organizations`, `/admin/dev-tools`
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
 ### Current Entities
 
 - `Organization`: Top-level organization entity
 - `OrganizationMembership`: User membership in organizations with roles
-- `User`: User/member entity
+- `User`: User/member entity with Email, DisplayName, PasswordHash, Role (User or Admin), CreatedAt
 - `ShareType`: Type of shares issued by organization
 - `ShareBalance`: User's balance of a specific share type
 - `ShareIssuance`: Record of share issuance events
@@ -168,9 +170,9 @@ When implementing a new feature or endpoint:
 - Auth & Users:
     - `POST /auth/login` → JWT login
     - `POST /users` → Create user
-    - `GET /users` → List users
-    - `GET /users/{id}` → Get user by ID
-    - `PUT /users/{id}` → Update user
+    - `GET /users` → List users (returns User objects including role field)
+    - `GET /users/{id}` → Get user by ID (returns User object including role field)
+    - `PUT /users/{id}` → Update user (accepts optional role field for admins to change user roles)
     - `DELETE /users/{id}` → Delete user
 - Organizations & Memberships:
     - `POST /organizations` → Create organization
