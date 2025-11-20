@@ -56,24 +56,89 @@ public class DevDataSeedingService : IDevDataSeedingService
 
         if (techOrg != null && alice != null && bob != null && creativeOrg != null && charlie != null)
         {
-            // Seed Memberships
-            if (await EnsureMembershipAsync(techOrg.Id, alice.Id, OrganizationRole.OrgAdmin, cancellationToken))
-                result.MembershipsCreated++;
-            if (await EnsureMembershipAsync(techOrg.Id, bob.Id, OrganizationRole.Member, cancellationToken))
-                result.MembershipsCreated++;
-            if (await EnsureMembershipAsync(creativeOrg.Id, charlie.Id, OrganizationRole.OrgAdmin, cancellationToken))
-                result.MembershipsCreated++;
-            if (await EnsureMembershipAsync(creativeOrg.Id, alice.Id, OrganizationRole.Member, cancellationToken))
-                result.MembershipsCreated++;
+            // Seed Memberships (batch)
+            var membershipSpecs = new[]
+            {
+                (OrgId: techOrg.Id, UserId: alice.Id, Role: OrganizationRole.OrgAdmin),
+                (OrgId: techOrg.Id, UserId: bob.Id, Role: OrganizationRole.Member),
+                (OrgId: creativeOrg.Id, UserId: charlie.Id, Role: OrganizationRole.OrgAdmin),
+                (OrgId: creativeOrg.Id, UserId: alice.Id, Role: OrganizationRole.Member)
+            };
 
-            // Seed Share Types
-            var votingShare = await EnsureShareTypeAsync(techOrg.Id, "Voting Share", "VOTE", "Standard voting rights", 1.0m, null, true, cancellationToken);
-            var founderShare = await EnsureShareTypeAsync(techOrg.Id, "Founder Share", "FNDR", "Extra voting power for founders", 10.0m, 100, false, cancellationToken);
-            var creativeShare = await EnsureShareTypeAsync(creativeOrg.Id, "Creative Token", "CRTV", "Voting token for creative decisions", 1.0m, null, true, cancellationToken);
-            
-            if (votingShare != null) result.ShareTypesCreated++;
-            if (founderShare != null) result.ShareTypesCreated++;
-            if (creativeShare != null) result.ShareTypesCreated++;
+            // Load all existing memberships for these users and orgs
+            var orgIds = new[] { techOrg.Id, creativeOrg.Id };
+            var userIds = new[] { alice.Id, bob.Id, charlie.Id };
+            var existingMemberships = await _dbContext.OrganizationMemberships
+                .Where(m => orgIds.Contains(m.OrganizationId) && userIds.Contains(m.UserId))
+                .ToListAsync(cancellationToken);
+
+            var membershipsToAdd = new List<OrganizationMembership>();
+            foreach (var spec in membershipSpecs)
+            {
+                var alreadyExists = existingMemberships.Any(m => m.OrganizationId == spec.OrgId && m.UserId == spec.UserId);
+                if (!alreadyExists)
+                {
+                    membershipsToAdd.Add(new OrganizationMembership
+                    {
+                        Id = Guid.NewGuid(),
+                        OrganizationId = spec.OrgId,
+                        UserId = spec.UserId,
+                        Role = spec.Role,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                    result.MembershipsCreated++;
+                    _logger.LogDebug("Prepared membership for user {UserId} in org {OrganizationId}", spec.UserId, spec.OrgId);
+                }
+            }
+
+            if (membershipsToAdd.Count > 0)
+            {
+                _dbContext.OrganizationMemberships.AddRange(membershipsToAdd);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            // Seed Share Types (batch)
+            var shareTypeSpecs = new[]
+            {
+                new { OrganizationId = techOrg.Id, Name = "Voting Share", Symbol = "VOTE", Description = "Standard voting rights", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true },
+                new { OrganizationId = techOrg.Id, Name = "Founder Share", Symbol = "FNDR", Description = "Extra voting power for founders", VotingWeight = 10.0m, MaxSupply = (decimal?)100, IsTransferable = false },
+                new { OrganizationId = creativeOrg.Id, Name = "Creative Token", Symbol = "CRTV", Description = "Voting token for creative decisions", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true }
+            };
+
+            var shareTypeOrgIds = shareTypeSpecs.Select(s => s.OrganizationId).Distinct().ToList();
+            var symbols = shareTypeSpecs.Select(s => s.Symbol).Distinct().ToList();
+            var existingShareTypes = await _dbContext.ShareTypes
+                .Where(st => shareTypeOrgIds.Contains(st.OrganizationId) && symbols.Contains(st.Symbol))
+                .ToListAsync(cancellationToken);
+
+            var shareTypesToAdd = new List<ShareType>();
+            foreach (var spec in shareTypeSpecs)
+            {
+                var alreadyExists = existingShareTypes.Any(st => st.OrganizationId == spec.OrganizationId && st.Symbol == spec.Symbol);
+                if (!alreadyExists)
+                {
+                    shareTypesToAdd.Add(new ShareType
+                    {
+                        Id = Guid.NewGuid(),
+                        OrganizationId = spec.OrganizationId,
+                        Name = spec.Name,
+                        Symbol = spec.Symbol,
+                        Description = spec.Description,
+                        VotingWeight = spec.VotingWeight,
+                        MaxSupply = spec.MaxSupply,
+                        IsTransferable = spec.IsTransferable,
+                        CreatedAt = DateTimeOffset.UtcNow
+                    });
+                    result.ShareTypesCreated++;
+                    _logger.LogDebug("Prepared share type '{Symbol}' in org {OrganizationId}", spec.Symbol, spec.OrganizationId);
+                }
+            }
+
+            if (shareTypesToAdd.Count > 0)
+            {
+                _dbContext.ShareTypes.AddRange(shareTypesToAdd);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
 
             // Fetch share types from DB
             var votingShareType = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "VOTE", cancellationToken);
@@ -92,13 +157,22 @@ public class DevDataSeedingService : IDevDataSeedingService
                     (ShareTypeId: creativeShareType.Id, UserId: alice.Id, Quantity: 75m)
                 };
 
+                // Load all potentially existing issuances at once using Contains
+                var shareTypeIds = issuanceSpecs.Select(s => s.ShareTypeId).Distinct().ToList();
+                var issuanceUserIds = issuanceSpecs.Select(s => s.UserId).Distinct().ToList();
+                var existingIssuances = await _dbContext.ShareIssuances
+                    .Where(si => shareTypeIds.Contains(si.ShareTypeId) && issuanceUserIds.Contains(si.UserId))
+                    .ToListAsync(cancellationToken);
+
                 var issuancesToAdd = new List<ShareIssuance>();
                 var balanceUpdates = new Dictionary<(Guid ShareTypeId, Guid UserId), decimal>();
 
                 foreach (var spec in issuanceSpecs)
                 {
-                    var exists = await _dbContext.ShareIssuances
-                        .AnyAsync(si => si.ShareTypeId == spec.ShareTypeId && si.UserId == spec.UserId && si.Quantity == spec.Quantity, cancellationToken);
+                    var exists = existingIssuances.Any(si => 
+                        si.ShareTypeId == spec.ShareTypeId && 
+                        si.UserId == spec.UserId && 
+                        si.Quantity == spec.Quantity);
                     
                     if (!exists)
                     {
@@ -111,11 +185,11 @@ public class DevDataSeedingService : IDevDataSeedingService
                             IssuedAt = DateTimeOffset.UtcNow
                         });
                         
-                        // Track balance updates
+                        // Track balance updates using TryGetValue
                         var key = (spec.ShareTypeId, spec.UserId);
-                        if (balanceUpdates.ContainsKey(key))
+                        if (balanceUpdates.TryGetValue(key, out var existingQuantity))
                         {
-                            balanceUpdates[key] += spec.Quantity;
+                            balanceUpdates[key] = existingQuantity + spec.Quantity;
                         }
                         else
                         {
@@ -131,14 +205,20 @@ public class DevDataSeedingService : IDevDataSeedingService
                 {
                     _dbContext.ShareIssuances.AddRange(issuancesToAdd);
                     
+                    // Load all relevant balances at once using Contains
+                    var balanceShareTypeIds = balanceUpdates.Keys.Select(k => k.ShareTypeId).Distinct().ToList();
+                    var balanceUserIds = balanceUpdates.Keys.Select(k => k.UserId).Distinct().ToList();
+                    var existingBalances = await _dbContext.ShareBalances
+                        .Where(sb => balanceShareTypeIds.Contains(sb.ShareTypeId) && balanceUserIds.Contains(sb.UserId))
+                        .ToListAsync(cancellationToken);
+                    
                     // Update or create ShareBalances for the issuances
                     foreach (var kvp in balanceUpdates)
                     {
                         var (shareTypeId, userId) = kvp.Key;
                         var quantity = kvp.Value;
                         
-                        var balance = await _dbContext.ShareBalances
-                            .FirstOrDefaultAsync(sb => sb.ShareTypeId == shareTypeId && sb.UserId == userId, cancellationToken);
+                        var balance = existingBalances.FirstOrDefault(sb => sb.ShareTypeId == shareTypeId && sb.UserId == userId);
                         
                         if (balance == null)
                         {
@@ -398,61 +478,5 @@ public class DevDataSeedingService : IDevDataSeedingService
         await _dbContext.SaveChangesAsync(cancellationToken);
         _logger.LogDebug("Created user '{Email}'", email);
         return user;
-    }
-
-    private async Task<bool> EnsureMembershipAsync(Guid organizationId, Guid userId, OrganizationRole role, CancellationToken cancellationToken)
-    {
-        var existing = await _dbContext.OrganizationMemberships
-            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
-        
-        if (existing != null)
-        {
-            _logger.LogDebug("Membership already exists for user {UserId} in org {OrganizationId}", userId, organizationId);
-            return false;
-        }
-
-        var membership = new OrganizationMembership
-        {
-            Id = Guid.NewGuid(),
-            OrganizationId = organizationId,
-            UserId = userId,
-            Role = role,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.OrganizationMemberships.Add(membership);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        _logger.LogDebug("Created membership for user {UserId} in org {OrganizationId}", userId, organizationId);
-        return true;
-    }
-
-    private async Task<ShareType?> EnsureShareTypeAsync(Guid organizationId, string name, string symbol, string? description, decimal votingWeight, decimal? maxSupply, bool isTransferable, CancellationToken cancellationToken)
-    {
-        var existing = await _dbContext.ShareTypes
-            .FirstOrDefaultAsync(st => st.OrganizationId == organizationId && st.Symbol == symbol, cancellationToken);
-        
-        if (existing != null)
-        {
-            _logger.LogDebug("ShareType '{Symbol}' already exists in org {OrganizationId}", symbol, organizationId);
-            return null;
-        }
-
-        var shareType = new ShareType
-        {
-            Id = Guid.NewGuid(),
-            OrganizationId = organizationId,
-            Name = name,
-            Symbol = symbol,
-            Description = description,
-            VotingWeight = votingWeight,
-            MaxSupply = maxSupply,
-            IsTransferable = isTransferable,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.ShareTypes.Add(shareType);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        _logger.LogDebug("Created share type '{Symbol}' in org {OrganizationId}", symbol, organizationId);
-        return shareType;
     }
 }

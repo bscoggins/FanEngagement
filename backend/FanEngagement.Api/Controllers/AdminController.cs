@@ -15,7 +15,7 @@ public class AdminController(IDevDataSeedingService devDataSeedingService, IHost
         // Only allow in Development environment
         if (!hostEnvironment.IsDevelopment())
         {
-            return StatusCode(403, new { message = "This endpoint is only available in Development environment" });
+            return Forbid();
         }
 
         var result = await devDataSeedingService.SeedDevDataAsync(cancellationToken);
