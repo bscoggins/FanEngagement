@@ -32,4 +32,16 @@ public class OrganizationsController(IOrganizationService organizationService) :
 
         return Ok(organization);
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult> Update(Guid id, [FromBody] UpdateOrganizationRequest request, CancellationToken cancellationToken)
+    {
+        var organization = await organizationService.UpdateAsync(id, request, cancellationToken);
+        if (organization is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(organization);
+    }
 }

@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Organization } from '../types/api';
+import type { Organization, UpdateOrganizationRequest } from '../types/api';
 
 export const organizationsApi = {
   getAll: async (): Promise<Organization[]> => {
@@ -9,6 +9,11 @@ export const organizationsApi = {
 
   getById: async (id: string): Promise<Organization> => {
     const response = await apiClient.get<Organization>(`/organizations/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, request: UpdateOrganizationRequest): Promise<Organization> => {
+    const response = await apiClient.put<Organization>(`/organizations/${id}`, request);
     return response.data;
   },
 };

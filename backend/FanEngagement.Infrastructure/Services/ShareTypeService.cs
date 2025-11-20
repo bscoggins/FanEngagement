@@ -38,4 +38,30 @@ public class ShareTypeService(FanEngagementDbContext dbContext) : IShareTypeServ
 
         return shareTypes;
     }
+
+    public async Task<ShareType?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.ShareTypes.AsNoTracking().FirstOrDefaultAsync(st => st.Id == id, cancellationToken);
+    }
+
+    public async Task<ShareType?> UpdateAsync(Guid id, UpdateShareTypeRequest request, CancellationToken cancellationToken = default)
+    {
+        var shareType = await dbContext.ShareTypes.FirstOrDefaultAsync(st => st.Id == id, cancellationToken);
+        
+        if (shareType == null)
+        {
+            return null;
+        }
+
+        shareType.Name = request.Name;
+        shareType.Symbol = request.Symbol;
+        shareType.Description = request.Description;
+        shareType.VotingWeight = request.VotingWeight;
+        shareType.MaxSupply = request.MaxSupply;
+        shareType.IsTransferable = request.IsTransferable;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return shareType;
+    }
 }

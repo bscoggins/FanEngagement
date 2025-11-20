@@ -17,8 +17,14 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     }
 
     [HttpGet]
-    public async Task<ActionResult> GetAll(Guid organizationId, CancellationToken cancellationToken)
+    public async Task<ActionResult> GetAll(Guid organizationId, [FromQuery] bool includeUserDetails = false, CancellationToken cancellationToken = default)
     {
+        if (includeUserDetails)
+        {
+            var membershipsWithUsers = await membershipService.GetByOrganizationWithUserDetailsAsync(organizationId, cancellationToken);
+            return Ok(membershipsWithUsers);
+        }
+
         var memberships = await membershipService.GetByOrganizationAsync(organizationId, cancellationToken);
         return Ok(memberships);
     }

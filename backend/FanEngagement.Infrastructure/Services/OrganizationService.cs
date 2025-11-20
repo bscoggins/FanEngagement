@@ -37,4 +37,21 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
     {
         return await dbContext.Organizations.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
+
+    public async Task<Organization?> UpdateAsync(Guid id, UpdateOrganizationRequest request, CancellationToken cancellationToken = default)
+    {
+        var organization = await dbContext.Organizations.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+        
+        if (organization == null)
+        {
+            return null;
+        }
+
+        organization.Name = request.Name;
+        organization.Description = request.Description;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return organization;
+    }
 }
