@@ -116,4 +116,19 @@ describe('AdminLayout', () => {
       expect(screen.getByText('Login Page')).toBeInTheDocument();
     });
   });
+
+  it('handles auth:logout event from API client', async () => {
+    renderAdminLayout();
+    
+    // Dispatch the auth:logout event (simulating a 401 from the API)
+    window.dispatchEvent(new CustomEvent('auth:logout'));
+    
+    await waitFor(() => {
+      expect(screen.getByText('Login Page')).toBeInTheDocument();
+    });
+    
+    // Verify localStorage was cleared
+    expect(localStorage.getItem('authToken')).toBeNull();
+    expect(localStorage.getItem('authUser')).toBeNull();
+  });
 });
