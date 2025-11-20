@@ -21,6 +21,13 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<'OrgAdmin' | 'Member'>('Member');
   const [isAdding, setIsAdding] = useState(false);
 
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'OrgAdmin' || value === 'Member') {
+      setSelectedRole(value);
+    }
+  };
+
   const fetchData = async () => {
     if (!orgId) {
       setError('Invalid organization ID');
@@ -275,7 +282,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
               <select
                 id="role"
                 value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as 'OrgAdmin' | 'Member')}
+                onChange={handleRoleChange}
                 required
                 style={{
                   width: '100%',

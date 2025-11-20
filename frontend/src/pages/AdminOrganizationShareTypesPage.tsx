@@ -99,6 +99,10 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     });
   };
 
+  const handleIsTransferableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, isTransferable: e.target.value === 'true' }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orgId) return;
@@ -155,8 +159,14 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
     } else if (name === 'votingWeight' || name === 'maxSupply') {
-      const numValue = value === '' ? undefined : parseFloat(value);
-      setFormData((prev) => ({ ...prev, [name]: numValue }));
+      if (value === '') {
+        setFormData((prev) => ({ ...prev, [name]: undefined }));
+      } else {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+          setFormData((prev) => ({ ...prev, [name]: numValue }));
+        }
+      }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -407,7 +417,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   id="isTransferable"
                   name="isTransferable"
                   value={formData.isTransferable ? 'true' : 'false'}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, isTransferable: e.target.value === 'true' }))}
+                  onChange={handleIsTransferableChange}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
