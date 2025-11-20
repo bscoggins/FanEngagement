@@ -185,16 +185,9 @@ public class DevDataSeedingService : IDevDataSeedingService
                             IssuedAt = DateTimeOffset.UtcNow
                         });
                         
-                        // Track balance updates using TryGetValue
+                        // Track balance updates using ternary operator
                         var key = (spec.ShareTypeId, spec.UserId);
-                        if (balanceUpdates.TryGetValue(key, out var existingQuantity))
-                        {
-                            balanceUpdates[key] = existingQuantity + spec.Quantity;
-                        }
-                        else
-                        {
-                            balanceUpdates[key] = spec.Quantity;
-                        }
+                        balanceUpdates[key] = (balanceUpdates.TryGetValue(key, out var existingQuantity) ? existingQuantity : 0) + spec.Quantity;
                         
                         result.ShareIssuancesCreated++;
                         _logger.LogDebug("Prepared share issuance for user {UserId}, quantity {Quantity}", spec.UserId, spec.Quantity);
@@ -268,11 +261,18 @@ public class DevDataSeedingService : IDevDataSeedingService
                     }
                 };
 
+                // Batch existence check for proposals
+                var proposalOrgIds = proposalSpecs.Select(s => s.OrganizationId).Distinct().ToList();
+                var proposalTitles = proposalSpecs.Select(s => s.Title).Distinct().ToList();
+                var existingProposals = await _dbContext.Proposals
+                    .Where(p => proposalOrgIds.Contains(p.OrganizationId) && proposalTitles.Contains(p.Title))
+                    .ToListAsync(cancellationToken);
+
                 var proposalsToAdd = new List<Proposal>();
                 foreach (var spec in proposalSpecs)
                 {
-                    var exists = await _dbContext.Proposals
-                        .AnyAsync(p => p.OrganizationId == spec.OrganizationId && p.Title == spec.Title, cancellationToken);
+                    var exists = existingProposals.Any(p =>
+                        p.OrganizationId == spec.OrganizationId && p.Title == spec.Title);
                     
                     if (!exists)
                     {
@@ -383,11 +383,15 @@ public class DevDataSeedingService : IDevDataSeedingService
                 // Seed Votes (batch)
                 if (techProposal != null && yesOption != null && noOption != null)
                 {
+                    // Batch vote existence check
+                    var voteUserIds = new[] { alice.Id, bob.Id };
+                    var existingVotes = await _dbContext.Votes
+                        .Where(v => v.ProposalId == techProposal.Id && voteUserIds.Contains(v.UserId))
+                        .ToListAsync(cancellationToken);
+
                     var votesToAdd = new List<Vote>();
                     
-                    var aliceVoteExists = await _dbContext.Votes
-                        .AnyAsync(v => v.ProposalId == techProposal.Id && v.UserId == alice.Id, cancellationToken);
-                    if (!aliceVoteExists)
+                    if (!existingVotes.Any(v => v.UserId == alice.Id))
                     {
                         votesToAdd.Add(new Vote
                         {
@@ -401,9 +405,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                         result.VotesCreated++;
                     }
                     
-                    var bobVoteExists = await _dbContext.Votes
-                        .AnyAsync(v => v.ProposalId == techProposal.Id && v.UserId == bob.Id, cancellationToken);
-                    if (!bobVoteExists)
+                    if (!existingVotes.Any(v => v.UserId == bob.Id))
                     {
                         votesToAdd.Add(new Vote
                         {
