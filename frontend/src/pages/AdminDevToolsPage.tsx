@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
 import { adminApi, type DevDataSeedingResult } from '../api/adminApi';
-import { useAuth } from '../auth/AuthContext';
-import { Navigate } from 'react-router-dom';
 
 export const AdminDevToolsPage: React.FC = () => {
-  const { isAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DevDataSeedingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Redirect non-admins
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
 
   const handleSeedDevData = async () => {
     setIsLoading(true);
