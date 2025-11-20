@@ -6,9 +6,9 @@ echo "Postgres Data Persistence Verification Script"
 echo "================================================"
 echo ""
 
-# Step 1: Clean up any existing containers and volumes
-echo "Step 1: Cleaning up existing containers and volumes..."
-docker compose down -v
+# Step 1: Clean up any existing containers (but preserve volumes)
+echo "Step 1: Cleaning up existing containers..."
+docker compose down
 echo "✓ Cleanup complete"
 echo ""
 
@@ -20,7 +20,7 @@ echo ""
 
 # Step 3: Wait for database to be healthy
 echo "Step 3: Waiting for database to be healthy..."
-sleep 10
+docker compose up -d --wait db
 echo "✓ Database is ready"
 echo ""
 
@@ -61,16 +61,15 @@ fi
 echo ""
 
 # Step 8: Start the stack again
-echo "Step 8: Starting the stack again with 'docker compose up -d'..."
-docker compose up -d db
-sleep 10
+echo "Step 8: Starting the stack again with 'docker compose up -d --wait db'..."
+docker compose up -d --wait db
 echo "✓ Stack restarted"
 echo ""
 
 # Step 9: Verify data persisted
 echo "Step 9: Verifying data persisted after restart..."
 DATA_COUNT=$(docker exec fanengagement-db psql -U fanengagement -d fanengagement -t -c \
-  "SELECT COUNT(*) FROM persistence_test;")
+  "SELECT COUNT(*) FROM persistence_test;" | tr -d '[:space:]')
 if [ "$DATA_COUNT" -gt 0 ]; then
   echo "✓ Data persisted! Found $DATA_COUNT row(s):"
   docker exec fanengagement-db psql -U fanengagement -d fanengagement -c \

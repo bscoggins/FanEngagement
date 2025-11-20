@@ -38,15 +38,15 @@ volumes:
 
 2. Create some test data:
    ```bash
-   docker exec -it fanengagement-db psql -U fanengagement -d fanengagement -c \
+   docker exec fanengagement-db psql -U fanengagement -d fanengagement -c \
      "CREATE TABLE test_data (id SERIAL PRIMARY KEY, value TEXT);"
-   docker exec -it fanengagement-db psql -U fanengagement -d fanengagement -c \
+   docker exec fanengagement-db psql -U fanengagement -d fanengagement -c \
      "INSERT INTO test_data (value) VALUES ('test');"
    ```
 
 3. Verify data exists:
    ```bash
-   docker exec -it fanengagement-db psql -U fanengagement -d fanengagement -c \
+   docker exec fanengagement-db psql -U fanengagement -d fanengagement -c \
      "SELECT * FROM test_data;"
    ```
 
@@ -67,7 +67,7 @@ volumes:
 
 7. Verify data persisted:
    ```bash
-   docker exec -it fanengagement-db psql -U fanengagement -d fanengagement -c \
+   docker exec fanengagement-db psql -U fanengagement -d fanengagement -c \
      "SELECT * FROM test_data;"
    ```
 
@@ -80,13 +80,15 @@ Run the provided verification script:
 ```
 
 This script will:
-- Clean up any existing containers and volumes
+- Clean up any existing containers (preserves volumes)
 - Start the database service
 - Create test data
 - Stop and remove containers
 - Verify the volume persists
 - Restart the database
 - Verify the data is still present
+
+**Note:** This script preserves any existing data in your database volumes. It only removes containers, not volumes.
 
 ## Important Notes
 
