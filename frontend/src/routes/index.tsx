@@ -6,6 +6,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { UsersPage } from '../pages/UsersPage';
 import { UserCreatePage } from '../pages/UserCreatePage';
 import { UserEditPage } from '../pages/UserEditPage';
+import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +42,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <UserEditPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/dev-tools',
+        element: (
+          <ProtectedRoute>
+            <AdminDevToolsPage />
           </ProtectedRoute>
         ),
       },
