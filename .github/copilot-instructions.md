@@ -47,6 +47,9 @@ FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a 
 - For Docker Compose, set environment variables (`Jwt__Issuer`, `Jwt__Audience`, `Jwt__SigningKey`). A placeholder is included; override with a strong secret via `.env` or CI secret store:
     - Example `.env` entry: `JWT_SIGNING_KEY=$(openssl rand -base64 64)`
 - Never commit production secrets. Rotate keys periodically.
+ - Startup will throw if Issuer, Audience, or SigningKey are missing/empty (validated in `Program.cs`).
+ - In Development an initial admin user (`admin@example.com`) is auto-created or elevated to Admin role; change this in real environments.
+ - CORS defaults to allowing `http://localhost:3000` and `http://localhost:5173` when `Cors:AllowedOrigins` is not configured.
 
 ## Development Environment
 
@@ -197,6 +200,9 @@ When implementing a new feature or endpoint:
     - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status/type)
     - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details
     - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry outbound event
+ - Admin & Dev Utilities:
+     - `POST /admin/seed-dev-data` → Seed development data (Development only, Admin role required)
+     - `GET /users/admin/stats` → Basic user statistics (Admin role required)
 
 ## Coding Conventions
 

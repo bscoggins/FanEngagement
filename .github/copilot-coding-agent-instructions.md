@@ -69,6 +69,9 @@ Notes:
 - On startup the API applies pending EF Core migrations automatically.
 - The Docker Compose frontend URL is `http://localhost:3000`. The frontend build uses `VITE_API_BASE_URL=/api` (see line 41 of `docker-compose.yml`). The frontend container proxies `/api` requests to the backend, enabling same-origin API calls and avoiding CORS issues.
 - JWT settings must be provided: set `Jwt__Issuer`, `Jwt__Audience`, and `Jwt__SigningKey` (secure, non-empty). Compose uses env vars; override `JWT_SIGNING_KEY` in `.env` or CI secrets.
+- Startup throws if any JWT Issuer/Audience/SigningKey values are missing or empty (validated in `Program.cs`).
+- Development auto-seeds an admin user (`admin@example.com`) or elevates existing user to Admin; update/remove for production.
+- If `Cors:AllowedOrigins` not set, CORS defaults to `http://localhost:3000` and `http://localhost:5173`.
 
 ## Current API Endpoints
 
@@ -115,6 +118,9 @@ Notes:
    - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status/type)
    - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details
    - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry outbound event
+- Admin & Dev Utilities:
+   - `POST /admin/seed-dev-data` → Seed development data (Development only, Admin role required)
+   - `GET /users/admin/stats` → Basic user statistics (Admin role required)
 
 Controllers live in `backend/FanEngagement.Api/Controllers/` and call services defined in `Application` and implemented in `Infrastructure/Services`.
 
