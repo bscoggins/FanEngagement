@@ -45,10 +45,6 @@ export interface Membership {
   createdAt: string;
 }
 
-export interface MembershipWithOrganization extends Membership {
-  organizationName: string;
-}
-
 export interface MembershipWithOrganizationDto {
   id: string;
   organizationId: string;

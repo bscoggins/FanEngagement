@@ -112,6 +112,7 @@ Notes:
    - `POST /users` → Create user
    - `GET /users` → List users (returns User objects with role field: User or Admin)
    - `GET /users/{id}` → Get user by ID (returns User object with role field)
+   - `GET /users/{id}/memberships` → Get user's organization memberships with organization details
    - `PUT /users/{id}` → Update user (accepts optional role field for role changes)
    - `DELETE /users/{id}` → Delete user
 - Organizations & Memberships:

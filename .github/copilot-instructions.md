@@ -172,6 +172,7 @@ When implementing a new feature or endpoint:
     - `POST /users` → Create user
     - `GET /users` → List users (returns User objects including role field)
     - `GET /users/{id}` → Get user by ID (returns User object including role field)
+    - `GET /users/{id}/memberships` → Get user's organization memberships with organization details
     - `PUT /users/{id}` → Update user (accepts optional role field for admins to change user roles)
     - `DELETE /users/{id}` → Delete user
 - Organizations & Memberships:
