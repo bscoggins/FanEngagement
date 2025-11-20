@@ -2,6 +2,36 @@
 
 This document tells GitHub Copilot Agent exactly how to work on this repository inside GitHub (create branches, implement changes, run builds/tests, and open PRs) with minimal back-and-forth.
 
+## Completion & Handoff Rules
+
+- When the required code, pages, services, and tests are complete:
+  - Stop making further changes.
+  - Summarize all added/modified files.
+  - Provide explicit instructions for the human reviewer (build/test steps).
+
+## Standard Task Template
+
+Each new issue for the GitHub Copilot Coding Agent should follow this structure:
+
+#github-pull-request_copilot-coding-agent
+Title: <meaningful title>
+
+Body:
+- Scope:
+    <What must be built, modified, or added>
+- Requirements:
+    <Backend/frontend details, architectural rules, API routes, DTOs, validation, UI behaviors>
+- Constraints:
+    <Authorization rules, multi-tenancy, environments, dependencies>
+- Testing:
+    <Unit tests, integration tests, frontend tests>
+- Completion:
+    - All builds succeed (backend + frontend)
+    - All tests pass
+    - New API endpoints/routes/forms documented in the PR
+    - Update `copilot-instructions.md`
+    - Update `copilot-coding-agent-instructions.md`
+
 ## Repository Overview
 
 - Solution: `backend/FanEngagement.sln`
