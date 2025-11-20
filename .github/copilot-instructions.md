@@ -2,6 +2,11 @@
 
 This file provides context and guidelines for GitHub Copilot Chat when assisting with the FanEngagement application in VS Code.
 
+## Guardrails for Chat Interactions
+- When I request changes, always propose a plan before modifying existing files.
+- Never delete code unless explicitly instructed.
+- Never introduce new external dependencies without justification.
+
 ## Project Overview
 
 FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a React + TypeScript frontend, designed for fan engagement and organization management with share-based voting capabilities.
