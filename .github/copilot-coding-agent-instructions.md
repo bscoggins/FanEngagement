@@ -243,11 +243,14 @@ When implementing a frontend feature:
 1. Routes & Pages
    - Add/update route in `frontend/src/routes/`.
    - Add/update page components in `frontend/src/pages/` and shared components in `frontend/src/components/`.
+   - For admin features, use the `/admin` route tree with `AdminLayout` and `AdminRoute` for access control.
 2. API Integration
    - Add/update `frontend/src/api/*Api.ts` using the shared `apiClient` (Axios).
    - Ensure backend endpoints exist and are documented.
 3. Auth
    - Use `AuthContext` and `ProtectedRoute` for protected pages.
+   - Use `AdminRoute` for admin-only pages (checks both authentication and Admin role).
+   - Admin navigation link appears in main layout only for users with Admin role.
 4. Env
    - Ensure `VITE_API_BASE_URL` is set appropriately for dev/prod.
 5. Tests

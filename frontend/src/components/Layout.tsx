@@ -33,7 +33,7 @@ export const Layout: React.FC = () => {
           ) : (
             <>
               <Link to="/users">Users</Link>
-              {isAdmin && <Link to="/admin/dev-tools">Dev Tools</Link>}
+              {isAdmin && <Link to="/admin">Admin</Link>}
               <span className="user-info">
                 Logged in as {user?.email}
               </span>
