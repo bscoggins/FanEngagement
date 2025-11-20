@@ -76,6 +76,10 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
 
         user.Email = request.Email;
         user.DisplayName = request.DisplayName;
+        if (request.Role.HasValue)
+        {
+            user.Role = request.Role.Value;
+        }
 
         try
         {
@@ -111,6 +115,7 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             Id = user.Id,
             Email = user.Email,
             DisplayName = user.DisplayName,
+            Role = user.Role,
             CreatedAt = user.CreatedAt
         };
     }

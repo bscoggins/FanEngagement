@@ -55,6 +55,7 @@ describe('UserCreatePage', () => {
       id: 'new-user-id',
       email: 'newuser@example.com',
       displayName: 'New User',
+      role: 'User',
       createdAt: '2024-01-03T00:00:00Z',
     };
 
@@ -142,6 +143,7 @@ describe('UserCreatePage', () => {
         id: 'new-user-id',
         email: 'newuser@example.com',
         displayName: 'New User',
+        role: 'User',
         createdAt: '2024-01-03T00:00:00Z',
       }), 100));
     });
