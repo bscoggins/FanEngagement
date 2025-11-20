@@ -43,12 +43,14 @@ describe('UsersPage', () => {
       id: '1',
       email: 'user1@example.com',
       displayName: 'User One',
+      role: 'User',
       createdAt: '2024-01-01T00:00:00Z',
     },
     {
       id: '2',
       email: 'user2@example.com',
       displayName: 'User Two',
+      role: 'Admin',
       createdAt: '2024-01-02T00:00:00Z',
     },
   ];

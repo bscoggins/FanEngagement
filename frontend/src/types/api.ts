@@ -15,6 +15,7 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
+  role: 'User' | 'Admin';
   createdAt: string;
 }
 
@@ -27,4 +28,23 @@ export interface CreateUserRequest {
 export interface UpdateUserRequest {
   email: string;
   displayName: string;
+  role?: 'User' | 'Admin';
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface Membership {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface MembershipWithOrganization extends Membership {
+  organizationName: string;
 }

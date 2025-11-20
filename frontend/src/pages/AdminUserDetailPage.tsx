@@ -1,0 +1,370 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { usersApi } from '../api/usersApi';
+import { membershipsApi } from '../api/membershipsApi';
+import { organizationsApi } from '../api/organizationsApi';
+import type { UpdateUserRequest, User, Membership, MembershipWithOrganization } from '../types/api';
+
+export const AdminUserDetailPage: React.FC = () => {
+  const { userId } = useParams<{ userId: string }>();
+  
+  const [user, setUser] = useState<User | null>(null);
+  const [memberships, setMemberships] = useState<MembershipWithOrganization[]>([]);
+  const [formData, setFormData] = useState<UpdateUserRequest>({
+    email: '',
+    displayName: '',
+    role: 'User',
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserAndMemberships = async () => {
+      if (!userId) {
+        setFetchError('Invalid user ID');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setFetchError(null);
+        
+        // Fetch user data
+        const userData = await usersApi.getById(userId);
+        setUser(userData);
+        setFormData({
+          email: userData.email,
+          displayName: userData.displayName,
+          role: userData.role,
+        });
+
+        // Fetch all organizations and memberships to find this user's memberships
+        const orgMembershipsResults = await (async () => {
+          const orgs = await organizationsApi.getAll();
+          const promises = orgs.map(async (org) => {
+            try {
+              const orgMemberships = await membershipsApi.getByOrganization(org.id);
+              return { org, memberships: orgMemberships };
+            } catch {
+              return { org, memberships: [] as Membership[] };
+            }
+          });
+          return Promise.all(promises);
+        })();
+        
+        // Filter memberships for this user and enrich with org names
+        const userMemberships: MembershipWithOrganization[] = [];
+        for (const { org, memberships: orgMemberships } of orgMembershipsResults) {
+          const userMembership = orgMemberships.find(m => m.userId === userId);
+          if (userMembership) {
+            userMemberships.push({
+              ...userMembership,
+              organizationName: org.name,
+            });
+          }
+        }
+        
+        setMemberships(userMemberships);
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+        if (err && typeof err === 'object' && 'response' in err) {
+          const axiosError = err as { response?: { status: number } };
+          if (axiosError.response?.status === 404) {
+            setFetchError('User not found');
+          } else {
+            setFetchError('Failed to load user. Please try again.');
+          }
+        } else {
+          setFetchError('Failed to load user. Please try again.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserAndMemberships();
+  }, [userId]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+
+    setError(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    try {
+      await usersApi.update(userId, formData);
+      setSuccessMessage('User updated successfully!');
+      
+      // Refresh user data
+      const updatedUser = await usersApi.getById(userId);
+      setUser(updatedUser);
+      setFormData({
+        email: updatedUser.email,
+        displayName: updatedUser.displayName,
+        role: updatedUser.role,
+      });
+    } catch (err) {
+      console.error('Failed to update user:', err);
+      // Handle validation errors from API
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { status: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 400) {
+          setError(axiosError.response.data?.message || 'Invalid user data. Please check your inputs.');
+        } else if (axiosError.response?.status === 404) {
+          setError('User not found');
+        } else {
+          setError('Failed to update user. Please try again.');
+        }
+      } else {
+        setError('Failed to update user. Please try again.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="admin-user-detail-page">
+        <h1>Edit User</h1>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="admin-user-detail-page">
+        <h1>Edit User</h1>
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '4px',
+            color: '#c33',
+            marginBottom: '1rem',
+          }}
+        >
+          {fetchError}
+        </div>
+        <Link to="/admin/users" style={{ color: '#0066cc' }}>
+          ← Back to Users
+        </Link>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="admin-user-detail-page">
+        <h1>Edit User</h1>
+        <p>User not found</p>
+        <Link to="/admin/users" style={{ color: '#0066cc' }}>
+          ← Back to Users
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-user-detail-page">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <Link to="/admin/users" style={{ color: '#0066cc', textDecoration: 'none' }}>
+          ← Back to Users
+        </Link>
+      </div>
+      
+      <h1>Edit User</h1>
+      
+      <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr 1fr' }}>
+        {/* User Edit Form */}
+        <div style={{ 
+          backgroundColor: 'white', 
+          padding: '1.5rem', 
+          borderRadius: '8px', 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>User Details</h2>
+          
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Email *
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  fontSize: '1rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="displayName" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Display Name *
+              </label>
+              <input
+                id="displayName"
+                name="displayName"
+                type="text"
+                value={formData.displayName}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  fontSize: '1rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                }}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="role" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Role *
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  fontSize: '1rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                }}
+              >
+                <option value="User">User</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+
+            <div style={{ 
+              padding: '0.75rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              color: '#666'
+            }}>
+              <strong>User ID:</strong> {user.id}<br />
+              <strong>Created:</strong> {new Date(user.createdAt).toLocaleString()}
+            </div>
+
+            {successMessage && (
+              <div
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: '#d4edda',
+                  border: '1px solid #c3e6cb',
+                  borderRadius: '4px',
+                  color: '#155724',
+                }}
+              >
+                {successMessage}
+              </div>
+            )}
+
+            {error && (
+              <div
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: '#fee',
+                  border: '1px solid #fcc',
+                  borderRadius: '4px',
+                  color: '#c33',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+              <button
+                type="submit"
+                disabled={isSaving}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: isSaving ? '#ccc' : '#0066cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: isSaving ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Organization Memberships */}
+        <div style={{ 
+          backgroundColor: 'white', 
+          padding: '1.5rem', 
+          borderRadius: '8px', 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
+            Organization Memberships
+          </h2>
+          
+          {memberships.length === 0 ? (
+            <p style={{ color: '#666', textAlign: 'center', padding: '2rem 0' }}>
+              This user is not a member of any organizations.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {memberships.map((membership) => (
+                <div
+                  key={membership.id}
+                  style={{
+                    padding: '1rem',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '4px',
+                    backgroundColor: '#f8f9fa',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>
+                    {membership.organizationName}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                    <strong>Role:</strong> {membership.role}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                    <strong>Joined:</strong> {new Date(membership.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

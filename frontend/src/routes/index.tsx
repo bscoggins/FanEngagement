@@ -10,6 +10,7 @@ import { UserCreatePage } from '../pages/UserCreatePage';
 import { UserEditPage } from '../pages/UserEditPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/AdminUsersPage';
+import { AdminUserDetailPage } from '../pages/AdminUserDetailPage';
 import { AdminOrganizationsPage } from '../pages/AdminOrganizationsPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 
@@ -67,6 +68,10 @@ export const router = createBrowserRouter([
       {
         path: 'users',
         element: <AdminUsersPage />,
+      },
+      {
+        path: 'users/:userId',
+        element: <AdminUserDetailPage />,
       },
       {
         path: 'organizations',
