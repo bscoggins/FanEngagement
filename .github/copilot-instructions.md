@@ -138,7 +138,8 @@ When implementing a new feature or endpoint:
 
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
 - **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
-- **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages.
+- **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages.
+- **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Only users with Admin role can access.
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
 ### Current Entities
