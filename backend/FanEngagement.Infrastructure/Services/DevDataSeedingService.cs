@@ -82,55 +82,163 @@ public class DevDataSeedingService : IDevDataSeedingService
 
             if (votingShareType != null && founderShareType != null && creativeShareType != null)
             {
-                // Seed Share Issuances
-                if (await EnsureShareIssuanceAsync(votingShareType.Id, alice.Id, 100m, cancellationToken))
-                    result.ShareIssuancesCreated++;
-                if (await EnsureShareIssuanceAsync(votingShareType.Id, bob.Id, 50m, cancellationToken))
-                    result.ShareIssuancesCreated++;
-                if (await EnsureShareIssuanceAsync(founderShareType.Id, alice.Id, 10m, cancellationToken))
-                    result.ShareIssuancesCreated++;
-                if (await EnsureShareIssuanceAsync(creativeShareType.Id, charlie.Id, 200m, cancellationToken))
-                    result.ShareIssuancesCreated++;
-                if (await EnsureShareIssuanceAsync(creativeShareType.Id, alice.Id, 75m, cancellationToken))
-                    result.ShareIssuancesCreated++;
+                // Seed Share Issuances (batch) - collect all issuances to create
+                var issuanceSpecs = new[]
+                {
+                    (ShareTypeId: votingShareType.Id, UserId: alice.Id, Quantity: 100m),
+                    (ShareTypeId: votingShareType.Id, UserId: bob.Id, Quantity: 50m),
+                    (ShareTypeId: founderShareType.Id, UserId: alice.Id, Quantity: 10m),
+                    (ShareTypeId: creativeShareType.Id, UserId: charlie.Id, Quantity: 200m),
+                    (ShareTypeId: creativeShareType.Id, UserId: alice.Id, Quantity: 75m)
+                };
 
-                // Seed Proposals
-                var proposal1 = await EnsureProposalAsync(
-                    techOrg.Id,
-                    alice.Id,
-                    "Upgrade Development Infrastructure",
-                    "Should we invest in new cloud infrastructure?",
-                    ProposalStatus.Open,
-                    DateTimeOffset.UtcNow.AddDays(-2),
-                    DateTimeOffset.UtcNow.AddDays(5),
-                    cancellationToken);
-                
-                var proposal2 = await EnsureProposalAsync(
-                    creativeOrg.Id,
-                    charlie.Id,
-                    "Annual Art Exhibition",
-                    "Vote on the theme for this year's exhibition",
-                    ProposalStatus.Draft,
-                    null,
-                    null,
-                    cancellationToken);
-                
-                if (proposal1 != null) result.ProposalsCreated++;
-                if (proposal2 != null) result.ProposalsCreated++;
+                var issuancesToAdd = new List<ShareIssuance>();
+                var balanceUpdates = new Dictionary<(Guid ShareTypeId, Guid UserId), decimal>();
 
-                // Fetch proposals from DB
+                foreach (var spec in issuanceSpecs)
+                {
+                    var exists = await _dbContext.ShareIssuances
+                        .AnyAsync(si => si.ShareTypeId == spec.ShareTypeId && si.UserId == spec.UserId && si.Quantity == spec.Quantity, cancellationToken);
+                    
+                    if (!exists)
+                    {
+                        issuancesToAdd.Add(new ShareIssuance
+                        {
+                            Id = Guid.NewGuid(),
+                            ShareTypeId = spec.ShareTypeId,
+                            UserId = spec.UserId,
+                            Quantity = spec.Quantity,
+                            IssuedAt = DateTimeOffset.UtcNow
+                        });
+                        
+                        // Track balance updates
+                        var key = (spec.ShareTypeId, spec.UserId);
+                        if (balanceUpdates.ContainsKey(key))
+                        {
+                            balanceUpdates[key] += spec.Quantity;
+                        }
+                        else
+                        {
+                            balanceUpdates[key] = spec.Quantity;
+                        }
+                        
+                        result.ShareIssuancesCreated++;
+                        _logger.LogDebug("Prepared share issuance for user {UserId}, quantity {Quantity}", spec.UserId, spec.Quantity);
+                    }
+                }
+
+                if (issuancesToAdd.Count > 0)
+                {
+                    _dbContext.ShareIssuances.AddRange(issuancesToAdd);
+                    
+                    // Update or create ShareBalances for the issuances
+                    foreach (var kvp in balanceUpdates)
+                    {
+                        var (shareTypeId, userId) = kvp.Key;
+                        var quantity = kvp.Value;
+                        
+                        var balance = await _dbContext.ShareBalances
+                            .FirstOrDefaultAsync(sb => sb.ShareTypeId == shareTypeId && sb.UserId == userId, cancellationToken);
+                        
+                        if (balance == null)
+                        {
+                            _dbContext.ShareBalances.Add(new ShareBalance
+                            {
+                                Id = Guid.NewGuid(),
+                                ShareTypeId = shareTypeId,
+                                UserId = userId,
+                                Balance = quantity,
+                                UpdatedAt = DateTimeOffset.UtcNow
+                            });
+                            _logger.LogDebug("Created share balance for user {UserId}, balance {Balance}", userId, quantity);
+                        }
+                        else
+                        {
+                            balance.Balance += quantity;
+                            balance.UpdatedAt = DateTimeOffset.UtcNow;
+                            _logger.LogDebug("Updated share balance for user {UserId}, new balance {Balance}", userId, balance.Balance);
+                        }
+                    }
+                    
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                // Seed Proposals (batch) - collect all proposals to create
+                var proposalSpecs = new[]
+                {
+                    new
+                    {
+                        OrganizationId = techOrg.Id,
+                        CreatedByUserId = alice.Id,
+                        Title = "Upgrade Development Infrastructure",
+                        Description = "Should we invest in new cloud infrastructure?",
+                        Status = ProposalStatus.Open,
+                        StartAt = (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays(-2),
+                        EndAt = (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays(5)
+                    },
+                    new
+                    {
+                        OrganizationId = creativeOrg.Id,
+                        CreatedByUserId = charlie.Id,
+                        Title = "Annual Art Exhibition",
+                        Description = "Vote on the theme for this year's exhibition",
+                        Status = ProposalStatus.Draft,
+                        StartAt = (DateTimeOffset?)null,
+                        EndAt = (DateTimeOffset?)null
+                    }
+                };
+
+                var proposalsToAdd = new List<Proposal>();
+                foreach (var spec in proposalSpecs)
+                {
+                    var exists = await _dbContext.Proposals
+                        .AnyAsync(p => p.OrganizationId == spec.OrganizationId && p.Title == spec.Title, cancellationToken);
+                    
+                    if (!exists)
+                    {
+                        proposalsToAdd.Add(new Proposal
+                        {
+                            Id = Guid.NewGuid(),
+                            OrganizationId = spec.OrganizationId,
+                            CreatedByUserId = spec.CreatedByUserId,
+                            Title = spec.Title,
+                            Description = spec.Description,
+                            Status = spec.Status,
+                            StartAt = spec.StartAt,
+                            EndAt = spec.EndAt,
+                            CreatedAt = DateTimeOffset.UtcNow
+                        });
+                        result.ProposalsCreated++;
+                        _logger.LogDebug("Prepared proposal '{Title}' in org {OrganizationId}", spec.Title, spec.OrganizationId);
+                    }
+                }
+
+                if (proposalsToAdd.Count > 0)
+                {
+                    _dbContext.Proposals.AddRange(proposalsToAdd);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                // Fetch proposals from DB (without eager loading options to avoid performance overhead)
                 var techProposal = await _dbContext.Proposals
-                    .Include(p => p.Options)
                     .FirstOrDefaultAsync(p => p.OrganizationId == techOrg.Id && p.Title == "Upgrade Development Infrastructure", cancellationToken);
                 var creativeProposal = await _dbContext.Proposals
-                    .Include(p => p.Options)
                     .FirstOrDefaultAsync(p => p.OrganizationId == creativeOrg.Id && p.Title == "Annual Art Exhibition", cancellationToken);
+
+                // Seed Proposal Options (batch)
+                var optionsToAdd = new List<ProposalOption>();
+                ProposalOption? yesOption = null;
+                ProposalOption? noOption = null;
 
                 if (techProposal != null)
                 {
-                    // Add proposal options if not already present
-                    var yesOption = techProposal.Options.FirstOrDefault(o => o.Text == "Yes, upgrade now");
-                    var noOption = techProposal.Options.FirstOrDefault(o => o.Text == "No, wait until next quarter");
+                    // Check existing options
+                    var existingOptions = await _dbContext.ProposalOptions
+                        .Where(o => o.ProposalId == techProposal.Id)
+                        .ToListAsync(cancellationToken);
+                    
+                    yesOption = existingOptions.FirstOrDefault(o => o.Text == "Yes, upgrade now");
+                    noOption = existingOptions.FirstOrDefault(o => o.Text == "No, wait until next quarter");
                     
                     if (yesOption == null)
                     {
@@ -141,8 +249,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                             Text = "Yes, upgrade now",
                             Description = "Proceed with the infrastructure upgrade immediately"
                         };
-                        _dbContext.ProposalOptions.Add(yesOption);
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        optionsToAdd.Add(yesOption);
                     }
                     
                     if (noOption == null)
@@ -154,23 +261,19 @@ public class DevDataSeedingService : IDevDataSeedingService
                             Text = "No, wait until next quarter",
                             Description = "Defer the upgrade to next quarter"
                         };
-                        _dbContext.ProposalOptions.Add(noOption);
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        optionsToAdd.Add(noOption);
                     }
-
-                    // Seed some votes
-                    if (await EnsureVoteAsync(techProposal.Id, yesOption.Id, alice.Id, 100m, cancellationToken))
-                        result.VotesCreated++;
-                    if (await EnsureVoteAsync(techProposal.Id, noOption.Id, bob.Id, 50m, cancellationToken))
-                        result.VotesCreated++;
                 }
 
                 if (creativeProposal != null)
                 {
-                    // Add proposal options if not already present
-                    if (!creativeProposal.Options.Any(o => o.Text == "Nature and Environment"))
+                    var existingOptions = await _dbContext.ProposalOptions
+                        .Where(o => o.ProposalId == creativeProposal.Id)
+                        .ToListAsync(cancellationToken);
+                    
+                    if (!existingOptions.Any(o => o.Text == "Nature and Environment"))
                     {
-                        _dbContext.ProposalOptions.Add(new ProposalOption
+                        optionsToAdd.Add(new ProposalOption
                         {
                             Id = Guid.NewGuid(),
                             ProposalId = creativeProposal.Id,
@@ -179,9 +282,9 @@ public class DevDataSeedingService : IDevDataSeedingService
                         });
                     }
                     
-                    if (!creativeProposal.Options.Any(o => o.Text == "Urban Life"))
+                    if (!existingOptions.Any(o => o.Text == "Urban Life"))
                     {
-                        _dbContext.ProposalOptions.Add(new ProposalOption
+                        optionsToAdd.Add(new ProposalOption
                         {
                             Id = Guid.NewGuid(),
                             ProposalId = creativeProposal.Id,
@@ -189,8 +292,56 @@ public class DevDataSeedingService : IDevDataSeedingService
                             Description = "Explore themes of city living"
                         });
                     }
-                    
+                }
+
+                if (optionsToAdd.Count > 0)
+                {
+                    _dbContext.ProposalOptions.AddRange(optionsToAdd);
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                // Seed Votes (batch)
+                if (techProposal != null && yesOption != null && noOption != null)
+                {
+                    var votesToAdd = new List<Vote>();
+                    
+                    var aliceVoteExists = await _dbContext.Votes
+                        .AnyAsync(v => v.ProposalId == techProposal.Id && v.UserId == alice.Id, cancellationToken);
+                    if (!aliceVoteExists)
+                    {
+                        votesToAdd.Add(new Vote
+                        {
+                            Id = Guid.NewGuid(),
+                            ProposalId = techProposal.Id,
+                            ProposalOptionId = yesOption.Id,
+                            UserId = alice.Id,
+                            VotingPower = 100m,
+                            CastAt = DateTimeOffset.UtcNow
+                        });
+                        result.VotesCreated++;
+                    }
+                    
+                    var bobVoteExists = await _dbContext.Votes
+                        .AnyAsync(v => v.ProposalId == techProposal.Id && v.UserId == bob.Id, cancellationToken);
+                    if (!bobVoteExists)
+                    {
+                        votesToAdd.Add(new Vote
+                        {
+                            Id = Guid.NewGuid(),
+                            ProposalId = techProposal.Id,
+                            ProposalOptionId = noOption.Id,
+                            UserId = bob.Id,
+                            VotingPower = 50m,
+                            CastAt = DateTimeOffset.UtcNow
+                        });
+                        result.VotesCreated++;
+                    }
+                    
+                    if (votesToAdd.Count > 0)
+                    {
+                        _dbContext.Votes.AddRange(votesToAdd);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
                 }
             }
         }
@@ -303,89 +454,5 @@ public class DevDataSeedingService : IDevDataSeedingService
         await _dbContext.SaveChangesAsync(cancellationToken);
         _logger.LogDebug("Created share type '{Symbol}' in org {OrganizationId}", symbol, organizationId);
         return shareType;
-    }
-
-    private async Task<bool> EnsureShareIssuanceAsync(Guid shareTypeId, Guid userId, decimal quantity, CancellationToken cancellationToken)
-    {
-        // Check if this exact issuance already exists (same user, share type, quantity)
-        var existing = await _dbContext.ShareIssuances
-            .FirstOrDefaultAsync(si => si.ShareTypeId == shareTypeId && si.UserId == userId && si.Quantity == quantity, cancellationToken);
-        
-        if (existing != null)
-        {
-            _logger.LogDebug("Share issuance already exists for user {UserId}, share type {ShareTypeId}, quantity {Quantity}", userId, shareTypeId, quantity);
-            return false;
-        }
-
-        var issuance = new ShareIssuance
-        {
-            Id = Guid.NewGuid(),
-            ShareTypeId = shareTypeId,
-            UserId = userId,
-            Quantity = quantity,
-            IssuedAt = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.ShareIssuances.Add(issuance);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        _logger.LogDebug("Created share issuance for user {UserId}, quantity {Quantity}", userId, quantity);
-        return true;
-    }
-
-    private async Task<Proposal?> EnsureProposalAsync(Guid organizationId, Guid createdByUserId, string title, string? description, ProposalStatus status, DateTimeOffset? startAt, DateTimeOffset? endAt, CancellationToken cancellationToken)
-    {
-        var existing = await _dbContext.Proposals
-            .FirstOrDefaultAsync(p => p.OrganizationId == organizationId && p.Title == title, cancellationToken);
-        
-        if (existing != null)
-        {
-            _logger.LogDebug("Proposal '{Title}' already exists in org {OrganizationId}", title, organizationId);
-            return null;
-        }
-
-        var proposal = new Proposal
-        {
-            Id = Guid.NewGuid(),
-            OrganizationId = organizationId,
-            CreatedByUserId = createdByUserId,
-            Title = title,
-            Description = description,
-            Status = status,
-            StartAt = startAt,
-            EndAt = endAt,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.Proposals.Add(proposal);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        _logger.LogDebug("Created proposal '{Title}' in org {OrganizationId}", title, organizationId);
-        return proposal;
-    }
-
-    private async Task<bool> EnsureVoteAsync(Guid proposalId, Guid proposalOptionId, Guid userId, decimal votingPower, CancellationToken cancellationToken)
-    {
-        var existing = await _dbContext.Votes
-            .FirstOrDefaultAsync(v => v.ProposalId == proposalId && v.UserId == userId, cancellationToken);
-        
-        if (existing != null)
-        {
-            _logger.LogDebug("Vote already exists for user {UserId} on proposal {ProposalId}", userId, proposalId);
-            return false;
-        }
-
-        var vote = new Vote
-        {
-            Id = Guid.NewGuid(),
-            ProposalId = proposalId,
-            ProposalOptionId = proposalOptionId,
-            UserId = userId,
-            VotingPower = votingPower,
-            CastAt = DateTimeOffset.UtcNow
-        };
-
-        _dbContext.Votes.Add(vote);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        _logger.LogDebug("Created vote for user {UserId} on proposal {ProposalId}", userId, proposalId);
-        return true;
     }
 }

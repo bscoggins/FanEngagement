@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace FanEngagement.Tests;
 
-public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>
+public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client;
     private readonly TestWebApplicationFactory _factory;
@@ -20,6 +20,64 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>
         _factory = factory;
         _client = factory.CreateClient();
         _output = output;
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public async Task DisposeAsync()
+    {
+        // Clean up seeded test data after each test to ensure test isolation
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        
+        // Remove seeded data in reverse dependency order
+        var votes = await dbContext.Votes.Where(v => 
+            dbContext.Proposals.Any(p => 
+                (p.Title == "Upgrade Development Infrastructure" || p.Title == "Annual Art Exhibition") 
+                && p.Id == v.ProposalId)).ToListAsync();
+        dbContext.Votes.RemoveRange(votes);
+        
+        var proposalOptions = await dbContext.ProposalOptions.Where(o => 
+            dbContext.Proposals.Any(p => 
+                (p.Title == "Upgrade Development Infrastructure" || p.Title == "Annual Art Exhibition") 
+                && p.Id == o.ProposalId)).ToListAsync();
+        dbContext.ProposalOptions.RemoveRange(proposalOptions);
+        
+        var proposals = await dbContext.Proposals.Where(p => 
+            p.Title == "Upgrade Development Infrastructure" || p.Title == "Annual Art Exhibition").ToListAsync();
+        dbContext.Proposals.RemoveRange(proposals);
+        
+        var shareIssuances = await dbContext.ShareIssuances.Where(si => 
+            dbContext.ShareTypes.Any(st => 
+                (st.Symbol == "VOTE" || st.Symbol == "FNDR" || st.Symbol == "CRTV") 
+                && st.Id == si.ShareTypeId)).ToListAsync();
+        dbContext.ShareIssuances.RemoveRange(shareIssuances);
+        
+        var shareBalances = await dbContext.ShareBalances.Where(sb => 
+            dbContext.ShareTypes.Any(st => 
+                (st.Symbol == "VOTE" || st.Symbol == "FNDR" || st.Symbol == "CRTV") 
+                && st.Id == sb.ShareTypeId)).ToListAsync();
+        dbContext.ShareBalances.RemoveRange(shareBalances);
+        
+        var shareTypes = await dbContext.ShareTypes.Where(st => 
+            st.Symbol == "VOTE" || st.Symbol == "FNDR" || st.Symbol == "CRTV").ToListAsync();
+        dbContext.ShareTypes.RemoveRange(shareTypes);
+        
+        var memberships = await dbContext.OrganizationMemberships.Where(m => 
+            dbContext.Organizations.Any(o => 
+                (o.Name == "Tech Innovators" || o.Name == "Creative Studios") 
+                && o.Id == m.OrganizationId)).ToListAsync();
+        dbContext.OrganizationMemberships.RemoveRange(memberships);
+        
+        var users = await dbContext.Users.Where(u => 
+            u.Email == "alice@example.com" || u.Email == "bob@example.com" || u.Email == "charlie@example.com").ToListAsync();
+        dbContext.Users.RemoveRange(users);
+        
+        var orgs = await dbContext.Organizations.Where(o => 
+            o.Name == "Tech Innovators" || o.Name == "Creative Studios").ToListAsync();
+        dbContext.Organizations.RemoveRange(orgs);
+        
+        await dbContext.SaveChangesAsync();
     }
 
     [Fact]
