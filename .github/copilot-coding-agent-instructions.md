@@ -245,10 +245,18 @@ When implementing a frontend feature:
    - Add/update route in `frontend/src/routes/`.
    - Add/update page components in `frontend/src/pages/` and shared components in `frontend/src/components/`.
    - For admin features, use the `/admin` route tree with `AdminLayout` and `AdminRoute` for access control.
-   - Current admin routes: `/admin` (dashboard), `/admin/users` (user list), `/admin/users/:userId` (user detail/edit), `/admin/organizations`, `/admin/dev-tools`
+   - Current admin routes:
+    - `/admin` (dashboard)
+    - `/admin/users` (user list)
+    - `/admin/users/:userId` (user detail/edit)
+    - `/admin/organizations` (organizations list)
+    - `/admin/organizations/:orgId/edit` (edit organization)
+    - `/admin/organizations/:orgId/memberships` (manage organization memberships)
+    - `/admin/organizations/:orgId/share-types` (manage organization share types)
+    - `/admin/dev-tools`
 2. API Integration
    - Add/update `frontend/src/api/*Api.ts` using the shared `apiClient` (Axios).
-   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`
+   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`
    - Ensure backend endpoints exist and are documented.
 3. Auth
    - Use `AuthContext` and `ProtectedRoute` for protected pages.
