@@ -1,0 +1,516 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { shareTypesApi } from '../api/shareTypesApi';
+import { organizationsApi } from '../api/organizationsApi';
+import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
+
+export const AdminOrganizationShareTypesPage: React.FC = () => {
+  const { orgId } = useParams<{ orgId: string }>();
+  
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [shareTypes, setShareTypes] = useState<ShareType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Form state
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<CreateShareTypeRequest>({
+    name: '',
+    symbol: '',
+    description: '',
+    votingWeight: 1,
+    maxSupply: undefined,
+    isTransferable: true,
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const fetchData = async () => {
+    if (!orgId) {
+      setError('Invalid organization ID');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const [orgData, shareTypesData] = await Promise.all([
+        organizationsApi.getById(orgId),
+        shareTypesApi.getByOrganization(orgId),
+      ]);
+      
+      setOrganization(orgData);
+      setShareTypes(shareTypesData);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+      setError('Failed to load data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [orgId]);
+
+  const handleCreateNew = () => {
+    setEditingId(null);
+    setFormData({
+      name: '',
+      symbol: '',
+      description: '',
+      votingWeight: 1,
+      maxSupply: undefined,
+      isTransferable: true,
+    });
+    setShowForm(true);
+    setError(null);
+    setSuccessMessage(null);
+  };
+
+  const handleEdit = (shareType: ShareType) => {
+    setEditingId(shareType.id);
+    setFormData({
+      name: shareType.name,
+      symbol: shareType.symbol,
+      description: shareType.description || '',
+      votingWeight: shareType.votingWeight,
+      maxSupply: shareType.maxSupply,
+      isTransferable: shareType.isTransferable,
+    });
+    setShowForm(true);
+    setError(null);
+    setSuccessMessage(null);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({
+      name: '',
+      symbol: '',
+      description: '',
+      votingWeight: 1,
+      maxSupply: undefined,
+      isTransferable: true,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orgId) return;
+
+    setError(null);
+    setSuccessMessage(null);
+    setIsSaving(true);
+
+    try {
+      if (editingId) {
+        // Update existing share type
+        await shareTypesApi.update(orgId, editingId, formData as UpdateShareTypeRequest);
+        setSuccessMessage('Share type updated successfully!');
+      } else {
+        // Create new share type
+        await shareTypesApi.create(orgId, formData);
+        setSuccessMessage('Share type created successfully!');
+      }
+      
+      setShowForm(false);
+      setEditingId(null);
+      setFormData({
+        name: '',
+        symbol: '',
+        description: '',
+        votingWeight: 1,
+        maxSupply: undefined,
+        isTransferable: true,
+      });
+      
+      // Refresh share types
+      await fetchData();
+    } catch (err) {
+      console.error('Failed to save share type:', err);
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { status: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 400) {
+          setError(axiosError.response.data?.message || 'Invalid share type data. Please check your inputs.');
+        } else {
+          setError('Failed to save share type. Please try again.');
+        }
+      } else {
+        setError('Failed to save share type. Please try again.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else if (name === 'votingWeight' || name === 'maxSupply') {
+      const numValue = value === '' ? undefined : parseFloat(value);
+      setFormData((prev) => ({ ...prev, [name]: numValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <h1>Manage Share Types</h1>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div>
+        <h1>Manage Share Types</h1>
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '4px',
+            color: '#c33',
+            marginTop: '1rem',
+          }}
+        >
+          Organization not found
+        </div>
+        <div style={{ marginTop: '1rem' }}>
+          <Link
+            to="/admin/organizations"
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Back to Organizations
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <Link
+          to="/admin/organizations"
+          style={{
+            color: '#0066cc',
+            textDecoration: 'none',
+            fontSize: '0.875rem',
+          }}
+        >
+          ← Back to Organizations
+        </Link>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div>
+          <h1>Manage Share Types</h1>
+          <div style={{ color: '#666', fontSize: '1rem' }}>
+            Organization: {organization.name}
+          </div>
+        </div>
+        <button
+          onClick={showForm ? handleCancel : handleCreateNew}
+          style={{
+            padding: '0.75rem 1.5rem',
+            backgroundColor: showForm ? '#6c757d' : '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          {showForm ? 'Cancel' : 'Create Share Type'}
+        </button>
+      </div>
+
+      {error && (
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '4px',
+            color: '#c33',
+            marginBottom: '1rem',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#e7f5e7',
+            border: '1px solid #b3e0b3',
+            borderRadius: '4px',
+            color: '#2d5a2d',
+            marginBottom: '1rem',
+          }}
+        >
+          {successMessage}
+        </div>
+      )}
+
+      {showForm && (
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            padding: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
+            {editingId ? 'Edit Share Type' : 'Create New Share Type'}
+          </h2>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="symbol" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Symbol *
+                </label>
+                <input
+                  type="text"
+                  id="symbol"
+                  name="symbol"
+                  value={formData.symbol}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={2}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label htmlFor="votingWeight" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Voting Weight *
+                </label>
+                <input
+                  type="number"
+                  id="votingWeight"
+                  name="votingWeight"
+                  value={formData.votingWeight}
+                  onChange={handleChange}
+                  required
+                  min="0"
+                  step="0.01"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="maxSupply" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Max Supply
+                </label>
+                <input
+                  type="number"
+                  id="maxSupply"
+                  name="maxSupply"
+                  value={formData.maxSupply ?? ''}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="isTransferable" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Transferable
+                </label>
+                <select
+                  id="isTransferable"
+                  name="isTransferable"
+                  value={formData.isTransferable ? 'true' : 'false'}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isTransferable: e.target.value === 'true' }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                  }}
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSaving}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: isSaving ? '#ccc' : '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSaving ? 'Saving...' : (editingId ? 'Update Share Type' : 'Create Share Type')}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {shareTypes.length === 0 ? (
+        <div style={{ 
+          padding: '2rem', 
+          backgroundColor: 'white', 
+          borderRadius: '8px', 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          textAlign: 'center'
+        }}>
+          <p style={{ color: '#666' }}>No share types found. Create one to get started.</p>
+        </div>
+      ) : (
+        <div style={{ 
+          backgroundColor: 'white', 
+          borderRadius: '8px', 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          overflow: 'hidden'
+        }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Name</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Symbol</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Voting Weight</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Max Supply</th>
+                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Transferable</th>
+                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shareTypes.map((shareType) => (
+                <tr key={shareType.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <td style={{ padding: '1rem' }}>{shareType.name}</td>
+                  <td style={{ padding: '1rem', fontWeight: 500 }}>{shareType.symbol}</td>
+                  <td style={{ padding: '1rem' }}>{shareType.votingWeight}</td>
+                  <td style={{ padding: '1rem' }}>
+                    {shareType.maxSupply !== null && shareType.maxSupply !== undefined ? shareType.maxSupply : <em style={{ color: '#999' }}>Unlimited</em>}
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '12px',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      backgroundColor: shareType.isTransferable ? '#e7f5e7' : '#fee',
+                      color: shareType.isTransferable ? '#2d5a2d' : '#c33',
+                    }}>
+                      {shareType.isTransferable ? 'Yes' : 'No'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <button
+                      onClick={() => handleEdit(shareType)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#0066cc',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
