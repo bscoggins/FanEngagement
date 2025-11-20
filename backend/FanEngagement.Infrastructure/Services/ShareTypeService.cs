@@ -53,12 +53,7 @@ public class ShareTypeService(FanEngagementDbContext dbContext) : IShareTypeServ
             return null;
         }
 
-        shareType.Name = request.Name;
-        shareType.Symbol = request.Symbol;
-        shareType.Description = request.Description;
-        shareType.VotingWeight = request.VotingWeight;
-        shareType.MaxSupply = request.MaxSupply;
-        shareType.IsTransferable = request.IsTransferable;
+        UpdateShareTypeProperties(shareType, request);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -74,15 +69,20 @@ public class ShareTypeService(FanEngagementDbContext dbContext) : IShareTypeServ
             return null;
         }
 
+        UpdateShareTypeProperties(shareType, request);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return shareType;
+    }
+
+    private static void UpdateShareTypeProperties(ShareType shareType, UpdateShareTypeRequest request)
+    {
         shareType.Name = request.Name;
         shareType.Symbol = request.Symbol;
         shareType.Description = request.Description;
         shareType.VotingWeight = request.VotingWeight;
         shareType.MaxSupply = request.MaxSupply;
         shareType.IsTransferable = request.IsTransferable;
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return shareType;
     }
 }
