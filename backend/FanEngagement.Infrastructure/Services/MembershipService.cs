@@ -74,6 +74,26 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
         return membership == null ? null : MapToDto(membership);
     }
 
+    public async Task<IReadOnlyList<MembershipWithOrganizationDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var memberships = await dbContext.OrganizationMemberships
+            .AsNoTracking()
+            .Include(m => m.Organization)
+            .Where(m => m.UserId == userId)
+            .OrderBy(m => m.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return memberships.Select(m => new MembershipWithOrganizationDto
+        {
+            Id = m.Id,
+            OrganizationId = m.OrganizationId,
+            OrganizationName = m.Organization?.Name ?? string.Empty,
+            UserId = m.UserId,
+            Role = m.Role,
+            CreatedAt = m.CreatedAt
+        }).ToList();
+    }
+
     public async Task<bool> DeleteAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default)
     {
         var membership = await dbContext.OrganizationMemberships

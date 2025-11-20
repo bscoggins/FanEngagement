@@ -48,3 +48,12 @@ export interface Membership {
 export interface MembershipWithOrganization extends Membership {
   organizationName: string;
 }
+
+export interface MembershipWithOrganizationDto {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  userId: string;
+  role: string;
+  createdAt: string;
+}

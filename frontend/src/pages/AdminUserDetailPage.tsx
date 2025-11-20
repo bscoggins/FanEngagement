@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { membershipsApi } from '../api/membershipsApi';
-import { organizationsApi } from '../api/organizationsApi';
-import type { UpdateUserRequest, User, Membership, MembershipWithOrganization } from '../types/api';
+import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
 export const AdminUserDetailPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   
   const [user, setUser] = useState<User | null>(null);
-  const [memberships, setMemberships] = useState<MembershipWithOrganization[]>([]);
+  const [memberships, setMemberships] = useState<MembershipWithOrganizationDto[]>([]);
   const [formData, setFormData] = useState<UpdateUserRequest>({
     email: '',
     displayName: '',
@@ -42,32 +41,8 @@ export const AdminUserDetailPage: React.FC = () => {
           role: userData.role,
         });
 
-        // Fetch all organizations and memberships to find this user's memberships
-        const orgMembershipsResults = await (async () => {
-          const orgs = await organizationsApi.getAll();
-          const promises = orgs.map(async (org) => {
-            try {
-              const orgMemberships = await membershipsApi.getByOrganization(org.id);
-              return { org, memberships: orgMemberships };
-            } catch {
-              return { org, memberships: [] as Membership[] };
-            }
-          });
-          return Promise.all(promises);
-        })();
-        
-        // Filter memberships for this user and enrich with org names
-        const userMemberships: MembershipWithOrganization[] = [];
-        for (const { org, memberships: orgMemberships } of orgMembershipsResults) {
-          const userMembership = orgMemberships.find(m => m.userId === userId);
-          if (userMembership) {
-            userMemberships.push({
-              ...userMembership,
-              organizationName: org.name,
-            });
-          }
-        }
-        
+        // Fetch user's memberships with organization details in a single call
+        const userMemberships = await membershipsApi.getByUserId(userId);
         setMemberships(userMemberships);
       } catch (err) {
         console.error('Failed to fetch user:', err);
@@ -188,7 +163,7 @@ export const AdminUserDetailPage: React.FC = () => {
       
       <h1>Edit User</h1>
       
-      <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr 1fr' }}>
+      <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))' }}>
         {/* User Edit Form */}
         <div style={{ 
           backgroundColor: 'white', 

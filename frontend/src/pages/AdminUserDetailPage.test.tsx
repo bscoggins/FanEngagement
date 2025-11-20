@@ -6,8 +6,7 @@ import { AuthProvider } from '../auth/AuthContext';
 import { AdminUserDetailPage } from './AdminUserDetailPage';
 import { usersApi } from '../api/usersApi';
 import { membershipsApi } from '../api/membershipsApi';
-import { organizationsApi } from '../api/organizationsApi';
-import type { User, Organization, Membership } from '../types/api';
+import type { User, MembershipWithOrganizationDto } from '../types/api';
 
 // Mock the APIs
 vi.mock('../api/usersApi', () => ({
@@ -19,13 +18,7 @@ vi.mock('../api/usersApi', () => ({
 
 vi.mock('../api/membershipsApi', () => ({
   membershipsApi: {
-    getByOrganization: vi.fn(),
-  },
-}));
-
-vi.mock('../api/organizationsApi', () => ({
-  organizationsApi: {
-    getAll: vi.fn(),
+    getByUserId: vi.fn(),
   },
 }));
 
@@ -51,15 +44,11 @@ describe('AdminUserDetailPage', () => {
     createdAt: '2024-01-01T00:00:00Z',
   };
 
-  const mockOrganizations: Organization[] = [
-    { id: 'org-1', name: 'Organization One', createdAt: '2024-01-01T00:00:00Z' },
-    { id: 'org-2', name: 'Organization Two', createdAt: '2024-01-02T00:00:00Z' },
-  ];
-
-  const mockMemberships: Membership[] = [
+  const mockMembershipsWithOrg: MembershipWithOrganizationDto[] = [
     {
       id: 'mem-1',
       organizationId: 'org-1',
+      organizationName: 'Organization One',
       userId: 'user-1',
       role: 'Member',
       createdAt: '2024-01-01T00:00:00Z',
@@ -81,7 +70,7 @@ describe('AdminUserDetailPage', () => {
 
   it('renders loading state initially', () => {
     vi.mocked(usersApi.getById).mockImplementation(() => new Promise(() => {})); // Never resolves
-    vi.mocked(organizationsApi.getAll).mockImplementation(() => new Promise(() => {}));
+    vi.mocked(membershipsApi.getByUserId).mockImplementation(() => new Promise(() => {}));
     renderAdminUserDetailPage();
     
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -89,8 +78,8 @@ describe('AdminUserDetailPage', () => {
 
   it('fetches and displays user data in form', async () => {
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization).mockResolvedValue(mockMemberships);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValueOnce(mockMembershipsWithOrg);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
     
     renderAdminUserDetailPage();
     
@@ -108,10 +97,7 @@ describe('AdminUserDetailPage', () => {
 
   it('displays user memberships', async () => {
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization)
-      .mockResolvedValueOnce(mockMemberships)
-      .mockResolvedValueOnce([]);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValueOnce(mockMembershipsWithOrg);
     
     renderAdminUserDetailPage();
     
@@ -127,8 +113,7 @@ describe('AdminUserDetailPage', () => {
 
   it('displays empty state when user has no memberships', async () => {
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization).mockResolvedValue([]);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValueOnce([]);
     
     renderAdminUserDetailPage();
     
@@ -150,8 +135,8 @@ describe('AdminUserDetailPage', () => {
     vi.mocked(usersApi.getById)
       .mockResolvedValueOnce(mockUser)
       .mockResolvedValueOnce(updatedUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValue(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization).mockResolvedValue([]);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
     vi.mocked(usersApi.update).mockResolvedValueOnce(updatedUser);
     
     renderAdminUserDetailPage();
@@ -219,8 +204,8 @@ describe('AdminUserDetailPage', () => {
     };
 
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValue(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization).mockResolvedValue([]);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
     vi.mocked(usersApi.update).mockRejectedValueOnce(mockError);
     
     renderAdminUserDetailPage();
@@ -247,8 +232,8 @@ describe('AdminUserDetailPage', () => {
 
   it('disables submit button while saving', async () => {
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValue(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization).mockResolvedValue([]);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
     vi.mocked(usersApi.update).mockImplementation(() => {
       return new Promise(resolve => setTimeout(() => resolve({
         ...mockUser,
@@ -280,8 +265,8 @@ describe('AdminUserDetailPage', () => {
 
   it('has back link to admin users list', async () => {
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
-    vi.mocked(organizationsApi.getAll).mockResolvedValue(mockOrganizations);
-    vi.mocked(membershipsApi.getByOrganization).mockResolvedValue([]);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
     
     renderAdminUserDetailPage();
     

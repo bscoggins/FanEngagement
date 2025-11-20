@@ -1,3 +1,4 @@
+using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace FanEngagement.Api.Controllers;
 [ApiController]
 [Route("users")]
 [Authorize]
-public class UsersController(IUserService userService) : ControllerBase
+public class UsersController(IUserService userService, IMembershipService membershipService) : ControllerBase
 {
     [HttpPost]
     [AllowAnonymous]
@@ -34,6 +35,13 @@ public class UsersController(IUserService userService) : ControllerBase
         }
 
         return Ok(user);
+    }
+
+    [HttpGet("{id:guid}/memberships")]
+    public async Task<ActionResult> GetUserMemberships(Guid id, CancellationToken cancellationToken)
+    {
+        var memberships = await membershipService.GetByUserIdAsync(id, cancellationToken);
+        return Ok(memberships);
     }
 
     [HttpPut("{id:guid}")]
