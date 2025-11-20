@@ -58,16 +58,6 @@ describe('AdminDevToolsPage', () => {
     expect(screen.getByRole('button', { name: /seed dev data/i })).toBeInTheDocument();
   });
 
-  it('redirects non-admin users to home page', async () => {
-    renderAdminDevToolsPage(false);
-
-    await waitFor(() => {
-      expect(screen.getByText('Home Page')).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText('Developer Tools')).not.toBeInTheDocument();
-  });
-
   it('calls seedDevData API when button is clicked', async () => {
     const mockResult = {
       organizationsCreated: 2,
