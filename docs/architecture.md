@@ -113,7 +113,7 @@ These roles are assigned per-organization via the `OrganizationMembership.Role` 
 
 ### Current Authorization Implementation
 
-> **⚠️ IMPORTANT:** The permissions documented below represent the **intended model**, not the current implementation. Many endpoints lack proper authorization checks. See "Implementation Status by Endpoint" below for actual enforcement.
+> **⚠️ IMPORTANT:** The permissions documented below represent the **intended model**, not the current implementation. Many endpoints lack proper authorization checks. See the table below for actual enforcement.
 
 The table below specifies the **intended** permissions model that should be enforced.
 
@@ -137,7 +137,7 @@ The table below specifies the **intended** permissions model that should be enfo
 | List org memberships | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can list |
 | View membership | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can view |
 | Remove member | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can remove |
-| Update membership role | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - CRITICAL RISK: any authenticated user can change roles; intended model should prevent OrgAdmins from changing their own role |
+| Update membership role | ❌ Not supported | - | ✓ | - | ✓ | No API endpoint exists; roles can only be set during membership creation via `CreateMembershipRequest.Role`. To change a role, delete and recreate the membership. |
 | **Share Type Management** |
 | Create share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
 | List share types | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
@@ -214,8 +214,9 @@ The table below specifies the **intended** permissions model that should be enfo
 
 3. **Membership APIs** (MembershipsController):
    - ❌ All membership operations require only `[Authorize]` with no organization role checks
-   - ❌ Any authenticated user can add/remove members or change roles for any organization
-   - **Risk:** Unauthorized access grants, privilege escalation, membership manipulation
+   - ❌ Any authenticated user can add/remove members for any organization
+   - ❌ No endpoint exists to update membership roles; roles can only be set at creation, requiring delete/recreate to change
+   - **Risk:** Unauthorized access grants, membership manipulation (note: while there's no direct role update endpoint, recreation allows role changes)
 
 4. **Share Type, Issuance, Balances** (ShareTypesController, ShareIssuancesController):
    - ❌ Share type operations require only `[Authorize]` - any authenticated user can create/update
