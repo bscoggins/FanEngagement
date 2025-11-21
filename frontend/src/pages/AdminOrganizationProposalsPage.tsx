@@ -20,13 +20,19 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateProposalRequest>({
     title: '',
     description: '',
-    status: 'Draft',
     startAt: '',
     endAt: '',
     quorumRequirement: undefined,
     createdByUserId: '', // Will be set from auth context when creating
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Helper function to convert datetime-local to ISO 8601 with timezone
+  const convertToISO8601 = (dateTimeLocal?: string): string | undefined => {
+    if (!dateTimeLocal) return undefined;
+    // datetime-local gives us "2024-01-01T12:00", we need to convert to ISO 8601 with Z (UTC)
+    return new Date(dateTimeLocal).toISOString();
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,7 +84,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     setFormData({
       title: '',
       description: '',
-      status: 'Draft',
       startAt: '',
       endAt: '',
       quorumRequirement: undefined,
@@ -94,7 +99,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     setFormData({
       title: '',
       description: '',
-      status: 'Draft',
       startAt: '',
       endAt: '',
       quorumRequirement: undefined,
@@ -115,13 +119,12 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       setIsSaving(true);
       setError(null);
 
-      // Filter out empty optional fields
+      // Convert datetime-local to ISO 8601 and filter out empty optional fields
       const requestData: CreateProposalRequest = {
         title: formData.title,
         description: formData.description || undefined,
-        status: formData.status,
-        startAt: formData.startAt || undefined,
-        endAt: formData.endAt || undefined,
+        startAt: convertToISO8601(formData.startAt),
+        endAt: convertToISO8601(formData.endAt),
         quorumRequirement: formData.quorumRequirement,
         createdByUserId: formData.createdByUserId,
       };
@@ -133,7 +136,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       setFormData({
         title: '',
         description: '',
-        status: 'Draft',
         startAt: '',
         endAt: '',
         quorumRequirement: undefined,
@@ -293,29 +295,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   minHeight: '100px',
                 }}
               />
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="status" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Status *
-              </label>
-              <select
-                id="status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as ProposalStatus })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
-              >
-                <option value="Draft">Draft</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
-                <option value="Finalized">Finalized</option>
-              </select>
             </div>
 
             <div style={{

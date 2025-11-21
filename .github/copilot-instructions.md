@@ -424,7 +424,7 @@ The admin proposal management UI follows consistent patterns:
   - Pattern: `<label htmlFor="fieldName">` + `<input id="fieldName">`
 
 - **State Management**:
-  - Auth user ID retrieved from localStorage for proposal creation
+  - Auth user ID retrieved from useAuth hook for proposal creation
   - Form state managed in component state with controlled inputs
   - Success/error messages displayed above forms
   - Refetch data after mutations

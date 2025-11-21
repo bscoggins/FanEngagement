@@ -149,7 +149,6 @@ export interface ProposalDetails {
 export interface CreateProposalRequest {
   title: string;
   description?: string;
-  status: ProposalStatus;
   startAt?: string;
   endAt?: string;
   quorumRequirement?: number;
@@ -159,10 +158,6 @@ export interface CreateProposalRequest {
 export interface UpdateProposalRequest {
   title?: string;
   description?: string;
-  status?: ProposalStatus;
-  startAt?: string;
-  endAt?: string;
-  quorumRequirement?: number;
 }
 
 export interface AddProposalOptionRequest {
