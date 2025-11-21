@@ -143,7 +143,7 @@ When implementing a new feature or endpoint:
 
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
 - **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
-  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`
+  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`
 - **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages.
 - **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Only users with Admin role can access.
   - Admin routes: 
@@ -154,6 +154,8 @@ When implementing a new feature or endpoint:
     - `/admin/organizations/:orgId/edit` (edit organization)
     - `/admin/organizations/:orgId/memberships` (manage organization memberships)
     - `/admin/organizations/:orgId/share-types` (manage organization share types)
+    - `/admin/organizations/:orgId/proposals` (list proposals for organization)
+    - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results)
     - `/admin/dev-tools`
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
@@ -395,6 +397,37 @@ public async Task GetOrganizationById_ReturnsOrganization_WhenExists()
     Assert.Equal("Test Org", org!.Name);
 }
 ```
+
+### Proposal Management Pages
+
+The admin proposal management UI follows consistent patterns:
+
+- **List Page** (`AdminOrganizationProposalsPage`):
+  - Displays proposals with status badges (Draft/Open/Closed/Finalized)
+  - Create new proposals inline with collapsible form
+  - Status-specific colors: Draft (gray), Open (green), Closed (red), Finalized (blue)
+  - Shows proposal metadata: title, description, start/end dates, quorum requirement
+  
+- **Detail Page** (`AdminProposalDetailPage`):
+  - View proposal details with formatted dates and metadata
+  - Edit mode available for Draft/Open proposals
+  - Options management: add/delete options (subject to backend validation)
+  - Close button for Draft/Open proposals
+  - Results display for Closed/Finalized proposals with:
+    - Vote counts and voting power per option
+    - Percentage bars for visual representation
+    - Total voting power across all options
+  
+- **Form Accessibility**:
+  - All form fields use `htmlFor` and `id` attributes for proper label association
+  - Enables `getByLabelText` in tests
+  - Pattern: `<label htmlFor="fieldName">` + `<input id="fieldName">`
+
+- **State Management**:
+  - Auth user ID retrieved from useAuth hook for proposal creation
+  - Form state managed in component state with controlled inputs
+  - Success/error messages displayed above forms
+  - Refetch data after mutations
 
 ## Additional Resources
 

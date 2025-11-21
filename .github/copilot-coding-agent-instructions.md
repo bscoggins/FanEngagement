@@ -253,10 +253,12 @@ When implementing a frontend feature:
     - `/admin/organizations/:orgId/edit` (edit organization)
     - `/admin/organizations/:orgId/memberships` (manage organization memberships)
     - `/admin/organizations/:orgId/share-types` (manage organization share types)
+    - `/admin/organizations/:orgId/proposals` (list proposals for organization)
+    - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results)
     - `/admin/dev-tools`
 2. API Integration
    - Add/update `frontend/src/api/*Api.ts` using the shared `apiClient` (Axios).
-   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`
+   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`
    - Ensure backend endpoints exist and are documented.
 3. Auth
    - Use `AuthContext` and `ProtectedRoute` for protected pages.
@@ -336,6 +338,18 @@ docker compose up -d db
 docker compose run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
 docker compose down -v
 ```
+
+## Recent Architectural Additions
+
+### Admin Proposal Management (Implemented)
+- Added `frontend/src/api/proposalsApi.ts` for proposal CRUD operations
+- Created `AdminOrganizationProposalsPage` for listing proposals per organization
+- Created `AdminProposalDetailPage` for viewing/editing proposals, managing options, and viewing results
+- Form accessibility: All inputs use `htmlFor` and `id` attributes for proper label association
+- Status-based UI: Different colors and controls for Draft/Open/Closed/Finalized statuses
+- Results visualization: Vote counts, voting power, and percentage bars for closed proposals
+- Routes: `/admin/organizations/:orgId/proposals` and `/admin/organizations/:orgId/proposals/:proposalId`
+- Tests: 11 new tests added covering proposal list, create, edit, options, and results views
 
 ## Azure Notes (If Applicable)
 

@@ -15,6 +15,8 @@ import { AdminOrganizationsPage } from '../pages/AdminOrganizationsPage';
 import { AdminOrganizationEditPage } from '../pages/AdminOrganizationEditPage';
 import { AdminOrganizationMembershipsPage } from '../pages/AdminOrganizationMembershipsPage';
 import { AdminOrganizationShareTypesPage } from '../pages/AdminOrganizationShareTypesPage';
+import { AdminOrganizationProposalsPage } from '../pages/AdminOrganizationProposalsPage';
+import { AdminProposalDetailPage } from '../pages/AdminProposalDetailPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 
 export const router = createBrowserRouter([
@@ -91,6 +93,14 @@ export const router = createBrowserRouter([
       {
         path: 'organizations/:orgId/share-types',
         element: <AdminOrganizationShareTypesPage />,
+      },
+      {
+        path: 'organizations/:orgId/proposals',
+        element: <AdminOrganizationProposalsPage />,
+      },
+      {
+        path: 'organizations/:orgId/proposals/:proposalId',
+        element: <AdminProposalDetailPage />,
       },
       {
         path: 'dev-tools',
