@@ -12,5 +12,6 @@ public interface IProposalService
     Task<bool> DeleteOptionAsync(Guid proposalId, Guid optionId, CancellationToken cancellationToken = default);
     
     Task<VoteDto?> CastVoteAsync(Guid proposalId, CastVoteRequest request, CancellationToken cancellationToken = default);
+    Task<VoteDto?> GetUserVoteAsync(Guid proposalId, Guid userId, CancellationToken cancellationToken = default);
     Task<ProposalResultsDto?> GetResultsAsync(Guid proposalId, CancellationToken cancellationToken = default);
 }

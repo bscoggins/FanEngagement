@@ -177,3 +177,25 @@ export interface ProposalResults {
   optionResults: OptionResult[];
   totalVotingPower: number;
 }
+
+export interface Vote {
+  id: string;
+  proposalId: string;
+  proposalOptionId: string;
+  userId: string;
+  votingPower: number;
+  castAt: string;
+}
+
+export interface CastVoteRequest {
+  proposalOptionId: string;
+  userId: string;
+}
+
+export interface ShareBalance {
+  shareTypeId: string;
+  shareTypeName: string;
+  shareTypeSymbol: string;
+  balance: number;
+  updatedAt: string;
+}

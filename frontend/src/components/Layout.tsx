@@ -32,6 +32,8 @@ export const Layout: React.FC = () => {
             <Link to="/login">Login</Link>
           ) : (
             <>
+              <Link to="/me">My Account</Link>
+              <Link to="/me/organizations">My Organizations</Link>
               <Link to="/users">Users</Link>
               {isAdmin && <Link to="/admin">Admin</Link>}
               <span className="user-info">

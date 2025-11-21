@@ -7,6 +7,8 @@ import type {
   ProposalOption,
   AddProposalOptionRequest,
   ProposalResults,
+  Vote,
+  CastVoteRequest,
 } from '../types/api';
 
 export const proposalsApi = {
@@ -70,6 +72,22 @@ export const proposalsApi = {
    */
   async getResults(proposalId: string): Promise<ProposalResults> {
     const response = await apiClient.get(`/proposals/${proposalId}/results`);
+    return response.data;
+  },
+
+  /**
+   * Cast a vote on a proposal
+   */
+  async castVote(proposalId: string, data: CastVoteRequest): Promise<Vote> {
+    const response = await apiClient.post(`/proposals/${proposalId}/votes`, data);
+    return response.data;
+  },
+
+  /**
+   * Get user's vote on a proposal
+   */
+  async getUserVote(proposalId: string, userId: string): Promise<Vote> {
+    const response = await apiClient.get(`/proposals/${proposalId}/votes/${userId}`);
     return response.data;
   },
 };

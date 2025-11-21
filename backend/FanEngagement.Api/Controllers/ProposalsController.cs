@@ -114,6 +114,18 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
         }
     }
 
+    [HttpGet("{proposalId:guid}/votes/{userId:guid}")]
+    public async Task<ActionResult> GetUserVote(Guid proposalId, Guid userId, CancellationToken cancellationToken)
+    {
+        var vote = await proposalService.GetUserVoteAsync(proposalId, userId, cancellationToken);
+        if (vote is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(vote);
+    }
+
     [HttpGet("{proposalId:guid}/results")]
     public async Task<ActionResult> GetResults(Guid proposalId, CancellationToken cancellationToken)
     {

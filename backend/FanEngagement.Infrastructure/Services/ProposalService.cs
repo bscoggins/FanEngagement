@@ -296,6 +296,28 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         };
     }
 
+    public async Task<VoteDto?> GetUserVoteAsync(Guid proposalId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var vote = await dbContext.Votes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.ProposalId == proposalId && v.UserId == userId, cancellationToken);
+
+        if (vote is null)
+        {
+            return null;
+        }
+
+        return new VoteDto
+        {
+            Id = vote.Id,
+            ProposalId = vote.ProposalId,
+            ProposalOptionId = vote.ProposalOptionId,
+            UserId = vote.UserId,
+            VotingPower = vote.VotingPower,
+            CastAt = vote.CastAt
+        };
+    }
+
     public async Task<ProposalResultsDto?> GetResultsAsync(Guid proposalId, CancellationToken cancellationToken = default)
     {
         var proposal = await dbContext.Proposals
