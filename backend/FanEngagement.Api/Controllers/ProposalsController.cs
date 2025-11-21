@@ -1,4 +1,5 @@
 using FanEngagement.Application.Proposals;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
@@ -112,6 +113,32 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
         {
             return BadRequest(new { Error = ex.Message });
         }
+    }
+
+    [HttpGet("{proposalId:guid}/votes/{userId:guid}")]
+    [Authorize]
+    public async Task<ActionResult> GetUserVote(Guid proposalId, Guid userId, CancellationToken cancellationToken)
+    {
+        // Only allow access if the requesting user is the target user or has Admin role
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var requestingUserId))
+        {
+            return Forbid();
+        }
+
+        // Allow if user is viewing their own vote or is an Admin
+        if (requestingUserId != userId && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
+        var vote = await proposalService.GetUserVoteAsync(proposalId, userId, cancellationToken);
+        if (vote is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(vote);
     }
 
     [HttpGet("{proposalId:guid}/results")]

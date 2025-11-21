@@ -143,8 +143,14 @@ When implementing a new feature or endpoint:
 
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
 - **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
-  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`
+  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`, `shareBalancesApi`
 - **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages.
+- **User Self-Service Area**: User routes at `/me` for authenticated users (non-admin). Uses `ProtectedRoute`.
+  - User routes:
+    - `/me` (account page - view/edit profile)
+    - `/me/organizations` (list user's organization memberships)
+    - `/me/organizations/:orgId` (view org details, share balances, active proposals)
+    - `/me/proposals/:proposalId` (view proposal, cast vote, see results)
 - **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Only users with Admin role can access.
   - Admin routes: 
     - `/admin` (dashboard)
@@ -212,6 +218,7 @@ When implementing a new feature or endpoint:
     - `POST /proposals/{proposalId}/options` → Add proposal option
     - `DELETE /proposals/{proposalId}/options/{optionId}` → Delete proposal option
     - `POST /proposals/{proposalId}/votes` → Cast vote
+    - `GET /proposals/{proposalId}/votes/{userId}` → Get user's vote on a proposal
     - `GET /proposals/{proposalId}/results` → Get results
 - Webhooks & Outbound Events:
     - `POST /organizations/{organizationId}/webhooks` → Create webhook endpoint

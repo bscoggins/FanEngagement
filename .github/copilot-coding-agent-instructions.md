@@ -139,6 +139,7 @@ Notes:
    - `POST /proposals/{proposalId}/options` → Add proposal option
    - `DELETE /proposals/{proposalId}/options/{optionId}` → Delete proposal option
    - `POST /proposals/{proposalId}/votes` → Cast vote
+   - `GET /proposals/{proposalId}/votes/{userId}` → Get user's vote on a proposal
    - `GET /proposals/{proposalId}/results` → Get results
 - Webhooks & Outbound Events:
    - `POST /organizations/{organizationId}/webhooks` → Create webhook endpoint
@@ -256,14 +257,21 @@ When implementing a frontend feature:
     - `/admin/organizations/:orgId/proposals` (list proposals for organization)
     - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results)
     - `/admin/dev-tools`
+   - For user self-service features, use the `/me` route tree with `ProtectedRoute` (not AdminRoute).
+   - Current user self-service routes:
+    - `/me` (account page - view/edit profile)
+    - `/me/organizations` (list user's organization memberships)
+    - `/me/organizations/:orgId` (view org details, share balances, active proposals)
+    - `/me/proposals/:proposalId` (view proposal, cast vote, see results)
 2. API Integration
    - Add/update `frontend/src/api/*Api.ts` using the shared `apiClient` (Axios).
-   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`
+   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`, `shareBalancesApi`
    - Ensure backend endpoints exist and are documented.
 3. Auth
    - Use `AuthContext` and `ProtectedRoute` for protected pages.
    - Use `AdminRoute` for admin-only pages (checks both authentication and Admin role).
    - Admin navigation link appears in main layout only for users with Admin role.
+   - User self-service links (My Account, My Organizations) appear for all authenticated users.
 4. Env
    - Ensure `VITE_API_BASE_URL` is set appropriately for dev/prod.
 5. Tests

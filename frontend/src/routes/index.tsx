@@ -8,6 +8,10 @@ import { LoginPage } from '../pages/LoginPage';
 import { UsersPage } from '../pages/UsersPage';
 import { UserCreatePage } from '../pages/UserCreatePage';
 import { UserEditPage } from '../pages/UserEditPage';
+import { MyAccountPage } from '../pages/MyAccountPage';
+import { MyOrganizationsPage } from '../pages/MyOrganizationsPage';
+import { MyOrganizationPage } from '../pages/MyOrganizationPage';
+import { MyProposalPage } from '../pages/MyProposalPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/AdminUsersPage';
 import { AdminUserDetailPage } from '../pages/AdminUserDetailPage';
@@ -53,6 +57,38 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <UserEditPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'me',
+        element: (
+          <ProtectedRoute>
+            <MyAccountPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'me/organizations',
+        element: (
+          <ProtectedRoute>
+            <MyOrganizationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'me/organizations/:orgId',
+        element: (
+          <ProtectedRoute>
+            <MyOrganizationPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'me/proposals/:proposalId',
+        element: (
+          <ProtectedRoute>
+            <MyProposalPage />
           </ProtectedRoute>
         ),
       },
