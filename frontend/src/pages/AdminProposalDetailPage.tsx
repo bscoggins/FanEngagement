@@ -409,11 +409,12 @@ export const AdminProposalDetailPage: React.FC = () => {
           <h2>Edit Proposal</h2>
           <form onSubmit={handleSaveEdit}>
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="editTitle" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Title *
               </label>
               <input
                 type="text"
+                id="editTitle"
                 value={editFormData.title || ''}
                 onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
                 style={{
@@ -428,10 +429,11 @@ export const AdminProposalDetailPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="editDescription" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Description
               </label>
               <textarea
+                id="editDescription"
                 value={editFormData.description || ''}
                 onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                 style={{
@@ -446,10 +448,11 @@ export const AdminProposalDetailPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="editStatus" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Status
               </label>
               <select
+                id="editStatus"
                 value={editFormData.status || ''}
                 onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as ProposalStatus })}
                 style={{
@@ -474,11 +477,12 @@ export const AdminProposalDetailPage: React.FC = () => {
               marginBottom: '1rem'
             }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="editStartAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Start Date & Time
                 </label>
                 <input
                   type="datetime-local"
+                  id="editStartAt"
                   value={editFormData.startAt || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, startAt: e.target.value })}
                   style={{
@@ -492,11 +496,12 @@ export const AdminProposalDetailPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="editEndAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   End Date & Time
                 </label>
                 <input
                   type="datetime-local"
+                  id="editEndAt"
                   value={editFormData.endAt || ''}
                   onChange={(e) => setEditFormData({ ...editFormData, endAt: e.target.value })}
                   style={{
@@ -511,11 +516,12 @@ export const AdminProposalDetailPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="editQuorumRequirement" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Quorum Requirement (%)
               </label>
               <input
                 type="number"
+                id="editQuorumRequirement"
                 step="0.01"
                 min="0"
                 max="100"

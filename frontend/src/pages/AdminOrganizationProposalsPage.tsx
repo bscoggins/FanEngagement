@@ -297,10 +297,11 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="status" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Status *
               </label>
               <select
+                id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as ProposalStatus })}
                 style={{
@@ -325,11 +326,12 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
               marginBottom: '1rem'
             }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="startAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   Start Date & Time
                 </label>
                 <input
                   type="datetime-local"
+                  id="startAt"
                   value={formData.startAt}
                   onChange={(e) => setFormData({ ...formData, startAt: e.target.value })}
                   style={{
@@ -343,11 +345,12 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="endAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                   End Date & Time
                 </label>
                 <input
                   type="datetime-local"
+                  id="endAt"
                   value={formData.endAt}
                   onChange={(e) => setFormData({ ...formData, endAt: e.target.value })}
                   style={{
@@ -362,11 +365,12 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="quorumRequirement" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Quorum Requirement (%)
               </label>
               <input
                 type="number"
+                id="quorumRequirement"
                 step="0.01"
                 min="0"
                 max="100"
