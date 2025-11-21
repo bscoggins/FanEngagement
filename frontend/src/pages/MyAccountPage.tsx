@@ -55,7 +55,11 @@ export const MyAccountPage: React.FC = () => {
       setSuccessMessage('Profile updated successfully!');
     } catch (err: any) {
       console.error('Failed to update user:', err);
-      setError(err.response?.data?.message || 'Failed to update profile.');
+      setError(
+        err.response?.data?.Error ||
+        err.response?.data?.message ||
+        'Failed to update profile.'
+      );
     }
   };
 

@@ -91,7 +91,7 @@ describe('MyProposalPage', () => {
       status: 'Open' as const,
       startAt: '2024-01-15T00:00:00Z',
       endAt: '2024-02-15T00:00:00Z',
-      quorumRequirement: null,
+      quorumRequirement: undefined,
       createdByUserId: 'user-2',
       createdAt: '2024-01-10T00:00:00Z',
       options: [
@@ -159,7 +159,7 @@ describe('MyProposalPage', () => {
       status: 'Open' as const,
       startAt: '2024-01-15T00:00:00Z',
       endAt: '2024-02-15T00:00:00Z',
-      quorumRequirement: null,
+      quorumRequirement: undefined,
       createdByUserId: 'user-2',
       createdAt: '2024-01-10T00:00:00Z',
       options: [
@@ -202,7 +202,7 @@ describe('MyProposalPage', () => {
       status: 'Open' as const,
       startAt: '2024-01-15T00:00:00Z',
       endAt: '2024-02-15T00:00:00Z',
-      quorumRequirement: null,
+      quorumRequirement: undefined,
       createdByUserId: 'user-2',
       createdAt: '2024-01-10T00:00:00Z',
       options: [
@@ -253,7 +253,7 @@ describe('MyProposalPage', () => {
       status: 'Closed' as const,
       startAt: '2024-01-15T00:00:00Z',
       endAt: '2024-02-15T00:00:00Z',
-      quorumRequirement: null,
+      quorumRequirement: undefined,
       createdByUserId: 'user-2',
       createdAt: '2024-01-10T00:00:00Z',
       options: [
@@ -317,7 +317,7 @@ describe('MyProposalPage', () => {
       status: 'Open' as const,
       startAt: '2024-01-15T00:00:00Z',
       endAt: '2024-02-15T00:00:00Z',
-      quorumRequirement: null,
+      quorumRequirement: undefined,
       createdByUserId: 'user-2',
       createdAt: '2024-01-10T00:00:00Z',
       options: [
