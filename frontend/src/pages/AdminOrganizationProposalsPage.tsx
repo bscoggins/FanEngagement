@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { proposalsApi } from '../api/proposalsApi';
+import { useAuth } from '../auth/AuthContext';
 import { organizationsApi } from '../api/organizationsApi';
 import type { Proposal, Organization, CreateProposalRequest, ProposalStatus } from '../types/api';
 
 export const AdminOrganizationProposalsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
+  const { user } = useAuth();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -73,9 +75,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   };
 
   const handleCreateNew = () => {
-    const authUserStr = localStorage.getItem('authUser');
-    const authUser = authUserStr ? JSON.parse(authUserStr) : null;
-    
     setFormData({
       title: '',
       description: '',
@@ -83,7 +82,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       startAt: '',
       endAt: '',
       quorumRequirement: undefined,
-      createdByUserId: authUser?.userId || '',
+      createdByUserId: user?.userId || '',
     });
     setShowForm(true);
     setError(null);

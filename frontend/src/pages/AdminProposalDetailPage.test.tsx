@@ -311,7 +311,8 @@ describe('AdminProposalDetailPage', () => {
   });
 
   it('deletes option successfully', async () => {
-    vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
+    const draftProposal = { ...mockProposal, status: 'Draft' as const };
+    vi.mocked(proposalsApi.getById).mockResolvedValue(draftProposal);
     vi.mocked(proposalsApi.deleteOption).mockResolvedValueOnce(undefined);
     
     renderPage();

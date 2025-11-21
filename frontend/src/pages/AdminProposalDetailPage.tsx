@@ -31,17 +31,46 @@ export const AdminProposalDetailPage: React.FC = () => {
   });
   const [isAddingOption, setIsAddingOption] = useState(false);
 
-  const fetchProposal = async () => {
-    if (!proposalId) {
-      setError('Invalid proposal ID');
-      setIsLoading(false);
-      return;
-    }
+  useEffect(() => {
+    const fetchProposal = async () => {
+      if (!proposalId) {
+        setError('Invalid proposal ID');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const proposalData = await proposalsApi.getById(proposalId);
+        setProposal(proposalData);
+        
+        // Fetch results if proposal is Closed or Finalized
+        if (proposalData.status === 'Closed' || proposalData.status === 'Finalized') {
+          try {
+            const resultsData = await proposalsApi.getResults(proposalId);
+            setResults(resultsData);
+          } catch (err) {
+            console.error('Failed to fetch results:', err);
+            // Don't set error state, as the proposal loaded successfully
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch proposal:', err);
+        setError('Failed to load proposal. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProposal();
+  }, [proposalId]);
+
+  const refetchProposal = async () => {
+    if (!proposalId) return;
 
     try {
-      setIsLoading(true);
-      setError(null);
-      
       const proposalData = await proposalsApi.getById(proposalId);
       setProposal(proposalData);
       
@@ -52,20 +81,12 @@ export const AdminProposalDetailPage: React.FC = () => {
           setResults(resultsData);
         } catch (err) {
           console.error('Failed to fetch results:', err);
-          // Don't set error state, as the proposal loaded successfully
         }
       }
     } catch (err) {
       console.error('Failed to fetch proposal:', err);
-      setError('Failed to load proposal. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchProposal();
-  }, [proposalId]);
 
   const handleEditClick = () => {
     if (!proposal) return;
@@ -73,10 +94,6 @@ export const AdminProposalDetailPage: React.FC = () => {
     setEditFormData({
       title: proposal.title,
       description: proposal.description || '',
-      status: proposal.status,
-      startAt: proposal.startAt ? formatDateTimeLocal(proposal.startAt) : '',
-      endAt: proposal.endAt ? formatDateTimeLocal(proposal.endAt) : '',
-      quorumRequirement: proposal.quorumRequirement,
     });
     setIsEditing(true);
     setError(null);
@@ -101,21 +118,17 @@ export const AdminProposalDetailPage: React.FC = () => {
       setIsSaving(true);
       setError(null);
 
-      // Build update request with only changed fields
+      // Only send title and description (backend only supports these fields)
       const updateData: UpdateProposalRequest = {
         title: editFormData.title,
         description: editFormData.description || undefined,
-        status: editFormData.status,
-        startAt: editFormData.startAt || undefined,
-        endAt: editFormData.endAt || undefined,
-        quorumRequirement: editFormData.quorumRequirement,
       };
 
       await proposalsApi.update(proposalId, updateData);
       
       setSuccessMessage('Proposal updated successfully');
       setIsEditing(false);
-      await fetchProposal();
+      await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to update proposal:', err);
       if (err && typeof err === 'object' && 'response' in err) {
@@ -140,7 +153,7 @@ export const AdminProposalDetailPage: React.FC = () => {
       setError(null);
       await proposalsApi.close(proposalId);
       setSuccessMessage('Proposal closed successfully');
-      await fetchProposal();
+      await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to close proposal:', err);
       if (err && typeof err === 'object' && 'response' in err) {
@@ -172,7 +185,7 @@ export const AdminProposalDetailPage: React.FC = () => {
       setSuccessMessage('Option added successfully');
       setShowAddOptionForm(false);
       setOptionFormData({ text: '', description: '' });
-      await fetchProposal();
+      await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to add option:', err);
       if (err && typeof err === 'object' && 'response' in err) {
@@ -197,7 +210,7 @@ export const AdminProposalDetailPage: React.FC = () => {
       setError(null);
       await proposalsApi.deleteOption(proposalId, optionId);
       setSuccessMessage('Option deleted successfully');
-      await fetchProposal();
+      await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to delete option:', err);
       if (err && typeof err === 'object' && 'response' in err) {
@@ -212,16 +225,6 @@ export const AdminProposalDetailPage: React.FC = () => {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleString();
-  };
-
-  const formatDateTimeLocal = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const getStatusBadgeColor = (status: ProposalStatus) => {
@@ -241,6 +244,7 @@ export const AdminProposalDetailPage: React.FC = () => {
 
   const canEdit = proposal && (proposal.status === 'Draft' || proposal.status === 'Open');
   const canClose = proposal && (proposal.status === 'Draft' || proposal.status === 'Open');
+  const canDeleteOptions = proposal && proposal.status === 'Draft'; // Only Draft proposals can have options deleted
   const showResults = proposal && (proposal.status === 'Closed' || proposal.status === 'Finalized');
 
   if (isLoading) {
@@ -447,99 +451,6 @@ export const AdminProposalDetailPage: React.FC = () => {
               />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="editStatus" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Status
-              </label>
-              <select
-                id="editStatus"
-                value={editFormData.status || ''}
-                onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as ProposalStatus })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
-              >
-                <option value="Draft">Draft</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
-                <option value="Finalized">Finalized</option>
-              </select>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))',
-              gap: '1rem',
-              marginBottom: '1rem'
-            }}>
-              <div>
-                <label htmlFor="editStartAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  Start Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  id="editStartAt"
-                  value={editFormData.startAt || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, startAt: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    border: '1px solid #ced4da',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                  }}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="editEndAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  End Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  id="editEndAt"
-                  value={editFormData.endAt || ''}
-                  onChange={(e) => setEditFormData({ ...editFormData, endAt: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    border: '1px solid #ced4da',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="editQuorumRequirement" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Quorum Requirement (%)
-              </label>
-              <input
-                type="number"
-                id="editQuorumRequirement"
-                step="0.01"
-                min="0"
-                max="100"
-                value={editFormData.quorumRequirement ?? ''}
-                onChange={(e) => setEditFormData({
-                  ...editFormData,
-                  quorumRequirement: e.target.value ? parseFloat(e.target.value) : undefined
-                })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
-              />
-            </div>
-
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
                 type="submit"
@@ -717,7 +628,7 @@ export const AdminProposalDetailPage: React.FC = () => {
                       <p style={{ color: '#666', margin: 0 }}>{option.description}</p>
                     )}
                   </div>
-                  {canEdit && (
+                  {canDeleteOptions && (
                     <button
                       onClick={() => handleDeleteOption(option.id)}
                       style={{

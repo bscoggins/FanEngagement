@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AdminOrganizationProposalsPage } from './AdminOrganizationProposalsPage';
 import { proposalsApi } from '../api/proposalsApi';
 import { organizationsApi } from '../api/organizationsApi';
+import { AuthProvider } from '../auth/AuthContext';
 import type { Proposal, Organization } from '../types/api';
 
 // Mock the APIs
@@ -23,10 +24,19 @@ vi.mock('../api/organizationsApi', () => ({
 describe('AdminOrganizationProposalsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock localStorage
+    // Mock localStorage for auth
     Storage.prototype.getItem = vi.fn((key) => {
+      if (key === 'authToken') {
+        return 'test-token';
+      }
       if (key === 'authUser') {
-        return JSON.stringify({ userId: 'user-1' });
+        return JSON.stringify({ 
+          userId: 'user-1',
+          email: 'admin@test.com',
+          displayName: 'Admin User',
+          role: 'Admin',
+          token: 'test-token'
+        });
       }
       return null;
     });
@@ -68,11 +78,13 @@ describe('AdminOrganizationProposalsPage', () => {
 
   const renderPage = (orgId = 'org-1') => {
     return render(
-      <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/proposals`]}>
-        <Routes>
-          <Route path="/admin/organizations/:orgId/proposals" element={<AdminOrganizationProposalsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/proposals`]}>
+          <Routes>
+            <Route path="/admin/organizations/:orgId/proposals" element={<AdminOrganizationProposalsPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>
     );
   };
 
