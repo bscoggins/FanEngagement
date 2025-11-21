@@ -20,8 +20,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   const [formData, setFormData] = useState<CreateProposalRequest>({
     title: '',
     description: '',
-    startAt: '',
-    endAt: '',
+    startAt: undefined,
+    endAt: undefined,
     quorumRequirement: undefined,
     createdByUserId: '', // Will be set from auth context when creating
   });
@@ -30,8 +30,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   // Helper function to convert datetime-local to ISO 8601 with timezone
   const convertToISO8601 = (dateTimeLocal?: string): string | undefined => {
     if (!dateTimeLocal) return undefined;
-    // datetime-local gives us "2024-01-01T12:00", we need to convert to ISO 8601 with Z (UTC)
-    return new Date(dateTimeLocal).toISOString();
+    // Treat datetime-local input as UTC by appending 'Z' before conversion
+    return new Date(dateTimeLocal + 'Z').toISOString();
   };
 
   useEffect(() => {
@@ -84,8 +84,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     setFormData({
       title: '',
       description: '',
-      startAt: '',
-      endAt: '',
+      startAt: undefined,
+      endAt: undefined,
       quorumRequirement: undefined,
       createdByUserId: user?.userId || '',
     });
@@ -99,8 +99,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     setFormData({
       title: '',
       description: '',
-      startAt: '',
-      endAt: '',
+      startAt: undefined,
+      endAt: undefined,
       quorumRequirement: undefined,
       createdByUserId: '',
     });
@@ -136,8 +136,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       setFormData({
         title: '',
         description: '',
-        startAt: '',
-        endAt: '',
+        startAt: undefined,
+        endAt: undefined,
         quorumRequirement: undefined,
         createdByUserId: '',
       });
@@ -310,8 +310,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 <input
                   type="datetime-local"
                   id="startAt"
-                  value={formData.startAt}
-                  onChange={(e) => setFormData({ ...formData, startAt: e.target.value })}
+                  value={formData.startAt ?? ''}
+                  onChange={(e) => setFormData({ ...formData, startAt: e.target.value || undefined })}
                   style={{
                     width: '100%',
                     padding: '0.5rem',
@@ -329,8 +329,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 <input
                   type="datetime-local"
                   id="endAt"
-                  value={formData.endAt}
-                  onChange={(e) => setFormData({ ...formData, endAt: e.target.value })}
+                  value={formData.endAt ?? ''}
+                  onChange={(e) => setFormData({ ...formData, endAt: e.target.value || undefined })}
                   style={{
                     width: '100%',
                     padding: '0.5rem',
