@@ -34,14 +34,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     return new Date(dateTimeLocal + 'Z').toISOString();
   };
 
-  // Helper function to convert ISO 8601 to datetime-local format
-  const convertToDateTimeLocal = (isoString?: string): string => {
-    if (!isoString) return '';
-    // datetime-local expects "YYYY-MM-DDTHH:mm" format
-    // ISO 8601 is "YYYY-MM-DDTHH:mm:ss.sssZ", so we take first 16 characters
-    return isoString.slice(0, 16);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (!orgId) {
@@ -318,7 +310,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 <input
                   type="datetime-local"
                   id="startAt"
-                  value={convertToDateTimeLocal(formData.startAt)}
+                  value={formData.startAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, startAt: e.target.value || undefined })}
                   style={{
                     width: '100%',
@@ -337,7 +329,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 <input
                   type="datetime-local"
                   id="endAt"
-                  value={convertToDateTimeLocal(formData.endAt)}
+                  value={formData.endAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, endAt: e.target.value || undefined })}
                   style={{
                     width: '100%',
