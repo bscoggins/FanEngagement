@@ -156,6 +156,57 @@ Notes:
 
 Controllers live in `backend/FanEngagement.Api/Controllers/` and call services defined in `Application` and implemented in `Infrastructure/Services`.
 
+## Roles & Permissions Model
+
+FanEngagement uses a **two-tier role model** with global roles and organization-scoped roles:
+
+### Global Roles (User.Role - UserRole enum)
+Located in `backend/FanEngagement.Domain/Enums/UserRole.cs`:
+- **User** (`UserRole.User` = 0): Default role. Can manage own profile, view own memberships, participate in organizations they're members of.
+- **Admin** (`UserRole.Admin` = 1): Platform-wide administrator. Has implicit permission for all actions regardless of organization membership. Auto-seeded in Development as `admin@example.com`.
+
+### Organization Roles (OrganizationMembership.Role - OrganizationRole enum)
+Located in `backend/FanEngagement.Domain/Enums/OrganizationRole.cs`:
+- **Member** (`OrganizationRole.Member` = 1): Regular organization member. Can view org details, share balances, proposals, and vote on proposals.
+- **OrgAdmin** (`OrganizationRole.OrgAdmin` = 0): Organization administrator. Can manage org settings, memberships, share types, proposals, and webhooks for their organization.
+
+### Authorization Principles
+
+1. **Global Admin Override**: Users with `UserRole.Admin` have implicit permission for all actions, regardless of organization membership.
+2. **Organization Membership Required**: For org-scoped actions, user must have an `OrganizationMembership` record (unless Global Admin).
+3. **Organization Role Check**: Extract `organizationId` from route → query `OrganizationMembership` → check `Role` property → grant/deny based on permissions.
+4. **Self-Access**: Users can always access their own resources (profile, memberships, votes, balances).
+5. **Creator Privileges**: Proposal creators can manage their proposals even if not OrgAdmins (as long as they're org members).
+
+### Key Permission Examples
+
+- **Create Organization**: Admin only
+- **Update Organization**: OrgAdmin for their org, Admin for any org
+- **Manage Memberships**: OrgAdmin for their org, Admin for any org
+- **Manage Share Types**: OrgAdmin for their org, Admin for any org
+- **Create Proposal**: Org members, OrgAdmins, Admin
+- **Update/Close Proposal**: Proposal creator, OrgAdmin for that org, Admin
+- **Vote on Proposal**: Org members, OrgAdmins, Admin
+- **Manage Webhooks**: OrgAdmin for their org, Admin for any org
+- **Seed Dev Data**: Admin only, Development environment only
+
+For the complete permissions matrix with all actions, see the **Roles & Permissions** section in `docs/architecture.md`.
+
+### Current Authorization Implementation
+
+- JWT authentication configured with role claims (see `Program.cs`)
+- Some endpoints use `[Authorize(Roles = "Admin")]` attribute
+- Some controllers check `User.IsInRole("Admin")` for specific actions
+- **Future Work**: Comprehensive policy-based authorization with custom requirements/handlers should be implemented to enforce permissions consistently
+
+### When Adding New Features
+
+- **Determine required role(s)** for each action using the permissions matrix in `docs/architecture.md`
+- **For global actions**: Use `[Authorize(Roles = "Admin")]` or check `User.IsInRole("Admin")`
+- **For org-scoped actions**: Query `OrganizationMembership` to verify user has required role for that organization
+- **Document permissions** in PR description and update `docs/architecture.md` if introducing new actions
+- **Don't implement policies yet** unless specifically requested; current approach uses attribute-based and manual checks
+
 ## How To Ask Copilot Agent To Work
 
 Use the GitHub Copilot coding agent by adding a comment containing the hashtag below to a new or existing issue, or by opening a conversation and concluding with the hashtag. The agent will create a branch, implement changes, and open a PR.
