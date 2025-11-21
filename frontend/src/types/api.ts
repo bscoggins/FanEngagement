@@ -34,7 +34,18 @@ export interface UpdateUserRequest {
 export interface Organization {
   id: string;
   name: string;
+  description?: string;
   createdAt: string;
+}
+
+export interface CreateOrganizationRequest {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateOrganizationRequest {
+  name: string;
+  description?: string;
 }
 
 export interface Membership {
@@ -52,4 +63,49 @@ export interface MembershipWithOrganizationDto {
   userId: string;
   role: string;
   createdAt: string;
+}
+
+export interface MembershipWithUserDto {
+  id: string;
+  organizationId: string;
+  userId: string;
+  userEmail: string;
+  userDisplayName: string;
+  role: 'OrgAdmin' | 'Member';
+  createdAt: string;
+}
+
+export interface CreateMembershipRequest {
+  userId: string;
+  role: 'OrgAdmin' | 'Member';
+}
+
+export interface ShareType {
+  id: string;
+  organizationId: string;
+  name: string;
+  symbol: string;
+  description?: string;
+  votingWeight: number;
+  maxSupply?: number;
+  isTransferable: boolean;
+  createdAt: string;
+}
+
+export interface CreateShareTypeRequest {
+  name: string;
+  symbol: string;
+  description?: string;
+  votingWeight: number;
+  maxSupply?: number;
+  isTransferable: boolean;
+}
+
+export interface UpdateShareTypeRequest {
+  name: string;
+  symbol: string;
+  description?: string;
+  votingWeight: number;
+  maxSupply?: number;
+  isTransferable: boolean;
 }

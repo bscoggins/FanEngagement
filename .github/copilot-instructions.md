@@ -143,10 +143,18 @@ When implementing a new feature or endpoint:
 
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
 - **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
-  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`
+  - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`
 - **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages.
 - **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Only users with Admin role can access.
-  - Admin routes: `/admin` (dashboard), `/admin/users` (user list), `/admin/users/:userId` (user detail/edit), `/admin/organizations`, `/admin/dev-tools`
+  - Admin routes: 
+    - `/admin` (dashboard)
+    - `/admin/users` (user list)
+    - `/admin/users/:userId` (user detail/edit)
+    - `/admin/organizations` (organizations list)
+    - `/admin/organizations/:orgId/edit` (edit organization)
+    - `/admin/organizations/:orgId/memberships` (manage organization memberships)
+    - `/admin/organizations/:orgId/share-types` (manage organization share types)
+    - `/admin/dev-tools`
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
 ### Current Entities
@@ -179,13 +187,16 @@ When implementing a new feature or endpoint:
     - `POST /organizations` → Create organization
     - `GET /organizations` → List organizations
     - `GET /organizations/{id}` → Get organization by ID
-    - `GET /organizations/{organizationId}/memberships` → List memberships
+    - `PUT /organizations/{id}` → Update organization
+    - `GET /organizations/{organizationId}/memberships?includeUserDetails=true` → List memberships (optionally with user details)
     - `POST /organizations/{organizationId}/memberships` → Add membership
     - `GET /organizations/{organizationId}/memberships/{userId}` → Get membership by user
     - `DELETE /organizations/{organizationId}/memberships/{userId}` → Remove membership
 - Share Types & Issuances:
     - `POST /organizations/{organizationId}/share-types` → Create share type
     - `GET /organizations/{organizationId}/share-types` → List share types
+    - `GET /organizations/{organizationId}/share-types/{id}` → Get share type by ID
+    - `PUT /organizations/{organizationId}/share-types/{id}` → Update share type
     - `POST /organizations/{organizationId}/share-issuances` → Create share issuance
     - `GET /organizations/{organizationId}/share-issuances` → List share issuances
     - `GET /organizations/{organizationId}/users/{userId}/share-issuances` → List user share issuances

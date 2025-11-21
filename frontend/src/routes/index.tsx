@@ -12,6 +12,9 @@ import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/AdminUsersPage';
 import { AdminUserDetailPage } from '../pages/AdminUserDetailPage';
 import { AdminOrganizationsPage } from '../pages/AdminOrganizationsPage';
+import { AdminOrganizationEditPage } from '../pages/AdminOrganizationEditPage';
+import { AdminOrganizationMembershipsPage } from '../pages/AdminOrganizationMembershipsPage';
+import { AdminOrganizationShareTypesPage } from '../pages/AdminOrganizationShareTypesPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 
 export const router = createBrowserRouter([
@@ -76,6 +79,18 @@ export const router = createBrowserRouter([
       {
         path: 'organizations',
         element: <AdminOrganizationsPage />,
+      },
+      {
+        path: 'organizations/:orgId/edit',
+        element: <AdminOrganizationEditPage />,
+      },
+      {
+        path: 'organizations/:orgId/memberships',
+        element: <AdminOrganizationMembershipsPage />,
+      },
+      {
+        path: 'organizations/:orgId/share-types',
+        element: <AdminOrganizationShareTypesPage />,
       },
       {
         path: 'dev-tools',

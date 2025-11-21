@@ -7,4 +7,5 @@ public interface IOrganizationService
     Task<Organization> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Organization>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<Organization?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Organization?> UpdateAsync(Guid id, UpdateOrganizationRequest request, CancellationToken cancellationToken = default);
 }

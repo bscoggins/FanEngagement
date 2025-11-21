@@ -38,4 +38,51 @@ public class ShareTypeService(FanEngagementDbContext dbContext) : IShareTypeServ
 
         return shareTypes;
     }
+
+    public async Task<ShareType?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.ShareTypes.AsNoTracking().FirstOrDefaultAsync(st => st.Id == id, cancellationToken);
+    }
+
+    public async Task<ShareType?> UpdateAsync(Guid id, UpdateShareTypeRequest request, CancellationToken cancellationToken = default)
+    {
+        var shareType = await dbContext.ShareTypes.FirstOrDefaultAsync(st => st.Id == id, cancellationToken);
+        
+        if (shareType == null)
+        {
+            return null;
+        }
+
+        UpdateShareTypeProperties(shareType, request);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return shareType;
+    }
+
+    public async Task<ShareType?> UpdateAsync(Guid organizationId, Guid id, UpdateShareTypeRequest request, CancellationToken cancellationToken = default)
+    {
+        var shareType = await dbContext.ShareTypes.FirstOrDefaultAsync(st => st.Id == id && st.OrganizationId == organizationId, cancellationToken);
+        
+        if (shareType == null)
+        {
+            return null;
+        }
+
+        UpdateShareTypeProperties(shareType, request);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return shareType;
+    }
+
+    private static void UpdateShareTypeProperties(ShareType shareType, UpdateShareTypeRequest request)
+    {
+        shareType.Name = request.Name;
+        shareType.Symbol = request.Symbol;
+        shareType.Description = request.Description;
+        shareType.VotingWeight = request.VotingWeight;
+        shareType.MaxSupply = request.MaxSupply;
+        shareType.IsTransferable = request.IsTransferable;
+    }
 }
