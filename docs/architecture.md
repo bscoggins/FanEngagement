@@ -106,7 +106,7 @@ These roles are assigned per-organization via the `OrganizationMembership.Role` 
 - **OrgAdmin** (`OrganizationRole.OrgAdmin`)
   - Administrator for a specific organization
   - Can manage organization settings and details
-  - Can manage memberships (add/remove members, assign roles for other members)
+  - Can manage memberships (add/remove members, assign roles for other members; cannot modify their own role to prevent privilege escalation)
   - Can manage share types and issue shares
   - Can create, edit, and manage proposals
   - Can manage webhook endpoints and view outbound events
@@ -123,7 +123,7 @@ The table below specifies the **intended** permissions model that should be enfo
 | Create user | ✅ OPEN | ✓ | ✓ | - | - | `[AllowAnonymous]` - anyone can create |
 | List all users | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can list |
 | View any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can view |
-| Update any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can update (including role changes) |
+| Update any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - CRITICAL RISK: any authenticated user can update any user (including role changes for privilege escalation) |
 | Delete any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can delete |
 | View own memberships | ✅ ENFORCED | ✓ | ✓ | - | - | Properly checks self or Admin role |
 | View user statistics | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Roles = "Admin")]` |
@@ -137,7 +137,7 @@ The table below specifies the **intended** permissions model that should be enfo
 | List org memberships | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can list |
 | View membership | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can view |
 | Remove member | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can remove |
-| Update membership role | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - should prevent OrgAdmins from changing their own role |
+| Update membership role | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - CRITICAL RISK: any authenticated user can change roles; intended model should prevent OrgAdmins from changing their own role |
 | **Share Type Management** |
 | Create share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
 | List share types | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
