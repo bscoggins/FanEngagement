@@ -137,20 +137,20 @@ The table below specifies the **intended** permissions model that should be enfo
 | List org memberships | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can list |
 | View membership | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can view |
 | Remove member | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can remove |
-| Update membership role | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - OrgAdmins should not be able to change their own role to prevent privilege escalation |
+| Update membership role | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - should prevent OrgAdmins from changing their own role |
 | **Share Type Management** |
 | Create share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
 | List share types | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
 | View share type | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
 | Update share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
 | **Share Issuance & Balances** |
-| Issue shares | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
-| List share issuances | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
-| View user share issuances | ⚠️ AUTH-ONLY | (self) | ✓ | ✓ (self) | ✓ | `[Authorize]` only - any authenticated user |
-| View user share balances | ⚠️ AUTH-ONLY | (self) | ✓ | ✓ (self) | ✓ | `[Authorize]` only - any authenticated user |
+| Issue shares | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| List share issuances | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| View user share issuances | ⚠️ OPEN | (self) | ✓ | ✓ (self) | ✓ | No `[Authorize]` - anonymous access |
+| View user share balances | ⚠️ OPEN | (self) | ✓ | ✓ (self) | ✓ | No `[Authorize]` - anonymous access |
 | **Proposal Management** |
-| Create proposal | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
-| List proposals by org | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
+| Create proposal | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
+| List proposals by org | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
 | View proposal | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
 | Update proposal | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
 | Close proposal | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
@@ -162,8 +162,8 @@ The table below specifies the **intended** permissions model that should be enfo
 | View own vote | ⚠️ OPEN | ✓ | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
 | View user's vote | ✅ PARTIAL | - | ✓ | - | - | Checks self or Admin role |
 | **Webhook & Events Management** |
-| Webhook CRUD | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
-| Outbound events | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
+| Webhook CRUD | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| Outbound events | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
 | **Admin & Dev Tools** |
 | Seed dev data | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Roles = "Admin")]` + environment check |
 
@@ -217,13 +217,20 @@ The table below specifies the **intended** permissions model that should be enfo
    - ❌ Any authenticated user can add/remove members or change roles for any organization
    - **Risk:** Unauthorized access grants, privilege escalation, membership manipulation
 
-4. **Share Type, Issuance, Proposals** (Various Controllers):
-   - ❌ Most operations require only `[Authorize]` with no organization membership/role checks
-   - **Risk:** Unauthorized share issuance, proposal manipulation, voting fraud
+4. **Share Type, Issuance, Balances** (ShareTypesController, ShareIssuancesController):
+   - ❌ Share type operations require only `[Authorize]` - any authenticated user can create/update
+   - ❌ Share issuance and balance endpoints have NO authorization - anonymous access
+   - **Risk:** Unauthorized share issuance, balance manipulation, financial fraud
 
-5. **Proposal & Voting APIs** (ProposalsController, etc.):
-   - ❌ Many operations have NO authorization - anonymous access
-   - **Risk:** Anonymous voting, proposal manipulation, results tampering
+5. **Proposal & Voting APIs** (OrganizationProposalsController, ProposalsController, etc.):
+   - ❌ Organization proposal create/list have NO authorization - anonymous access
+   - ❌ Proposal view/update/close/options have NO authorization - anonymous access
+   - ❌ Voting endpoints have NO authorization - anonymous voting possible
+   - **Risk:** Anonymous voting, proposal manipulation, results tampering, governance fraud
+
+6. **Webhook & Event APIs** (WebhookEndpointsController, OutboundEventsController):
+   - ❌ All webhook and outbound event operations have NO authorization - anonymous access
+   - **Risk:** Unauthorized webhook creation, event manipulation, data exfiltration
 
 ### Migration Path to Proper Authorization
 
