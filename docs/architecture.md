@@ -72,7 +72,7 @@ FanEngagement is a multi-tenant fan governance platform. Organizations (teams, c
 
 ## Roles & Permissions
 
-FanEngagement uses a two-tier role model: **Global Roles** (platform-wide) and **Organization Roles** (per-organization).
+FanEngagement defines a two-tier role model: **Global Roles** (platform-wide) and **Organization Roles** (per-organization). The role model is implemented in the domain entities, but **authorization enforcement is currently incomplete** and varies by endpoint.
 
 ### Role Definitions
 
@@ -91,6 +91,7 @@ These roles are assigned to users at the platform level and stored in the `User.
   - Can manage all platform resources (users, organizations, etc.)
   - Can perform administrative tasks like seeding dev data
   - Should be granted sparingly and only to trusted platform operators
+  > **Security Note:** Global Admins bypass all organization-level access controls and should be granted only to trusted platform operators.
 
 #### Organization Roles (OrganizationMembership.Role - OrganizationRole enum)
 
@@ -105,101 +106,154 @@ These roles are assigned per-organization via the `OrganizationMembership.Role` 
 - **OrgAdmin** (`OrganizationRole.OrgAdmin`)
   - Administrator for a specific organization
   - Can manage organization settings and details
-  - Can manage memberships (add/remove members, assign roles)
+  - Can manage memberships (add/remove members, assign roles for other members)
   - Can manage share types and issue shares
   - Can create, edit, and manage proposals
   - Can manage webhook endpoints and view outbound events
 
-### Permissions Matrix
+### Current Authorization Implementation
 
-The table below specifies which roles can perform which actions. For organization-scoped actions, the role is determined by looking up the user's `OrganizationMembership.Role` for the relevant organization.
+> **⚠️ IMPORTANT:** The permissions documented below represent the **intended model**, not the current implementation. Many endpoints lack proper authorization checks. See "Implementation Status by Endpoint" below for actual enforcement.
 
-| Action | Global: User | Global: Admin | Org: Member | Org: OrgAdmin | Notes |
-|--------|--------------|---------------|-------------|---------------|-------|
+The table below specifies the **intended** permissions model that should be enforced.
+
+| Action | Current Enforcement | Intended: Global User | Intended: Global Admin | Intended: Org Member | Intended: Org OrgAdmin | Implementation Notes |
+|--------|---------------------|-------------|---------------|-------------|---------------|----------------------|
 | **User Management** |
-| View own user profile | ✓ | ✓ | - | - | Users can view their own profile |
-| Update own user profile | ✓ | ✓ | - | - | Users can update their own email/display name |
-| View any user profile | - | ✓ | - | - | Admin only |
-| Update any user profile | - | ✓ | - | - | Admin only (including role changes) |
-| Delete any user | - | ✓ | - | - | Admin only |
-| List all users | - | ✓ | - | - | Admin only |
-| View user statistics | - | ✓ | - | - | Admin only |
+| Create user | ✅ OPEN | ✓ | ✓ | - | - | `[AllowAnonymous]` - anyone can create |
+| List all users | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can list |
+| View any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can view |
+| Update any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can update (including role changes) |
+| Delete any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can delete |
+| View own memberships | ✅ ENFORCED | ✓ | ✓ | - | - | Properly checks self or Admin role |
+| View user statistics | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Roles = "Admin")]` |
 | **Organization Management** |
-| Create organization | - | ✓ | - | - | Admin only |
-| List all organizations | ✓ | ✓ | - | - | All authenticated users |
-| View organization details | (member) | ✓ | ✓ | ✓ | Members/OrgAdmins can view their org; Admin can view any |
-| Update organization | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| Delete organization | - | ✓ | - | - | Admin only |
+| Create organization | ⚠️ OPEN | - | ✓ | - | - | No `[Authorize]` - anonymous users can create |
+| List all organizations | ⚠️ OPEN | ✓ | ✓ | - | - | No `[Authorize]` - anonymous access |
+| View organization | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
+| Update organization | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can update |
 | **Membership Management** |
-| View org memberships | - | ✓ | - | ✓ | OrgAdmin can view for their org; Admin for any org |
-| Add member to org | - | ✓ | - | ✓ | OrgAdmin can add to their org; Admin to any org |
-| Remove member from org | - | ✓ | - | ✓ | OrgAdmin can remove from their org; Admin from any org |
-| Update membership role | - | ✓ | - | ✓ | OrgAdmin can update in their org; Admin in any org |
-| View own memberships | ✓ | ✓ | - | - | Users can view their own org memberships |
+| Add member to org | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can add |
+| List org memberships | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can list |
+| View membership | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can view |
+| Remove member | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can remove |
+| Update membership role | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - OrgAdmins should not be able to change their own role to prevent privilege escalation |
 | **Share Type Management** |
-| Create share type | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| List share types | (member) | ✓ | ✓ | ✓ | Members can view for their org; Admin for any org |
-| View share type details | (member) | ✓ | ✓ | ✓ | Members can view for their org; Admin for any org |
-| Update share type | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
+| Create share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
+| List share types | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
+| View share type | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
+| Update share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
 | **Share Issuance & Balances** |
-| Issue shares | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| List share issuances | - | ✓ | - | ✓ | OrgAdmin can view for their org; Admin for any org |
-| View user share issuances | (self) | ✓ | ✓ (self) | ✓ | Users can view their own; OrgAdmin can view for their org members |
-| View user share balances | (self) | ✓ | ✓ (self) | ✓ | Users can view their own; OrgAdmin can view for their org members |
+| Issue shares | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
+| List share issuances | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
+| View user share issuances | ⚠️ AUTH-ONLY | (self) | ✓ | ✓ (self) | ✓ | `[Authorize]` only - any authenticated user |
+| View user share balances | ⚠️ AUTH-ONLY | (self) | ✓ | ✓ (self) | ✓ | `[Authorize]` only - any authenticated user |
 | **Proposal Management** |
-| Create proposal | (member) | ✓ | ✓ | ✓ | Members can create for their org; Admin for any org |
-| List proposals | (member) | ✓ | ✓ | ✓ | Members can view for their org; Admin for any org |
-| View proposal details | (member) | ✓ | ✓ | ✓ | Members can view for their org; Admin for any org |
-| Update proposal | (creator) | ✓ | - | ✓ | Proposal creator or OrgAdmin for their org; Admin for any org |
-| Close proposal | (creator) | ✓ | - | ✓ | Proposal creator or OrgAdmin for their org; Admin for any org |
-| Add/delete proposal options | (creator) | ✓ | - | ✓ | Proposal creator or OrgAdmin for their org; Admin for any org |
-| View proposal results | (member) | ✓ | ✓ | ✓ | Members can view for their org; Admin for any org |
+| Create proposal | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
+| List proposals by org | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
+| View proposal | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
+| Update proposal | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| Close proposal | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| Add proposal option | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| Delete proposal option | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| View proposal results | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
 | **Voting** |
-| Cast vote on proposal | (member) | ✓ | ✓ | ✓ | Members can vote on proposals in their org; Admin can vote on any |
-| View own vote | ✓ | ✓ | ✓ | ✓ | Users can view their own votes |
-| View any user's vote | - | ✓ | - | - | Admin only |
-| **Webhook Management** |
-| Create webhook endpoint | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| List webhook endpoints | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| View webhook endpoint | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| Update webhook endpoint | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| Delete webhook endpoint | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| **Outbound Events** |
-| List outbound events | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| View outbound event details | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
-| Retry outbound event | - | ✓ | - | ✓ | OrgAdmin for their org; Admin for any org |
+| Cast vote | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
+| View own vote | ⚠️ OPEN | ✓ | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
+| View user's vote | ✅ PARTIAL | - | ✓ | - | - | Checks self or Admin role |
+| **Webhook & Events Management** |
+| Webhook CRUD | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
+| Outbound events | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
 | **Admin & Dev Tools** |
-| Seed dev data | - | ✓ | - | - | Admin only, Development environment only |
-| Access admin endpoints | - | ✓ | - | - | Admin only |
+| Seed dev data | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Roles = "Admin")]` + environment check |
 
 **Legend:**
-- ✓ = Allowed
-- - = Not allowed
-- (member) = Allowed if user is a member of the relevant organization
-- (self) = Allowed only for the user's own resources
-- (creator) = Allowed if user is the creator of the resource
+- ✅ ENFORCED: Proper authorization checks in place
+- ✅ PARTIAL: Some checks but incomplete
+- ⚠️ AUTH-ONLY: Only requires authentication, no role/membership checks
+- ⚠️ OPEN: No authorization - anonymous access allowed
+- ✓ = Should be allowed (intended model)
+- - = Should not be allowed
+- (member) = Should be allowed if user is a member of the relevant organization
+- (self) = Should be allowed only for the user's own resources
+- (creator) = Should be allowed if user is the creator of the resource
 
-### Role Evaluation Rules
+### Intended Authorization Rules (Target State)
 
-1. **Global Admin Override**: A user with `UserRole.Admin` has implicit permission for all actions, regardless of organization membership or role.
+1. **Global Admin Override**: A user with `UserRole.Admin` should have implicit permission for all actions, regardless of organization membership or role.
+   > **Security Note:** Global Admins bypass all organization-level access controls and should be granted only to trusted platform operators.
 
-2. **Organization Membership Required**: For any organization-scoped action, the user must have an `OrganizationMembership` record for that organization (unless they are a Global Admin).
+2. **Organization Membership Required**: For any organization-scoped action, the user should have an `OrganizationMembership` record for that organization (unless they are a Global Admin).
 
 3. **Organization Role Check**: For organization-scoped actions, the system should:
    - Extract the `organizationId` from the route or request
    - Query `OrganizationMembership` where `UserId = currentUser.Id AND OrganizationId = organizationId`
    - Check the `Role` property of the membership record
-   - Grant or deny access based on the permissions matrix above
+   - Grant or deny access based on the intended permissions above
 
-4. **Self-Access**: Users can always access their own resources (profile, memberships, votes, balances) without needing special roles.
+4. **Self-Access**: Users should be able to access their own resources (profile, memberships, votes, balances) without needing special roles.
 
-5. **Creator Privileges**: Users who create proposals have implicit permission to manage those proposals (update, close, manage options) even if they are not OrgAdmins, as long as they are members of the organization.
+5. **Creator Privileges**: Users who create proposals should have permission to manage those proposals (update, close, manage options) even if they are not OrgAdmins, as long as they are members of the organization.
 
-### Implementation Notes
+6. **Privilege Escalation Prevention**: OrgAdmins should not be able to modify their own membership role to prevent privilege escalation. Only Global Admins or other OrgAdmins should be able to change an OrgAdmin's role.
 
-- **Current State**: As of this documentation, the role model is fully defined in the domain entities and exposed via DTOs. Some endpoints use `[Authorize(Roles = "Admin")]` attributes or manual role checks.
-- **Future Work**: A comprehensive authorization policy system should be implemented to enforce these permissions consistently across all endpoints. This should use ASP.NET Core's policy-based authorization with custom requirements and handlers.
-- **JWT Claims**: The JWT token includes role claims for the user's global role. Organization-specific role checks require database lookups of `OrganizationMembership` records.
+### Implementation Gaps & Security Concerns
+
+> **⚠️ CRITICAL SECURITY GAPS:** The current implementation has significant authorization gaps that expose sensitive operations to unauthorized users.
+
+1. **User Management APIs** (UsersController):
+   - ❌ List, view, update, delete users require only `[Authorize]` with no role checks
+   - ❌ Any authenticated user can view all users, update any user (including role changes), or delete any user
+   - ✅ Only "View user statistics" properly requires Admin role
+   - **Risk:** User enumeration, unauthorized privilege escalation, account takeover
+
+2. **Organization APIs** (OrganizationsController):
+   - ❌ Create, list, view organizations have NO authorization - anonymous access
+   - ❌ Update organization requires only `[Authorize]` with no role checks
+   - **Risk:** Unauthorized org creation, data exposure, unauthorized modifications
+
+3. **Membership APIs** (MembershipsController):
+   - ❌ All membership operations require only `[Authorize]` with no organization role checks
+   - ❌ Any authenticated user can add/remove members or change roles for any organization
+   - **Risk:** Unauthorized access grants, privilege escalation, membership manipulation
+
+4. **Share Type, Issuance, Proposals** (Various Controllers):
+   - ❌ Most operations require only `[Authorize]` with no organization membership/role checks
+   - **Risk:** Unauthorized share issuance, proposal manipulation, voting fraud
+
+5. **Proposal & Voting APIs** (ProposalsController, etc.):
+   - ❌ Many operations have NO authorization - anonymous access
+   - **Risk:** Anonymous voting, proposal manipulation, results tampering
+
+### Migration Path to Proper Authorization
+
+To implement the intended model, the following work is required:
+
+1. **Implement Policy-Based Authorization**:
+   - Create custom authorization policies for each permission category
+   - Define requirements for Global Admin, OrgAdmin, and OrgMember scenarios
+   - Implement custom authorization handlers that query OrganizationMembership
+
+2. **Apply Policies to Controllers**:
+   - Replace bare `[Authorize]` with specific policy requirements
+   - Add organization-scoped policy checks (e.g., `[Authorize(Policy = "RequireOrgAdmin")]`)
+   - Implement organization context extraction from routes
+
+3. **Add Privilege Escalation Safeguards**:
+   - Prevent OrgAdmins from modifying their own membership role
+   - Validate role changes at the service layer
+
+4. **Add Authorization Tests**:
+   - Test each endpoint with different role combinations
+   - Verify access is properly denied for unauthorized users
+   - Test edge cases (self-access, creator privileges, admin override)
+
+### JWT Claims & Implementation
+
+- **JWT Claims**: The JWT token includes role claims for the user's global role via `ClaimTypes.Role`
+- **Organization Role Checks**: Organization-specific role checks require database lookups of `OrganizationMembership` records
+- **Current Approach**: Mixed use of `[Authorize]`, `[Authorize(Roles = "Admin")]`, and manual `User.IsInRole()` checks
+- **Target Approach**: Consistent policy-based authorization with custom requirements and handlers
 
 ## Tech Stack
 

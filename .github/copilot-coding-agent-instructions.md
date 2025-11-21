@@ -158,54 +158,76 @@ Controllers live in `backend/FanEngagement.Api/Controllers/` and call services d
 
 ## Roles & Permissions Model
 
-FanEngagement uses a **two-tier role model** with global roles and organization-scoped roles:
+FanEngagement defines a **two-tier role model** with global roles and organization-scoped roles. **⚠️ IMPORTANT:** Authorization enforcement is currently incomplete - many endpoints lack proper role/membership checks.
 
 ### Global Roles (User.Role - UserRole enum)
 Located in `backend/FanEngagement.Domain/Enums/UserRole.cs`:
 - **User** (`UserRole.User` = 0): Default role. Can manage own profile, view own memberships, participate in organizations they're members of.
-- **Admin** (`UserRole.Admin` = 1): Platform-wide administrator. Has implicit permission for all actions regardless of organization membership. Auto-seeded in Development as `admin@example.com`.
+- **Admin** (`UserRole.Admin` = 1): Platform-wide administrator. Should have implicit permission for all actions regardless of organization membership. Auto-seeded in Development as `admin@example.com`.
 
 ### Organization Roles (OrganizationMembership.Role - OrganizationRole enum)
 Located in `backend/FanEngagement.Domain/Enums/OrganizationRole.cs`:
-- **Member** (`OrganizationRole.Member` = 1): Regular organization member. Can view org details, share balances, proposals, and vote on proposals.
-- **OrgAdmin** (`OrganizationRole.OrgAdmin` = 0): Organization administrator. Can manage org settings, memberships, share types, proposals, and webhooks for their organization.
+- **Member** (`OrganizationRole.Member` = 1): Regular organization member. Should be able to view org details, share balances, proposals, and vote on proposals.
+- **OrgAdmin** (`OrganizationRole.OrgAdmin` = 0): Organization administrator. Should be able to manage org settings, memberships (cannot modify their own role), share types, proposals, and webhooks for their organization.
 
-### Authorization Principles
+### Current Implementation Status
 
-1. **Global Admin Override**: Users with `UserRole.Admin` have implicit permission for all actions, regardless of organization membership.
-2. **Organization Membership Required**: For org-scoped actions, user must have an `OrganizationMembership` record (unless Global Admin).
-3. **Organization Role Check**: Extract `organizationId` from route → query `OrganizationMembership` → check `Role` property → grant/deny based on permissions.
-4. **Self-Access**: Users can always access their own resources (profile, memberships, votes, balances).
-5. **Creator Privileges**: Proposal creators can manage their proposals even if not OrgAdmins (as long as they're org members).
+> **⚠️ CRITICAL:** The role model is defined in entities, but authorization is **not consistently enforced**. Many endpoints have security gaps.
 
-### Key Permission Examples
+**Known Security Gaps:**
+1. **User Management** (UsersController): List/view/update/delete users only require `[Authorize]` - any authenticated user can access
+2. **Organization Management** (OrganizationsController): Create/list/view have NO auth; update only requires `[Authorize]`
+3. **Membership Management** (MembershipsController): All operations only require `[Authorize]` - no org role checks
+4. **Share Types/Proposals** (Various): Most operations only require `[Authorize]` or no auth at all
 
-- **Create Organization**: Admin only
-- **Update Organization**: OrgAdmin for their org, Admin for any org
-- **Manage Memberships**: OrgAdmin for their org, Admin for any org
-- **Manage Share Types**: OrgAdmin for their org, Admin for any org
-- **Create Proposal**: Org members, OrgAdmins, Admin
-- **Update/Close Proposal**: Proposal creator, OrgAdmin for that org, Admin
-- **Vote on Proposal**: Org members, OrgAdmins, Admin
-- **Manage Webhooks**: OrgAdmin for their org, Admin for any org
-- **Seed Dev Data**: Admin only, Development environment only
+See **Implementation Gaps & Security Concerns** in `docs/architecture.md` for complete details.
 
-For the complete permissions matrix with all actions, see the **Roles & Permissions** section in `docs/architecture.md`.
+### Intended Authorization Principles (Target State)
 
-### Current Authorization Implementation
+1. **Global Admin Override**: Users with `UserRole.Admin` should have implicit permission for all actions, regardless of organization membership.
+   > **Security Note:** Global Admins bypass all organization-level access controls and should be granted only to trusted platform operators.
+
+2. **Organization Membership Required**: For org-scoped actions, user should have an `OrganizationMembership` record (unless Global Admin).
+
+3. **Organization Role Check**: Extract `organizationId` from route → query `OrganizationMembership` → check `Role` property → grant/deny based on intended permissions.
+
+4. **Self-Access**: Users should be able to access their own resources (profile, memberships, votes, balances).
+
+5. **Creator Privileges**: Proposal creators should be able to manage their proposals even if not OrgAdmins (as long as they're org members).
+
+6. **Privilege Escalation Prevention**: OrgAdmins should not be able to modify their own membership role.
+
+### Current Implementation Approach
 
 - JWT authentication configured with role claims (see `Program.cs`)
-- Some endpoints use `[Authorize(Roles = "Admin")]` attribute
-- Some controllers check `User.IsInRole("Admin")` for specific actions
-- **Future Work**: Comprehensive policy-based authorization with custom requirements/handlers should be implemented to enforce permissions consistently
+- Mixed authorization:
+  - Some endpoints: `[Authorize(Roles = "Admin")]` ✅
+  - Many endpoints: `[Authorize]` only ⚠️
+  - Some endpoints: No authorization ❌
+  - Few endpoints: Manual `User.IsInRole()` checks ✅
+- **Target Approach**: Consistent policy-based authorization with custom requirements/handlers
 
 ### When Adding New Features
 
-- **Determine required role(s)** for each action using the permissions matrix in `docs/architecture.md`
-- **For global actions**: Use `[Authorize(Roles = "Admin")]` or check `User.IsInRole("Admin")`
-- **For org-scoped actions**: Query `OrganizationMembership` to verify user has required role for that organization
-- **Document permissions** in PR description and update `docs/architecture.md` if introducing new actions
-- **Don't implement policies yet** unless specifically requested; current approach uses attribute-based and manual checks
+- **Check current state first**: Review `docs/architecture.md` "Current Authorization Implementation" table
+- **Determine intended permissions**: Use the "Intended" columns in the permissions matrix
+- **For new endpoints**:
+  - Use attribute-based authorization and manual role checks for now
+  - Implement policy-based authorization only when explicitly requested in the issue requirements
+  - Consider security: default to more restrictive permissions
+- **For existing endpoints**: Be aware of current gaps but don't fix unless explicitly requested
+- **Document changes**: Update `docs/architecture.md` if introducing new actions or changing authorization approach
+
+### Migration Path (Future Work)
+
+To reach the intended model:
+1. Implement policy-based authorization with custom requirements/handlers
+2. Replace bare `[Authorize]` with specific policy requirements
+3. Add organization-scoped policy checks
+4. Add privilege escalation safeguards (prevent OrgAdmins from changing own role)
+5. Add comprehensive authorization tests
+
+For the complete current vs. intended permissions matrix, see **Roles & Permissions** in `docs/architecture.md`.
 
 ## How To Ask Copilot Agent To Work
 
