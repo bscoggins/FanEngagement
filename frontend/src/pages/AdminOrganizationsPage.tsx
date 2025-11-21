@@ -144,6 +144,21 @@ export const AdminOrganizationsPage: React.FC = () => {
                       >
                         Share Types
                       </Link>
+                      <Link
+                        to={`/admin/organizations/${org.id}/proposals`}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor: '#17a2b8',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        Proposals
+                      </Link>
                     </div>
                   </td>
                 </tr>

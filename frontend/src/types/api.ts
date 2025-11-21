@@ -109,3 +109,76 @@ export interface UpdateShareTypeRequest {
   maxSupply?: number;
   isTransferable: boolean;
 }
+
+export type ProposalStatus = 'Draft' | 'Open' | 'Closed' | 'Finalized';
+
+export interface Proposal {
+  id: string;
+  organizationId: string;
+  title: string;
+  description?: string;
+  status: ProposalStatus;
+  startAt?: string;
+  endAt?: string;
+  quorumRequirement?: number;
+  createdByUserId: string;
+  createdAt: string;
+}
+
+export interface ProposalOption {
+  id: string;
+  proposalId: string;
+  text: string;
+  description?: string;
+}
+
+export interface ProposalDetails {
+  id: string;
+  organizationId: string;
+  title: string;
+  description?: string;
+  status: ProposalStatus;
+  startAt?: string;
+  endAt?: string;
+  quorumRequirement?: number;
+  createdByUserId: string;
+  createdAt: string;
+  options: ProposalOption[];
+}
+
+export interface CreateProposalRequest {
+  title: string;
+  description?: string;
+  status: ProposalStatus;
+  startAt?: string;
+  endAt?: string;
+  quorumRequirement?: number;
+  createdByUserId: string;
+}
+
+export interface UpdateProposalRequest {
+  title?: string;
+  description?: string;
+  status?: ProposalStatus;
+  startAt?: string;
+  endAt?: string;
+  quorumRequirement?: number;
+}
+
+export interface AddProposalOptionRequest {
+  text: string;
+  description?: string;
+}
+
+export interface OptionResult {
+  optionId: string;
+  optionText: string;
+  voteCount: number;
+  totalVotingPower: number;
+}
+
+export interface ProposalResults {
+  proposalId: string;
+  optionResults: OptionResult[];
+  totalVotingPower: number;
+}
