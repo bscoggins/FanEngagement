@@ -564,12 +564,75 @@ Common commands:
 dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj -c Release
 ```
 
+## Validation & Error Handling
+
+### Request Validation
+
+The API uses FluentValidation for automatic request validation. All request DTOs must have validators in `backend/FanEngagement.Application/Validators/`.
+
+**When adding a new endpoint that accepts a request DTO:**
+
+1. Create a validator class (if one doesn't exist):
+```csharp
+public class CreateMyRequestValidator : AbstractValidator<CreateMyRequest>
+{
+    public CreateMyRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
+    }
+}
+```
+
+2. Validators are auto-discovered - no manual registration needed
+
+### Error Handling
+
+**IMPORTANT: Do NOT use try-catch blocks in controllers for business logic exceptions.**
+
+The `GlobalExceptionHandlerMiddleware` handles all exceptions and returns RFC 7807 ProblemDetails responses.
+
+**Services should throw exceptions for business rule violations:**
+- `InvalidOperationException` for domain validation errors
+- `ArgumentException` for invalid arguments
+- Let other exceptions bubble up naturally
+
+**Example:**
+```csharp
+// Service method
+public async Task<Proposal> UpdateAsync(Guid id, UpdateProposalRequest request)
+{
+    var proposal = await _context.Proposals.FindAsync(id);
+    if (proposal?.Status == ProposalStatus.Closed)
+    {
+        throw new InvalidOperationException("Cannot update a closed proposal.");
+    }
+    // ... update logic
+}
+
+// Controller (no try-catch needed)
+[HttpPut("{id}")]
+public async Task<ActionResult> Update(Guid id, UpdateProposalRequest request)
+{
+    var result = await _proposalService.UpdateAsync(id, request);
+    return result is null ? NotFound() : Ok(result);
+}
+```
+
+**Error responses are automatically formatted as:**
+- Validation errors → HTTP 400 with field-level error details
+- Domain errors (InvalidOperationException) → HTTP 400 with error message
+- Not found → HTTP 404
+- Server errors → HTTP 500
+
 ## Coding Conventions
 
 - Keep controllers thin; business logic belongs in Application/Infrastructure services.
 - Prefer async APIs and pass `CancellationToken` through layers.
 - Return appropriate HTTP status codes (`201 Created`, `404 NotFound`, `204 NoContent`, etc.).
-- Validate inputs; prefer model binding attributes and FluentValidation (if introduced later).
+- **Do NOT use try-catch in controllers** - let exceptions bubble to global handler.
+- Create FluentValidation validators for all request DTOs.
 - Naming: PascalCase for types, camelCase for locals/parameters, pluralize collections.
 
 ## Documentation & OpenAPI

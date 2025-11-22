@@ -271,13 +271,137 @@ To implement the intended model, the following work is required:
 - ORM: EF Core
 - Auth: JWT-based (can be stubbed initially; structure should allow multi-tenant auth later)
 
+## Validation & Error Handling
+
+### Validation Strategy
+
+The API uses a two-tier validation approach:
+
+1. **Request Validation (DTO-level)** - FluentValidation
+   - Validates incoming request DTOs before they reach controllers
+   - Checks:
+     - Required fields
+     - Format constraints (email, URL)
+     - Length limits (strings, arrays)
+     - Numeric ranges
+   - Automatically integrated with ASP.NET Core model binding
+   - Returns HTTP 400 with structured validation errors
+
+2. **Domain Validation (Business Rules)** - Service Layer
+   - Enforced in service implementations
+   - Examples:
+     - Cannot close an already-closed proposal
+     - Cannot issue shares exceeding MaxSupply
+     - Cannot add options to a closed proposal
+     - User must be organization member to receive shares
+   - Throws `InvalidOperationException` or `ArgumentException`
+   - Handled by global exception middleware
+
+### Validators
+
+FluentValidation validators exist for all request DTOs:
+
+**User Management:**
+- `CreateUserRequestValidator` - Email format, password length (min 8), display name length
+- `UpdateUserRequestValidator` - Optional fields with same constraints
+
+**Organization Management:**
+- `CreateOrganizationRequestValidator` - Name required (max 200 chars), description (max 1000 chars)
+- `UpdateOrganizationRequestValidator` - Same constraints for optional fields
+
+**Proposal Management:**
+- `CreateProposalRequestValidator` - Title required (max 200 chars), EndAt > StartAt, quorum 0-100%
+- `UpdateProposalRequestValidator` - Same constraints for optional fields
+- `AddProposalOptionRequestValidator` - Option text required (max 200 chars)
+- `CastVoteRequestValidator` - User ID and option ID required
+
+**Share Management:**
+- `CreateShareTypeRequestValidator` - Name/symbol required, voting weight >= 0, MaxSupply > 0 if set
+- `UpdateShareTypeRequestValidator` - Same constraints for optional fields
+- `CreateShareIssuanceRequestValidator` - Quantity > 0, user/shareType IDs required
+
+**Membership Management:**
+- `CreateMembershipRequestValidator` - User ID required, role must be valid enum
+
+**Webhook Management:**
+- `CreateWebhookEndpointRequestValidator` - Valid HTTP(S) URL, secret min 16 chars, at least one event
+- `UpdateWebhookEndpointRequestValidator` - Same constraints
+
+### Error Response Format
+
+All errors follow RFC 7807 ProblemDetails format:
+
+**Validation Error (HTTP 400):**
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Email": ["Email must be a valid email address."],
+    "Password": ["Password must be at least 8 characters."]
+  },
+  "traceId": "00-..."
+}
+```
+
+**Domain Validation Error (HTTP 400):**
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+  "title": "Invalid Operation",
+  "status": 400,
+  "detail": "Cannot update proposal in Closed state.",
+  "instance": "/proposals/abc-123"
+}
+```
+
+**Not Found (HTTP 404):**
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "The requested resource was not found.",
+  "instance": "/users/123"
+}
+```
+
+**Server Error (HTTP 500):**
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+  "title": "Internal Server Error",
+  "status": 500,
+  "detail": "An unexpected error occurred. Please try again later.",
+  "instance": "/api/..."
+}
+```
+
+In Development mode, 500 errors include additional debugging information in the `extensions` field.
+
+### Exception Handling Middleware
+
+The `GlobalExceptionHandlerMiddleware` catches all unhandled exceptions and converts them to ProblemDetails responses:
+
+- `InvalidOperationException` → 400 Bad Request
+- `ArgumentException` → 400 Bad Request  
+- `DomainValidationException` (custom) → 400 Bad Request with validation errors
+- `ResourceNotFoundException` (custom) → 404 Not Found
+- All other exceptions → 500 Internal Server Error
+
+Controllers no longer need try-catch blocks for business logic exceptions - they bubble up to the middleware automatically.
+
 ## Solution Structure
 
 - `FanEngagement.Api`
   - ASP.NET Core startup, DI configuration, controllers (or minimal APIs), request/response models.
+  - **Middleware:** Global exception handler
+  - **Exceptions:** Custom exception types for domain validation
 - `FanEngagement.Application`
   - Application services / use cases.
   - DTOs, validators, orchestration logic.
+  - **Validators:** FluentValidation validators for all request DTOs
 - `FanEngagement.Domain`
   - Entities, value objects, domain services (pure C#).
 - `FanEngagement.Infrastructure`

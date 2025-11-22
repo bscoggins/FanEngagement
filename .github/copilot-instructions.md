@@ -484,6 +484,153 @@ dotnet ef database update \
 - Test migrations both up and down
 - Migrations apply automatically on API startup
 
+## Validation & Error Handling
+
+### Request Validation with FluentValidation
+
+The API uses FluentValidation for automatic request validation. All request DTOs have corresponding validators in `backend/FanEngagement.Application/Validators/`.
+
+#### Adding Validation for New DTOs
+
+1. **Create a validator class** in `backend/FanEngagement.Application/Validators/`:
+
+```csharp
+using FluentValidation;
+
+namespace FanEngagement.Application.Validators;
+
+public class CreateMyRequestValidator : AbstractValidator<CreateMyRequest>
+{
+    public CreateMyRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
+        
+        RuleFor(x => x.Email)
+            .EmailAddress().WithMessage("Email must be a valid email address.")
+            .When(x => !string.IsNullOrEmpty(x.Email));
+        
+        RuleFor(x => x.Age)
+            .GreaterThanOrEqualTo(0).WithMessage("Age must be greater than or equal to 0.")
+            .LessThanOrEqualTo(150).WithMessage("Age must not exceed 150.");
+    }
+}
+```
+
+2. **Validators are auto-registered** - No manual registration needed, FluentValidation discovers them automatically
+
+3. **Validation runs automatically** before controller actions execute
+
+#### Common Validation Patterns
+
+- **Required fields**: `.NotEmpty()`
+- **String length**: `.MinimumLength(n)`, `.MaximumLength(n)`
+- **Numeric ranges**: `.GreaterThan(n)`, `.GreaterThanOrEqualTo(n)`, `.LessThan(n)`, `.LessThanOrEqualTo(n)`
+- **Email format**: `.EmailAddress()`
+- **Custom validation**: `.Must(x => CustomValidation(x)).WithMessage("...")`
+- **Conditional validation**: `.When(x => condition)`
+- **Complex validation**: Use `.Custom()` for multi-field validation
+
+### Error Handling
+
+#### Global Exception Middleware
+
+The `GlobalExceptionHandlerMiddleware` catches all unhandled exceptions and returns RFC 7807 ProblemDetails responses:
+
+**Do NOT use try-catch in controllers** - Let exceptions bubble up to the middleware:
+
+```csharp
+// ❌ DON'T DO THIS
+[HttpPost]
+public async Task<ActionResult> Create([FromBody] CreateRequest request)
+{
+    try
+    {
+        var result = await _service.CreateAsync(request);
+        return Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(new { error = ex.Message });
+    }
+}
+
+// ✅ DO THIS
+[HttpPost]
+public async Task<ActionResult> Create([FromBody] CreateRequest request)
+{
+    var result = await _service.CreateAsync(request);
+    return Ok(result);
+}
+```
+
+#### Exception Types and HTTP Status Codes
+
+- `InvalidOperationException` → 400 Bad Request
+- `ArgumentException` → 400 Bad Request
+- `DomainValidationException` → 400 Bad Request (custom exception in `FanEngagement.Api.Exceptions`)
+- `ResourceNotFoundException` → 404 Not Found (custom exception)
+- All other exceptions → 500 Internal Server Error
+
+#### Throwing Domain Validation Errors in Services
+
+For business rule violations, throw `InvalidOperationException`:
+
+```csharp
+public async Task<Proposal> UpdateAsync(Guid id, UpdateProposalRequest request)
+{
+    var proposal = await _context.Proposals.FindAsync(id);
+    if (proposal is null)
+        return null;
+    
+    // Domain validation
+    if (proposal.Status == ProposalStatus.Closed)
+    {
+        throw new InvalidOperationException("Cannot update a closed proposal.");
+    }
+    
+    // ... update logic
+}
+```
+
+#### Standard Error Response Format
+
+All errors follow RFC 7807 ProblemDetails:
+
+**Validation errors** (HTTP 400):
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Email": ["Email must be a valid email address."],
+    "Password": ["Password must be at least 8 characters."]
+  }
+}
+```
+
+**Domain errors** (HTTP 400):
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+  "title": "Invalid Operation",
+  "status": 400,
+  "detail": "Cannot update proposal in Closed state."
+}
+```
+
+**Resource not found** (HTTP 404):
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "The requested resource was not found."
+}
+```
+
 ## Common Tasks
 
 ### Adding a New Controller Endpoint
