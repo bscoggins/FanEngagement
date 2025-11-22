@@ -212,7 +212,7 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task CreateUser_ReturnsInternalServerError_WhenEmailAlreadyExists()
+    public async Task CreateUser_ReturnsBadRequest_WhenEmailAlreadyExists()
     {
         // Arrange
         var email = $"duplicate-{Guid.NewGuid()}@example.com";
@@ -235,11 +235,11 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response1.StatusCode);
-        Assert.Equal(HttpStatusCode.InternalServerError, response2.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response2.StatusCode);
     }
 
     [Fact]
-    public async Task UpdateUser_ReturnsInternalServerError_WhenEmailAlreadyExists()
+    public async Task UpdateUser_ReturnsBadRequest_WhenEmailAlreadyExists()
     {
         // Arrange
         var user1Request = new CreateUserRequest
@@ -275,6 +275,6 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PutAsJsonAsync($"/users/{user1!.Id}", updateRequest);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
