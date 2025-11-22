@@ -165,10 +165,36 @@ When implementing a new feature or endpoint:
     - `/admin/dev-tools`
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
+### Roles & Permissions
+
+FanEngagement defines a **two-tier role model**, but **authorization is currently incomplete**:
+
+#### Global Roles (User.Role - UserRole enum)
+- **User** (`UserRole.User`): Default role for all users. Can manage own profile, view own memberships, participate in organizations they're a member of.
+- **Admin** (`UserRole.Admin`): Platform-wide administrator. Can manage all platform resources (users, organizations). Has implicit permission for all actions.
+
+#### Organization Roles (OrganizationMembership.Role - OrganizationRole enum)
+- **Member** (`OrganizationRole.Member`): Regular organization member. Can view org details, share balances, proposals, and vote on proposals.
+- **OrgAdmin** (`OrganizationRole.OrgAdmin`): Organization administrator. Can manage org settings, memberships, share types, proposals, and webhooks for their organization.
+
+**⚠️ Current Implementation Gaps:**
+- Many endpoints lack proper role/membership checks (only require `[Authorize]` or no auth at all)
+- User management APIs accessible to any authenticated user (should be Admin-only)
+- Organization and membership APIs lack role enforcement
+- See **Implementation Gaps & Security Concerns** in `docs/architecture.md` for full details
+
+**Intended principles (not fully enforced):**
+- Global Admin should have implicit permission for all actions
+- Organization-scoped actions should require appropriate `OrganizationMembership.Role`
+- Users should always be able to access their own resources
+- Proposal creators should have implicit permission to manage their proposals
+
+For the complete current vs. intended permissions matrix and security gap analysis, see the **Roles & Permissions** section in `docs/architecture.md`.
+
 ### Current Entities
 
 - `Organization`: Top-level organization entity
-- `OrganizationMembership`: User membership in organizations with roles
+- `OrganizationMembership`: User membership in organizations with roles (Member or OrgAdmin)
 - `User`: User/member entity with Email, DisplayName, PasswordHash, Role (User or Admin), CreatedAt
 - `ShareType`: Type of shares issued by organization
 - `ShareBalance`: User's balance of a specific share type
