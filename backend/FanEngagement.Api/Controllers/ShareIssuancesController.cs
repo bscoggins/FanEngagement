@@ -1,13 +1,16 @@
 using FanEngagement.Application.ShareIssuances;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("organizations/{organizationId:guid}")]
+[Authorize]
 public class ShareIssuancesController(IShareIssuanceService shareIssuanceService) : ControllerBase
 {
     [HttpPost("share-issuances")]
+    [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult<ShareIssuanceDto>> Create(
         Guid organizationId,
         [FromBody] CreateShareIssuanceRequest request,
@@ -25,6 +28,7 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
     }
 
     [HttpGet("share-issuances")]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult<IReadOnlyList<ShareIssuanceDto>>> GetByOrganization(
         Guid organizationId,
         CancellationToken cancellationToken)
@@ -34,6 +38,7 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
     }
 
     [HttpGet("users/{userId:guid}/share-issuances")]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult<IReadOnlyList<ShareIssuanceDto>>> GetByUser(
         Guid organizationId,
         Guid userId,
@@ -46,6 +51,7 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
 
 [ApiController]
 [Route("organizations/{organizationId:guid}/users/{userId:guid}/balances")]
+[Authorize(Policy = "OrgMember")]
 public class ShareBalancesController(IShareIssuanceService shareIssuanceService) : ControllerBase
 {
     [HttpGet]

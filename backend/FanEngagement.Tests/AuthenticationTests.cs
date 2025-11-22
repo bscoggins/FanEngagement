@@ -9,10 +9,12 @@ namespace FanEngagement.Tests;
 public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
 
     public AuthenticationTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _output = output;
     }
@@ -116,19 +118,19 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task ProtectedEndpoint_ReturnsOk_WithValidToken()
     {
-        // Arrange - Create a user and get a token
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        // Arrange - Create an admin user and get a token (GetById requires admin)
+        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         
-        _client.AddAuthorizationHeader(token);
+        _client.AddAuthorizationHeader(adminToken);
 
         // Act
-        var response = await _client.GetAsync($"/users/{user.Id}");
+        var response = await _client.GetAsync($"/users/{adminId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var retrievedUser = await response.Content.ReadFromJsonAsync<UserDto>();
         Assert.NotNull(retrievedUser);
-        Assert.Equal(user.Id, retrievedUser!.Id);
+        Assert.Equal(adminId, retrievedUser!.Id);
     }
 
     [Fact]
@@ -144,10 +146,10 @@ public class AuthenticationTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetAllUsers_ReturnsOk_WithValidToken()
     {
-        // Arrange - Create a user and get a token
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        // Arrange - GetAll requires admin token
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         
-        _client.AddAuthorizationHeader(token);
+        _client.AddAuthorizationHeader(adminToken);
 
         // Act
         var response = await _client.GetAsync("/users");

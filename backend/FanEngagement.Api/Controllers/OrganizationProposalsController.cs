@@ -1,13 +1,16 @@
 using FanEngagement.Application.Proposals;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("organizations/{organizationId:guid}/proposals")]
+[Authorize]
 public class OrganizationProposalsController(IProposalService proposalService) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateProposalRequest request, CancellationToken cancellationToken)
     {
         try
@@ -22,6 +25,7 @@ public class OrganizationProposalsController(IProposalService proposalService) :
     }
 
     [HttpGet]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> GetByOrganization(Guid organizationId, CancellationToken cancellationToken)
     {
         var proposals = await proposalService.GetByOrganizationAsync(organizationId, cancellationToken);

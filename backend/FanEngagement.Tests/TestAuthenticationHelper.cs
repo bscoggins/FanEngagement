@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Users;
+using FanEngagement.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FanEngagement.Tests;
 
@@ -50,6 +52,41 @@ public static class TestAuthenticationHelper
         }
 
         return (user, loginResult.Token);
+    }
+
+    public static async Task<(Guid UserId, string Token)> CreateAuthenticatedAdminAsync(TestWebApplicationFactory factory)
+    {
+        // Create admin user directly in the database
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
+        var adminPassword = "AdminPass123!";
+        var adminUser = new FanEngagement.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = adminEmail,
+            DisplayName = "Admin User",
+            PasswordHash = authService.HashPassword(adminPassword),
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var loginRequest = new LoginRequest
+        {
+            Email = adminEmail,
+            Password = adminPassword
+        };
+
+        var loginResponse = await client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+        return (adminUser.Id, loginResult!.Token);
     }
 
     public static void AddAuthorizationHeader(this HttpClient client, string token)

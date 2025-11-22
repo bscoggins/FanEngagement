@@ -13,10 +13,12 @@ namespace FanEngagement.Tests;
 public class MembershipTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
 
     public MembershipTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _output = output;
     }
@@ -215,8 +217,8 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
     public async Task CreateMembership_ReturnsInternalServerError_WhenUserDoesNotExist()
     {
         // Arrange
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var organizationId = await CreateOrganization();
         var nonExistentUserId = Guid.NewGuid();
@@ -238,8 +240,8 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
     public async Task CreateMembership_ReturnsInternalServerError_WhenOrganizationDoesNotExist()
     {
         // Arrange
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var nonExistentOrgId = Guid.NewGuid();
         var userId = await CreateUser();
@@ -259,9 +261,9 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<(Guid organizationId, Guid userId)> SetupOrganizationAndUser()
     {
-        // Get authentication token
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Get admin authentication token for setup operations
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var organizationId = await CreateOrganization();
         var userId = await CreateUser();

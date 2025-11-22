@@ -9,10 +9,12 @@ namespace FanEngagement.Tests;
 public class UserTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
 
     public UserTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _output = output;
     }
@@ -51,8 +53,11 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetUserById_ReturnsUser_WhenExists()
     {
         // Arrange
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Use admin token for GetById operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         // Act
         var response = await _client.GetAsync($"/users/{user.Id}");
@@ -68,9 +73,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetUserById_ReturnsNotFound_WhenDoesNotExist()
     {
-        // Arrange
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Arrange - use admin token for GetById operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
         
         var nonExistentId = Guid.NewGuid();
 
@@ -100,9 +105,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         await _client.PostAsJsonAsync("/users", request1);
         await _client.PostAsJsonAsync("/users", request2);
 
-        // Get authentication token
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Get admin authentication token for GetAll operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         // Act
         var response = await _client.GetAsync("/users");
@@ -118,8 +123,11 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateUser_ReturnsUpdatedUser_WhenExists()
     {
         // Arrange
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Use admin token for update operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var updateRequest = new UpdateUserRequest
         {
@@ -148,9 +156,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task UpdateUser_ReturnsNotFound_WhenDoesNotExist()
     {
-        // Arrange
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Arrange - use admin token for update operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var nonExistentId = Guid.NewGuid();
         var updateRequest = new UpdateUserRequest
@@ -170,8 +178,11 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     public async Task DeleteUser_ReturnsNoContent_WhenExists()
     {
         // Arrange
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Use admin token for delete operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         // Act
         var deleteResponse = await _client.DeleteAsync($"/users/{user.Id}");
@@ -187,9 +198,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task DeleteUser_ReturnsNotFound_WhenDoesNotExist()
     {
-        // Arrange
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Arrange - use admin token for delete operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var nonExistentId = Guid.NewGuid();
 
@@ -250,9 +261,9 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
         var user2Response = await _client.PostAsJsonAsync("/users", user2Request);
         var user2 = await user2Response.Content.ReadFromJsonAsync<UserDto>();
 
-        // Get authentication token
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Get admin authentication token for update operation
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
         var updateRequest = new UpdateUserRequest
         {

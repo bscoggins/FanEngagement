@@ -181,6 +181,10 @@ public class OutboundEventTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<Organization> CreateOrganizationAsync()
     {
+        // Get admin token for creating organization
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
         var createOrgResponse = await _client.PostAsJsonAsync("/organizations",
             new CreateOrganizationRequest { Name = "Test Organization" });
         Assert.Equal(HttpStatusCode.Created, createOrgResponse.StatusCode);
