@@ -1,11 +1,13 @@
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("organizations/{organizationId:guid}/outbound-events")]
+[Authorize(Policy = "OrgAdmin")]
 public class OutboundEventsController(IOutboundEventService outboundEventService) : ControllerBase
 {
     [HttpGet]

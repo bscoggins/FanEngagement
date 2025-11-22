@@ -10,6 +10,7 @@ namespace FanEngagement.Api.Controllers;
 public class MembershipsController(IMembershipService membershipService) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateMembershipRequest request, CancellationToken cancellationToken)
     {
         var membership = await membershipService.CreateAsync(organizationId, request, cancellationToken);
@@ -17,6 +18,7 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     }
 
     [HttpGet]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> GetAll(Guid organizationId, [FromQuery] bool includeUserDetails = false, CancellationToken cancellationToken = default)
     {
         if (includeUserDetails)
@@ -30,6 +32,7 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     }
 
     [HttpGet("{userId:guid}")]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> GetByUser(Guid organizationId, Guid userId, CancellationToken cancellationToken)
     {
         var membership = await membershipService.GetByOrganizationAndUserAsync(organizationId, userId, cancellationToken);
@@ -42,6 +45,7 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     }
 
     [HttpDelete("{userId:guid}")]
+    [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Delete(Guid organizationId, Guid userId, CancellationToken cancellationToken)
     {
         var deleted = await membershipService.DeleteAsync(organizationId, userId, cancellationToken);

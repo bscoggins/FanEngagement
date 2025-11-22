@@ -1,10 +1,12 @@
 using FanEngagement.Application.WebhookEndpoints;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("organizations/{organizationId:guid}/webhooks")]
+[Authorize(Policy = "OrgAdmin")]
 public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointService) : ControllerBase
 {
     [HttpPost]

@@ -1,8 +1,10 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using FanEngagement.Api.Authorization;
 using FanEngagement.Infrastructure;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -80,7 +82,32 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+// Register authorization handlers
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuthorizationHandler, OrganizationMemberHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, OrganizationAdminHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProposalManagerHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProposalMemberHandler>();
+
+// Configure authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    // Policy: User must be a Global Admin
+    options.AddPolicy("GlobalAdmin", policy =>
+        policy.RequireRole("Admin"));
+
+    // Policy: User must be a member of the organization in the route (or Global Admin)
+    options.AddPolicy("OrgMember", policy =>
+        policy.Requirements.Add(new OrganizationMemberRequirement()));
+
+    // Policy: User must be an OrgAdmin of the organization in the route (or Global Admin)
+    options.AddPolicy("OrgAdmin", policy =>
+        policy.Requirements.Add(new OrganizationAdminRequirement()));
+
+    // Policy: User must be the proposal creator, OrgAdmin of the org, or Global Admin
+    options.AddPolicy("ProposalManager", policy =>
+        policy.Requirements.Add(new ProposalManagerRequirement()));
+});
 
 var app = builder.Build();
 

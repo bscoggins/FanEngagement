@@ -6,9 +6,11 @@ namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("proposals")]
+[Authorize]
 public class ProposalsController(IProposalService proposalService) : ControllerBase
 {
     [HttpGet("{proposalId:guid}", Name = "GetProposalById")]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> GetById(Guid proposalId, CancellationToken cancellationToken)
     {
         var proposal = await proposalService.GetByIdAsync(proposalId, cancellationToken);
@@ -21,6 +23,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpPut("{proposalId:guid}")]
+    [Authorize(Policy = "ProposalManager")]
     public async Task<ActionResult> Update(Guid proposalId, [FromBody] UpdateProposalRequest request, CancellationToken cancellationToken)
     {
         try
@@ -40,6 +43,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpPost("{proposalId:guid}/close")]
+    [Authorize(Policy = "ProposalManager")]
     public async Task<ActionResult> Close(Guid proposalId, CancellationToken cancellationToken)
     {
         try
@@ -59,6 +63,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpPost("{proposalId:guid}/options")]
+    [Authorize(Policy = "ProposalManager")]
     public async Task<ActionResult> AddOption(Guid proposalId, [FromBody] AddProposalOptionRequest request, CancellationToken cancellationToken)
     {
         try
@@ -78,6 +83,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpDelete("{proposalId:guid}/options/{optionId:guid}")]
+    [Authorize(Policy = "ProposalManager")]
     public async Task<ActionResult> DeleteOption(Guid proposalId, Guid optionId, CancellationToken cancellationToken)
     {
         try
@@ -97,6 +103,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpPost("{proposalId:guid}/votes")]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> CastVote(Guid proposalId, [FromBody] CastVoteRequest request, CancellationToken cancellationToken)
     {
         try
@@ -142,6 +149,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpGet("{proposalId:guid}/results")]
+    [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> GetResults(Guid proposalId, CancellationToken cancellationToken)
     {
         var results = await proposalService.GetResultsAsync(proposalId, cancellationToken);

@@ -19,6 +19,7 @@ public class UsersController(IUserService userService, IMembershipService member
     }
 
     [HttpGet]
+    [Authorize(Policy = "GlobalAdmin")]
     public async Task<ActionResult> GetAll(CancellationToken cancellationToken)
     {
         var users = await userService.GetAllAsync(cancellationToken);
@@ -26,6 +27,7 @@ public class UsersController(IUserService userService, IMembershipService member
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = "GlobalAdmin")]
     public async Task<ActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var user = await userService.GetByIdAsync(id, cancellationToken);
@@ -58,6 +60,7 @@ public class UsersController(IUserService userService, IMembershipService member
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "GlobalAdmin")]
     public async Task<ActionResult> Update(Guid id, [FromBody] UpdateUserRequest request, CancellationToken cancellationToken)
     {
         var user = await userService.UpdateAsync(id, request, cancellationToken);
@@ -70,6 +73,7 @@ public class UsersController(IUserService userService, IMembershipService member
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "GlobalAdmin")]
     public async Task<ActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var deleted = await userService.DeleteAsync(id, cancellationToken);
