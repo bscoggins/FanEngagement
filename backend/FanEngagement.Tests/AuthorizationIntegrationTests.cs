@@ -23,43 +23,10 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client = factory.CreateClient();
     }
 
-    private async Task<(Guid UserId, string Token)> CreateAdminUserAsync()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
-        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-
-        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
-        var adminPassword = "AdminPass123!";
-        var adminUser = new FanEngagement.Domain.Entities.User
-        {
-            Id = Guid.NewGuid(),
-            Email = adminEmail,
-            DisplayName = "Admin User",
-            PasswordHash = authService.HashPassword(adminPassword),
-            Role = UserRole.Admin,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        dbContext.Users.Add(adminUser);
-        await dbContext.SaveChangesAsync();
-
-        var loginRequest = new LoginRequest
-        {
-            Email = adminEmail,
-            Password = adminPassword
-        };
-
-        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
-
-        return (adminUser.Id, loginResult!.Token);
-    }
-
     private async Task<(Guid OrgId, Guid AdminUserId, string AdminToken, Guid MemberUserId, string MemberToken)> CreateOrgWithUsersAsync()
     {
         // Create organization as admin
-        var (adminUserId, adminToken) = await CreateAdminUserAsync();
+        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var orgRequest = new CreateOrganizationRequest { Name = "Test Organization" };
@@ -116,7 +83,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     public async Task GetAllUsers_ReturnsOk_ForGlobalAdmin()
     {
         // Arrange
-        var (_, adminToken) = await CreateAdminUserAsync();
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         // Act
@@ -164,11 +131,12 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     {
         // Arrange
         var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        var (_, adminToken) = await CreateAdminUserAsync();
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var updateRequest = new UpdateUserRequest
         {
+            Email = $"updated-{Guid.NewGuid()}@example.com",
             DisplayName = "Updated Name"
         };
 
@@ -203,7 +171,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     public async Task CreateOrganization_ReturnsCreated_ForGlobalAdmin()
     {
         // Arrange
-        var (_, adminToken) = await CreateAdminUserAsync();
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var orgRequest = new CreateOrganizationRequest { Name = "Test Org" };

@@ -110,6 +110,11 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange
         var (_, userId) = await SetupTestDataAsync();
+        
+        // Use admin token to attempt creating in non-existent org
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
         var request = new CreateProposalRequest
         {
             Title = "Test Proposal",
@@ -208,7 +213,11 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetProposalById_ReturnsNotFound_WhenProposalDoesNotExist()
     {
-        // Act
+        // Arrange - use admin token since non-existent proposal can't verify org membership
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
+        // Act - try to get non-existent proposal
         var response = await _client.GetAsync($"/proposals/{Guid.NewGuid()}");
 
         // Assert
@@ -410,8 +419,8 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetProposalsByOrganization_ReturnsOnlyForSpecifiedOrganization()
     {
         // Arrange - Create two organizations with proposals
+        // First org and user
         var (org1Id, user1Id) = await SetupTestDataAsync();
-        var (org2Id, user2Id) = await SetupTestDataAsync();
 
         var request1 = new CreateProposalRequest
         {
@@ -420,6 +429,48 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         };
         await _client.PostAsJsonAsync($"/organizations/{org1Id}/proposals", request1);
 
+        // Second org and user (need admin to create org, then add user as member)
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
+        var org2Request = new CreateOrganizationRequest
+        {
+            Name = $"Test Organization {Guid.NewGuid()}",
+            Description = "Test Organization"
+        };
+        var org2Response = await _client.PostAsJsonAsync("/organizations", org2Request);
+        var org2 = await org2Response.Content.ReadFromJsonAsync<Organization>();
+        var org2Id = org2!.Id;
+
+        // Create second user
+        var user2Request = new CreateUserRequest
+        {
+            Email = $"test-{Guid.NewGuid()}@example.com",
+            DisplayName = "Test User 2",
+            Password = "TestPassword123!"
+        };
+        var user2Response = await _client.PostAsJsonAsync("/users", user2Request);
+        var user2 = await user2Response.Content.ReadFromJsonAsync<User>();
+        var user2Id = user2!.Id;
+
+        // Add user2 to org2 with OrgAdmin role
+        var membership2Request = new CreateMembershipRequest
+        {
+            UserId = user2Id,
+            Role = OrganizationRole.OrgAdmin
+        };
+        await _client.PostAsJsonAsync($"/organizations/{org2Id}/memberships", membership2Request);
+
+        // Login as user2 to create proposal in org2
+        var login2Request = new LoginRequest
+        {
+            Email = user2Request.Email,
+            Password = user2Request.Password
+        };
+        var login2Response = await _client.PostAsJsonAsync("/auth/login", login2Request);
+        var login2Result = await login2Response.Content.ReadFromJsonAsync<LoginResponse>();
+        _client.AddAuthorizationHeader(login2Result!.Token);
+
         var request2 = new CreateProposalRequest
         {
             Title = "Org 2 Proposal",
@@ -427,7 +478,16 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         };
         await _client.PostAsJsonAsync($"/organizations/{org2Id}/proposals", request2);
 
-        // Act
+        // Switch back to user1 (who is member of org1) to query org1 proposals
+        var login1Request = new LoginRequest
+        {
+            Email = $"test-{user1Id}@example.com", // Need to know the email
+            Password = "TestPassword123!"
+        };
+        // Actually, let's just use admin token since we already have it to avoid email issues
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act - Get proposals for org1
         var response = await _client.GetAsync($"/organizations/{org1Id}/proposals");
 
         // Assert

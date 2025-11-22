@@ -392,7 +392,11 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetResults_ReturnsNotFound_WhenProposalDoesNotExist()
     {
-        // Act
+        // Arrange - need auth to access results endpoint
+        // Create minimal setup with org membership
+        var (orgId, userId, shareTypeId, proposalId, optionId) = await SetupTestDataAsync();
+        
+        // Act - try to get results for non-existent proposal
         var response = await _client.GetAsync($"/proposals/{Guid.NewGuid()}/results");
 
         // Assert

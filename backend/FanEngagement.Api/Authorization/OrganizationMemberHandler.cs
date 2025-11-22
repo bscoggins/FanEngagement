@@ -36,23 +36,11 @@ public class OrganizationMemberHandler : AuthorizationHandler<OrganizationMember
             return; // No valid user ID, requirement not met
         }
 
-        // Extract organizationId from route (try both 'organizationId' and 'id')
+        // Extract organizationId from route
         var httpContext = _httpContextAccessor.HttpContext;
-        Guid organizationId;
-        
-        if (httpContext?.Request.RouteValues.TryGetValue("organizationId", out var orgIdObj) == true 
-            && Guid.TryParse(orgIdObj?.ToString(), out organizationId))
+        if (httpContext == null || !RouteValueHelpers.TryGetOrganizationId(httpContext.Request.RouteValues, out var organizationId))
         {
-            // Found organizationId
-        }
-        else if (httpContext?.Request.RouteValues.TryGetValue("id", out var idObj) == true 
-                 && Guid.TryParse(idObj?.ToString(), out organizationId))
-        {
-            // Found id (used in OrganizationsController)
-        }
-        else
-        {
-            return; // No organizationId or id in route, requirement not met
+            return; // No organizationId in route, requirement not met
         }
 
         // Check if user is a member of the organization
