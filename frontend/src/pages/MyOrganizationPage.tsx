@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
 import { organizationsApi } from '../api/organizationsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
 import { proposalsApi } from '../api/proposalsApi';
@@ -9,6 +10,7 @@ import type { Organization, ShareBalance, Proposal } from '../types/api';
 export const MyOrganizationPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
   const { user } = useAuth();
+  const { isOrgAdmin } = usePermissions();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [balances, setBalances] = useState<ShareBalance[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -80,11 +82,43 @@ export const MyOrganizationPage: React.FC = () => {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>{organization.name}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+        <h1 style={{ margin: 0 }}>{organization.name}</h1>
+        {orgId && isOrgAdmin(orgId) && (
+          <span style={{ 
+            padding: '0.25rem 0.75rem', 
+            backgroundColor: '#17a2b8', 
+            color: 'white', 
+            borderRadius: '4px',
+            fontSize: '0.875rem',
+            fontWeight: 'bold'
+          }}>
+            Org Admin
+          </span>
+        )}
+      </div>
       {organization.description && (
         <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>
           {organization.description}
         </p>
+      )}
+      
+      {orgId && isOrgAdmin(orgId) && (
+        <div style={{ 
+          marginTop: '1rem', 
+          padding: '1rem', 
+          backgroundColor: '#e7f3ff', 
+          borderLeft: '4px solid #17a2b8',
+          borderRadius: '4px'
+        }}>
+          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Admin Actions:</p>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <Link to={`/admin/organizations/${orgId}/edit`}>Edit Organization</Link>
+            <Link to={`/admin/organizations/${orgId}/memberships`}>Manage Members</Link>
+            <Link to={`/admin/organizations/${orgId}/share-types`}>Manage Share Types</Link>
+            <Link to={`/admin/organizations/${orgId}/proposals`}>Manage Proposals</Link>
+          </div>
+        </div>
       )}
 
       <div style={{ marginTop: '2rem' }}>

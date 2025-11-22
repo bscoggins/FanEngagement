@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { AdminRoute } from '../components/AdminRoute';
+import { OrgAdminRoute } from '../components/OrgAdminRoute';
 import { AdminLayout } from '../components/AdminLayout';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
@@ -120,23 +121,43 @@ export const router = createBrowserRouter([
       },
       {
         path: 'organizations/:orgId/edit',
-        element: <AdminOrganizationEditPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationEditPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/memberships',
-        element: <AdminOrganizationMembershipsPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationMembershipsPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/share-types',
-        element: <AdminOrganizationShareTypesPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationShareTypesPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/proposals',
-        element: <AdminOrganizationProposalsPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationProposalsPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/proposals/:proposalId',
-        element: <AdminProposalDetailPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminProposalDetailPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'dev-tools',
