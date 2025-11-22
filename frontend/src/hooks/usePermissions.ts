@@ -105,6 +105,6 @@ export const usePermissions = (): PermissionsContextType => {
     isOrgMember,
     memberships,
     isLoading,
-    refreshMemberships: () => fetchMemberships(),
+    refreshMemberships: () => fetchMemberships(undefined),
   };
 };

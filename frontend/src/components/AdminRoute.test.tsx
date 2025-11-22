@@ -113,7 +113,7 @@ describe('AdminRoute', () => {
     // Setup mock before rendering
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
     
-    renderAdminRoute('/admin', 'User', true, mockMemberships);
+    renderAdminRoute('/admin', 'User', true);
     
     // memberships API should be called
     await waitFor(() => {
