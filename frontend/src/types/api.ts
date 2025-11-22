@@ -52,7 +52,7 @@ export interface Membership {
   id: string;
   organizationId: string;
   userId: string;
-  role: string;
+  role: 'OrgAdmin' | 'Member';
   createdAt: string;
 }
 
