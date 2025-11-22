@@ -56,6 +56,108 @@ FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a 
  - In Development an initial admin user (`admin@example.com`) is auto-created or elevated to Admin role; change this in real environments.
  - CORS defaults to allowing `http://localhost:3000` and `http://localhost:5173` when `Cors:AllowedOrigins` is not configured.
 
+### Authorization & Access Control
+
+FanEngagement uses a comprehensive authorization system based on policies and custom authorization handlers.
+
+#### Authorization Policies
+
+Four main policies are defined and enforced across API endpoints:
+
+1. **GlobalAdmin** - Requires `UserRole.Admin`
+   - Platform-wide administrator access
+   - Bypasses all organization-level access controls
+   - Use for platform management operations
+
+2. **OrgMember** - Requires organization membership (or GlobalAdmin)
+   - User must be a member of the organization specified in the route
+   - Automatically succeeds for GlobalAdmins
+   - Use for read operations within an organization
+
+3. **OrgAdmin** - Requires `OrganizationRole.OrgAdmin` for the organization (or GlobalAdmin)
+   - User must be an OrgAdmin of the specific organization in the route
+   - Automatically succeeds for GlobalAdmins
+   - Use for organization management operations
+
+4. **ProposalManager** - Requires proposal creator, OrgAdmin, or GlobalAdmin
+   - Allows proposal creator, OrgAdmins of the org, or GlobalAdmins
+   - Use for proposal modification operations
+
+#### Applying Authorization to New Endpoints
+
+When adding a new controller endpoint:
+
+1. **Determine the appropriate policy:**
+   - User management → `GlobalAdmin`
+   - Organization management → `OrgAdmin` for writes, `OrgMember` for reads
+   - Proposal management → `ProposalManager` for writes, `OrgMember` for reads/votes
+   - Public endpoints → `[AllowAnonymous]` or no `[Authorize]`
+
+2. **Apply the policy attribute:**
+   ```csharp
+   [HttpPost]
+   [Authorize(Policy = "OrgAdmin")]
+   public async Task<ActionResult> Create(...)
+   ```
+
+3. **Ensure route parameters match policy expectations:**
+   - `OrgMember` and `OrgAdmin` policies expect `organizationId` or `id` in route
+   - `ProposalManager` expects `proposalId` in route
+   - GlobalAdmin doesn't check route parameters
+
+4. **Test authorization:**
+   - Add unit tests for the authorization handler if needed
+   - Add integration tests covering authorized and unauthorized access
+
+#### Authorization Handlers
+
+Custom handlers in `backend/FanEngagement.Api/Authorization/`:
+- `OrganizationMemberHandler` - Checks membership from `organizationId`/`id` route param
+- `OrganizationAdminHandler` - Checks OrgAdmin role from route param
+- `ProposalMemberHandler` - Resolves org from `proposalId` and checks membership
+- `ProposalManagerHandler` - Checks creator/OrgAdmin/GlobalAdmin for proposals
+
+All handlers first check if the user has GlobalAdmin role, which bypasses org-level checks.
+
+#### Common Patterns
+
+**Organization-scoped controller:**
+```csharp
+[ApiController]
+[Route("organizations/{organizationId:guid}/items")]
+[Authorize(Policy = "OrgMember")]  // All actions require membership
+public class ItemsController : ControllerBase
+{
+    [HttpPost]
+    [Authorize(Policy = "OrgAdmin")]  // Override for write operation
+    public async Task<ActionResult> Create(...) { }
+    
+    [HttpGet]
+    public async Task<ActionResult> GetAll(...) { }  // Inherits OrgMember
+}
+```
+
+**User management controller:**
+```csharp
+[HttpGet]
+[Authorize(Policy = "GlobalAdmin")]
+public async Task<ActionResult> GetAllUsers(...) { }
+```
+
+**Self-access endpoints:**
+```csharp
+[HttpGet("{id:guid}/memberships")]
+public async Task<ActionResult> GetUserMemberships(Guid id, ...)
+{
+    // Check if user is viewing their own memberships or is admin
+    if (requestingUserId != id && !User.IsInRole("Admin"))
+    {
+        return Forbid();
+    }
+    // ...
+}
+```
+
 ## Development Environment
 
 ### Running the Application

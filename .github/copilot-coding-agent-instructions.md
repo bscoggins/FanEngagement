@@ -172,60 +172,142 @@ Located in `backend/FanEngagement.Domain/Enums/OrganizationRole.cs`:
 
 ### Current Implementation Status
 
-> **⚠️ CRITICAL:** The role model is defined in entities, but authorization is **not consistently enforced**. Many endpoints have security gaps.
+> **✅ COMPLETE:** Authorization policies and handlers are now fully implemented and enforced across all endpoints.
 
-**Known Security Gaps:**
-1. **User Management** (UsersController): List/view/update/delete users only require `[Authorize]` - any authenticated user can access
-2. **Organization Management** (OrganizationsController): Create/list/view have NO auth; update only requires `[Authorize]`
-3. **Membership Management** (MembershipsController): All operations only require `[Authorize]` - no org role checks
-4. **Share Types/Proposals** (Various): Most operations only require `[Authorize]` or no auth at all
+**Authorization has been implemented with:**
+1. Custom authorization requirements and handlers for organization membership/role checks
+2. Four comprehensive policies: GlobalAdmin, OrgMember, OrgAdmin, ProposalManager
+3. Policy enforcement on all controllers with appropriate granularity
+4. Comprehensive unit and integration tests (30 tests total)
 
-See **Implementation Gaps & Security Concerns** in `docs/architecture.md` for complete details.
+### Authorization Policies
 
-### Intended Authorization Principles (Target State)
+1. **GlobalAdmin** - Requires `UserRole.Admin`
+   - Platform-wide administrator access
+   - Bypasses all organization-level access controls
 
-1. **Global Admin Override**: Users with `UserRole.Admin` should have implicit permission for all actions, regardless of organization membership.
+2. **OrgMember** - Requires organization membership (or GlobalAdmin)
+   - User must be a member of the organization specified in the route
+   - Automatically succeeds for GlobalAdmins
+
+3. **OrgAdmin** - Requires `OrganizationRole.OrgAdmin` for the organization (or GlobalAdmin)
+   - User must be an OrgAdmin of the specific organization in the route
+   - Automatically succeeds for GlobalAdmins
+
+4. **ProposalManager** - Requires proposal creator, OrgAdmin, or GlobalAdmin
+   - Allows proposal creator, OrgAdmins of the org, or GlobalAdmins
+
+### Authorization Handlers
+
+Located in `backend/FanEngagement.Api/Authorization/`:
+- `OrganizationMemberHandler` - Checks membership from `organizationId`/`id` route param
+- `OrganizationAdminHandler` - Checks OrgAdmin role from route param
+- `ProposalMemberHandler` - Resolves org from `proposalId` and checks membership
+- `ProposalManagerHandler` - Checks creator/OrgAdmin/GlobalAdmin for proposals
+
+### Current Authorization by Controller
+
+- **UsersController**: All operations except Create and GetUserMemberships require GlobalAdmin
+- **OrganizationsController**: Create requires GlobalAdmin, GetById requires OrgMember, Update requires OrgAdmin, List is public
+- **MembershipsController**: Create/Delete require OrgAdmin, GetAll/GetByUser require OrgMember
+- **ShareTypesController**: Create/Update require OrgAdmin, Get operations require OrgMember
+- **ShareIssuancesController**: Create requires OrgAdmin, Get operations require OrgMember
+- **ProposalsController**: View/Vote/Results require OrgMember, Update/Close/Options require ProposalManager
+- **OrganizationProposalsController**: Create/List require OrgMember
+- **WebhookEndpointsController**: All operations require OrgAdmin
+- **OutboundEventsController**: All operations require OrgAdmin
+- **AuthController/HealthController**: Public endpoints (no authorization)
+
+### Intended Authorization Principles (Implemented)
+
+1. **Global Admin Override**: Users with `UserRole.Admin` have implicit permission for all actions, regardless of organization membership.
    > **Security Note:** Global Admins bypass all organization-level access controls and should be granted only to trusted platform operators.
 
-2. **Organization Membership Required**: For org-scoped actions, user should have an `OrganizationMembership` record (unless Global Admin).
+2. **Organization Membership Required**: For org-scoped actions, user must have an `OrganizationMembership` record (unless Global Admin).
 
-3. **Organization Role Check**: Extract `organizationId` from route → query `OrganizationMembership` → check `Role` property → grant/deny based on intended permissions.
+3. **Organization Role Check**: Extract `organizationId` from route → query `OrganizationMembership` → check `Role` property → grant/deny based on policy.
 
-4. **Self-Access**: Users should be able to access their own resources (profile, memberships, votes, balances).
+4. **Self-Access**: Users can access their own resources (profile, memberships, votes, balances) via manual checks in controllers.
 
-5. **Creator Privileges**: Proposal creators should be able to manage their proposals even if not OrgAdmins (as long as they're org members).
+5. **Creator Privileges**: Proposal creators can manage their proposals even if not OrgAdmins (via ProposalManager policy).
 
-6. **Privilege Escalation Prevention**: OrgAdmins should not be able to modify their own membership role.
+6. **Privilege Escalation Prevention**: Implemented at application layer (no API to update membership roles - must delete and recreate).
 
 ### Current Implementation Approach
 
 - JWT authentication configured with role claims (see `Program.cs`)
-- Mixed authorization:
-  - Some endpoints: `[Authorize(Roles = "Admin")]` ✅
-  - Many endpoints: `[Authorize]` only ⚠️
-  - Some endpoints: No authorization ❌
-  - Few endpoints: Manual `User.IsInRole()` checks ✅
-- **Target Approach**: Consistent policy-based authorization with custom requirements/handlers
+- Policy-based authorization using custom requirements/handlers ✅
+- All endpoints have appropriate authorization policies applied ✅
+- Comprehensive test coverage (13 unit tests + 17 integration tests) ✅
 
 ### When Adding New Features
 
-- **Check current state first**: Review `docs/architecture.md` "Current Authorization Implementation" table
-- **Determine intended permissions**: Use the "Intended" columns in the permissions matrix
-- **For new endpoints**:
-  - Use attribute-based authorization and manual role checks for now
-  - Implement policy-based authorization only when explicitly requested in the issue requirements
-  - Consider security: default to more restrictive permissions
-- **For existing endpoints**: Be aware of current gaps but don't fix unless explicitly requested
-- **Document changes**: Update `docs/architecture.md` if introducing new actions or changing authorization approach
+**Always apply authorization to new endpoints:**
 
-### Migration Path (Future Work)
+1. **Determine the appropriate policy** based on the operation:
+   - User management → `[Authorize(Policy = "GlobalAdmin")]`
+   - Organization management (writes) → `[Authorize(Policy = "OrgAdmin")]`
+   - Organization management (reads) → `[Authorize(Policy = "OrgMember")]`
+   - Proposal management (writes) → `[Authorize(Policy = "ProposalManager")]`
+   - Proposal viewing/voting → `[Authorize(Policy = "OrgMember")]`
+   - Public endpoints → `[AllowAnonymous]`
 
-To reach the intended model:
-1. Implement policy-based authorization with custom requirements/handlers
-2. Replace bare `[Authorize]` with specific policy requirements
-3. Add organization-scoped policy checks
-4. Add privilege escalation safeguards (prevent OrgAdmins from changing own role)
-5. Add comprehensive authorization tests
+2. **Apply the policy attribute:**
+   ```csharp
+   [HttpPost]
+   [Authorize(Policy = "OrgAdmin")]
+   public async Task<ActionResult> Create(...)
+   ```
+
+3. **Ensure route parameters match policy expectations:**
+   - `OrgMember` and `OrgAdmin` expect `organizationId` or `id` in route
+   - `ProposalManager` expects `proposalId` in route
+   - GlobalAdmin doesn't require specific route parameters
+
+4. **Add authorization tests:**
+   - Unit tests for new authorization handlers (if creating custom ones)
+   - Integration tests covering authorized and unauthorized access scenarios
+
+5. **Document in PR:**
+   - List which policies are applied to new endpoints
+   - Note any authorization decisions
+
+**Example patterns:**
+
+```csharp
+// Organization-scoped controller
+[ApiController]
+[Route("organizations/{organizationId:guid}/items")]
+[Authorize(Policy = "OrgMember")]  // Base requirement
+public class ItemsController : ControllerBase
+{
+    [HttpPost]
+    [Authorize(Policy = "OrgAdmin")]  // Override for writes
+    public async Task<ActionResult> Create(...)
+    
+    [HttpGet]
+    public async Task<ActionResult> GetAll(...)  // Inherits OrgMember
+}
+
+// User management
+[HttpGet]
+[Authorize(Policy = "GlobalAdmin")]
+public async Task<ActionResult> GetAllUsers(...)
+
+// Self-access with manual checks
+[HttpGet("{id:guid}/data")]
+[Authorize]
+public async Task<ActionResult> GetUserData(Guid id, ...)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var requestingUserId))
+        return Forbid();
+    
+    if (requestingUserId != id && !User.IsInRole("Admin"))
+        return Forbid();
+    // ...
+}
+```
 
 For the complete current vs. intended permissions matrix, see **Roles & Permissions** in `docs/architecture.md`.
 
