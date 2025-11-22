@@ -394,7 +394,7 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange - need auth to access results endpoint
         // Create minimal setup with org membership
-        var (orgId, userId, shareTypeId, proposalId, optionId) = await SetupTestDataAsync();
+        var (_, _, _, _, _) = await SetupTestDataAsync();
         
         // Act - try to get results for non-existent proposal
         var response = await _client.GetAsync($"/proposals/{Guid.NewGuid()}/results");
