@@ -524,7 +524,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     public async Task UpdateProposal_ReturnsForbidden_ForNonCreatorRegularMember()
     {
         // Arrange
-        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
         _client.AddAuthorizationHeader(memberToken);
 
         var proposalRequest = new CreateProposalRequest
@@ -543,8 +543,8 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Remove("Authorization");
         var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         
-        // Add new member to org using admin token (first member we created who is also the one who created the proposal)
-        _client.AddAuthorizationHeader(memberToken);
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
         var newMembershipRequest = new CreateMembershipRequest
         {
             UserId = newMember.Id,
