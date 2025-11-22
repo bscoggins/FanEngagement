@@ -98,7 +98,7 @@ export const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <AdminRoute>
+      <AdminRoute allowOrgAdmin={true}>
         <AdminLayout />
       </AdminRoute>
     ),
@@ -109,15 +109,27 @@ export const router = createBrowserRouter([
       },
       {
         path: 'users',
-        element: <AdminUsersPage />,
+        element: (
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'users/:userId',
-        element: <AdminUserDetailPage />,
+        element: (
+          <AdminRoute>
+            <AdminUserDetailPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'organizations',
-        element: <AdminOrganizationsPage />,
+        element: (
+          <AdminRoute>
+            <AdminOrganizationsPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/edit',
@@ -161,7 +173,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'dev-tools',
-        element: <AdminDevToolsPage />,
+        element: (
+          <AdminRoute>
+            <AdminDevToolsPage />
+          </AdminRoute>
+        ),
       },
     ],
   },

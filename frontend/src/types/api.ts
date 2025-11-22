@@ -61,7 +61,7 @@ export interface MembershipWithOrganizationDto {
   organizationId: string;
   organizationName: string;
   userId: string;
-  role: string;
+  role: 'OrgAdmin' | 'Member';
   createdAt: string;
 }
 

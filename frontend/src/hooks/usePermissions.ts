@@ -38,59 +38,41 @@ interface PermissionsContextType {
 export const usePermissions = (): PermissionsContextType => {
   const { user, isAuthenticated, isAdmin } = useAuth();
   const [memberships, setMemberships] = useState<MembershipWithOrganizationDto[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start as true, will be set to false after first fetch
 
-  const fetchMemberships = useCallback(async () => {
+  const fetchMemberships = useCallback(async (signal?: AbortSignal) => {
     if (!isAuthenticated || !user?.userId) {
       setMemberships([]);
+      setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
       const data = await membershipsApi.getByUserId(user.userId);
-      setMemberships(data);
+      if (!signal?.aborted) {
+        setMemberships(data);
+      }
     } catch (error) {
-      console.error('Failed to fetch memberships:', error);
-      setMemberships([]);
+      if (!signal?.aborted) {
+        console.error('Failed to fetch memberships:', error);
+        setMemberships([]);
+      }
     } finally {
-      setIsLoading(false);
+      if (!signal?.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [isAuthenticated, user?.userId]);
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadMemberships = async () => {
-      if (!isAuthenticated || !user?.userId) {
-        setMemberships([]);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const data = await membershipsApi.getByUserId(user.userId);
-        if (isMounted) {
-          setMemberships(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Failed to fetch memberships:', error);
-          setMemberships([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadMemberships();
+    const abortController = new AbortController();
+    fetchMemberships(abortController.signal);
 
     return () => {
-      isMounted = false;
+      abortController.abort();
     };
-  }, [isAuthenticated, user?.userId]);
+  }, [fetchMemberships]);
 
   const isGlobalAdmin = (): boolean => {
     return isAdmin;
@@ -123,6 +105,6 @@ export const usePermissions = (): PermissionsContextType => {
     isOrgMember,
     memberships,
     isLoading,
-    refreshMemberships: fetchMemberships,
+    refreshMemberships: () => fetchMemberships(),
   };
 };
