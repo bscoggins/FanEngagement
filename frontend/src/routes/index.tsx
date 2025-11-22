@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { AdminRoute } from '../components/AdminRoute';
+import { OrgAdminRoute } from '../components/OrgAdminRoute';
 import { AdminLayout } from '../components/AdminLayout';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
@@ -97,7 +98,7 @@ export const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <AdminRoute>
+      <AdminRoute allowOrgAdmin={true}>
         <AdminLayout />
       </AdminRoute>
     ),
@@ -108,39 +109,75 @@ export const router = createBrowserRouter([
       },
       {
         path: 'users',
-        element: <AdminUsersPage />,
+        element: (
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'users/:userId',
-        element: <AdminUserDetailPage />,
+        element: (
+          <AdminRoute>
+            <AdminUserDetailPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'organizations',
-        element: <AdminOrganizationsPage />,
+        element: (
+          <AdminRoute>
+            <AdminOrganizationsPage />
+          </AdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/edit',
-        element: <AdminOrganizationEditPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationEditPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/memberships',
-        element: <AdminOrganizationMembershipsPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationMembershipsPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/share-types',
-        element: <AdminOrganizationShareTypesPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationShareTypesPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/proposals',
-        element: <AdminOrganizationProposalsPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationProposalsPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'organizations/:orgId/proposals/:proposalId',
-        element: <AdminProposalDetailPage />,
+        element: (
+          <OrgAdminRoute>
+            <AdminProposalDetailPage />
+          </OrgAdminRoute>
+        ),
       },
       {
         path: 'dev-tools',
-        element: <AdminDevToolsPage />,
+        element: (
+          <AdminRoute>
+            <AdminDevToolsPage />
+          </AdminRoute>
+        ),
       },
     ],
   },

@@ -311,6 +311,102 @@ public async Task<ActionResult> GetUserData(Guid id, ...)
 
 For the complete current vs. intended permissions matrix, see **Roles & Permissions** in `docs/architecture.md`.
 
+### Frontend Permission Helpers
+
+> **✅ COMPLETE:** Frontend permission system is now fully implemented with hooks, components, and route guards.
+
+The frontend provides comprehensive permission checking aligned with backend authorization:
+
+**Permission Hook (`usePermissions`):**
+
+Located in `frontend/src/hooks/usePermissions.ts`:
+- Fetches user's organization memberships on mount
+- Provides permission checking functions:
+  - `isGlobalAdmin()`: Returns true for users with Admin role
+  - `isOrgAdmin(orgId)`: Returns true for GlobalAdmins or OrgAdmins of specific org
+  - `isOrgMember(orgId)`: Returns true for GlobalAdmins or members/admins of specific org
+- Exposes `memberships` array and `refreshMemberships()` function
+
+**Usage Example:**
+
+```typescript
+import { usePermissions } from '../hooks/usePermissions';
+
+const MyComponent = () => {
+  const { isGlobalAdmin, isOrgAdmin, isOrgMember, memberships } = usePermissions();
+  
+  const handleAction = () => {
+    if (!isOrgAdmin(orgId)) {
+      alert('You must be an organization admin');
+      return;
+    }
+    // Perform admin action
+  };
+};
+```
+
+**Permission Wrapper Components:**
+
+Located in `frontend/src/components/PermissionWrappers.tsx`:
+
+```tsx
+import { IfGlobalAdmin, IfOrgAdmin, IfOrgMember } from '../components/PermissionWrappers';
+
+// Show button only to GlobalAdmins
+<IfGlobalAdmin>
+  <button>Platform Admin Action</button>
+</IfGlobalAdmin>
+
+// Show button only to OrgAdmins of this org
+<IfOrgAdmin orgId={orgId}>
+  <button>Manage Organization</button>
+</IfOrgAdmin>
+
+// Show content only to members of this org
+<IfOrgMember orgId={orgId}>
+  <div>Member-only content</div>
+</IfOrgMember>
+```
+
+**Route Guards:**
+
+Located in `frontend/src/components/`:
+
+1. **`AdminRoute`**: Requires GlobalAdmin role (platform-level admin pages)
+2. **`OrgAdminRoute`**: Requires GlobalAdmin OR OrgAdmin for specific org (org-scoped admin pages)
+3. **`ProtectedRoute`**: Requires authentication (any authenticated user)
+
+```tsx
+// In routes/index.tsx
+{
+  path: 'organizations/:orgId/edit',
+  element: (
+    <OrgAdminRoute>
+      <AdminOrganizationEditPage />
+    </OrgAdminRoute>
+  ),
+}
+```
+
+**UI Permission Indicators:**
+
+- **AdminLayout**: Shows red "Platform Admin" badge for GlobalAdmins; hides Users/Organizations/Dev Tools nav from non-GlobalAdmins
+- **AdminDashboardPage**: Shows different content based on role (platform shortcuts for GlobalAdmins, org list for OrgAdmins, no-access message for regular users)
+- **MyOrganizationPage**: Shows blue "Org Admin" badge and admin action links for OrgAdmins
+
+**When Adding New Frontend Features:**
+
+1. **Determine required permissions** based on backend authorization
+2. **Apply route guard** if entire page requires specific role:
+   - GlobalAdmin → wrap in `<AdminRoute>`
+   - OrgAdmin → wrap in `<OrgAdminRoute>`
+   - Any authenticated → wrap in `<ProtectedRoute>`
+3. **Use permission helpers** for conditional UI elements:
+   - Buttons/actions → use `usePermissions()` hook to enable/disable
+   - Sections → use `<IfGlobalAdmin>`, `<IfOrgAdmin>`, or `<IfOrgMember>` wrappers
+4. **Add visual indicators** where appropriate (badges, labels)
+5. **Test permission logic** with unit tests using mocked `usePermissions` hook
+
 ## How To Ask Copilot Agent To Work
 
 Use the GitHub Copilot coding agent by adding a comment containing the hashtag below to a new or existing issue, or by opening a conversation and concluding with the hashtag. The agent will create a branch, implement changes, and open a PR.
