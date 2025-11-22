@@ -1,8 +1,12 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using FanEngagement.Api.Authorization;
+using FanEngagement.Api.Middleware;
+using FanEngagement.Application.Validators;
 using FanEngagement.Infrastructure;
 using FanEngagement.Infrastructure.Persistence;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +14,16 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Register FluentValidation validators
+builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -181,8 +190,11 @@ if (app.Environment.IsDevelopment())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseDeveloperExceptionPage();
+    // Don't use UseDeveloperExceptionPage - we use our global exception handler
 }
+
+// Add global exception handling middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 

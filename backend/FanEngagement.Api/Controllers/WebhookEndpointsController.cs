@@ -15,19 +15,8 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         [FromBody] CreateWebhookEndpointRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var webhook = await webhookEndpointService.CreateAsync(organizationId, request, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { organizationId, webhookId = webhook.Id }, webhook);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return NotFound(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        var webhook = await webhookEndpointService.CreateAsync(organizationId, request, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { organizationId, webhookId = webhook.Id }, webhook);
     }
 
     [HttpGet]
@@ -61,20 +50,13 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         [FromBody] UpdateWebhookEndpointRequest request,
         CancellationToken cancellationToken)
     {
-        try
+        var webhook = await webhookEndpointService.UpdateAsync(organizationId, webhookId, request, cancellationToken);
+        if (webhook is null)
         {
-            var webhook = await webhookEndpointService.UpdateAsync(organizationId, webhookId, request, cancellationToken);
-            if (webhook is null)
-            {
-                return NotFound();
-            }
+            return NotFound();
+        }
 
-            return Ok(webhook);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        return Ok(webhook);
     }
 
     [HttpDelete("{webhookId:guid}")]

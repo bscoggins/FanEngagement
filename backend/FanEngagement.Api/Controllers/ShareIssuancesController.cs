@@ -16,15 +16,8 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
         [FromBody] CreateShareIssuanceRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var issuance = await shareIssuanceService.CreateAsync(organizationId, request, cancellationToken);
-            return CreatedAtAction(nameof(GetByOrganization), new { organizationId }, issuance);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        var issuance = await shareIssuanceService.CreateAsync(organizationId, request, cancellationToken);
+        return CreatedAtAction(nameof(GetByOrganization), new { organizationId }, issuance);
     }
 
     [HttpGet("share-issuances")]
