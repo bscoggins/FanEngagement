@@ -478,13 +478,7 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         };
         await _client.PostAsJsonAsync($"/organizations/{org2Id}/proposals", request2);
 
-        // Switch back to user1 (who is member of org1) to query org1 proposals
-        var login1Request = new LoginRequest
-        {
-            Email = $"test-{user1Id}@example.com", // Need to know the email
-            Password = "TestPassword123!"
-        };
-        // Actually, let's just use admin token since we already have it to avoid email issues
+        // Use admin token to query org1 proposals (admin can access all orgs)
         _client.AddAuthorizationHeader(adminToken);
 
         // Act - Get proposals for org1
