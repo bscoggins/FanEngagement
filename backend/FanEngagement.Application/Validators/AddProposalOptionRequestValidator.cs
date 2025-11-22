@@ -9,7 +9,6 @@ public class AddProposalOptionRequestValidator : AbstractValidator<AddProposalOp
     {
         RuleFor(x => x.Text)
             .NotEmpty().WithMessage("Option text is required.")
-            .MinimumLength(1).WithMessage("Option text must be at least 1 character.")
             .MaximumLength(200).WithMessage("Option text must not exceed 200 characters.");
 
         RuleFor(x => x.Description)

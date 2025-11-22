@@ -9,7 +9,6 @@ public class CreateProposalRequestValidator : AbstractValidator<CreateProposalRe
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Proposal title is required.")
-            .MinimumLength(1).WithMessage("Proposal title must be at least 1 character.")
             .MaximumLength(200).WithMessage("Proposal title must not exceed 200 characters.");
 
         RuleFor(x => x.Description)

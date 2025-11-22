@@ -9,12 +9,10 @@ public class UpdateShareTypeRequestValidator : AbstractValidator<UpdateShareType
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Share type name is required.")
-            .MinimumLength(1).WithMessage("Share type name must be at least 1 character.")
             .MaximumLength(100).WithMessage("Share type name must not exceed 100 characters.");
 
         RuleFor(x => x.Symbol)
             .NotEmpty().WithMessage("Share type symbol is required.")
-            .MinimumLength(1).WithMessage("Share type symbol must be at least 1 character.")
             .MaximumLength(10).WithMessage("Share type symbol must not exceed 10 characters.");
 
         RuleFor(x => x.Description)

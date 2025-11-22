@@ -9,7 +9,6 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Organization name is required.")
-            .MinimumLength(1).WithMessage("Organization name must be at least 1 character.")
             .MaximumLength(200).WithMessage("Organization name must not exceed 200 characters.");
 
         RuleFor(x => x.Description)

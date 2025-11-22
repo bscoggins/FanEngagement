@@ -116,7 +116,7 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
     public async Task CreateShareIssuance_ReturnsBadRequest_WhenExceedsMaxSupply()
     {
         // Arrange
-        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         // Create organization

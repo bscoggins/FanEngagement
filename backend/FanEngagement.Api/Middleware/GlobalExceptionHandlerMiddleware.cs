@@ -38,6 +38,13 @@ public class GlobalExceptionHandlerMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        // Check if response has already started
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning("Cannot handle exception - response has already started");
+            return;
+        }
+
         // Log the exception
         _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 

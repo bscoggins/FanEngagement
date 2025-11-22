@@ -8,7 +8,6 @@ public class UpdateProposalRequestValidator : AbstractValidator<UpdateProposalRe
     public UpdateProposalRequestValidator()
     {
         RuleFor(x => x.Title)
-            .MinimumLength(1).WithMessage("Proposal title must be at least 1 character.")
             .MaximumLength(200).WithMessage("Proposal title must not exceed 200 characters.")
             .When(x => !string.IsNullOrEmpty(x.Title));
 
