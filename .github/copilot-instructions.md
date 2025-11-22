@@ -269,7 +269,7 @@ When implementing a new feature or endpoint:
 
 ### Roles & Permissions
 
-FanEngagement defines a **two-tier role model**, but **authorization is currently incomplete**:
+FanEngagement defines a **two-tier role model** with comprehensive authorization enforcement on both backend and frontend:
 
 #### Global Roles (User.Role - UserRole enum)
 - **User** (`UserRole.User`): Default role for all users. Can manage own profile, view own memberships, participate in organizations they're a member of.
@@ -279,17 +279,83 @@ FanEngagement defines a **two-tier role model**, but **authorization is currentl
 - **Member** (`OrganizationRole.Member`): Regular organization member. Can view org details, share balances, proposals, and vote on proposals.
 - **OrgAdmin** (`OrganizationRole.OrgAdmin`): Organization administrator. Can manage org settings, memberships, share types, proposals, and webhooks for their organization.
 
-**⚠️ Current Implementation Gaps:**
-- Many endpoints lack proper role/membership checks (only require `[Authorize]` or no auth at all)
-- User management APIs accessible to any authenticated user (should be Admin-only)
-- Organization and membership APIs lack role enforcement
-- See **Implementation Gaps & Security Concerns** in `docs/architecture.md` for full details
+#### Frontend Permission Helpers
 
-**Intended principles (not fully enforced):**
-- Global Admin should have implicit permission for all actions
-- Organization-scoped actions should require appropriate `OrganizationMembership.Role`
-- Users should always be able to access their own resources
-- Proposal creators should have implicit permission to manage their proposals
+The frontend provides a comprehensive permission system via the `usePermissions()` hook:
+
+```typescript
+import { usePermissions } from '../hooks/usePermissions';
+
+const { isGlobalAdmin, isOrgAdmin, isOrgMember, memberships } = usePermissions();
+
+// Check permissions
+if (isGlobalAdmin()) {
+  // Show platform admin features
+}
+
+if (isOrgAdmin(orgId)) {
+  // Show org admin actions for this organization
+}
+
+if (isOrgMember(orgId)) {
+  // Show member-level content
+}
+```
+
+**Permission Wrapper Components:**
+
+Use these for conditional rendering based on roles:
+
+```tsx
+import { IfGlobalAdmin, IfOrgAdmin, IfOrgMember } from '../components/PermissionWrappers';
+
+<IfGlobalAdmin>
+  <button>Platform Admin Action</button>
+</IfGlobalAdmin>
+
+<IfOrgAdmin orgId={orgId}>
+  <button>Manage Organization</button>
+</IfOrgAdmin>
+
+<IfOrgMember orgId={orgId}>
+  <div>Member content</div>
+</IfOrgMember>
+```
+
+**Route Guards:**
+
+- **`AdminRoute`**: Requires GlobalAdmin role for platform-level admin pages
+- **`OrgAdminRoute`**: Requires GlobalAdmin OR OrgAdmin role for org-scoped admin pages
+- **`ProtectedRoute`**: Requires authentication (any authenticated user)
+
+```tsx
+// routes/index.tsx
+{
+  path: 'organizations/:orgId/edit',
+  element: (
+    <OrgAdminRoute>
+      <AdminOrganizationEditPage />
+    </OrgAdminRoute>
+  ),
+}
+```
+
+#### UI Permission Indicators
+
+- **Platform Admin Badge**: Red "Platform Admin" badge shown in AdminLayout header for GlobalAdmins
+- **Org Admin Badge**: Blue "Org Admin" badge shown on organization pages for OrgAdmins
+- **Admin Action Links**: OrgAdmins see admin action quick links on MyOrganizationPage
+- **Conditional Navigation**: AdminLayout only shows Users/Organizations/Dev Tools nav for GlobalAdmins
+
+#### Backend Authorization
+
+Backend uses policy-based authorization with custom handlers:
+
+**Intended principles (enforced by backend):**
+- Global Admin has implicit permission for all actions (bypasses org-level checks)
+- Organization-scoped actions require appropriate `OrganizationMembership.Role`
+- Users can always access their own resources
+- Proposal creators have implicit permission to manage their proposals
 
 For the complete current vs. intended permissions matrix and security gap analysis, see the **Roles & Permissions** section in `docs/architecture.md`.
 
