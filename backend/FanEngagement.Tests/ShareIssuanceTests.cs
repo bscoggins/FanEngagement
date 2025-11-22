@@ -14,21 +14,23 @@ namespace FanEngagement.Tests;
 public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
 
     public ShareIssuanceTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _output = output;
     }
 
     private async Task<(Guid organizationId, Guid userId, Guid shareTypeId)> SetupTestDataAsync()
     {
-        // Get authentication token
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Get admin authentication token for setup operations
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
-        // Create organization
+        // Create organization (requires admin)
         var orgRequest = new CreateOrganizationRequest
         {
             Name = $"Test Organization {Guid.NewGuid()}",
@@ -37,7 +39,7 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
         var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
         var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
 
-        // Create user
+        // Create user (requires admin)
         var userRequest = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
@@ -47,15 +49,15 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var user = await userResponse.Content.ReadFromJsonAsync<User>();
 
-        // Create membership
+        // Create membership with OrgAdmin role so tests can perform operations (requires OrgAdmin)
         var membershipRequest = new CreateMembershipRequest
         {
             UserId = user!.Id,
-            Role = OrganizationRole.Member
+            Role = OrganizationRole.OrgAdmin
         };
         await _client.PostAsJsonAsync($"/organizations/{org!.Id}/memberships", membershipRequest);
 
-        // Create share type
+        // Create share type (requires OrgAdmin)
         var shareTypeRequest = new CreateShareTypeRequest
         {
             Name = "Test Shares",

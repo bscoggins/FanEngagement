@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.Proposals;
@@ -15,21 +16,23 @@ namespace FanEngagement.Tests;
 public class ProposalTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
 
     public ProposalTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _output = output;
     }
 
     private async Task<(Guid organizationId, Guid userId)> SetupTestDataAsync()
     {
-        // Get authentication token
-        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        _client.AddAuthorizationHeader(token);
+        // Get admin authentication token for setup operations
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
 
-        // Create organization
+        // Create organization (requires admin)
         var orgRequest = new CreateOrganizationRequest
         {
             Name = $"Test Organization {Guid.NewGuid()}",
@@ -38,7 +41,7 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
         var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
 
-        // Create user
+        // Create user (requires admin)
         var userRequest = new CreateUserRequest
         {
             Email = $"test-{Guid.NewGuid()}@example.com",
@@ -48,13 +51,23 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
         var user = await userResponse.Content.ReadFromJsonAsync<User>();
 
-        // Create membership
+        // Create membership with OrgAdmin role so tests can perform operations (requires OrgAdmin)
         var membershipRequest = new CreateMembershipRequest
         {
             UserId = user!.Id,
-            Role = OrganizationRole.Member
+            Role = OrganizationRole.OrgAdmin
         };
         await _client.PostAsJsonAsync($"/organizations/{org!.Id}/memberships", membershipRequest);
+
+        // Login as the created user to get their token for tests
+        var loginRequest = new LoginRequest
+        {
+            Email = userRequest.Email,
+            Password = userRequest.Password
+        };
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        _client.AddAuthorizationHeader(loginResult!.Token);
 
         return (org.Id, user.Id);
     }

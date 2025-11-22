@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;

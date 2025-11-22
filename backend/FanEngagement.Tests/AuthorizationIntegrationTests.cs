@@ -219,7 +219,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     public async Task GetOrganizationById_ReturnsOk_ForOrgMember()
     {
         // Arrange
-        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
         _client.AddAuthorizationHeader(memberToken);
 
         // Act

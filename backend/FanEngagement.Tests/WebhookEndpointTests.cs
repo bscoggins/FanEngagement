@@ -10,10 +10,12 @@ namespace FanEngagement.Tests;
 public class WebhookEndpointTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
 
     public WebhookEndpointTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _output = output;
     }
@@ -239,6 +241,10 @@ public class WebhookEndpointTests : IClassFixture<TestWebApplicationFactory>
 
     private async Task<Organization> CreateOrganizationAsync()
     {
+        // Get admin token for creating organization
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
         var createOrgResponse = await _client.PostAsJsonAsync("/organizations",
             new CreateOrganizationRequest { Name = "Test Organization" });
         Assert.Equal(HttpStatusCode.Created, createOrgResponse.StatusCode);
