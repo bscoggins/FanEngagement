@@ -108,7 +108,7 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problemDetails);
-        Assert.Contains("already", problemDetails.Detail, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("already", problemDetails.Detail ?? "", StringComparison.OrdinalIgnoreCase);
         _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
@@ -176,7 +176,7 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problemDetails);
-        Assert.Contains("MaxSupply", problemDetails.Detail);
+        Assert.Contains("MaxSupply", problemDetails.Detail ?? "");
         _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
@@ -227,7 +227,7 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problemDetails);
-        Assert.Contains("not a member", problemDetails.Detail);
+        Assert.Contains("not a member", problemDetails.Detail ?? "");
         _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
@@ -288,7 +288,7 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problemDetails);
-        Assert.Contains("Cannot add options", problemDetails.Detail);
+        Assert.Contains("Cannot add options", problemDetails.Detail ?? "");
         _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 }
