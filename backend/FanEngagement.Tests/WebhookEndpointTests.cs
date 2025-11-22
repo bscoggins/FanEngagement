@@ -86,6 +86,9 @@ public class WebhookEndpointTests : IClassFixture<TestWebApplicationFactory>
     public async Task CreateWebhookEndpoint_ReturnsNotFound_WithInvalidOrganization()
     {
         // Arrange
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
         var request = new CreateWebhookEndpointRequest(
             "https://example.com/webhook",
             "secret123",
