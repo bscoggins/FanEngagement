@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { membershipsApi } from '../api/membershipsApi';
 import type { MembershipWithOrganizationDto } from '../types/api';
@@ -40,7 +40,7 @@ export const usePermissions = (): PermissionsContextType => {
   const [memberships, setMemberships] = useState<MembershipWithOrganizationDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchMemberships = async () => {
+  const fetchMemberships = useCallback(async () => {
     if (!isAuthenticated || !user?.userId) {
       setMemberships([]);
       return;
@@ -56,10 +56,40 @@ export const usePermissions = (): PermissionsContextType => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, user?.userId]);
 
   useEffect(() => {
-    fetchMemberships();
+    let isMounted = true;
+    
+    const loadMemberships = async () => {
+      if (!isAuthenticated || !user?.userId) {
+        setMemberships([]);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const data = await membershipsApi.getByUserId(user.userId);
+        if (isMounted) {
+          setMemberships(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch memberships:', error);
+          setMemberships([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadMemberships();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isAuthenticated, user?.userId]);
 
   const isGlobalAdmin = (): boolean => {
