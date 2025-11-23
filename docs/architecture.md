@@ -435,6 +435,74 @@ Focus on CRUD and basic flows:
   - `POST /organizations/{orgId}/webhooks`
   - System will later POST out to those URLs for events (e.g. `ProposalFinalized`).
 
+## Pagination and Filtering
+
+FanEngagement provides consistent pagination and filtering across list endpoints to ensure scalability and usability.
+
+### Pagination Model
+
+All list endpoints support optional pagination through query parameters:
+
+- **`page`** (integer, optional, default: 1): The page number to retrieve (1-based indexing)
+- **`pageSize`** (integer, optional, default: 10): Number of items per page (min: 1, max: 100)
+
+### Response Format
+
+Paginated responses return a `PagedResult<T>` object with the following structure:
+
+```json
+{
+  "items": [],         // Array of items for the current page
+  "totalCount": 0,     // Total number of items across all pages
+  "page": 1,           // Current page number
+  "pageSize": 10,      // Items per page
+  "totalPages": 0,     // Total number of pages
+  "hasPreviousPage": false,  // Whether a previous page exists
+  "hasNextPage": false       // Whether a next page exists
+}
+```
+
+### Filtering Capabilities
+
+Different endpoints support specific filters based on the resource type:
+
+#### Users (`GET /users`)
+- **`search`** (string, optional): Filter by email or display name (case-insensitive substring match)
+- Example: `GET /users?page=1&pageSize=20&search=john`
+
+#### Organizations (`GET /organizations`)
+- **`search`** (string, optional): Filter by organization name (case-insensitive substring match)
+- Example: `GET /organizations?page=1&pageSize=20&search=team`
+
+#### Proposals (`GET /organizations/{orgId}/proposals`)
+- **`status`** (enum, optional): Filter by proposal status (`Draft`, `Open`, `Closed`, `Finalized`)
+- **`search`** (string, optional): Filter by proposal title (case-insensitive substring match)
+- Example: `GET /organizations/{orgId}/proposals?page=1&pageSize=10&status=Open&search=budget`
+
+### Backward Compatibility
+
+All pagination and filtering parameters are optional. If no pagination parameters are provided, endpoints return all items (legacy behavior). This ensures backward compatibility with existing clients.
+
+### Validation
+
+- `page` must be ≥ 1 (returns 400 Bad Request if invalid)
+- `pageSize` must be between 1 and 100 (returns 400 Bad Request if invalid)
+- Invalid filter values are ignored or return empty results
+
+### Frontend Integration
+
+Frontend components for pagination and filtering:
+
+- **`Pagination` component**: Renders page navigation controls
+- **`SearchInput` component**: Provides debounced search input (300ms delay)
+- All admin list pages use these components for consistent UX
+
+Example usage in frontend:
+```typescript
+const { data, loading } = await usersApi.getAllPaged(page, pageSize, searchQuery);
+// data is PagedResult<User>
+```
+
 ## Non-Functional Requirements
 
 - Multi-tenant aware: most operations are scoped by `OrganizationId`.

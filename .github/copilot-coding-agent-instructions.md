@@ -772,3 +772,119 @@ Core UX utilities are located in:
 - `frontend/src/utils/errorUtils.ts` - Error parsing utilities
 - `frontend/src/hooks/useAsync.ts` - Async state management hook
 
+## Pagination and Filtering Requirements
+
+When creating or modifying list endpoints and pages, follow the standard pagination and filtering pattern:
+
+### Backend Requirements
+
+**For all new list endpoints:**
+- [ ] Add pagination support with query parameters: `page`, `pageSize`
+- [ ] Return `PagedResult<T>` from `FanEngagement.Application.Common`
+- [ ] Validate pagination parameters:
+  - `page` >= 1 (default: 1)
+  - `pageSize` between 1 and 100 (default: 10)
+  - Use constants from `PaginationValidators`
+- [ ] Add appropriate filter parameters based on entity type:
+  - Users: `search` (email/name)
+  - Organizations: `search` (name)
+  - Proposals: `status`, `search` (title)
+- [ ] Maintain backward compatibility: if no pagination params, return all items
+- [ ] Add integration tests for:
+  - Pagination (page boundaries, counts)
+  - Filters (search, status, etc.)
+  - Parameter validation (invalid page/pageSize)
+  - Backward compatibility (no params)
+
+**Example controller pattern:**
+```csharp
+[HttpGet]
+public async Task<ActionResult> GetAll(
+    [FromQuery] int? page,
+    [FromQuery] int? pageSize,
+    [FromQuery] string? search,
+    CancellationToken cancellationToken)
+{
+    if (page.HasValue || pageSize.HasValue || !string.IsNullOrWhiteSpace(search))
+    {
+        var currentPage = page ?? PaginationValidators.DefaultPage;
+        var currentPageSize = pageSize ?? PaginationValidators.DefaultPageSize;
+        
+        if (currentPage < 1)
+            return BadRequest(new { error = "Page must be >= 1." });
+        if (currentPageSize < PaginationValidators.MinPageSize || 
+            currentPageSize > PaginationValidators.MaxPageSize)
+            return BadRequest(new { error = $"PageSize must be between {PaginationValidators.MinPageSize} and {PaginationValidators.MaxPageSize}." });
+        
+        var pagedResult = await service.GetAllAsync(currentPage, currentPageSize, search, cancellationToken);
+        return Ok(pagedResult);
+    }
+    
+    var items = await service.GetAllAsync(cancellationToken);
+    return Ok(items);
+}
+```
+
+### Frontend Requirements
+
+**For all new list pages:**
+- [ ] Add `PagedResult<T>` type import from `../types/api`
+- [ ] Create paginated API method (e.g., `getAllPaged()`) in API client
+- [ ] Track pagination state: `currentPage`, `searchQuery`, filters
+- [ ] Use `Pagination` component from `../components/Pagination`
+- [ ] Use `SearchInput` component (with debounce) from `../components/SearchInput`
+- [ ] Display item count indicators (e.g., "Showing 1-10 of 50 items")
+- [ ] Reset to page 1 when changing filters
+- [ ] Handle empty results with appropriate message
+- [ ] Scroll to top on page change
+- [ ] Add tests for:
+  - Pagination controls update displayed data
+  - Search/filter inputs trigger filtered data
+  - Empty results are handled correctly
+
+**Example page pattern:**
+```typescript
+const [pagedResult, setPagedResult] = useState<PagedResult<Item> | null>(null);
+const [currentPage, setCurrentPage] = useState(1);
+const [searchQuery, setSearchQuery] = useState('');
+const pageSize = 10;
+
+useEffect(() => {
+  const fetchData = async () => {
+    const data = await itemsApi.getAllPaged(currentPage, pageSize, searchQuery || undefined);
+    setPagedResult(data);
+  };
+  fetchData();
+}, [currentPage, searchQuery]);
+
+const handlePageChange = (page: number) => {
+  setCurrentPage(page);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const handleSearchChange = (value: string) => {
+  setSearchQuery(value);
+  setCurrentPage(1); // Reset to first page
+};
+```
+
+**Components to use:**
+- `Pagination`: Page navigation controls
+- `SearchInput`: Debounced search input (300ms)
+- Located in `frontend/src/components/`
+
+**API client pattern:**
+```typescript
+getAllPaged: async (page: number, pageSize: number, filters?: string): Promise<PagedResult<T>> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+  if (filters) {
+    params.append('filterName', filters);
+  }
+  const response = await apiClient.get<PagedResult<T>>(`/endpoint?${params.toString()}`);
+  return response.data;
+}
+```
+
