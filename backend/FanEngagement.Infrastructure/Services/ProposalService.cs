@@ -203,7 +203,7 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
         var allBalances = await dbContext.ShareBalances
             .AsNoTracking()
             .Include(b => b.ShareType)
-            .Where(b => b.ShareType!.OrganizationId == proposal.OrganizationId)
+            .Where(b => b.ShareType != null && b.ShareType.OrganizationId == proposal.OrganizationId)
             .ToListAsync(cancellationToken);
         
         proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);

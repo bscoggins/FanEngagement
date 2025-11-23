@@ -76,20 +76,19 @@ public class ProposalLifecycleBackgroundService(
 
         // Find proposals that need to be opened
         var proposalsToOpen = await dbContext.Proposals
+            .AsNoTracking()
             .Where(p => p.Status == ProposalStatus.Draft
                      && p.StartAt.HasValue
                      && p.StartAt.Value <= now)
-            .Include(p => p.Options)
             .Take(_options.MaxProposalsPerBatch)
             .ToListAsync(cancellationToken);
 
         // Find proposals that need to be closed
         var proposalsToClose = await dbContext.Proposals
+            .AsNoTracking()
             .Where(p => p.Status == ProposalStatus.Open
                      && p.EndAt.HasValue
                      && p.EndAt.Value <= now)
-            .Include(p => p.Options)
-            .Include(p => p.Votes)
             .Take(_options.MaxProposalsPerBatch)
             .ToListAsync(cancellationToken);
 
@@ -151,21 +150,8 @@ public class ProposalLifecycleBackgroundService(
         Domain.Entities.Proposal proposal,
         CancellationToken cancellationToken)
     {
-        // Validate using domain service
-        var governanceService = new ProposalGovernanceService();
-        var validation = governanceService.ValidateCanOpen(proposal);
-        
-        if (!validation.IsValid)
-        {
-            logger.LogWarning(
-                "Cannot open proposal {ProposalId} (Title: {Title}): {Reason}",
-                proposal.Id,
-                proposal.Title,
-                validation.ErrorMessage);
-            return;
-        }
-
-        // Use the service to perform the transition (which handles snapshot and event)
+        // Call service method directly - it will re-load and validate with fresh data
+        // This avoids Time-of-Check-Time-of-Use (TOCTOU) issues with stale entity data
         var result = await proposalService.OpenAsync(proposal.Id, cancellationToken);
         
         if (result != null)
@@ -182,21 +168,8 @@ public class ProposalLifecycleBackgroundService(
         Domain.Entities.Proposal proposal,
         CancellationToken cancellationToken)
     {
-        // Validate using domain service
-        var governanceService = new ProposalGovernanceService();
-        var validation = governanceService.ValidateCanClose(proposal);
-        
-        if (!validation.IsValid)
-        {
-            logger.LogWarning(
-                "Cannot close proposal {ProposalId} (Title: {Title}): {Reason}",
-                proposal.Id,
-                proposal.Title,
-                validation.ErrorMessage);
-            return;
-        }
-
-        // Use the service to perform the transition (which computes results and enqueues event)
+        // Call service method directly - it will re-load and validate with fresh data
+        // This avoids Time-of-Check-Time-of-Use (TOCTOU) issues with stale entity data
         var result = await proposalService.CloseAsync(proposal.Id, cancellationToken);
         
         if (result != null)
