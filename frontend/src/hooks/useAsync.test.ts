@@ -118,7 +118,7 @@ describe('useAsync', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.error).toBe('Resource not found');
+    expect(result.current.error).toBe('The requested resource was not found.');
   });
 
   it('can be reset', async () => {
