@@ -131,11 +131,13 @@ Notes:
    - `GET /organizations/{organizationId}/users/{userId}/share-issuances` → List user share issuances
    - `GET /organizations/{organizationId}/users/{userId}/balances` → Get user share balances
 - Proposals & Voting:
-   - `POST /organizations/{organizationId}/proposals` → Create proposal
+   - `POST /organizations/{organizationId}/proposals` → Create proposal (starts in Draft status)
    - `GET /organizations/{organizationId}/proposals` → List proposals by organization
    - `GET /proposals/{proposalId}` → Get proposal by ID
    - `PUT /proposals/{proposalId}` → Update proposal
-   - `POST /proposals/{proposalId}/close` → Close proposal
+   - `POST /proposals/{proposalId}/open` → Open proposal (requires 2+ options, captures voting power snapshot)
+   - `POST /proposals/{proposalId}/close` → Close proposal (computes results, checks quorum)
+   - `POST /proposals/{proposalId}/finalize` → Finalize proposal (terminal state)
    - `POST /proposals/{proposalId}/options` → Add proposal option
    - `DELETE /proposals/{proposalId}/options/{optionId}` → Delete proposal option
    - `POST /proposals/{proposalId}/votes` → Cast vote
@@ -859,6 +861,57 @@ public async Task<ProposalDto?> OpenAsync(Guid proposalId, CancellationToken can
 **DO NOT skip domain service validation** - it ensures consistency across all entry points (API, background jobs, etc.).
 
 ## Recent Architectural Additions
+
+### Proposal Lifecycle Management and Quorum Enforcement (Implemented)
+
+**Background Service:**
+- Added `ProposalLifecycleBackgroundService` for automatic proposal transitions
+- Polls database at configurable interval (default: 60 seconds)
+- Opens Draft proposals when `StartAt <= now`
+- Closes Open proposals when `EndAt <= now`
+- Configuration in `appsettings.json`:
+  ```json
+  {
+    "ProposalLifecycle": {
+      "PollingIntervalSeconds": 60,
+      "MaxProposalsPerBatch": 100
+    }
+  }
+  ```
+
+**Lifecycle Changes:**
+- Proposals now start in `Draft` status (previously started as `Open`)
+- Explicit lifecycle: Draft → Open → Closed → Finalized
+- Opening proposal requires 2+ options and captures `EligibleVotingPowerSnapshot`
+- Closing proposal computes results using `ProposalGovernanceService.ComputeResults()`
+- Results include: `WinningOptionId`, `QuorumMet`, `TotalVotesCast`, `ClosedAt`
+
+**API Endpoints:**
+- `POST /proposals/{proposalId}/open` - Manually open proposal
+- `POST /proposals/{proposalId}/close` - Manually close proposal
+- `POST /proposals/{proposalId}/finalize` - Finalize proposal (terminal state)
+
+**Voting Eligibility:**
+- Must be in Open status
+- Must have voting power > 0
+- Respects time window (`StartAt` and `EndAt`)
+- One vote per user per proposal
+- Enhanced validation using `ProposalGovernanceService.ValidateCanVote()`
+
+**Outbound Events:**
+- Enqueues `ProposalOpened`, `ProposalClosed`, `ProposalFinalized` events
+- Events include proposal metadata (id, title, status, results)
+- Delivered via existing `WebhookDeliveryBackgroundService`
+
+**Testing:**
+- 12 new integration tests in `ProposalLifecycleTests.cs`
+- Updated existing tests to accommodate Draft → Open flow
+- All 217 tests passing
+
+**Important for Future Development:**
+- Always use `ProposalGovernanceService` for lifecycle transitions
+- Never manually set `proposal.Status` without validation
+- Background service disabled in tests via `TestWebApplicationFactory`
 
 ### Admin Proposal Management (Implemented)
 - Added `frontend/src/api/proposalsApi.ts` for proposal CRUD operations
