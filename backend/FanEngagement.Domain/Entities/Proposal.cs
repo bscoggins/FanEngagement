@@ -11,7 +11,20 @@ public class Proposal
     public ProposalStatus Status { get; set; }
     public DateTimeOffset? StartAt { get; set; }
     public DateTimeOffset? EndAt { get; set; }
+    
+    // Quorum configuration (percentage of total eligible voting power required)
     public decimal? QuorumRequirement { get; set; }
+    
+    // Snapshot of total eligible voting power at the time proposal opened
+    // Used for quorum calculation
+    public decimal? EligibleVotingPowerSnapshot { get; set; }
+    
+    // Result metadata (populated when proposal is closed/finalized)
+    public Guid? WinningOptionId { get; set; }
+    public bool? QuorumMet { get; set; }
+    public decimal? TotalVotesCast { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    
     public Guid CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 

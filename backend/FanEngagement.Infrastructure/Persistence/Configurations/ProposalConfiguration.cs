@@ -14,7 +14,17 @@ public class ProposalConfiguration : IEntityTypeConfiguration<Proposal>
         builder.Property(x => x.Title).IsRequired().HasMaxLength(200);
         builder.Property(x => x.Description).HasMaxLength(4000);
         builder.Property(x => x.Status).IsRequired();
+        
+        // Quorum configuration
         builder.Property(x => x.QuorumRequirement).HasColumnType("numeric(5,2)");
+        builder.Property(x => x.EligibleVotingPowerSnapshot).HasColumnType("numeric(18,2)");
+        
+        // Result metadata
+        builder.Property(x => x.WinningOptionId);
+        builder.Property(x => x.QuorumMet);
+        builder.Property(x => x.TotalVotesCast).HasColumnType("numeric(18,2)");
+        builder.Property(x => x.ClosedAt);
+        
         builder.Property(x => x.CreatedAt).IsRequired();
 
         builder.HasOne(x => x.Organization)
