@@ -9,6 +9,7 @@ import type {
   ProposalResults,
   Vote,
   CastVoteRequest,
+  PagedResult,
 } from '../types/api';
 
 export const proposalsApi = {
@@ -25,6 +26,32 @@ export const proposalsApi = {
    */
   async getByOrganization(organizationId: string): Promise<Proposal[]> {
     const response = await apiClient.get(`/organizations/${organizationId}/proposals`);
+    return response.data;
+  },
+
+  /**
+   * Get paginated proposals for an organization with optional filters
+   */
+  async getByOrganizationPaged(
+    organizationId: string,
+    page: number,
+    pageSize: number,
+    status?: string,
+    search?: string
+  ): Promise<PagedResult<Proposal>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    if (status) {
+      params.append('status', status);
+    }
+    if (search) {
+      params.append('search', search);
+    }
+    const response = await apiClient.get<PagedResult<Proposal>>(
+      `/organizations/${organizationId}/proposals?${params.toString()}`
+    );
     return response.data;
   },
 
