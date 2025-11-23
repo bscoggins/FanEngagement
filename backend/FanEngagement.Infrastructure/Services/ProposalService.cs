@@ -128,6 +128,11 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             QuorumRequirement = proposal.QuorumRequirement,
             CreatedByUserId = proposal.CreatedByUserId,
             CreatedAt = proposal.CreatedAt,
+            WinningOptionId = proposal.WinningOptionId,
+            QuorumMet = proposal.QuorumMet,
+            TotalVotesCast = proposal.TotalVotesCast,
+            ClosedAt = proposal.ClosedAt,
+            EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot,
             Options = proposal.Options.Select(o => new ProposalOptionDto
             {
                 Id = o.Id,
@@ -390,7 +395,10 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         {
             ProposalId = proposalId,
             OptionResults = optionResults,
-            TotalVotingPower = totalVotingPower
+            TotalVotingPower = totalVotingPower,
+            QuorumMet = proposal.QuorumMet,
+            EligibleVotingPower = proposal.EligibleVotingPowerSnapshot,
+            WinningOptionId = proposal.WinningOptionId
         };
     }
 
@@ -418,7 +426,12 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             EndAt = proposal.EndAt,
             QuorumRequirement = proposal.QuorumRequirement,
             CreatedByUserId = proposal.CreatedByUserId,
-            CreatedAt = proposal.CreatedAt
+            CreatedAt = proposal.CreatedAt,
+            WinningOptionId = proposal.WinningOptionId,
+            QuorumMet = proposal.QuorumMet,
+            TotalVotesCast = proposal.TotalVotesCast,
+            ClosedAt = proposal.ClosedAt,
+            EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot
         };
     }
 }

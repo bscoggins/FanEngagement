@@ -5,6 +5,9 @@ public class ProposalResultsDto
     public Guid ProposalId { get; set; }
     public List<OptionResultDto> OptionResults { get; set; } = new();
     public decimal TotalVotingPower { get; set; }
+    public bool? QuorumMet { get; set; }
+    public decimal? EligibleVotingPower { get; set; }
+    public Guid? WinningOptionId { get; set; }
 }
 
 public class OptionResultDto
