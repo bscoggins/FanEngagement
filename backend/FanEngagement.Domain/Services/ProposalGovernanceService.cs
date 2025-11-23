@@ -60,11 +60,6 @@ public class ProposalGovernanceService
             return GovernanceValidationResult.Invalid($"Only Draft proposals can be opened. Current status: {proposal.Status}");
         }
 
-        if (!proposal.Options.Any())
-        {
-            return GovernanceValidationResult.Invalid("Proposal must have at least one option before opening.");
-        }
-
         if (proposal.Options.Count < 2)
         {
             return GovernanceValidationResult.Invalid("Proposal must have at least two options.");
@@ -78,9 +73,9 @@ public class ProposalGovernanceService
     /// </summary>
     public GovernanceValidationResult ValidateCanClose(Proposal proposal)
     {
-        if (proposal.Status != ProposalStatus.Open && proposal.Status != ProposalStatus.Draft)
+        if (proposal.Status != ProposalStatus.Open)
         {
-            return GovernanceValidationResult.Invalid($"Only Open or Draft proposals can be closed. Current status: {proposal.Status}");
+            return GovernanceValidationResult.Invalid($"Only Open proposals can be closed. Current status: {proposal.Status}");
         }
 
         return GovernanceValidationResult.Valid();
@@ -191,17 +186,28 @@ public class ProposalGovernanceService
                 VoteCount = optionVotes.Count,
                 TotalVotingPower = optionVotes.Sum(v => v.VotingPower)
             };
-        }).OrderByDescending(r => r.TotalVotingPower).ToList();
+        }).OrderByDescending(r => r.TotalVotingPower)
+          .ThenBy(r => r.OptionId) // Deterministic tie-breaker
+          .ToList();
 
         var totalVotingPowerCast = optionResults.Sum(r => r.TotalVotingPower);
         var winningOption = optionResults.FirstOrDefault();
         
         bool quorumMet = true;
-        if (proposal.QuorumRequirement.HasValue && proposal.EligibleVotingPowerSnapshot.HasValue)
+        if (proposal.QuorumRequirement.HasValue)
         {
-            // Quorum is met if votes cast >= required percentage of eligible voting power
-            var requiredVotingPower = proposal.EligibleVotingPowerSnapshot.Value * (proposal.QuorumRequirement.Value / 100m);
-            quorumMet = totalVotingPowerCast >= requiredVotingPower;
+            if (proposal.EligibleVotingPowerSnapshot.HasValue)
+            {
+                // Quorum is met if votes cast >= required percentage of eligible voting power
+                var requiredVotingPower = proposal.EligibleVotingPowerSnapshot.Value * (proposal.QuorumRequirement.Value / 100m);
+                quorumMet = totalVotingPowerCast >= requiredVotingPower;
+            }
+            else
+            {
+                // If no snapshot exists (legacy proposals or proposals created improperly),
+                // treat quorum as not met since we can't validate it
+                quorumMet = false;
+            }
         }
 
         return new ProposalResultComputation

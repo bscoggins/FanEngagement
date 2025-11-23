@@ -2,6 +2,7 @@ using FanEngagement.Application.Common;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
+using FanEngagement.Domain.Services;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -153,10 +154,12 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             return null;
         }
 
-        // Only allow updates if proposal is in Draft or Open state
-        if (proposal.Status != ProposalStatus.Draft && proposal.Status != ProposalStatus.Open)
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanUpdate(proposal);
+        if (!validation.IsValid)
         {
-            throw new InvalidOperationException($"Cannot update proposal in {proposal.Status} state.");
+            throw new InvalidOperationException(validation.ErrorMessage);
         }
 
         if (request.Title is not null)
@@ -177,8 +180,8 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
     public async Task<ProposalDto?> CloseAsync(Guid proposalId, CancellationToken cancellationToken = default)
     {
         var proposal = await dbContext.Proposals
+            .Include(p => p.Options)
             .Include(p => p.Votes)
-            .ThenInclude(v => v.ProposalOption)
             .FirstOrDefaultAsync(p => p.Id == proposalId, cancellationToken);
 
         if (proposal is null)
@@ -186,13 +189,24 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             return null;
         }
 
-        // Cannot close an already closed or finalized proposal
-        if (proposal.Status == ProposalStatus.Closed || proposal.Status == ProposalStatus.Finalized)
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanClose(proposal);
+        if (!validation.IsValid)
         {
-            throw new InvalidOperationException($"Proposal is already {proposal.Status}.");
+            throw new InvalidOperationException(validation.ErrorMessage);
         }
 
+        // Compute results using domain service
+        var results = governanceService.ComputeResults(proposal);
+        
+        // Update proposal with computed results
         proposal.Status = ProposalStatus.Closed;
+        proposal.WinningOptionId = results.WinningOptionId;
+        proposal.QuorumMet = results.QuorumMet;
+        proposal.TotalVotesCast = results.TotalVotingPowerCast;
+        proposal.ClosedAt = DateTimeOffset.UtcNow;
+        
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return MapToDto(proposal);
@@ -208,10 +222,12 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             return null;
         }
 
-        // Only allow adding options if proposal is in Draft or Open state
-        if (proposal.Status != ProposalStatus.Draft && proposal.Status != ProposalStatus.Open)
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanAddOption(proposal);
+        if (!validation.IsValid)
         {
-            throw new InvalidOperationException($"Cannot add options to proposal in {proposal.Status} state.");
+            throw new InvalidOperationException(validation.ErrorMessage);
         }
 
         var option = new ProposalOption
@@ -244,12 +260,6 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             return false;
         }
 
-        // Only allow deleting options if proposal is in Draft state
-        if (proposal.Status != ProposalStatus.Draft)
-        {
-            throw new InvalidOperationException($"Cannot delete options from proposal in {proposal.Status} state.");
-        }
-
         var option = await dbContext.ProposalOptions
             .FirstOrDefaultAsync(o => o.Id == optionId && o.ProposalId == proposalId, cancellationToken);
 
@@ -261,10 +271,13 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         // Check if any votes exist for this option
         var hasVotes = await dbContext.Votes
             .AnyAsync(v => v.ProposalOptionId == optionId, cancellationToken);
-        
-        if (hasVotes)
+
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanDeleteOption(proposal, hasVotes);
+        if (!validation.IsValid)
         {
-            throw new InvalidOperationException("Cannot delete option that has votes.");
+            throw new InvalidOperationException(validation.ErrorMessage);
         }
 
         dbContext.ProposalOptions.Remove(option);
@@ -410,7 +423,8 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             .Where(b => b.UserId == userId && b.ShareType!.OrganizationId == organizationId)
             .ToListAsync(cancellationToken);
 
-        return balances.Sum(b => b.Balance * b.ShareType!.VotingWeight);
+        var calculator = new VotingPowerCalculator();
+        return calculator.CalculateVotingPower(balances);
     }
 
     private static ProposalDto MapToDto(Proposal proposal)

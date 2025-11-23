@@ -129,7 +129,7 @@ public class ProposalGovernanceServiceTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("at least one option", result.ErrorMessage);
+        Assert.Contains("at least two options", result.ErrorMessage);
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class ProposalGovernanceServiceTests
     }
 
     [Fact]
-    public void ValidateCanClose_WhenDraft_IsValid()
+    public void ValidateCanClose_WhenDraft_IsInvalid()
     {
         // Arrange
         var proposal = CreateProposal(ProposalStatus.Draft);
@@ -190,7 +190,8 @@ public class ProposalGovernanceServiceTests
         var result = _governanceService.ValidateCanClose(proposal);
 
         // Assert
-        Assert.True(result.IsValid);
+        Assert.False(result.IsValid);
+        Assert.Contains("Only Open proposals can be closed", result.ErrorMessage);
     }
 
     [Fact]

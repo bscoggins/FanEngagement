@@ -213,7 +213,7 @@ Results are computed when a proposal transitions to `Closed` status.
 #### Result Fields Populated
 
 1. **`WinningOptionId`**: The `ProposalOption.Id` with the highest `TotalVotingPower`
-   - In case of a tie, the first option (by internal ordering) wins
+   - In case of a tie, the option with the lowest `OptionId` (lexicographically) wins
    - If no votes were cast, this field is `null`
 
 2. **`QuorumMet`**: Boolean indicating whether quorum requirement was satisfied
