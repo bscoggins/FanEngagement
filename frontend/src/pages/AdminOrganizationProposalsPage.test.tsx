@@ -280,12 +280,12 @@ describe('AdminOrganizationProposalsPage', () => {
       // Look for status badges within the proposals, not the filter dropdown
       const openBadge = screen.getByText((content, element) => {
         return element?.tagName === 'SPAN' && 
-               element?.style.backgroundColor === 'rgb(40, 167, 69)' && 
+               (element as HTMLElement)?.style.backgroundColor === 'rgb(40, 167, 69)' && 
                content === 'Open';
       });
       const draftBadge = screen.getByText((content, element) => {
         return element?.tagName === 'SPAN' && 
-               element?.style.backgroundColor === 'rgb(108, 117, 125)' && 
+               (element as HTMLElement)?.style.backgroundColor === 'rgb(108, 117, 125)' && 
                content === 'Draft';
       });
       expect(openBadge).toBeInTheDocument();

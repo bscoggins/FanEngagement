@@ -810,11 +810,11 @@ public async Task<ActionResult> GetAll(
         var currentPage = page ?? PaginationValidators.DefaultPage;
         var currentPageSize = pageSize ?? PaginationValidators.DefaultPageSize;
         
-        if (currentPage < 1)
-            return BadRequest(new { error = "Page must be >= 1." });
-        if (currentPageSize < PaginationValidators.MinPageSize || 
-            currentPageSize > PaginationValidators.MaxPageSize)
-            return BadRequest(new { error = $"PageSize must be between {PaginationValidators.MinPageSize} and {PaginationValidators.MaxPageSize}." });
+        var validationError = PaginationHelper.ValidatePaginationParameters(currentPage, currentPageSize);
+        if (validationError != null)
+        {
+            return validationError;
+        }
         
         var pagedResult = await service.GetAllAsync(currentPage, currentPageSize, search, cancellationToken);
         return Ok(pagedResult);

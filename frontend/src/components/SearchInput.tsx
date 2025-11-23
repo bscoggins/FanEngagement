@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface SearchInputProps {
   value: string;
@@ -14,6 +14,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   debounceMs = 300,
 }) => {
   const [localValue, setLocalValue] = useState(value);
+  const onChangeRef = useRef(onChange);
+
+  // Keep the ref up to date
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     setLocalValue(value);
@@ -22,12 +28,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (localValue !== value) {
-        onChange(localValue);
+        onChangeRef.current(localValue);
       }
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [localValue, debounceMs, onChange, value]);
+  }, [localValue, debounceMs, value]);
 
   return (
     <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
