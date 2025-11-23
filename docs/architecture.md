@@ -70,6 +70,315 @@ FanEngagement is a multi-tenant fan governance platform. Organizations (teams, c
     - `AttemptCount`
     - `LastAttemptAt`
 
+## Proposal Governance Rules
+
+FanEngagement implements a comprehensive governance model for proposals, defining clear rules for proposal lifecycle, voting eligibility, quorum requirements, result computation, and result visibility.
+
+### Lifecycle States and Transitions
+
+Proposals follow a strict state machine with four states:
+
+```
+Draft → Open → Closed → Finalized
+```
+
+#### State Definitions
+
+1. **Draft** (`ProposalStatus.Draft`)
+   - Initial state for proposals under construction
+   - Options can be freely added and deleted
+   - Proposal metadata (title, description, dates, quorum) can be edited
+   - No voting allowed
+   - Results not visible
+   - **Requirements to transition to Open:**
+     - Must have at least 2 options
+     - All required metadata should be configured
+
+2. **Open** (`ProposalStatus.Open`)
+   - Active voting state
+   - Members with voting power can cast votes
+   - Options can still be added (to accommodate late additions)
+   - Options cannot be deleted (to prevent vote invalidation)
+   - Proposal metadata can still be edited
+   - Results visible in real-time
+   - **When opened:**
+     - `EligibleVotingPowerSnapshot` is captured (total voting power in org at that moment)
+     - This snapshot is used for quorum calculation
+   - **Voting rules:**
+     - One vote per user per proposal
+     - User must have voting power > 0 to vote
+     - If `StartAt` is set, voting only allowed after that time
+     - If `EndAt` is set, voting only allowed before that time
+
+3. **Closed** (`ProposalStatus.Closed`)
+   - Voting has ended
+   - No more votes accepted
+   - Results are computed and stored:
+     - `WinningOptionId` - Option with highest total voting power
+     - `QuorumMet` - Whether quorum requirement was satisfied
+     - `TotalVotesCast` - Sum of all voting power cast
+     - `ClosedAt` - Timestamp of closure
+   - Results fully visible
+   - Cannot be modified further
+   - Can transition to Finalized for archival/locking
+
+4. **Finalized** (`ProposalStatus.Finalized`)
+   - Terminal state for completed proposals
+   - Results are locked and immutable
+   - Used to mark proposals where outcome has been executed or recorded permanently
+   - No transitions allowed from this state
+
+#### Allowed Transitions
+
+| From | To | Triggered By | Notes |
+|------|-----|--------------|-------|
+| Draft | Open | Manual (creator/OrgAdmin) | Requires 2+ options |
+| Open | Closed | Manual (creator/OrgAdmin) | Computes and stores results |
+| Closed | Finalized | Manual (OrgAdmin) | Marks outcome as executed |
+
+**No other transitions are allowed.** For example:
+- Cannot skip from Draft to Closed
+- Cannot reopen a Closed proposal
+- Cannot move backward in the lifecycle
+
+### Voting Eligibility
+
+Users are eligible to vote on a proposal if all of the following conditions are met:
+
+1. **Membership**: User must be a member of the organization (`OrganizationMembership` exists)
+2. **Voting Power**: User must have voting power > 0 in the organization
+3. **Proposal State**: Proposal must be in `Open` status
+4. **Time Window** (if configured):
+   - Current time must be >= `StartAt` (if set)
+   - Current time must be < `EndAt` (if set)
+5. **One Vote Rule**: User has not already voted on this proposal
+
+#### Voting Power Calculation
+
+Voting power is calculated as:
+
+```
+VotingPower = Sum(ShareBalance.Balance × ShareType.VotingWeight)
+```
+
+Across all share types in the organization where the user has a non-zero balance.
+
+**Snapshot Timing:**
+- **Current Implementation**: Voting power is calculated **at the time the vote is cast**
+- The calculated voting power is stored in the `Vote.VotingPower` field
+- This means voting power can change between when a proposal opens and when a user votes
+
+**Rationale for vote-time snapshot:**
+- Reflects the "current" stake of voters at decision time
+- Simpler to implement (no need to snapshot all balances at proposal open)
+- Prevents issues if shares are issued/transferred during voting period
+
+**Future Consideration:**
+- An alternative model would snapshot all eligible voting power when the proposal opens
+- This would lock in who can vote and with what power at the moment voting begins
+- This prevents gaming by issuing shares during voting
+
+### Quorum Requirements
+
+Quorum determines whether a proposal has sufficient participation to be considered valid.
+
+#### Quorum Configuration
+
+- **Field**: `Proposal.QuorumRequirement` (nullable decimal)
+- **Meaning**: Percentage (0-100) of total eligible voting power that must participate
+- **Example**: `50.0` means at least 50% of eligible voting power must vote
+
+#### Quorum Calculation
+
+When a proposal is closed, quorum is evaluated:
+
+```
+Required Voting Power = EligibleVotingPowerSnapshot × (QuorumRequirement / 100)
+Quorum Met = TotalVotesCast >= Required Voting Power
+```
+
+- **`EligibleVotingPowerSnapshot`**: Captured when proposal transitions to `Open` (sum of all voting power in the org at that moment)
+- **`TotalVotesCast`**: Sum of `Vote.VotingPower` for all votes on the proposal
+
+#### Quorum Outcomes
+
+- **If quorum is met** (`QuorumMet = true`): Proposal results are considered valid; winning option is determined
+- **If quorum is not met** (`QuorumMet = false`): Proposal results are recorded but may be considered invalid by governance rules (external to the platform)
+- **If no quorum requirement set** (`QuorumRequirement = null`): Quorum is always considered met
+
+### Result Computation
+
+Results are computed when a proposal transitions to `Closed` status.
+
+#### Result Fields Populated
+
+1. **`WinningOptionId`**: The `ProposalOption.Id` with the highest `TotalVotingPower`
+   - In case of a tie, the first option (by internal ordering) wins
+   - If no votes were cast, this field is `null`
+
+2. **`QuorumMet`**: Boolean indicating whether quorum requirement was satisfied
+   - Always `true` if no quorum requirement is set
+   - Calculated as described above
+
+3. **`TotalVotesCast`**: Sum of `Vote.VotingPower` across all votes
+   - Represents total voting power that participated
+
+4. **`ClosedAt`**: Timestamp when the proposal was closed
+
+#### Per-Option Results
+
+For each option, the following metrics are computed (on-demand via `GetResults` endpoint):
+
+- **`VoteCount`**: Number of individual votes cast for the option
+- **`TotalVotingPower`**: Sum of `Vote.VotingPower` for all votes on the option
+
+Options are ranked by `TotalVotingPower` (descending).
+
+### Result Visibility
+
+Results are visible to users based on proposal status:
+
+| Status | Results Visible | Rationale |
+|--------|----------------|-----------|
+| Draft | No | Proposal not yet active |
+| Open | Yes (real-time) | Allows transparency during voting; may encourage participation |
+| Closed | Yes | Voting complete, results finalized |
+| Finalized | Yes | Permanent record |
+
+**Real-time results in Open status:**
+- Current implementation shows results in real-time during voting
+- This promotes transparency but could influence voter behavior
+- Future enhancement: Add a configuration flag `ShowResultsWhileOpen` per proposal to make this behavior optional
+
+### Domain Services
+
+Governance logic is encapsulated in pure domain services (no infrastructure dependencies):
+
+#### `ProposalGovernanceService`
+
+Located in `FanEngagement.Domain.Services`, provides:
+
+- **Transition Validation**:
+  - `ValidateStatusTransition(proposal, targetStatus)`: Checks if transition is allowed
+  - `ValidateCanOpen(proposal)`: Ensures 2+ options before opening
+  - `ValidateCanClose(proposal)`: Allows closing from Draft or Open
+  - `ValidateCanFinalize(proposal)`: Only Closed proposals can be finalized
+
+- **Operation Validation**:
+  - `ValidateCanUpdate(proposal)`: Only Draft/Open proposals can be updated
+  - `ValidateCanAddOption(proposal)`: Only Draft/Open proposals
+  - `ValidateCanDeleteOption(proposal, hasVotes)`: Only Draft, and only if no votes
+  - `ValidateCanVote(proposal, hasExistingVote)`: Checks status, time window, duplicate votes
+
+- **Result Computation**:
+  - `ComputeResults(proposal)`: Aggregates votes, determines winner, checks quorum
+  - Returns `ProposalResultComputation` with all computed metrics
+
+- **Result Visibility**:
+  - `AreResultsVisible(status)`: Determines if results should be shown
+
+All methods return `GovernanceValidationResult` with `IsValid` and `ErrorMessage` for validation checks.
+
+#### `VotingPowerCalculator`
+
+Located in `FanEngagement.Domain.Services`, provides:
+
+- **`CalculateVotingPower(shareBalances)`**: Computes voting power for a user
+- **`CalculateTotalEligibleVotingPower(shareBalances)`**: Computes org-wide eligible voting power
+- **`IsEligibleToVote(votingPower)`**: Checks if voting power > 0
+
+### Workflow Examples
+
+#### Creating and Running a Proposal
+
+1. **Create Proposal** (`POST /organizations/{orgId}/proposals`)
+   - Proposal created in `Draft` status
+   - Add title, description, dates, quorum requirement
+
+2. **Add Options** (`POST /proposals/{proposalId}/options`)
+   - Add 2 or more options
+   - Options can be modified/deleted while in Draft
+
+3. **Open Proposal** (Manual action by creator/OrgAdmin)
+   - Validate: Must have 2+ options
+   - Transition to `Open` status
+   - Capture `EligibleVotingPowerSnapshot`
+   - Voting is now allowed
+
+4. **Cast Votes** (`POST /proposals/{proposalId}/votes`)
+   - Members vote (one vote per user)
+   - Voting power calculated and stored at cast time
+   - Results visible in real-time
+
+5. **Close Proposal** (Manual action by creator/OrgAdmin)
+   - Transition to `Closed` status
+   - Compute and store results:
+     - Determine `WinningOptionId`
+     - Check `QuorumMet`
+     - Record `TotalVotesCast` and `ClosedAt`
+
+6. **Finalize Proposal** (Optional, OrgAdmin only)
+   - Transition to `Finalized` status
+   - Marks outcome as executed/permanent
+
+#### Time-Bounded Voting
+
+Proposals can optionally specify `StartAt` and `EndAt` to restrict voting windows:
+
+- **Future Start**: Set `StartAt` to a future date; voting blocked until that time
+- **Deadline**: Set `EndAt` to enforce a voting deadline; votes rejected after that time
+- **No Time Bounds**: Leave both `null` for open-ended voting (manual close required)
+
+**Note:** Time bounds are **advisory only** in current implementation. Proposals do not auto-open or auto-close based on these times. An OrgAdmin must manually close the proposal.
+
+#### No-Quorum Voting
+
+If a proposal has no quorum requirement (`QuorumRequirement = null`):
+
+- Voting proceeds normally
+- When closed, `QuorumMet` is always `true`
+- Any level of participation is considered valid
+
+### Authorization and Governance
+
+Governance operations respect the role-based authorization model:
+
+| Operation | Allowed Roles | Notes |
+|-----------|---------------|-------|
+| Create Proposal | OrgAdmin, Member (within org) | See Roles & Permissions section |
+| Open Proposal | OrgAdmin, Creator | Requires validation (2+ options) |
+| Close Proposal | OrgAdmin, Creator | Computes results |
+| Finalize Proposal | OrgAdmin, Global Admin | Terminal state |
+| Add Option | OrgAdmin, Creator | Only in Draft/Open |
+| Delete Option | OrgAdmin, Creator | Only in Draft, no votes |
+| Update Proposal | OrgAdmin, Creator | Only in Draft/Open |
+| Cast Vote | Any Member with voting power | Only in Open, within time window |
+| View Results | Any Member | If results visible per status |
+
+See the **Roles & Permissions** section below for detailed authorization rules.
+
+### Non-Goals (Out of Scope)
+
+The following are **not** implemented in this governance model:
+
+1. **Automatic Transitions**: Proposals do not auto-open or auto-close based on `StartAt`/`EndAt`
+   - Future enhancement: Background job to close proposals at `EndAt`
+
+2. **Vote Changes**: Users cannot change or revoke their vote once cast
+   - Future enhancement: Allow vote changes before proposal closes
+
+3. **Delegated Voting**: Users cannot delegate their voting power to another user
+   - Future enhancement: Implement proxy voting
+
+4. **Weighted Options**: All options are equal; no concept of ranked choice or weighted voting
+   - Future enhancement: Ranked choice voting
+
+5. **Conditional Quorum**: Quorum is a simple percentage; no complex rules (e.g., "50% quorum OR 100 votes")
+   - Future enhancement: Custom quorum formulas
+
+6. **On-Chain Voting**: All voting is off-chain within the platform database
+   - Future enhancement: Blockchain integration for immutable vote records
+
 ## Roles & Permissions
 
 FanEngagement defines a two-tier role model: **Global Roles** (platform-wide) and **Organization Roles** (per-organization). The role model is implemented in the domain entities, but **authorization enforcement is currently incomplete** and varies by endpoint.

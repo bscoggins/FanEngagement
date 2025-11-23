@@ -661,6 +661,203 @@ docker compose run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagem
 docker compose down -v
 ```
 
+## Domain Services and Governance Rules
+
+### Proposal Governance Model
+
+FanEngagement implements comprehensive governance rules for proposals. These rules are documented in `docs/architecture.md` under "Proposal Governance Rules" and enforced through domain services.
+
+**Key Concepts:**
+- **Lifecycle**: Draft → Open → Closed → Finalized (strict state machine)
+- **Voting Eligibility**: Members with voting power > 0 in the organization
+- **Quorum**: Configurable percentage of eligible voting power required
+- **Result Computation**: Winning option determined by highest voting power, quorum validation
+- **Result Visibility**: Real-time for Open proposals, always visible for Closed/Finalized
+
+### Domain Services Location
+
+Domain services are pure business logic with no infrastructure dependencies:
+- **Location**: `backend/FanEngagement.Domain/Services/`
+- **Purpose**: Encapsulate complex business rules, state transitions, computations
+- **Testing**: Unit testable without database or HTTP context
+
+### ProposalGovernanceService
+
+**File**: `backend/FanEngagement.Domain/Services/ProposalGovernanceService.cs`
+
+This service manages ALL proposal lifecycle transitions and governance rule validation.
+
+**CRITICAL RULES FOR ALL PROPOSAL OPERATIONS:**
+
+1. **State Transitions**:
+   - ALWAYS use `ValidateStatusTransition()` before changing `Proposal.Status`
+   - NEVER directly set `proposal.Status = newStatus` without validation
+   - Allowed transitions only: Draft→Open, Open→Closed, Closed→Finalized
+
+2. **Opening Proposals**:
+   - MUST call `ValidateCanOpen()` - requires 2+ options
+   - MUST capture `EligibleVotingPowerSnapshot` when transitioning to Open
+   - Use `VotingPowerCalculator.CalculateTotalEligibleVotingPower()` with all org balances
+
+3. **Closing Proposals**:
+   - MUST call `ValidateCanClose()`
+   - MUST call `ComputeResults()` to populate result fields:
+     - `WinningOptionId`
+     - `QuorumMet`
+     - `TotalVotesCast`
+     - `ClosedAt`
+   - DO NOT manually compute these values; use the domain service
+
+4. **Voting**:
+   - MUST call `ValidateCanVote()` before accepting a vote
+   - Checks: proposal status, time window, duplicate votes
+   - Use `VotingPowerCalculator.CalculateVotingPower()` to get user's voting power
+   - Store the calculated voting power in `Vote.VotingPower`
+
+5. **Option Management**:
+   - MUST call `ValidateCanAddOption()` before adding options
+   - MUST call `ValidateCanDeleteOption()` before deleting options
+   - Options can only be deleted in Draft status with no votes
+
+6. **Updates**:
+   - MUST call `ValidateCanUpdate()` before updating proposal metadata
+   - Only Draft and Open proposals can be updated
+
+**Usage Pattern:**
+
+```csharp
+// In ProposalService or similar infrastructure service
+
+// ✅ CORRECT: Validate then transition
+var governanceService = new ProposalGovernanceService();
+var validation = governanceService.ValidateCanOpen(proposal);
+if (!validation.IsValid)
+{
+    throw new InvalidOperationException(validation.ErrorMessage);
+}
+
+// Capture snapshot
+var votingPowerCalc = new VotingPowerCalculator();
+var allBalances = await GetAllShareBalancesForOrg(proposal.OrganizationId);
+proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);
+
+// Transition
+proposal.Status = ProposalStatus.Open;
+await dbContext.SaveChangesAsync();
+
+// ❌ WRONG: Direct status change without validation
+proposal.Status = ProposalStatus.Open;
+await dbContext.SaveChangesAsync();
+```
+
+**When Closing:**
+
+```csharp
+// ✅ CORRECT: Validate, compute results, then close
+var validation = governanceService.ValidateCanClose(proposal);
+if (!validation.IsValid)
+{
+    throw new InvalidOperationException(validation.ErrorMessage);
+}
+
+var results = governanceService.ComputeResults(proposal);
+proposal.Status = ProposalStatus.Closed;
+proposal.WinningOptionId = results.WinningOptionId;
+proposal.QuorumMet = results.QuorumMet;
+proposal.TotalVotesCast = results.TotalVotingPowerCast;
+proposal.ClosedAt = DateTimeOffset.UtcNow;
+await dbContext.SaveChangesAsync();
+
+// ❌ WRONG: Manual result computation
+proposal.Status = ProposalStatus.Closed;
+proposal.WinningOptionId = /* some manual logic */;
+```
+
+### VotingPowerCalculator
+
+**File**: `backend/FanEngagement.Domain/Services/VotingPowerCalculator.cs`
+
+This service calculates voting power from share balances.
+
+**Formula**: `VotingPower = Sum(Balance × VotingWeight)` across all share types
+
+**Usage:**
+
+```csharp
+var calculator = new VotingPowerCalculator();
+
+// Calculate user's voting power
+var userBalances = await dbContext.ShareBalances
+    .Include(b => b.ShareType)
+    .Where(b => b.UserId == userId && b.ShareType!.OrganizationId == orgId)
+    .ToListAsync();
+var votingPower = calculator.CalculateVotingPower(userBalances);
+
+// Check eligibility
+if (!calculator.IsEligibleToVote(votingPower))
+{
+    throw new InvalidOperationException("User has no voting power in this organization.");
+}
+```
+
+**ALWAYS use this service for voting power calculation. DO NOT inline the formula elsewhere.**
+
+### Testing Domain Services
+
+Domain service tests go in `backend/FanEngagement.Tests/`:
+- `ProposalGovernanceServiceTests.cs` - 32 tests covering all validation and computation logic
+- `VotingPowerCalculatorTests.cs` - 10 tests covering all calculation scenarios
+
+**When adding new governance rules:**
+1. Add the rule to `ProposalGovernanceService`
+2. Write unit tests for the new rule
+3. Update `docs/architecture.md` "Proposal Governance Rules" section
+4. Update this guide with any new usage patterns
+
+### Integration with Infrastructure Services
+
+Infrastructure services (e.g., `ProposalService` in `FanEngagement.Infrastructure`) should:
+
+1. **Load data** from database (entities with navigation properties)
+2. **Instantiate domain services** (they are stateless, can be created on demand)
+3. **Call domain service methods** for business logic validation/computation
+4. **Handle persistence** of results back to the database
+
+```csharp
+public async Task<ProposalDto?> OpenAsync(Guid proposalId, CancellationToken cancellationToken)
+{
+    var proposal = await dbContext.Proposals
+        .Include(p => p.Options)
+        .FirstOrDefaultAsync(p => p.Id == proposalId, cancellationToken);
+    
+    if (proposal is null) return null;
+
+    // Use domain service for validation
+    var governanceService = new ProposalGovernanceService();
+    var validation = governanceService.ValidateCanOpen(proposal);
+    if (!validation.IsValid)
+    {
+        throw new InvalidOperationException(validation.ErrorMessage);
+    }
+
+    // Capture voting power snapshot
+    var votingPowerCalc = new VotingPowerCalculator();
+    var allBalances = await dbContext.ShareBalances
+        .Include(b => b.ShareType)
+        .Where(b => b.ShareType!.OrganizationId == proposal.OrganizationId)
+        .ToListAsync(cancellationToken);
+    proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);
+
+    // Transition
+    proposal.Status = ProposalStatus.Open;
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    return MapToDto(proposal);
+}
+```
+
+**DO NOT skip domain service validation** - it ensures consistency across all entry points (API, background jobs, etc.).
+
 ## Recent Architectural Additions
 
 ### Admin Proposal Management (Implemented)
