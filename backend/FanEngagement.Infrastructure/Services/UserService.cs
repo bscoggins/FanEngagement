@@ -58,13 +58,13 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
     {
         var query = dbContext.Users.AsNoTracking();
 
-        // Apply search filter if provided
+        // Apply search filter if provided (case-insensitive using EF.Functions.Like with LOWER)
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var searchLower = search.ToLower();
+            var searchPattern = $"%{search}%";
             query = query.Where(u => 
-                u.Email.ToLower().Contains(searchLower) || 
-                u.DisplayName.ToLower().Contains(searchLower));
+                EF.Functions.Like(u.Email.ToLower(), searchPattern.ToLower()) || 
+                EF.Functions.Like(u.DisplayName.ToLower(), searchPattern.ToLower()));
         }
 
         // Get total count

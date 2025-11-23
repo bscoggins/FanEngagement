@@ -38,11 +38,11 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
     {
         var query = dbContext.Organizations.AsNoTracking();
 
-        // Apply search filter if provided
+        // Apply search filter if provided (case-insensitive using EF.Functions.Like with LOWER)
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var searchLower = search.ToLower();
-            query = query.Where(o => o.Name.ToLower().Contains(searchLower));
+            var searchPattern = $"%{search}%";
+            query = query.Where(o => EF.Functions.Like(o.Name.ToLower(), searchPattern.ToLower()));
         }
 
         // Get total count

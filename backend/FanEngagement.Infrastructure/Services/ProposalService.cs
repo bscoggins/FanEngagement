@@ -78,11 +78,11 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             query = query.Where(p => p.Status == status.Value);
         }
 
-        // Apply search filter if provided
+        // Apply search filter if provided (case-insensitive using EF.Functions.Like with LOWER)
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var searchLower = search.ToLower();
-            query = query.Where(p => p.Title.ToLower().Contains(searchLower));
+            var searchPattern = $"%{search}%";
+            query = query.Where(p => EF.Functions.Like(p.Title.ToLower(), searchPattern.ToLower()));
         }
 
         // Get total count
