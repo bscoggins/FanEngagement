@@ -176,9 +176,14 @@ public class ProposalGovernanceService
     /// <returns>Computed results including winner, quorum status, and totals</returns>
     public ProposalResultComputation ComputeResults(Proposal proposal)
     {
+        // Group votes by option once to optimize from O(n×m) to O(n+m) complexity
+        var votesByOption = proposal.Votes
+            .GroupBy(v => v.ProposalOptionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         var optionResults = proposal.Options.Select(option =>
         {
-            var optionVotes = proposal.Votes.Where(v => v.ProposalOptionId == option.Id).ToList();
+            var optionVotes = votesByOption.GetValueOrDefault(option.Id, new List<Vote>());
             return new OptionResult
             {
                 OptionId = option.Id,

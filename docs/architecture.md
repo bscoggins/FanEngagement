@@ -261,7 +261,7 @@ Located in `FanEngagement.Domain.Services`, provides:
 - **Transition Validation**:
   - `ValidateStatusTransition(proposal, targetStatus)`: Checks if transition is allowed
   - `ValidateCanOpen(proposal)`: Ensures 2+ options before opening
-  - `ValidateCanClose(proposal)`: Allows closing from Draft or Open
+  - `ValidateCanClose(proposal)`: Allows closing from Open only
   - `ValidateCanFinalize(proposal)`: Only Closed proposals can be finalized
 
 - **Operation Validation**:
