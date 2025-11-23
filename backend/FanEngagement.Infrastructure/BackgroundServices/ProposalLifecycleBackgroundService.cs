@@ -108,7 +108,7 @@ public class ProposalLifecycleBackgroundService(
         {
             try
             {
-                await OpenProposalAsync(dbContext, proposalService, proposal, cancellationToken);
+                await OpenProposalAsync(proposalService, proposal, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -147,7 +147,6 @@ public class ProposalLifecycleBackgroundService(
     }
 
     private async Task OpenProposalAsync(
-        FanEngagementDbContext dbContext,
         IProposalService proposalService,
         Domain.Entities.Proposal proposal,
         CancellationToken cancellationToken)

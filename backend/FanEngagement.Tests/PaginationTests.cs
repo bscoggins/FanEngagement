@@ -246,7 +246,6 @@ public class PaginationTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(org);
 
         // Create proposals (they start in Draft status)
-        var proposalIds = new List<Guid>();
         for (int i = 0; i < 3; i++)
         {
             var proposalRequest = new CreateProposalRequest
@@ -257,10 +256,9 @@ public class PaginationTests : IClassFixture<TestWebApplicationFactory>
             };
             var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{org!.Id}/proposals", proposalRequest);
             var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
-            proposalIds.Add(proposal!.Id);
 
             // Add options and open the proposal
-            await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+            await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
             await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
             await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
         }
