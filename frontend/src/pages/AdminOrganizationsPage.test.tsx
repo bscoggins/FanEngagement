@@ -9,6 +9,7 @@ import type { Organization } from '../types/api';
 vi.mock('../api/organizationsApi', () => ({
   organizationsApi: {
     getAll: vi.fn(),
+    getAllPaged: vi.fn(),
   },
 }));
 
@@ -32,6 +33,16 @@ describe('AdminOrganizationsPage', () => {
     },
   ];
 
+  const mockPagedOrganizations = {
+    items: mockOrganizations,
+    totalCount: 2,
+    page: 1,
+    pageSize: 10,
+    totalPages: 1,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  };
+
   const renderAdminOrganizationsPage = () => {
     return render(
       <MemoryRouter>
@@ -41,20 +52,20 @@ describe('AdminOrganizationsPage', () => {
   };
 
   it('renders organization management heading', () => {
-    vi.mocked(organizationsApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(organizationsApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminOrganizationsPage();
     expect(screen.getByText('Organization Management')).toBeInTheDocument();
   });
 
   it('displays loading state initially', () => {
-    vi.mocked(organizationsApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(organizationsApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminOrganizationsPage();
     
     expect(screen.getByText(/loading organizations/i)).toBeInTheDocument();
   });
 
   it('displays organizations list after loading', async () => {
-    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
+    vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
     
     renderAdminOrganizationsPage();
     
@@ -70,7 +81,7 @@ describe('AdminOrganizationsPage', () => {
   });
 
   it('displays action buttons for each organization', async () => {
-    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
+    vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
     
     renderAdminOrganizationsPage();
     
@@ -96,7 +107,7 @@ describe('AdminOrganizationsPage', () => {
   });
 
   it('displays error message when API call fails', async () => {
-    vi.mocked(organizationsApi.getAll).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(organizationsApi.getAllPaged).mockRejectedValueOnce(new Error('Network error'));
     
     renderAdminOrganizationsPage();
     
@@ -104,11 +115,19 @@ describe('AdminOrganizationsPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    expect(screen.getByText(/failed to load organizations/i)).toBeInTheDocument();
+    expect(screen.getByText(/network error/i)).toBeInTheDocument();
   });
 
   it('displays empty state when no organizations exist', async () => {
-    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce([]);
+    vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 10,
+      totalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
     
     renderAdminOrganizationsPage();
     

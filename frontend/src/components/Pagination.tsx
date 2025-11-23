@@ -73,6 +73,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               cursor: 'pointer',
               fontSize: '0.875rem',
             }}
+            aria-label="Go to first page"
           >
             1
           </button>
@@ -115,6 +116,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               cursor: 'pointer',
               fontSize: '0.875rem',
             }}
+            aria-label="Go to last page"
           >
             {totalPages}
           </button>

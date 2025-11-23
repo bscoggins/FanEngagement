@@ -1,6 +1,7 @@
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Application.Validators;
+using FanEngagement.Api.Helpers;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,13 +38,10 @@ public class OrganizationProposalsController(IProposalService proposalService) :
             var currentPageSize = pageSize ?? PaginationValidators.DefaultPageSize;
 
             // Validate pagination parameters
-            if (currentPage < 1)
+            var validationError = PaginationHelper.ValidatePaginationParameters(currentPage, currentPageSize);
+            if (validationError != null)
             {
-                return BadRequest(new { error = "Page must be greater than or equal to 1." });
-            }
-            if (currentPageSize < PaginationValidators.MinPageSize || currentPageSize > PaginationValidators.MaxPageSize)
-            {
-                return BadRequest(new { error = $"PageSize must be between {PaginationValidators.MinPageSize} and {PaginationValidators.MaxPageSize}." });
+                return validationError;
             }
 
             var pagedResult = await proposalService.GetByOrganizationAsync(organizationId, currentPage, currentPageSize, status, search, cancellationToken);
