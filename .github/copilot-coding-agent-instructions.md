@@ -679,3 +679,96 @@ docker compose down -v
 
 ---
 This guide is designed for the GitHub Copilot coding agent to perform autonomous, safe changes with clear build/test guarantees and predictable PRs.
+
+## Frontend Development Requirements
+
+### Mandatory UX Patterns
+
+All frontend pages and components MUST follow these patterns:
+
+1. **Loading States**: Use `LoadingSpinner` component for all async loading
+   ```typescript
+   import { LoadingSpinner } from '../components/LoadingSpinner';
+   if (isLoading) return <LoadingSpinner message="Loading..." />;
+   ```
+
+2. **Error Handling**: Use `ErrorMessage` component with retry capability
+   ```typescript
+   import { ErrorMessage } from '../components/ErrorMessage';
+   if (error) return <ErrorMessage message={error} onRetry={fetchData} />;
+   ```
+
+3. **Empty States**: Use `EmptyState` component when no data
+   ```typescript
+   import { EmptyState } from '../components/EmptyState';
+   {items.length === 0 ? <EmptyState message="No items found." /> : renderItems()}
+   ```
+
+4. **User Notifications**: Use notification system for all success/error feedback
+   ```typescript
+   import { useNotifications } from '../contexts/NotificationContext';
+   const { showSuccess, showError } = useNotifications();
+   
+   // After successful operation
+   showSuccess('Item created successfully!');
+   
+   // On error
+   showError('Failed to save item.');
+   ```
+
+5. **Error Parsing**: Always use `parseApiError` for API errors
+   ```typescript
+   import { parseApiError } from '../utils/errorUtils';
+   
+   try {
+     await api.doSomething();
+     showSuccess('Success!');
+   } catch (err) {
+     const errorMessage = parseApiError(err);
+     setError(errorMessage);
+     showError(errorMessage);
+   }
+   ```
+
+6. **Button States**: Disable buttons and show progress during async operations
+   ```typescript
+   <button
+     disabled={isSaving}
+     style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}
+   >
+     {isSaving ? 'Saving...' : 'Save'}
+   </button>
+   ```
+
+### Testing Requirements
+
+Frontend tests MUST verify:
+
+1. Loading indicators appear and disappear correctly
+2. Error messages display when operations fail
+3. Success notifications appear after successful operations
+4. Buttons are disabled during operations
+5. Retry functionality works for error states
+
+### New Page Checklist
+
+When creating a new page:
+
+- [ ] Import and use `LoadingSpinner` for initial load
+- [ ] Import and use `ErrorMessage` with retry for errors
+- [ ] Import and use `EmptyState` for no-data scenarios
+- [ ] Import and use `useNotifications` for user feedback
+- [ ] Import and use `parseApiError` for error handling
+- [ ] Disable action buttons during async operations
+- [ ] Add tests for loading, error, and success states
+
+### Files and Imports
+
+Core UX utilities are located in:
+- `frontend/src/contexts/NotificationContext.tsx` - Notification provider and hook
+- `frontend/src/components/LoadingSpinner.tsx` - Loading indicator
+- `frontend/src/components/ErrorMessage.tsx` - Error display with retry
+- `frontend/src/components/EmptyState.tsx` - Empty state display
+- `frontend/src/utils/errorUtils.ts` - Error parsing utilities
+- `frontend/src/hooks/useAsync.ts` - Async state management hook
+
