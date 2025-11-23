@@ -89,7 +89,7 @@ public class GlobalExceptionHandlerMiddleware
                 Extensions =
                 {
                     ["resourceType"] = notFoundEx.ResourceType,
-                    ["resourceId"] = notFoundEx.ResourceId.ToString() ?? "Unknown"
+                    ["resourceId"] = notFoundEx.ResourceId != null ? notFoundEx.ResourceId.ToString() : "Unknown"
                 }
             },
             InvalidOperationException invalidOpEx => new ProblemDetails
