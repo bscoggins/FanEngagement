@@ -200,8 +200,8 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("already voted", error!.Error, StringComparison.OrdinalIgnoreCase);
+        var error = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+        Assert.Contains("already voted", error!.Detail ?? "", StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -224,8 +224,8 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("Closed", error!.Error);
+        var error = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+        Assert.Contains("Closed", error!.Detail ?? "");
     }
 
     [Fact]
@@ -263,8 +263,8 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("no voting power", error!.Error, StringComparison.OrdinalIgnoreCase);
+        var error = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+        Assert.Contains("no voting power", error!.Detail ?? "", StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

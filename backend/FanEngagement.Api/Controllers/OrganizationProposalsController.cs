@@ -13,15 +13,8 @@ public class OrganizationProposalsController(IProposalService proposalService) :
     [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateProposalRequest request, CancellationToken cancellationToken)
     {
-        try
-        {
-            var proposal = await proposalService.CreateAsync(organizationId, request, cancellationToken);
-            return CreatedAtRoute("GetProposalById", new { proposalId = proposal.Id }, proposal);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { Error = ex.Message });
-        }
+        var proposal = await proposalService.CreateAsync(organizationId, request, cancellationToken);
+        return CreatedAtRoute("GetProposalById", new { proposalId = proposal.Id }, proposal);
     }
 
     [HttpGet]

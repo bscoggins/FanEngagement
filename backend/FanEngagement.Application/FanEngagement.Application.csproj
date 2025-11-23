@@ -8,5 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="..\FanEngagement.Domain\FanEngagement.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.5.1" />
+  </ItemGroup>
 
 </Project>

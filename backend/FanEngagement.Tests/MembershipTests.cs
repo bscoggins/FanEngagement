@@ -193,7 +193,7 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task CreateMembership_ReturnsInternalServerError_WhenMembershipAlreadyExists()
+    public async Task CreateMembership_ReturnsBadRequest_WhenMembershipAlreadyExists()
     {
         // Arrange
         var (organizationId, userId) = await SetupOrganizationAndUser();
@@ -210,11 +210,11 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response1.StatusCode);
-        Assert.Equal(HttpStatusCode.InternalServerError, response2.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response2.StatusCode);
     }
 
     [Fact]
-    public async Task CreateMembership_ReturnsInternalServerError_WhenUserDoesNotExist()
+    public async Task CreateMembership_ReturnsBadRequest_WhenUserDoesNotExist()
     {
         // Arrange
         var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
@@ -233,11 +233,11 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PostAsJsonAsync($"/organizations/{organizationId}/memberships", request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public async Task CreateMembership_ReturnsInternalServerError_WhenOrganizationDoesNotExist()
+    public async Task CreateMembership_ReturnsBadRequest_WhenOrganizationDoesNotExist()
     {
         // Arrange
         var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
@@ -256,7 +256,7 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PostAsJsonAsync($"/organizations/{nonExistentOrgId}/memberships", request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     private async Task<(Guid organizationId, Guid userId)> SetupOrganizationAndUser()

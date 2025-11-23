@@ -242,8 +242,8 @@ public class ShareIssuanceTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        Assert.Contains("MaxSupply", error!.Error);
+        var error = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+        Assert.Contains("MaxSupply", error!.Detail ?? "");
     }
 
     [Fact]
