@@ -18,12 +18,26 @@ public static class PaginationHelper
     {
         if (page < 1)
         {
-            return new BadRequestObjectResult(new { error = "Page must be greater than or equal to 1." });
+            var problemDetails = new ProblemDetails
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Title = "Invalid Pagination Parameter",
+                Status = 400,
+                Detail = "Page must be greater than or equal to 1."
+            };
+            return new BadRequestObjectResult(problemDetails);
         }
         
         if (pageSize < PaginationValidators.MinPageSize || pageSize > PaginationValidators.MaxPageSize)
         {
-            return new BadRequestObjectResult(new { error = $"PageSize must be between {PaginationValidators.MinPageSize} and {PaginationValidators.MaxPageSize}." });
+            var problemDetails = new ProblemDetails
+            {
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Title = "Invalid Pagination Parameter",
+                Status = 400,
+                Detail = $"PageSize must be between {PaginationValidators.MinPageSize} and {PaginationValidators.MaxPageSize}."
+            };
+            return new BadRequestObjectResult(problemDetails);
         }
         
         return null;
