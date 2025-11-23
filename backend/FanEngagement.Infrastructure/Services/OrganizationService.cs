@@ -1,3 +1,4 @@
+using FanEngagement.Application.Common;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
@@ -31,6 +32,36 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
             .ToListAsync(cancellationToken);
 
         return organizations;
+    }
+
+    public async Task<PagedResult<Organization>> GetAllAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Organizations.AsNoTracking();
+
+        // Apply search filter if provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(o => o.Name.ToLower().Contains(searchLower));
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply pagination
+        var organizations = await query
+            .OrderBy(o => o.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Organization>
+        {
+            Items = organizations,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<Organization?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

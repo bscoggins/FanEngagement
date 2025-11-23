@@ -1,3 +1,4 @@
+using FanEngagement.Application.Common;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -57,6 +58,50 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             .ToListAsync(cancellationToken);
 
         return proposals.Select(MapToDto).ToList();
+    }
+
+    public async Task<PagedResult<ProposalDto>> GetByOrganizationAsync(
+        Guid organizationId, 
+        int page, 
+        int pageSize, 
+        ProposalStatus? status = null, 
+        string? search = null, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Proposals
+            .AsNoTracking()
+            .Where(p => p.OrganizationId == organizationId);
+
+        // Apply status filter if provided
+        if (status.HasValue)
+        {
+            query = query.Where(p => p.Status == status.Value);
+        }
+
+        // Apply search filter if provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(p => p.Title.ToLower().Contains(searchLower));
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply pagination
+        var proposals = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ProposalDto>
+        {
+            Items = proposals.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<ProposalDetailsDto?> GetByIdAsync(Guid proposalId, CancellationToken cancellationToken = default)
