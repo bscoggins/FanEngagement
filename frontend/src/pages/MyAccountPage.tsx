@@ -1,41 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { usersApi } from '../api/usersApi';
+import { useNotifications } from '../contexts/NotificationContext';
+import { parseApiError } from '../utils/errorUtils';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import type { User } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
   const { user: authUser, isAdmin } = useAuth();
+  const { showSuccess, showError } = useNotifications();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [successMessage, setSuccessMessage] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
   });
 
-  useEffect(() => {
+  const fetchUser = async () => {
     if (!authUser?.userId) return;
 
-    const fetchUser = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const userData = await usersApi.getById(authUser.userId);
-        setUser(userData);
-        setFormData({
-          displayName: userData.displayName,
-          email: userData.email,
-        });
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-        setError('Failed to load account information.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      setError('');
+      const userData = await usersApi.getById(authUser.userId);
+      setUser(userData);
+      setFormData({
+        displayName: userData.displayName,
+        email: userData.email,
+      });
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUser();
   }, [authUser?.userId]);
 
@@ -45,30 +50,27 @@ export const MyAccountPage: React.FC = () => {
 
     try {
       setError('');
-      setSuccessMessage('');
       const updated = await usersApi.update(user.id, {
         displayName: formData.displayName,
         email: formData.email,
       });
       setUser(updated);
       setIsEditing(false);
-      setSuccessMessage('Profile updated successfully!');
+      showSuccess('Profile updated successfully!');
     } catch (err: any) {
       console.error('Failed to update user:', err);
-      setError(
-        err.response?.data?.Error ||
-        err.response?.data?.message ||
-        'Failed to update profile.'
-      );
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
   if (loading) {
-    return <div style={{ padding: '2rem' }}>Loading...</div>;
+    return <LoadingSpinner message="Loading account..." />;
   }
 
   if (error && !user) {
-    return <div style={{ padding: '2rem', color: '#dc3545' }}>{error}</div>;
+    return <ErrorMessage message={error} onRetry={fetchUser} />;
   }
 
   if (!user) {
@@ -78,21 +80,6 @@ export const MyAccountPage: React.FC = () => {
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
       <h1>My Account</h1>
-
-      {successMessage && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#d4edda',
-            color: '#155724',
-            border: '1px solid #c3e6cb',
-            borderRadius: '4px',
-            marginBottom: '1rem',
-          }}
-        >
-          {successMessage}
-        </div>
-      )}
 
       {error && (
         <div

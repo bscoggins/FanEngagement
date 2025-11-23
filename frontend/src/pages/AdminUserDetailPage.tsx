@@ -2,10 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { membershipsApi } from '../api/membershipsApi';
+import { useNotifications } from '../contexts/NotificationContext';
+import { parseApiError } from '../utils/errorUtils';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
 export const AdminUserDetailPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
+  const { showSuccess, showError } = useNotifications();
   
   const [user, setUser] = useState<User | null>(null);
   const [memberships, setMemberships] = useState<MembershipWithOrganizationDto[]>([]);
@@ -18,49 +23,40 @@ export const AdminUserDetailPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const fetchUserAndMemberships = async () => {
+    if (!userId) {
+      setFetchError('Invalid user ID');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setFetchError(null);
+      
+      // Fetch user data
+      const userData = await usersApi.getById(userId);
+      setUser(userData);
+      setFormData({
+        email: userData.email,
+        displayName: userData.displayName,
+        role: userData.role,
+      });
+
+      // Fetch user's memberships with organization details in a single call
+      const userMemberships = await membershipsApi.getByUserId(userId);
+      setMemberships(userMemberships);
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      const errorMessage = parseApiError(err);
+      setFetchError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserAndMemberships = async () => {
-      if (!userId) {
-        setFetchError('Invalid user ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setFetchError(null);
-        
-        // Fetch user data
-        const userData = await usersApi.getById(userId);
-        setUser(userData);
-        setFormData({
-          email: userData.email,
-          displayName: userData.displayName,
-          role: userData.role,
-        });
-
-        // Fetch user's memberships with organization details in a single call
-        const userMemberships = await membershipsApi.getByUserId(userId);
-        setMemberships(userMemberships);
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-        if (err && typeof err === 'object' && 'response' in err) {
-          const axiosError = err as { response?: { status: number } };
-          if (axiosError.response?.status === 404) {
-            setFetchError('User not found');
-          } else {
-            setFetchError('Failed to load user. Please try again.');
-          }
-        } else {
-          setFetchError('Failed to load user. Please try again.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchUserAndMemberships();
   }, [userId]);
 
@@ -74,12 +70,11 @@ export const AdminUserDetailPage: React.FC = () => {
     if (!userId) return;
 
     setError(null);
-    setSuccessMessage(null);
     setIsSaving(true);
 
     try {
       await usersApi.update(userId, formData);
-      setSuccessMessage('User updated successfully!');
+      showSuccess('User updated successfully!');
       
       // Refresh user data
       const updatedUser = await usersApi.getById(userId);
@@ -91,19 +86,9 @@ export const AdminUserDetailPage: React.FC = () => {
       });
     } catch (err) {
       console.error('Failed to update user:', err);
-      // Handle validation errors from API
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status: number; data?: { message?: string } } };
-        if (axiosError.response?.status === 400) {
-          setError(axiosError.response.data?.message || 'Invalid user data. Please check your inputs.');
-        } else if (axiosError.response?.status === 404) {
-          setError('User not found');
-        } else {
-          setError('Failed to update user. Please try again.');
-        }
-      } else {
-        setError('Failed to update user. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -113,7 +98,7 @@ export const AdminUserDetailPage: React.FC = () => {
     return (
       <div className="admin-user-detail-page">
         <h1>Edit User</h1>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+        <LoadingSpinner message="Loading user..." />
       </div>
     );
   }
@@ -122,21 +107,7 @@ export const AdminUserDetailPage: React.FC = () => {
     return (
       <div className="admin-user-detail-page">
         <h1>Edit User</h1>
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-        >
-          {fetchError}
-        </div>
-        <Link to="/admin/users" style={{ color: '#0066cc' }}>
-          ← Back to Users
-        </Link>
+        <ErrorMessage message={fetchError} onRetry={fetchUserAndMemberships} />
       </div>
     );
   }
@@ -249,20 +220,6 @@ export const AdminUserDetailPage: React.FC = () => {
               <strong>User ID:</strong> {user.id}<br />
               <strong>Created:</strong> {new Date(user.createdAt).toLocaleString()}
             </div>
-
-            {successMessage && (
-              <div
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#d4edda',
-                  border: '1px solid #c3e6cb',
-                  borderRadius: '4px',
-                  color: '#155724',
-                }}
-              >
-                {successMessage}
-              </div>
-            )}
 
             {error && (
               <div

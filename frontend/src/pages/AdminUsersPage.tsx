@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
 import type { User } from '../types/api';
 
 export const AdminUsersPage: React.FC = () => {
@@ -8,21 +11,21 @@ export const AdminUsersPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await usersApi.getAll();
-        setUsers(data);
-      } catch (err) {
-        console.error('Failed to fetch users:', err);
-        setError('Failed to load users. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await usersApi.getAll();
+      setUsers(data);
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+      setError('Failed to load users. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -30,7 +33,7 @@ export const AdminUsersPage: React.FC = () => {
     return (
       <div>
         <h1>User Management</h1>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading users...</div>
+        <LoadingSpinner message="Loading users..." />
       </div>
     );
   }
@@ -39,18 +42,7 @@ export const AdminUsersPage: React.FC = () => {
     return (
       <div>
         <h1>User Management</h1>
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginTop: '1rem',
-          }}
-        >
-          {error}
-        </div>
+        <ErrorMessage message={error} onRetry={fetchUsers} />
       </div>
     );
   }
@@ -76,15 +68,7 @@ export const AdminUsersPage: React.FC = () => {
       </div>
       
       {users.length === 0 ? (
-        <div style={{ 
-          padding: '2rem', 
-          backgroundColor: 'white', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#666' }}>No users found.</p>
-        </div>
+        <EmptyState message="No users found." />
       ) : (
         <div style={{ 
           backgroundColor: 'white', 
