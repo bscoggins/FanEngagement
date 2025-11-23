@@ -101,7 +101,7 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotEqual(Guid.Empty, proposal!.Id);
         Assert.Equal(orgId, proposal.OrganizationId);
         Assert.Equal("Test Proposal", proposal.Title);
-        Assert.Equal(ProposalStatus.Open, proposal.Status);
+        Assert.Equal(ProposalStatus.Draft, proposal.Status);  // Changed from Open to Draft
         Assert.Equal(userId, proposal.CreatedByUserId);
     }
 
@@ -270,8 +270,13 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
         var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
+        // Add options and open the proposal
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         // Close the proposal
-        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
 
         var updateRequest = new UpdateProposalRequest { Title = "Updated Title" };
 
@@ -328,8 +333,13 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
         var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
+        // Add options and open the proposal
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         // Close the proposal
-        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
 
         var optionRequest = new AddProposalOptionRequest { Text = "New Option" };
 
@@ -346,8 +356,7 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         var (orgId, userId) = await SetupTestDataAsync();
 
-        // Create a proposal in Draft state (we'll need to adjust the service to support this)
-        // For now, we'll test with Open state and expect failure
+        // Create a proposal in Draft state
         var proposalRequest = new CreateProposalRequest
         {
             Title = "Test Proposal",
@@ -360,11 +369,11 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
         var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
 
-        // Act - This should fail because we're in Open state, not Draft
+        // Act - This should succeed because we're in Draft state
         var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option!.Id}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Fact]
@@ -381,8 +390,13 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
         var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
+        // Add options and open the proposal
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -405,8 +419,13 @@ public class ProposalTests : IClassFixture<TestWebApplicationFactory>
         var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
         var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
+        // Add options and open the proposal
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         // Close the proposal once
-        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
 
         // Act - Try to close again
         var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);

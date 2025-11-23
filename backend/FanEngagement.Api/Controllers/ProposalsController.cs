@@ -62,7 +62,7 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
     }
 
     [HttpPost("{proposalId:guid}/finalize")]
-    [Authorize(Policy = "OrgAdmin")]
+    [Authorize(Policy = "ProposalManager")]
     public async Task<ActionResult> Finalize(Guid proposalId, CancellationToken cancellationToken)
     {
         var proposal = await proposalService.FinalizeAsync(proposalId, cancellationToken);
