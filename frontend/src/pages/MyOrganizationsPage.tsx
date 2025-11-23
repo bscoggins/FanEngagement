@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { membershipsApi } from '../api/membershipsApi';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
+import { parseApiError } from '../utils/errorUtils';
 import type { MembershipWithOrganizationDto } from '../types/api';
 
 export const MyOrganizationsPage: React.FC = () => {
@@ -10,32 +14,34 @@ export const MyOrganizationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
+  const fetchMemberships = async () => {
     if (!user?.userId) return;
 
-    const fetchMemberships = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const data = await membershipsApi.getByUserId(user.userId);
-        setMemberships(data);
-      } catch (err) {
-        console.error('Failed to fetch memberships:', err);
-        setError('Failed to load your organizations.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      setError('');
+      const data = await membershipsApi.getByUserId(user.userId);
+      setMemberships(data);
+    } catch (err) {
+      console.error('Failed to fetch memberships:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMemberships();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId]);
 
   if (loading) {
-    return <div style={{ padding: '2rem' }}>Loading...</div>;
+    return <LoadingSpinner message="Loading your organizations..." />;
   }
 
   if (error) {
-    return <div style={{ padding: '2rem', color: '#dc3545' }}>{error}</div>;
+    return <ErrorMessage message={error} onRetry={fetchMemberships} />;
   }
 
   return (
@@ -43,7 +49,7 @@ export const MyOrganizationsPage: React.FC = () => {
       <h1>My Organizations</h1>
 
       {memberships.length === 0 ? (
-        <p>You are not a member of any organizations yet.</p>
+        <EmptyState message="You are not a member of any organizations yet." />
       ) : (
         <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
           {memberships.map((membership) => (

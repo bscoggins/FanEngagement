@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
+import { parseApiError } from '../utils/errorUtils';
 import type { Organization } from '../types/api';
 
 export const AdminOrganizationsPage: React.FC = () => {
@@ -8,29 +12,31 @@ export const AdminOrganizationsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchOrganizations = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await organizationsApi.getAll();
-        setOrganizations(data);
-      } catch (err) {
-        console.error('Failed to fetch organizations:', err);
-        setError('Failed to load organizations. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchOrganizations = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await organizationsApi.getAll();
+      setOrganizations(data);
+    } catch (err) {
+      console.error('Failed to fetch organizations:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrganizations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (isLoading) {
     return (
       <div>
         <h1>Organization Management</h1>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading organizations...</div>
+        <LoadingSpinner message="Loading organizations..." />
       </div>
     );
   }
@@ -39,18 +45,7 @@ export const AdminOrganizationsPage: React.FC = () => {
     return (
       <div>
         <h1>Organization Management</h1>
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginTop: '1rem',
-          }}
-        >
-          {error}
-        </div>
+        <ErrorMessage message={error} onRetry={fetchOrganizations} />
       </div>
     );
   }
@@ -62,15 +57,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       </div>
       
       {organizations.length === 0 ? (
-        <div style={{ 
-          padding: '2rem', 
-          backgroundColor: 'white', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#666' }}>No organizations found.</p>
-        </div>
+        <EmptyState message="No organizations found." />
       ) : (
         <div style={{ 
           backgroundColor: 'white', 

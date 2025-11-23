@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { parseApiError } from '../utils/errorUtils';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +10,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
+  const { showSuccess, showError } = useNotifications();
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -24,34 +27,15 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login({ email, password });
+      showSuccess('Login successful!');
       // After successful login, navigate to /users
       navigate('/users');
     } catch (err) {
       // Handle login errors
       console.error('Login error:', err);
-      
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status: number; data?: unknown } };
-        if (axiosError.response?.status === 401) {
-          setError('Invalid email or password');
-        } else if (axiosError.response?.status === 400) {
-          setError('Invalid request. Please check your email and password format.');
-        } else if (axiosError.response?.status && axiosError.response.status >= 500) {
-          setError('Server error. Please try again later.');
-        } else {
-          setError('An error occurred. Please try again.');
-        }
-      } else if (err && typeof err === 'object' && 'message' in err) {
-        // Network or other error
-        const errorMessage = (err as { message: string }).message.toLowerCase();
-        if (errorMessage.includes('network') || errorMessage.includes('econnrefused')) {
-          setError('Cannot connect to server. Please ensure the API is running.');
-        } else {
-          setError('An error occurred. Please try again.');
-        }
-      } else {
-        setError('An error occurred. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }

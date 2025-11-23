@@ -3,17 +3,22 @@ import { useParams, Link } from 'react-router-dom';
 import { membershipsApi } from '../api/membershipsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { usersApi } from '../api/usersApi';
+import { useNotifications } from '../contexts/NotificationContext';
+import { parseApiError } from '../utils/errorUtils';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
 import type { MembershipWithUserDto, Organization, User } from '../types/api';
 
 export const AdminOrganizationMembershipsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
+  const { showSuccess, showError } = useNotifications();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [memberships, setMemberships] = useState<MembershipWithUserDto[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Add membership form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -28,42 +33,17 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!orgId) {
-        setError('Invalid organization ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const [orgData, membershipsData, usersData] = await Promise.all([
-          organizationsApi.getById(orgId),
-          membershipsApi.getByOrganizationWithUserDetails(orgId),
-          usersApi.getAll(),
-        ]);
-        
-        setOrganization(orgData);
-        setMemberships(membershipsData);
-        setUsers(usersData);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load data. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [orgId]);
-
-  const refetchData = async () => {
-    if (!orgId) return;
+  const fetchData = async () => {
+    if (!orgId) {
+      setError('Invalid organization ID');
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      setIsLoading(true);
+      setError(null);
+      
       const [orgData, membershipsData, usersData] = await Promise.all([
         organizationsApi.getById(orgId),
         membershipsApi.getByOrganizationWithUserDetails(orgId),
@@ -75,15 +55,23 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       setUsers(usersData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId]);
 
   const handleAddMembership = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!orgId || !selectedUserId) return;
 
     setError(null);
-    setSuccessMessage(null);
     setIsAdding(true);
 
     try {
@@ -92,25 +80,18 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
         role: selectedRole,
       });
       
-      setSuccessMessage('Membership added successfully!');
+      showSuccess('Membership added successfully!');
       setShowAddForm(false);
       setSelectedUserId('');
       setSelectedRole('Member');
       
       // Refresh memberships
-      await refetchData();
+      await fetchData();
     } catch (err) {
       console.error('Failed to add membership:', err);
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status: number; data?: { message?: string } } };
-        if (axiosError.response?.status === 400) {
-          setError(axiosError.response.data?.message || 'Invalid membership data. The user may already be a member.');
-        } else {
-          setError('Failed to add membership. Please try again.');
-        }
-      } else {
-        setError('Failed to add membership. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsAdding(false);
     }
@@ -124,17 +105,18 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
     }
 
     setError(null);
-    setSuccessMessage(null);
 
     try {
       await membershipsApi.delete(orgId, userId);
-      setSuccessMessage('Membership removed successfully!');
+      showSuccess('Membership removed successfully!');
       
       // Refresh memberships
-      await refetchData();
+      await fetchData();
     } catch (err) {
       console.error('Failed to remove membership:', err);
-      setError('Failed to remove membership. Please try again.');
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -147,7 +129,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
     return (
       <div>
         <h1>Manage Memberships</h1>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+        <LoadingSpinner message="Loading memberships..." />
       </div>
     );
   }
@@ -156,34 +138,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
     return (
       <div>
         <h1>Manage Memberships</h1>
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginTop: '1rem',
-          }}
-        >
-          Organization not found
-        </div>
-        <div style={{ marginTop: '1rem' }}>
-          <Link
-            to="/admin/organizations"
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Back to Organizations
-          </Link>
-        </div>
+        <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
       </div>
     );
   }
@@ -237,21 +192,6 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
           }}
         >
           {error}
-        </div>
-      )}
-
-      {successMessage && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#e7f5e7',
-            border: '1px solid #b3e0b3',
-            borderRadius: '4px',
-            color: '#2d5a2d',
-            marginBottom: '1rem',
-          }}
-        >
-          {successMessage}
         </div>
       )}
 
@@ -334,15 +274,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       )}
 
       {memberships.length === 0 ? (
-        <div style={{ 
-          padding: '2rem', 
-          backgroundColor: 'white', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#666' }}>No members found.</p>
-        </div>
+        <EmptyState message="No members found. Add members to this organization." />
       ) : (
         <div style={{ 
           backgroundColor: 'white', 

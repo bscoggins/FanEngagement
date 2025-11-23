@@ -786,3 +786,180 @@ The admin proposal management UI follows consistent patterns:
 
 ---
 This instruction file helps GitHub Copilot Chat provide contextually relevant, accurate suggestions for the FanEngagement codebase.
+
+### Frontend UX Patterns
+
+The frontend uses consistent patterns for loading states, error handling, and user notifications:
+
+#### Notification System
+
+All pages should use the notification system for user feedback:
+
+```typescript
+import { useNotifications } from '../contexts/NotificationContext';
+
+const { showSuccess, showError, showInfo, showWarning } = useNotifications();
+
+// Show success after successful operations
+showSuccess('User updated successfully!');
+
+// Show errors from API failures  
+showError('Failed to save. Please try again.');
+```
+
+The `NotificationContainer` displays toasts in the top-right corner with auto-dismiss after 5 seconds.
+
+#### Loading States
+
+Use consistent loading indicators:
+
+```typescript
+import { LoadingSpinner } from '../components/LoadingSpinner';
+
+if (isLoading) {
+  return <LoadingSpinner message="Loading users..." />;
+}
+```
+
+#### Error Display
+
+Use the `ErrorMessage` component for error states:
+
+```typescript
+import { ErrorMessage } from '../components/ErrorMessage';
+
+if (error) {
+  return <ErrorMessage message={error} onRetry={fetchData} />;
+}
+```
+
+#### Empty States
+
+Use `EmptyState` when there's no data:
+
+```typescript
+import { EmptyState } from '../components/EmptyState';
+
+{data.length === 0 ? (
+  <EmptyState message="No users found." />
+) : (
+  // render data
+)}
+```
+
+#### Error Parsing
+
+Use `parseApiError` to extract meaningful error messages from API responses:
+
+```typescript
+import { parseApiError } from '../utils/errorUtils';
+
+try {
+  await api.doSomething();
+} catch (err) {
+  const errorMessage = parseApiError(err);
+  setError(errorMessage);
+  showError(errorMessage);
+}
+```
+
+This automatically handles:
+- RFC 7807 ProblemDetails format (`detail`, `title`)
+- Validation errors from the `errors` field
+- HTTP status codes (400, 401, 403, 404, 500)
+- Network errors
+
+#### Async Operations Hook
+
+For complex async state management, use the `useAsync` hook:
+
+```typescript
+import { useAsync } from '../hooks/useAsync';
+
+const { data, loading, error, execute, reset } = useAsync(
+  () => usersApi.getAll(),
+  true // execute immediately
+);
+
+// Manual execution
+execute();
+
+// Reset state
+reset();
+```
+
+#### UI Feedback During Operations
+
+Disable buttons and show progress during async operations:
+
+```typescript
+<button
+  type="submit"
+  disabled={isSaving}
+  style={{
+    backgroundColor: isSaving ? '#ccc' : '#0066cc',
+    cursor: isSaving ? 'not-allowed' : 'pointer',
+  }}
+>
+  {isSaving ? 'Saving...' : 'Save'}
+</button>
+```
+
+#### Complete Page Pattern
+
+A typical CRUD page should:
+
+1. Use `LoadingSpinner` during initial load
+2. Use `ErrorMessage` with retry if load fails
+3. Use `EmptyState` when no data
+4. Use notifications for success/error feedback
+5. Disable action buttons during operations
+6. Parse errors with `parseApiError`
+
+Example structure:
+
+```typescript
+const MyPage = () => {
+  const { showSuccess, showError } = useNotifications();
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await api.getData();
+      setData(result);
+    } catch (err) {
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading..." />;
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} onRetry={fetchData} />;
+  }
+
+  return (
+    <div>
+      {data.length === 0 ? (
+        <EmptyState message="No data yet." />
+      ) : (
+        // render data
+      )}
+    </div>
+  );
+};
+```
+
