@@ -108,7 +108,7 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problemDetails);
-        Assert.Contains("already", problemDetails.Detail ?? "", StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Only Open proposals can be closed", problemDetails.Detail ?? "");
         _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 

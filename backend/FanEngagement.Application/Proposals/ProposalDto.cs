@@ -14,4 +14,11 @@ public class ProposalDto
     public decimal? QuorumRequirement { get; set; }
     public Guid CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    
+    // Governance result fields (populated when closed/finalized)
+    public Guid? WinningOptionId { get; set; }
+    public bool? QuorumMet { get; set; }
+    public decimal? TotalVotesCast { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public decimal? EligibleVotingPowerSnapshot { get; set; }
 }

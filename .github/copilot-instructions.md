@@ -241,6 +241,92 @@ When implementing a new feature or endpoint:
 8. **Add migration** (if schema changes) via `dotnet ef migrations add`
 9. **Write tests** in `backend/FanEngagement.Tests/`
 
+### Using Domain Services
+
+Domain services contain pure business logic with no infrastructure dependencies. They live in `backend/FanEngagement.Domain/Services/`.
+
+**When to use domain services:**
+- Complex business rule validation
+- State transition logic
+- Multi-entity computations
+- Reusable domain logic that doesn't fit naturally on a single entity
+
+**Current Domain Services:**
+
+#### ProposalGovernanceService
+
+Located in `FanEngagement.Domain.Services`, this service manages proposal lifecycle and governance rules:
+
+```csharp
+// Validate status transitions
+var validationResult = governanceService.ValidateStatusTransition(proposal, ProposalStatus.Open);
+if (!validationResult.IsValid) {
+    throw new InvalidOperationException(validationResult.ErrorMessage);
+}
+
+// Validate voting eligibility
+var canVote = governanceService.ValidateCanVote(proposal, hasExistingVote: false);
+
+// Compute results
+var results = governanceService.ComputeResults(proposal);
+```
+
+**Rules:**
+- Use this service for ALL proposal lifecycle transitions (open, close, finalize)
+- Use this service to validate operations (add option, delete option, update, vote)
+- Do NOT implement state transition logic directly in controllers or infrastructure services
+- The domain service provides consistent validation across the application
+
+**Governance Lifecycle:**
+- **Draft → Open**: Requires 2+ options, captures eligible voting power snapshot
+- **Open → Closed**: Computes and stores results (winner, quorum, totals)
+- **Closed → Finalized**: Marks proposal as permanently complete
+- See `docs/architecture.md` "Proposal Governance Rules" section for complete details
+
+#### VotingPowerCalculator
+
+Located in `FanEngagement.Domain.Services`, this service calculates voting power:
+
+```csharp
+// Calculate user's voting power
+var votingPower = calculator.CalculateVotingPower(userShareBalances);
+
+// Calculate total eligible voting power for org
+var totalEligible = calculator.CalculateTotalEligibleVotingPower(allOrgBalances);
+
+// Check eligibility
+if (!calculator.IsEligibleToVote(votingPower)) {
+    throw new InvalidOperationException("User has no voting power");
+}
+```
+
+**Usage Guidelines:**
+- Always use this service to calculate voting power consistently
+- Do NOT inline voting power calculations in multiple places
+- Formula: `Sum(Balance × VotingWeight)` across all share types
+
+**Integration Pattern:**
+
+Infrastructure services (e.g., `ProposalService`) should:
+1. Load necessary data from database
+2. Call domain service methods for business logic
+3. Handle persistence of results
+
+```csharp
+// ✅ CORRECT: Use domain service
+var governanceService = new ProposalGovernanceService();
+var validation = governanceService.ValidateCanOpen(proposal);
+if (!validation.IsValid) {
+    throw new InvalidOperationException(validation.ErrorMessage);
+}
+// ... proceed with opening
+
+// ❌ WRONG: Ad-hoc validation
+if (proposal.Status != ProposalStatus.Draft) {
+    throw new InvalidOperationException("Cannot open");
+}
+```
+
 ### Frontend Patterns
 
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.

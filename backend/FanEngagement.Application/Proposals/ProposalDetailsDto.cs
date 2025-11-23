@@ -15,4 +15,11 @@ public class ProposalDetailsDto
     public Guid CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public List<ProposalOptionDto> Options { get; set; } = new();
+    
+    // Governance result fields (populated when closed/finalized)
+    public Guid? WinningOptionId { get; set; }
+    public bool? QuorumMet { get; set; }
+    public decimal? TotalVotesCast { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public decimal? EligibleVotingPowerSnapshot { get; set; }
 }
