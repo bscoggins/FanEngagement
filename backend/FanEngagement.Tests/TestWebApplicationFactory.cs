@@ -18,13 +18,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureServices(services =>
         {
-            // Remove background service that accesses database
-            var hostedServiceDescriptor = services.FirstOrDefault(d => 
+            // Remove background services that access database
+            var webhookServiceDescriptor = services.FirstOrDefault(d => 
                 d.ServiceType == typeof(IHostedService) && 
                 d.ImplementationType == typeof(WebhookDeliveryBackgroundService));
-            if (hostedServiceDescriptor != null)
+            if (webhookServiceDescriptor != null)
             {
-                services.Remove(hostedServiceDescriptor);
+                services.Remove(webhookServiceDescriptor);
+            }
+
+            var lifecycleServiceDescriptor = services.FirstOrDefault(d => 
+                d.ServiceType == typeof(IHostedService) && 
+                d.ImplementationType == typeof(ProposalLifecycleBackgroundService));
+            if (lifecycleServiceDescriptor != null)
+            {
+                services.Remove(lifecycleServiceDescriptor);
             }
 
             // Remove the existing DbContext registration

@@ -1,4 +1,6 @@
+using System.Text.Json;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -8,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class ProposalService(FanEngagementDbContext dbContext) : IProposalService
+public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventService outboundEventService) : IProposalService
 {
     public async Task<ProposalDto> CreateAsync(Guid organizationId, CreateProposalRequest request, CancellationToken cancellationToken = default)
     {
@@ -36,7 +38,7 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             OrganizationId = organizationId,
             Title = request.Title,
             Description = request.Description,
-            Status = ProposalStatus.Open,
+            Status = ProposalStatus.Draft,  // Start in Draft status
             StartAt = request.StartAt,
             EndAt = request.EndAt,
             QuorumRequirement = request.QuorumRequirement,
@@ -177,6 +179,44 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         return MapToDto(proposal);
     }
 
+    public async Task<ProposalDto?> OpenAsync(Guid proposalId, CancellationToken cancellationToken = default)
+    {
+        var proposal = await dbContext.Proposals
+            .Include(p => p.Options)
+            .FirstOrDefaultAsync(p => p.Id == proposalId, cancellationToken);
+
+        if (proposal is null)
+        {
+            return null;
+        }
+
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanOpen(proposal);
+        if (!validation.IsValid)
+        {
+            throw new InvalidOperationException(validation.ErrorMessage);
+        }
+
+        // Capture eligible voting power snapshot
+        var votingPowerCalc = new VotingPowerCalculator();
+        var allBalances = await dbContext.ShareBalances
+            .AsNoTracking()
+            .Include(b => b.ShareType)
+            .Where(b => b.ShareType!.OrganizationId == proposal.OrganizationId)
+            .ToListAsync(cancellationToken);
+        
+        proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);
+        proposal.Status = ProposalStatus.Open;
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Enqueue outbound event
+        await EnqueueProposalEventAsync(proposal, "ProposalOpened", cancellationToken);
+
+        return MapToDto(proposal);
+    }
+
     public async Task<ProposalDto?> CloseAsync(Guid proposalId, CancellationToken cancellationToken = default)
     {
         var proposal = await dbContext.Proposals
@@ -208,6 +248,37 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         proposal.ClosedAt = DateTimeOffset.UtcNow;
         
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Enqueue outbound event
+        await EnqueueProposalEventAsync(proposal, "ProposalClosed", cancellationToken);
+
+        return MapToDto(proposal);
+    }
+
+    public async Task<ProposalDto?> FinalizeAsync(Guid proposalId, CancellationToken cancellationToken = default)
+    {
+        var proposal = await dbContext.Proposals
+            .FirstOrDefaultAsync(p => p.Id == proposalId, cancellationToken);
+
+        if (proposal is null)
+        {
+            return null;
+        }
+
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanFinalize(proposal);
+        if (!validation.IsValid)
+        {
+            throw new InvalidOperationException(validation.ErrorMessage);
+        }
+
+        proposal.Status = ProposalStatus.Finalized;
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Enqueue outbound event
+        await EnqueueProposalEventAsync(proposal, "ProposalFinalized", cancellationToken);
 
         return MapToDto(proposal);
     }
@@ -297,12 +368,6 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
             return null;
         }
 
-        // Can only vote on Open proposals
-        if (proposal.Status != ProposalStatus.Open)
-        {
-            throw new InvalidOperationException($"Cannot vote on proposal in {proposal.Status} state.");
-        }
-
         // Verify the option belongs to this proposal
         if (!proposal.Options.Any(o => o.Id == request.ProposalOptionId))
         {
@@ -313,9 +378,12 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         var hasVoted = await dbContext.Votes
             .AnyAsync(v => v.ProposalId == proposalId && v.UserId == request.UserId, cancellationToken);
         
-        if (hasVoted)
+        // Use domain service for validation
+        var governanceService = new ProposalGovernanceService();
+        var validation = governanceService.ValidateCanVote(proposal, hasVoted);
+        if (!validation.IsValid)
         {
-            throw new InvalidOperationException("User has already voted on this proposal.");
+            throw new InvalidOperationException(validation.ErrorMessage);
         }
 
         // Verify user exists
@@ -330,7 +398,9 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
         // Calculate voting power from user's share balances
         var votingPower = await CalculateVotingPowerAsync(proposal.OrganizationId, request.UserId, cancellationToken);
 
-        if (votingPower <= 0)
+        // Check eligibility using domain service
+        var votingPowerCalc = new VotingPowerCalculator();
+        if (!votingPowerCalc.IsEligibleToVote(votingPower))
         {
             throw new InvalidOperationException("User has no voting power in this organization.");
         }
@@ -425,6 +495,24 @@ public class ProposalService(FanEngagementDbContext dbContext) : IProposalServic
 
         var calculator = new VotingPowerCalculator();
         return calculator.CalculateVotingPower(balances);
+    }
+
+    private async Task EnqueueProposalEventAsync(Proposal proposal, string eventType, CancellationToken cancellationToken)
+    {
+        var payload = new
+        {
+            proposalId = proposal.Id,
+            organizationId = proposal.OrganizationId,
+            title = proposal.Title,
+            status = proposal.Status.ToString(),
+            winningOptionId = proposal.WinningOptionId,
+            quorumMet = proposal.QuorumMet,
+            totalVotesCast = proposal.TotalVotesCast,
+            closedAt = proposal.ClosedAt
+        };
+
+        var payloadJson = JsonSerializer.Serialize(payload);
+        await outboundEventService.EnqueueEventAsync(proposal.OrganizationId, eventType, payloadJson, cancellationToken);
     }
 
     private static ProposalDto MapToDto(Proposal proposal)
