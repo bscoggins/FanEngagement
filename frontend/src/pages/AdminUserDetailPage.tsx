@@ -58,6 +58,7 @@ export const AdminUserDetailPage: React.FC = () => {
 
   useEffect(() => {
     fetchUserAndMemberships();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

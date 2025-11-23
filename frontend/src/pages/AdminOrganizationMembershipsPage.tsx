@@ -64,6 +64,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const handleAddMembership = async (e: React.FormEvent) => {

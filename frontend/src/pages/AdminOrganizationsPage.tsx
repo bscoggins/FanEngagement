@@ -4,6 +4,7 @@ import { organizationsApi } from '../api/organizationsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { parseApiError } from '../utils/errorUtils';
 import type { Organization } from '../types/api';
 
 export const AdminOrganizationsPage: React.FC = () => {
@@ -19,7 +20,8 @@ export const AdminOrganizationsPage: React.FC = () => {
       setOrganizations(data);
     } catch (err) {
       console.error('Failed to fetch organizations:', err);
-      setError('Failed to load organizations. Please try again.');
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -27,6 +29,7 @@ export const AdminOrganizationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrganizations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (isLoading) {

@@ -15,12 +15,17 @@ export interface UseAsyncResult<T> extends AsyncState<T> {
 /**
  * Hook for managing async operations with loading, error, and data states
  * 
- * @param asyncFunction - The async function to execute
+ * @param asyncFunction - The async function to execute (should be memoized with useCallback to avoid re-execution)
  * @param immediate - Whether to execute immediately on mount (default: true)
  * @returns AsyncState with execute and reset functions
  * 
  * @example
- * const { data, loading, error, execute } = useAsync(() => usersApi.getAll());
+ * // Wrap in useCallback to prevent re-execution
+ * const fetchData = useCallback(() => usersApi.getAll(), []);
+ * const { data, loading, error, execute } = useAsync(fetchData);
+ * 
+ * // Or use immediate: false and call execute manually
+ * const { data, loading, error, execute } = useAsync(() => usersApi.getAll(), false);
  */
 export function useAsync<T>(
   asyncFunction: () => Promise<T>,
@@ -42,7 +47,8 @@ export function useAsync<T>(
       const errorMessage = parseApiError(err);
       setState({ data: null, loading: false, error: errorMessage });
     }
-  }, [asyncFunction]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // asyncFunction not in deps - caller must ensure stability
 
   const reset = useCallback(() => {
     setState({ data: null, loading: false, error: null });
@@ -52,7 +58,8 @@ export function useAsync<T>(
     if (immediate) {
       execute();
     }
-  }, [immediate, execute]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [immediate]); // execute not in deps to prevent re-execution on inline functions
 
   return { ...state, execute, reset };
 }

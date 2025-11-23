@@ -4,6 +4,7 @@ import { usersApi } from '../api/usersApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { parseApiError } from '../utils/errorUtils';
 import type { User } from '../types/api';
 
 export const AdminUsersPage: React.FC = () => {
@@ -19,7 +20,8 @@ export const AdminUsersPage: React.FC = () => {
       setUsers(data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
-      setError('Failed to load users. Please try again.');
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -27,6 +29,7 @@ export const AdminUsersPage: React.FC = () => {
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (isLoading) {

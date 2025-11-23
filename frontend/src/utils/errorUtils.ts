@@ -33,7 +33,8 @@ export function parseApiError(err: unknown): string {
           }
         }
         if (errorMessages.length > 0) {
-          return errorMessages.join('. ');
+          // Return only the first error to avoid overwhelming users
+          return errorMessages[0];
         }
       }
       

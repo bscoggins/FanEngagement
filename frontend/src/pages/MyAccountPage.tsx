@@ -42,6 +42,7 @@ export const MyAccountPage: React.FC = () => {
 
   useEffect(() => {
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser?.userId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

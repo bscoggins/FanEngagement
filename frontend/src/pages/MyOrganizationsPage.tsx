@@ -5,6 +5,7 @@ import { membershipsApi } from '../api/membershipsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { parseApiError } from '../utils/errorUtils';
 import type { MembershipWithOrganizationDto } from '../types/api';
 
 export const MyOrganizationsPage: React.FC = () => {
@@ -23,7 +24,8 @@ export const MyOrganizationsPage: React.FC = () => {
       setMemberships(data);
     } catch (err) {
       console.error('Failed to fetch memberships:', err);
-      setError('Failed to load your organizations.');
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -31,6 +33,7 @@ export const MyOrganizationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchMemberships();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId]);
 
   if (loading) {

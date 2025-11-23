@@ -60,6 +60,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const handleCreateNew = () => {

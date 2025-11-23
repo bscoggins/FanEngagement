@@ -59,45 +59,46 @@ describe('NotificationContext', () => {
 
   it('auto-removes notifications after timeout', async () => {
     vi.useFakeTimers();
-    
-    let notificationMethods: any;
-    
-    function TestComponent() {
-      notificationMethods = useNotifications();
-      const { notifications } = useNotifications();
+    try {
+      let notificationMethods: any;
       
-      return (
-        <div>
-          {notifications.map(n => (
-            <div key={n.id}>{n.message}</div>
-          ))}
-        </div>
+      function TestComponent() {
+        notificationMethods = useNotifications();
+        const { notifications } = useNotifications();
+        
+        return (
+          <div>
+            {notifications.map(n => (
+              <div key={n.id}>{n.message}</div>
+            ))}
+          </div>
+        );
+      }
+
+      render(
+        <NotificationProvider>
+          <TestComponent />
+        </NotificationProvider>
       );
+
+      act(() => {
+        notificationMethods.showError('Error!');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Error!')).toBeInTheDocument();
+      });
+
+      await act(async () => {
+        vi.advanceTimersByTime(5000);
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Error!')).not.toBeInTheDocument();
+      });
+    } finally {
+      vi.useRealTimers();
     }
-
-    render(
-      <NotificationProvider>
-        <TestComponent />
-      </NotificationProvider>
-    );
-
-    act(() => {
-      notificationMethods.showError('Error!');
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Error!')).toBeInTheDocument();
-    });
-
-    await act(async () => {
-      vi.advanceTimersByTime(5000);
-      await new Promise(resolve => setTimeout(resolve, 0));
-    });
-
-    await waitFor(() => {
-      expect(screen.queryByText('Error!')).not.toBeInTheDocument();
-    });
-
-    vi.useRealTimers();
   }, 10000); // Increase timeout for this test
 });
