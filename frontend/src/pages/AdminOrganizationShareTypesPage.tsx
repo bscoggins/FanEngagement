@@ -2,16 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { shareTypesApi } from '../api/shareTypesApi';
 import { organizationsApi } from '../api/organizationsApi';
+import { useNotifications } from '../contexts/NotificationContext';
+import { parseApiError } from '../utils/errorUtils';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { EmptyState } from '../components/EmptyState';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
+  const { showSuccess, showError } = useNotifications();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [shareTypes, setShareTypes] = useState<ShareType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -26,40 +31,17 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!orgId) {
-        setError('Invalid organization ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const [orgData, shareTypesData] = await Promise.all([
-          organizationsApi.getById(orgId),
-          shareTypesApi.getByOrganization(orgId),
-        ]);
-        
-        setOrganization(orgData);
-        setShareTypes(shareTypesData);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load data. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [orgId]);
-
-  const refetchData = async () => {
-    if (!orgId) return;
+  const fetchData = async () => {
+    if (!orgId) {
+      setError('Invalid organization ID');
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      setIsLoading(true);
+      setError(null);
+      
       const [orgData, shareTypesData] = await Promise.all([
         organizationsApi.getById(orgId),
         shareTypesApi.getByOrganization(orgId),
@@ -69,8 +51,16 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       setShareTypes(shareTypesData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [orgId]);
 
   const handleCreateNew = () => {
     setEditingId(null);
@@ -84,7 +74,6 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     });
     setShowForm(true);
     setError(null);
-    setSuccessMessage(null);
   };
 
   const handleEdit = (shareType: ShareType) => {
@@ -99,7 +88,6 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     });
     setShowForm(true);
     setError(null);
-    setSuccessMessage(null);
   };
 
   const handleCancel = () => {
@@ -124,18 +112,17 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     if (!orgId) return;
 
     setError(null);
-    setSuccessMessage(null);
     setIsSaving(true);
 
     try {
       if (editingId) {
         // Update existing share type
         await shareTypesApi.update(orgId, editingId, formData as UpdateShareTypeRequest);
-        setSuccessMessage('Share type updated successfully!');
+        showSuccess('Share type updated successfully!');
       } else {
         // Create new share type
         await shareTypesApi.create(orgId, formData);
-        setSuccessMessage('Share type created successfully!');
+        showSuccess('Share type created successfully!');
       }
       
       setShowForm(false);
@@ -150,19 +137,12 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       });
       
       // Refresh share types
-      await refetchData();
+      await fetchData();
     } catch (err) {
       console.error('Failed to save share type:', err);
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status: number; data?: { message?: string } } };
-        if (axiosError.response?.status === 400) {
-          setError(axiosError.response.data?.message || 'Invalid share type data. Please check your inputs.');
-        } else {
-          setError('Failed to save share type. Please try again.');
-        }
-      } else {
-        setError('Failed to save share type. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -192,7 +172,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     return (
       <div>
         <h1>Manage Share Types</h1>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+        <LoadingSpinner message="Loading share types..." />
       </div>
     );
   }
@@ -201,34 +181,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     return (
       <div>
         <h1>Manage Share Types</h1>
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginTop: '1rem',
-          }}
-        >
-          Organization not found
-        </div>
-        <div style={{ marginTop: '1rem' }}>
-          <Link
-            to="/admin/organizations"
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Back to Organizations
-          </Link>
-        </div>
+        <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
       </div>
     );
   }
@@ -282,21 +235,6 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
           }}
         >
           {error}
-        </div>
-      )}
-
-      {successMessage && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#e7f5e7',
-            border: '1px solid #b3e0b3',
-            borderRadius: '4px',
-            color: '#2d5a2d',
-            marginBottom: '1rem',
-          }}
-        >
-          {successMessage}
         </div>
       )}
 
@@ -467,15 +405,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       )}
 
       {shareTypes.length === 0 ? (
-        <div style={{ 
-          padding: '2rem', 
-          backgroundColor: 'white', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#666' }}>No share types found. Create one to get started.</p>
-        </div>
+        <EmptyState message="No share types found. Create one to get started." />
       ) : (
         <div style={{ 
           backgroundColor: 'white', 
