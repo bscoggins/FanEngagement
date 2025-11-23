@@ -1,4 +1,5 @@
 using FanEngagement.Application.Authentication;
+using FanEngagement.Application.Common;
 using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
@@ -51,6 +52,38 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             .ToListAsync(cancellationToken);
 
         return users.Select(MapToDto).ToList();
+    }
+
+    public async Task<PagedResult<UserDto>> GetAllAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Users.AsNoTracking();
+
+        // Apply search filter if provided (case-insensitive using EF.Functions.Like with LOWER)
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchPattern = $"%{search}%";
+            query = query.Where(u => 
+                EF.Functions.Like(u.Email.ToLower(), searchPattern.ToLower()) || 
+                EF.Functions.Like(u.DisplayName.ToLower(), searchPattern.ToLower()));
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply pagination
+        var users = await query
+            .OrderBy(u => u.Email)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<UserDto>
+        {
+            Items = users.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<UserDto?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)

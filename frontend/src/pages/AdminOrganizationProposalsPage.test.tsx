@@ -11,6 +11,7 @@ import type { Proposal, Organization } from '../types/api';
 vi.mock('../api/proposalsApi', () => ({
   proposalsApi: {
     getByOrganization: vi.fn(),
+    getByOrganizationPaged: vi.fn(),
     create: vi.fn(),
   },
 }));
@@ -76,6 +77,16 @@ describe('AdminOrganizationProposalsPage', () => {
     },
   ];
 
+  const mockPagedProposals = {
+    items: mockProposals,
+    totalCount: 2,
+    page: 1,
+    pageSize: 10,
+    totalPages: 1,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  };
+
   const renderPage = (orgId = 'org-1') => {
     return render(
       <AuthProvider>
@@ -90,7 +101,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('renders proposals heading', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValueOnce(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce(mockPagedProposals);
     
     renderPage();
     
@@ -101,7 +112,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('displays loading state initially', () => {
     vi.mocked(organizationsApi.getById).mockImplementation(() => new Promise(() => {}));
-    vi.mocked(proposalsApi.getByOrganization).mockImplementation(() => new Promise(() => {}));
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockImplementation(() => new Promise(() => {}));
     
     renderPage();
     
@@ -110,7 +121,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('loads and displays proposals', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValueOnce(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce(mockPagedProposals);
     
     renderPage();
     
@@ -125,7 +136,15 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('displays empty state when no proposals exist', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValueOnce([]);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 10,
+      totalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    });
     
     renderPage();
     
@@ -136,7 +155,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('displays error message when data fails to load', async () => {
     vi.mocked(organizationsApi.getById).mockRejectedValueOnce(new Error('Network error'));
-    vi.mocked(proposalsApi.getByOrganization).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockRejectedValueOnce(new Error('Network error'));
     
     renderPage();
     
@@ -147,7 +166,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('shows create proposal form when create button clicked', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValueOnce(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce(mockPagedProposals);
     
     renderPage();
     
@@ -165,7 +184,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('creates a new proposal successfully', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValue(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValue(mockPagedProposals);
     vi.mocked(proposalsApi.create).mockResolvedValueOnce(mockProposals[0]);
     
     renderPage();
@@ -197,7 +216,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('displays error when create fails', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValue(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValue(mockPagedProposals);
     vi.mocked(proposalsApi.create).mockRejectedValueOnce({
       response: { data: { Error: 'Invalid data' } }
     });
@@ -228,7 +247,7 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('cancels create form', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValue(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValue(mockPagedProposals);
     
     renderPage();
     
@@ -253,19 +272,30 @@ describe('AdminOrganizationProposalsPage', () => {
 
   it('displays status badges correctly', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValueOnce(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce(mockPagedProposals);
     
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getAllByText('Open')).toHaveLength(1);
-      expect(screen.getAllByText('Draft')).toHaveLength(1);
+      // Look for status badges within the proposals, not the filter dropdown
+      const openBadge = screen.getByText((content, element) => {
+        return element?.tagName === 'SPAN' && 
+               (element as HTMLElement)?.style.backgroundColor === 'rgb(40, 167, 69)' && 
+               content === 'Open';
+      });
+      const draftBadge = screen.getByText((content, element) => {
+        return element?.tagName === 'SPAN' && 
+               (element as HTMLElement)?.style.backgroundColor === 'rgb(108, 117, 125)' && 
+               content === 'Draft';
+      });
+      expect(openBadge).toBeInTheDocument();
+      expect(draftBadge).toBeInTheDocument();
     });
   });
 
   it('displays view/edit links for proposals', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(proposalsApi.getByOrganization).mockResolvedValueOnce(mockProposals);
+    vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce(mockPagedProposals);
     
     renderPage();
     

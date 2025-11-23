@@ -1,5 +1,8 @@
+using FanEngagement.Application.Common;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Users;
+using FanEngagement.Application.Validators;
+using FanEngagement.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,8 +23,30 @@ public class UsersController(IUserService userService, IMembershipService member
 
     [HttpGet]
     [Authorize(Policy = "GlobalAdmin")]
-    public async Task<ActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult> GetAll(
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
     {
+        // If pagination parameters are provided, use paginated endpoint
+        if (page.HasValue || pageSize.HasValue || !string.IsNullOrWhiteSpace(search))
+        {
+            var currentPage = page ?? PaginationValidators.DefaultPage;
+            var currentPageSize = pageSize ?? PaginationValidators.DefaultPageSize;
+
+            // Validate pagination parameters
+            var validationError = PaginationHelper.ValidatePaginationParameters(currentPage, currentPageSize);
+            if (validationError != null)
+            {
+                return validationError;
+            }
+
+            var pagedResult = await userService.GetAllAsync(currentPage, currentPageSize, search, cancellationToken);
+            return Ok(pagedResult);
+        }
+
+        // Legacy endpoint - return all users without pagination
         var users = await userService.GetAllAsync(cancellationToken);
         return Ok(users);
     }

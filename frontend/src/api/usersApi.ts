@@ -1,9 +1,21 @@
 import { apiClient } from './client';
-import type { User, CreateUserRequest, UpdateUserRequest } from '../types/api';
+import type { User, CreateUserRequest, UpdateUserRequest, PagedResult } from '../types/api';
 
 export const usersApi = {
   getAll: async (): Promise<User[]> => {
     const response = await apiClient.get<User[]>('/users');
+    return response.data;
+  },
+
+  getAllPaged: async (page: number, pageSize: number, search?: string): Promise<PagedResult<User>> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    if (search) {
+      params.append('search', search);
+    }
+    const response = await apiClient.get<PagedResult<User>>(`/users?${params.toString()}`);
     return response.data;
   },
 

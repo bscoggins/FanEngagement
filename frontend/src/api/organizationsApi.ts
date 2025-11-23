@@ -1,9 +1,21 @@
 import { apiClient } from './client';
-import type { Organization, UpdateOrganizationRequest } from '../types/api';
+import type { Organization, UpdateOrganizationRequest, PagedResult } from '../types/api';
 
 export const organizationsApi = {
   getAll: async (): Promise<Organization[]> => {
     const response = await apiClient.get<Organization[]>('/organizations');
+    return response.data;
+  },
+
+  getAllPaged: async (page: number, pageSize: number, search?: string): Promise<PagedResult<Organization>> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    if (search) {
+      params.append('search', search);
+    }
+    const response = await apiClient.get<PagedResult<Organization>>(`/organizations?${params.toString()}`);
     return response.data;
   },
 

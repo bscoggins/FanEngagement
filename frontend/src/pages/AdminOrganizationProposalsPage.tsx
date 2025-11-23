@@ -3,17 +3,25 @@ import { useParams, Link } from 'react-router-dom';
 import { proposalsApi } from '../api/proposalsApi';
 import { useAuth } from '../auth/AuthContext';
 import { organizationsApi } from '../api/organizationsApi';
-import type { Proposal, Organization, CreateProposalRequest, ProposalStatus } from '../types/api';
+import { Pagination } from '../components/Pagination';
+import { SearchInput } from '../components/SearchInput';
+import type { Proposal, Organization, CreateProposalRequest, ProposalStatus, PagedResult } from '../types/api';
 
 export const AdminOrganizationProposalsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
   const { user } = useAuth();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [pagedResult, setPagedResult] = useState<PagedResult<Proposal> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Pagination and filter state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ProposalStatus | ''>('');
+  const pageSize = 10;
   
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -34,50 +42,53 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     return new Date(dateTimeLocal + 'Z').toISOString();
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!orgId) {
-        setError('Invalid organization ID');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const [orgData, proposalsData] = await Promise.all([
-          organizationsApi.getById(orgId),
-          proposalsApi.getByOrganization(orgId),
-        ]);
-        
-        setOrganization(orgData);
-        setProposals(proposalsData);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load data. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [orgId]);
-
-  const refetchData = async () => {
-    if (!orgId) return;
+  const fetchData = async (page: number, search: string, status: ProposalStatus | '') => {
+    if (!orgId) {
+      setError('Invalid organization ID');
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      setIsLoading(true);
+      setError(null);
+      
       const [orgData, proposalsData] = await Promise.all([
         organizationsApi.getById(orgId),
-        proposalsApi.getByOrganization(orgId),
+        proposalsApi.getByOrganizationPaged(orgId, page, pageSize, status || undefined, search || undefined),
       ]);
       
       setOrganization(orgData);
-      setProposals(proposalsData);
+      setPagedResult(proposalsData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
+      setError('Failed to load data. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchData(currentPage, searchQuery, statusFilter);
+  }, [orgId, currentPage, searchQuery, statusFilter]);
+
+  const refetchData = () => {
+    fetchData(currentPage, searchQuery, statusFilter);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleStatusFilterChange = (status: ProposalStatus | '') => {
+    setStatusFilter(status);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const handleCreateNew = () => {
@@ -189,6 +200,8 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     );
   }
 
+  const proposals = pagedResult?.items || [];
+
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
@@ -229,7 +242,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       )}
 
       {!showForm && (
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <button
             onClick={handleCreateNew}
             style={{
@@ -245,6 +258,45 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
           >
             Create New Proposal
           </button>
+
+          <div style={{ flex: 1, minWidth: '250px' }}>
+            <SearchInput
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search proposals by title..."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="statusFilter" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
+              Status
+            </label>
+            <select
+              id="statusFilter"
+              value={statusFilter}
+              onChange={(e) => handleStatusFilterChange(e.target.value as ProposalStatus | '')}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #ced4da',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">All Statuses</option>
+              <option value="Draft">Draft</option>
+              <option value="Open">Open</option>
+              <option value="Closed">Closed</option>
+              <option value="Finalized">Finalized</option>
+            </select>
+          </div>
+
+          {pagedResult && (
+            <div style={{ color: '#666', fontSize: '0.875rem', marginLeft: 'auto' }}>
+              {pagedResult.totalCount} proposal{pagedResult.totalCount !== 1 ? 's' : ''} total
+            </div>
+          )}
         </div>
       )}
 
@@ -415,15 +467,16 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
           border: '1px solid #dee2e6'
         }}>
           <p style={{ color: '#6c757d', fontSize: '1.1rem' }}>
-            No proposals found for this organization.
+            {searchQuery || statusFilter ? "No proposals found matching your filters." : "No proposals found for this organization."}
           </p>
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gap: '1rem',
-        }}>
-          {proposals.map((proposal) => (
+        <>
+          <div style={{
+            display: 'grid',
+            gap: '1rem',
+          }}>
+            {proposals.map((proposal) => (
             <div
               key={proposal.id}
               style={{
@@ -485,7 +538,18 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+
+          {pagedResult && (
+            <Pagination
+              currentPage={pagedResult.page}
+              totalPages={pagedResult.totalPages}
+              onPageChange={handlePageChange}
+              hasPreviousPage={pagedResult.hasPreviousPage}
+              hasNextPage={pagedResult.hasNextPage}
+            />
+          )}
+        </>
       )}
     </div>
   );

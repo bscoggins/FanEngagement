@@ -1,4 +1,7 @@
+using FanEngagement.Application.Common;
 using FanEngagement.Application.Organizations;
+using FanEngagement.Application.Validators;
+using FanEngagement.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,8 +22,30 @@ public class OrganizationsController(IOrganizationService organizationService) :
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult> GetAll(
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
     {
+        // If pagination parameters are provided, use paginated endpoint
+        if (page.HasValue || pageSize.HasValue || !string.IsNullOrWhiteSpace(search))
+        {
+            var currentPage = page ?? PaginationValidators.DefaultPage;
+            var currentPageSize = pageSize ?? PaginationValidators.DefaultPageSize;
+
+            // Validate pagination parameters
+            var validationError = PaginationHelper.ValidatePaginationParameters(currentPage, currentPageSize);
+            if (validationError != null)
+            {
+                return validationError;
+            }
+
+            var pagedResult = await organizationService.GetAllAsync(currentPage, currentPageSize, search, cancellationToken);
+            return Ok(pagedResult);
+        }
+
+        // Legacy endpoint - return all organizations without pagination
         var organizations = await organizationService.GetAllAsync(cancellationToken);
         return Ok(organizations);
     }

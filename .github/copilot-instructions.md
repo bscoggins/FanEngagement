@@ -631,6 +631,46 @@ All errors follow RFC 7807 ProblemDetails:
 }
 ```
 
+## Pagination and Filtering
+
+FanEngagement provides a consistent pagination and filtering system across all list endpoints.
+
+### Backend Pagination
+
+**Standard pagination parameters:**
+- `page` (int, optional, default: 1): Page number (1-based)
+- `pageSize` (int, optional, default: 10): Items per page (min: 1, max: 100)
+
+**Response type:** `PagedResult<T>` in `FanEngagement.Application.Common`
+
+**Implementing pagination in controllers:**
+- Add optional query parameters: `page`, `pageSize`, and filter params (e.g., `search`, `status`)
+- Validate parameters using constants from `PaginationValidators`
+- Call paginated service method if any pagination params are provided
+- Maintain backward compatibility by returning all items when no params provided
+
+**Standard filters by endpoint:**
+- Users: `search` (filters by email or display name)
+- Organizations: `search` (filters by organization name)
+- Proposals: `status` (Draft/Open/Closed/Finalized), `search` (filters by title)
+
+### Frontend Pagination
+
+**Components:**
+- `Pagination`: Renders page navigation controls
+- `SearchInput`: Debounced search input (300ms delay)
+
+**API client pattern:**
+- Add `getAllPaged()` method alongside existing `getAll()` method
+- Use URLSearchParams to build query string
+- Return `PagedResult<T>` type
+
+**Page implementation:**
+- Track `currentPage`, `searchQuery`, `statusFilter` in state
+- Fetch data in `useEffect` when filters/page change
+- Reset to page 1 when changing filters
+- Display count indicators (e.g., "Showing 1-10 of 50 users")
+
 ## Common Tasks
 
 ### Adding a New Controller Endpoint
