@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 
 export type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
@@ -21,7 +21,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const timeoutsRef = React.useRef<Map<string, number>>(new Map());
+  const timeoutsRef = useRef<Map<string, number>>(new Map());
 
   const addNotification = useCallback((type: NotificationType, message: string) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -64,7 +64,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   }, []);
 
   // Cleanup on unmount
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       timeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
       timeoutsRef.current.clear();
