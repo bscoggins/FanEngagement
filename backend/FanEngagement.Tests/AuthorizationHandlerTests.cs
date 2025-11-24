@@ -32,7 +32,7 @@ public class AuthorizationHandlerTests
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
     }
 
-    private HttpContext CreateHttpContext(ClaimsPrincipal user, Dictionary<string, object>? routeValues = null)
+    private HttpContext CreateHttpContext(ClaimsPrincipal user, Dictionary<string, object?>? routeValues = null)
     {
         var httpContext = new DefaultHttpContext
         {
@@ -56,7 +56,7 @@ public class AuthorizationHandlerTests
         var orgId = Guid.NewGuid();
         
         var user = CreateUser(userId, "Admin");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["organizationId"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["organizationId"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationMemberHandler(httpContextAccessor, dbContext);
@@ -93,7 +93,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["organizationId"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["organizationId"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationMemberHandler(httpContextAccessor, dbContext);
@@ -121,7 +121,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["organizationId"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["organizationId"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationMemberHandler(httpContextAccessor, dbContext);
@@ -158,7 +158,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["id"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["id"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationMemberHandler(httpContextAccessor, dbContext);
@@ -181,7 +181,7 @@ public class AuthorizationHandlerTests
         var orgId = Guid.NewGuid();
         
         var user = CreateUser(userId, "Admin");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["organizationId"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["organizationId"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationAdminHandler(httpContextAccessor, dbContext);
@@ -218,7 +218,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["organizationId"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["organizationId"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationAdminHandler(httpContextAccessor, dbContext);
@@ -255,7 +255,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["organizationId"] = orgId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["organizationId"] = orgId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new OrganizationAdminHandler(httpContextAccessor, dbContext);
@@ -278,7 +278,7 @@ public class AuthorizationHandlerTests
         var proposalId = Guid.NewGuid();
         
         var user = CreateUser(userId, "Admin");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["proposalId"] = proposalId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["proposalId"] = proposalId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new ProposalManagerHandler(httpContextAccessor, dbContext);
@@ -317,7 +317,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["proposalId"] = proposalId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["proposalId"] = proposalId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new ProposalManagerHandler(httpContextAccessor, dbContext);
@@ -366,7 +366,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["proposalId"] = proposalId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["proposalId"] = proposalId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new ProposalManagerHandler(httpContextAccessor, dbContext);
@@ -415,7 +415,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["proposalId"] = proposalId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["proposalId"] = proposalId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new ProposalManagerHandler(httpContextAccessor, dbContext);
@@ -463,7 +463,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["proposalId"] = proposalId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["proposalId"] = proposalId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new ProposalMemberHandler(httpContextAccessor, dbContext);
@@ -502,7 +502,7 @@ public class AuthorizationHandlerTests
         await dbContext.SaveChangesAsync();
         
         var user = CreateUser(userId, "User");
-        var httpContext = CreateHttpContext(user, new Dictionary<string, object> { ["proposalId"] = proposalId.ToString() });
+        var httpContext = CreateHttpContext(user, new Dictionary<string, object?> { ["proposalId"] = proposalId.ToString() });
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         
         var handler = new ProposalMemberHandler(httpContextAccessor, dbContext);
