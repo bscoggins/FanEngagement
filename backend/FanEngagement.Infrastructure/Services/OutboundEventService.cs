@@ -43,6 +43,7 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
             Status = OutboundEventStatus.Pending,
             AttemptCount = 0,
             LastAttemptAt = null,
+            LastError = null,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -55,7 +56,9 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
     public async Task<IReadOnlyList<OutboundEventDto>> GetAllAsync(
         Guid organizationId, 
         OutboundEventStatus? status = null, 
-        string? eventType = null, 
+        string? eventType = null,
+        DateTimeOffset? fromDate = null,
+        DateTimeOffset? toDate = null,
         CancellationToken cancellationToken = default)
     {
         var query = dbContext.OutboundEvents
@@ -70,6 +73,16 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
         if (!string.IsNullOrWhiteSpace(eventType))
         {
             query = query.Where(e => e.EventType == eventType);
+        }
+
+        if (fromDate.HasValue)
+        {
+            query = query.Where(e => e.CreatedAt >= fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            query = query.Where(e => e.CreatedAt <= toDate.Value);
         }
 
         var events = await query
@@ -105,6 +118,7 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
         }
 
         outboundEvent.Status = OutboundEventStatus.Pending;
+        outboundEvent.LastError = null;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
@@ -120,6 +134,7 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
             outboundEvent.Status,
             outboundEvent.AttemptCount,
             outboundEvent.LastAttemptAt,
+            outboundEvent.LastError,
             outboundEvent.CreatedAt
         );
     }
@@ -135,6 +150,7 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
             outboundEvent.Status,
             outboundEvent.AttemptCount,
             outboundEvent.LastAttemptAt,
+            outboundEvent.LastError,
             outboundEvent.CreatedAt
         );
     }

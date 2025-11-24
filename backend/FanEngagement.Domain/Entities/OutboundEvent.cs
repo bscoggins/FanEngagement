@@ -24,6 +24,9 @@ public class OutboundEvent
     
     public DateTimeOffset? LastAttemptAt { get; set; }
     
+    [MaxLength(1000)]
+    public string? LastError { get; set; }
+    
     public DateTimeOffset CreatedAt { get; set; }
 
     public Organization? Organization { get; set; }

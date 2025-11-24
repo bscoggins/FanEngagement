@@ -171,8 +171,64 @@ export const AdminOrganizationEditPage: React.FC = () => {
       <h1>Edit Organization</h1>
 
       {organization && (
-        <div style={{ marginBottom: '1.5rem', color: '#666', fontSize: '0.9rem' }}>
-          <div>Created: {new Date(organization.createdAt).toLocaleString()}</div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+            <div>Created: {new Date(organization.createdAt).toLocaleString()}</div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Link
+              to={`/admin/organizations/${orgId}/memberships`}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f0f0f0',
+                color: '#333',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+              }}
+            >
+              Memberships
+            </Link>
+            <Link
+              to={`/admin/organizations/${orgId}/share-types`}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f0f0f0',
+                color: '#333',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+              }}
+            >
+              Share Types
+            </Link>
+            <Link
+              to={`/admin/organizations/${orgId}/proposals`}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f0f0f0',
+                color: '#333',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+              }}
+            >
+              Proposals
+            </Link>
+            <Link
+              to={`/admin/organizations/${orgId}/webhook-events`}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f0f0f0',
+                color: '#333',
+                borderRadius: '4px',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+              }}
+            >
+              Webhook Events
+            </Link>
+          </div>
         </div>
       )}
 

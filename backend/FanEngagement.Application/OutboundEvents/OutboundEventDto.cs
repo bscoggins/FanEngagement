@@ -10,5 +10,6 @@ public record OutboundEventDto(
     OutboundEventStatus Status,
     int AttemptCount,
     DateTimeOffset? LastAttemptAt,
+    string? LastError,
     DateTimeOffset CreatedAt
 );

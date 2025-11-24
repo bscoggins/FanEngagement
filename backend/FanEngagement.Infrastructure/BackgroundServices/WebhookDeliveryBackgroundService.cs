@@ -28,6 +28,12 @@ public class WebhookDeliveryBackgroundService(
     private const int MaxRetries = 3;
     private const int PollingIntervalSeconds = 30;
     private const int MaxEventsPerBatch = 100;
+    private const int MaxErrorLength = 1000;
+
+    /// <summary>
+    /// Result of a webhook delivery attempt.
+    /// </summary>
+    private record DeliveryResult(bool Success, string? Error);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -162,24 +168,29 @@ public class WebhookDeliveryBackgroundService(
 
         var httpClient = httpClientFactory.CreateClient();
         var allSucceeded = true;
+        var errors = new List<string>();
 
         foreach (var endpoint in matchingEndpoints)
         {
             try
             {
-                var success = await DeliverToEndpointAsync(
+                var result = await DeliverToEndpointAsync(
                     httpClient,
                     endpoint,
                     outboundEvent,
                     cancellationToken);
 
-                if (!success)
+                if (!result.Success)
                 {
                     allSucceeded = false;
+                    if (!string.IsNullOrEmpty(result.Error))
+                    {
+                        errors.Add(result.Error);
+                    }
                 }
                 
                 // Record metrics for each delivery attempt
-                metrics?.RecordWebhookDelivery(success, outboundEvent.EventType, outboundEvent.OrganizationId);
+                metrics?.RecordWebhookDelivery(result.Success, outboundEvent.EventType, outboundEvent.OrganizationId);
             }
             catch (HttpRequestException ex)
             {
@@ -191,6 +202,7 @@ public class WebhookDeliveryBackgroundService(
                     endpoint.Id,
                     outboundEvent.OrganizationId);
                 allSucceeded = false;
+                errors.Add($"HTTP error: {ex.Message}");
                 metrics?.RecordWebhookDelivery(false, outboundEvent.EventType, outboundEvent.OrganizationId);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -207,6 +219,7 @@ public class WebhookDeliveryBackgroundService(
                     endpoint.Id,
                     outboundEvent.OrganizationId);
                 allSucceeded = false;
+                errors.Add($"Unexpected error: {ex.Message}");
                 metrics?.RecordWebhookDelivery(false, outboundEvent.EventType, outboundEvent.OrganizationId);
             }
         }
@@ -218,35 +231,45 @@ public class WebhookDeliveryBackgroundService(
         if (allSucceeded)
         {
             outboundEvent.Status = OutboundEventStatus.Delivered;
+            outboundEvent.LastError = null;
             logger.LogInformation(
                 "Successfully delivered event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to all endpoints",
                 outboundEvent.Id,
                 outboundEvent.EventType,
                 outboundEvent.OrganizationId);
         }
-        else if (outboundEvent.AttemptCount >= MaxRetries)
-        {
-            outboundEvent.Status = OutboundEventStatus.Failed;
-            logger.LogWarning(
-                "Event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) failed after {AttemptCount} attempts",
-                outboundEvent.Id,
-                outboundEvent.EventType,
-                outboundEvent.OrganizationId,
-                outboundEvent.AttemptCount);
-        }
         else
         {
-            logger.LogWarning(
-                "Event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) delivery partially failed, will retry (attempt {AttemptCount}/{MaxRetries})",
-                outboundEvent.Id,
-                outboundEvent.EventType,
-                outboundEvent.OrganizationId,
-                outboundEvent.AttemptCount,
-                MaxRetries);
+            // Combine errors and truncate if necessary
+            var combinedError = string.Join("; ", errors);
+            outboundEvent.LastError = TruncateError(combinedError);
+
+            if (outboundEvent.AttemptCount >= MaxRetries)
+            {
+                outboundEvent.Status = OutboundEventStatus.Failed;
+                logger.LogWarning(
+                    "Event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) failed after {AttemptCount} attempts. LastError: {LastError}",
+                    outboundEvent.Id,
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId,
+                    outboundEvent.AttemptCount,
+                    outboundEvent.LastError);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) delivery partially failed, will retry (attempt {AttemptCount}/{MaxRetries}). LastError: {LastError}",
+                    outboundEvent.Id,
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId,
+                    outboundEvent.AttemptCount,
+                    MaxRetries,
+                    outboundEvent.LastError);
+            }
         }
     }
 
-    private async Task<bool> DeliverToEndpointAsync(
+    private async Task<DeliveryResult> DeliverToEndpointAsync(
         HttpClient httpClient,
         Domain.Entities.WebhookEndpoint endpoint,
         Domain.Entities.OutboundEvent outboundEvent,
@@ -285,23 +308,26 @@ public class WebhookDeliveryBackgroundService(
                     endpoint.Url,
                     endpoint.Id,
                     (int)response.StatusCode);
-                return true;
+                return new DeliveryResult(true, null);
             }
             else
             {
+                var error = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase} from {endpoint.Url}";
                 logger.LogWarning(
-                    "Failed to deliver event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId}). Status: {StatusCode}",
+                    "Failed to deliver event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId}). Status: {StatusCode}, ReasonPhrase: {ReasonPhrase}",
                     outboundEvent.Id,
                     outboundEvent.EventType,
                     outboundEvent.OrganizationId,
                     endpoint.Url,
                     endpoint.Id,
-                    (int)response.StatusCode);
-                return false;
+                    (int)response.StatusCode,
+                    response.ReasonPhrase);
+                return new DeliveryResult(false, error);
             }
         }
         catch (HttpRequestException ex)
         {
+            var error = $"HTTP error: {ex.Message}";
             logger.LogError(
                 ex,
                 "HTTP error delivering event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId})",
@@ -310,7 +336,21 @@ public class WebhookDeliveryBackgroundService(
                 outboundEvent.OrganizationId,
                 endpoint.Url,
                 endpoint.Id);
-            return false;
+            return new DeliveryResult(false, error);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            // Request timeout (not application cancellation)
+            var error = $"Request timeout to {endpoint.Url}";
+            logger.LogWarning(
+                ex,
+                "Request timeout delivering event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId})",
+                outboundEvent.Id,
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId,
+                endpoint.Url,
+                endpoint.Id);
+            return new DeliveryResult(false, error);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -321,10 +361,11 @@ public class WebhookDeliveryBackgroundService(
                 outboundEvent.OrganizationId,
                 endpoint.Url,
                 endpoint.Id);
-            return false;
+            return new DeliveryResult(false, "Operation cancelled");
         }
         catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
         {
+            var error = $"Unexpected error: {ex.Message}";
             logger.LogError(
                 ex,
                 "Unexpected error delivering event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId})",
@@ -333,7 +374,7 @@ public class WebhookDeliveryBackgroundService(
                 outboundEvent.OrganizationId,
                 endpoint.Url,
                 endpoint.Id);
-            return false;
+            return new DeliveryResult(false, error);
         }
     }
 
@@ -345,5 +386,15 @@ public class WebhookDeliveryBackgroundService(
         using var hmac = new HMACSHA256(keyBytes);
         var hashBytes = hmac.ComputeHash(payloadBytes);
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
+
+    private static string TruncateError(string error)
+    {
+        if (string.IsNullOrEmpty(error))
+        {
+            return error;
+        }
+
+        return error.Length <= MaxErrorLength ? error : error[..MaxErrorLength];
     }
 }

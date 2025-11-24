@@ -234,3 +234,22 @@ export interface ShareBalance {
   balance: number;
   updatedAt: string;
 }
+
+// Outbound Event types
+export type OutboundEventStatus = 'Pending' | 'Delivered' | 'Failed';
+
+export interface OutboundEvent {
+  id: string;
+  organizationId: string;
+  webhookEndpointId?: string;
+  eventType: string;
+  status: OutboundEventStatus;
+  attemptCount: number;
+  lastAttemptAt?: string;
+  lastError?: string;
+  createdAt: string;
+}
+
+export interface OutboundEventDetails extends OutboundEvent {
+  payload: string;
+}
