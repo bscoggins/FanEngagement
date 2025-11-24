@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { proposalsApi } from '../api/proposalsApi';
+import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
+import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
+import { QuorumInfo } from '../components/QuorumInfo';
+import { parseApiError } from '../utils/errorUtils';
 import type {
   ProposalDetails,
   UpdateProposalRequest,
   AddProposalOptionRequest,
   ProposalResults,
-  ProposalStatus,
 } from '../types/api';
 
 export const AdminProposalDetailPage: React.FC = () => {
@@ -156,12 +159,46 @@ export const AdminProposalDetailPage: React.FC = () => {
       await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to close proposal:', err);
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { Error?: string } } };
-        setError(axiosError.response?.data?.Error || 'Failed to close proposal');
-      } else {
-        setError('Failed to close proposal. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    }
+  };
+
+  const handleOpenProposal = async () => {
+    if (!proposalId) return;
+    
+    if (!confirm('Are you sure you want to open this proposal for voting?')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await proposalsApi.open(proposalId);
+      setSuccessMessage('Proposal opened successfully');
+      await refetchProposal();
+    } catch (err: unknown) {
+      console.error('Failed to open proposal:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    }
+  };
+
+  const handleFinalizeProposal = async () => {
+    if (!proposalId) return;
+    
+    if (!confirm('Are you sure you want to finalize this proposal? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await proposalsApi.finalize(proposalId);
+      setSuccessMessage('Proposal finalized successfully');
+      await refetchProposal();
+    } catch (err: unknown) {
+      console.error('Failed to finalize proposal:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
     }
   };
 
@@ -188,12 +225,8 @@ export const AdminProposalDetailPage: React.FC = () => {
       await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to add option:', err);
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { Error?: string } } };
-        setError(axiosError.response?.data?.Error || 'Failed to add option');
-      } else {
-        setError('Failed to add option. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
     } finally {
       setIsAddingOption(false);
     }
@@ -213,12 +246,8 @@ export const AdminProposalDetailPage: React.FC = () => {
       await refetchProposal();
     } catch (err: unknown) {
       console.error('Failed to delete option:', err);
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { Error?: string } } };
-        setError(axiosError.response?.data?.Error || 'Failed to delete option');
-      } else {
-        setError('Failed to delete option. Please try again.');
-      }
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
     }
   };
 
@@ -227,25 +256,12 @@ export const AdminProposalDetailPage: React.FC = () => {
     return new Date(dateStr).toLocaleString();
   };
 
-  const getStatusBadgeColor = (status: ProposalStatus) => {
-    switch (status) {
-      case 'Draft':
-        return '#6c757d';
-      case 'Open':
-        return '#28a745';
-      case 'Closed':
-        return '#dc3545';
-      case 'Finalized':
-        return '#007bff';
-      default:
-        return '#6c757d';
-    }
-  };
-
   const canEdit = proposal && (proposal.status === 'Draft' || proposal.status === 'Open');
-  const canClose = proposal && (proposal.status === 'Draft' || proposal.status === 'Open');
+  const canOpen = proposal && proposal.status === 'Draft';
+  const canClose = proposal && proposal.status === 'Open';
+  const canFinalize = proposal && proposal.status === 'Closed';
   const canDeleteOptions = proposal && proposal.status === 'Draft'; // Only Draft proposals can have options deleted
-  const showResults = proposal && (proposal.status === 'Closed' || proposal.status === 'Finalized');
+  const showResults = proposal && (proposal.status === 'Open' || proposal.status === 'Closed' || proposal.status === 'Finalized');
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -317,18 +333,15 @@ export const AdminProposalDetailPage: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
             <div>
               <h1 style={{ marginTop: 0, marginBottom: '0.5rem' }}>{proposal.title}</h1>
-              <span style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '4px',
-                backgroundColor: getStatusBadgeColor(proposal.status),
-                color: 'white',
-                fontSize: '0.9rem',
-                fontWeight: 'bold',
-              }}>
-                {proposal.status}
-              </span>
+              <ProposalStatusBadge status={proposal.status} />
+              <ProposalTimingInfo
+                status={proposal.status}
+                startAt={proposal.startAt}
+                endAt={proposal.endAt}
+                style={{ marginTop: '0.5rem' }}
+              />
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {canEdit && (
                 <button
                   onClick={handleEditClick}
@@ -345,6 +358,22 @@ export const AdminProposalDetailPage: React.FC = () => {
                   Edit
                 </button>
               )}
+              {canOpen && (
+                <button
+                  onClick={handleOpenProposal}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  Open Proposal
+                </button>
+              )}
               {canClose && (
                 <button
                   onClick={handleCloseProposal}
@@ -359,6 +388,22 @@ export const AdminProposalDetailPage: React.FC = () => {
                   }}
                 >
                   Close Proposal
+                </button>
+              )}
+              {canFinalize && (
+                <button
+                  onClick={handleFinalizeProposal}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  Finalize
                 </button>
               )}
             </div>
@@ -382,7 +427,7 @@ export const AdminProposalDetailPage: React.FC = () => {
               <div>{formatDate(proposal.endAt)}</div>
             </div>
             <div>
-              <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Quorum</strong>
+              <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Quorum Requirement</strong>
               <div>
                 {proposal.quorumRequirement !== null && proposal.quorumRequirement !== undefined
                   ? `${proposal.quorumRequirement}%`
@@ -393,6 +438,35 @@ export const AdminProposalDetailPage: React.FC = () => {
               <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Created</strong>
               <div>{formatDate(proposal.createdAt)}</div>
             </div>
+            {proposal.eligibleVotingPowerSnapshot !== undefined && proposal.eligibleVotingPowerSnapshot !== null && (
+              <div>
+                <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Eligible Voting Power</strong>
+                <div>{proposal.eligibleVotingPowerSnapshot.toFixed(2)}</div>
+              </div>
+            )}
+            {proposal.totalVotesCast !== undefined && proposal.totalVotesCast !== null && (
+              <div>
+                <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Total Votes Cast</strong>
+                <div>{proposal.totalVotesCast.toFixed(2)}</div>
+              </div>
+            )}
+            {proposal.quorumMet !== undefined && proposal.quorumMet !== null && (
+              <div>
+                <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Quorum Status</strong>
+                <div style={{ 
+                  color: proposal.quorumMet ? '#28a745' : '#dc3545',
+                  fontWeight: 'bold'
+                }}>
+                  {proposal.quorumMet ? '✓ Met' : '✗ Not Met'}
+                </div>
+              </div>
+            )}
+            {proposal.closedAt && (
+              <div>
+                <strong style={{ display: 'block', color: '#666', marginBottom: '0.25rem' }}>Closed At</strong>
+                <div>{formatDate(proposal.closedAt)}</div>
+              </div>
+            )}
           </div>
 
           {proposal.description && (
@@ -662,6 +736,18 @@ export const AdminProposalDetailPage: React.FC = () => {
         }}>
           <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Results</h2>
           
+          {/* Show Quorum Info for Closed/Finalized proposals */}
+          {(proposal.status === 'Closed' || proposal.status === 'Finalized') && (
+            <QuorumInfo
+              quorumRequirement={proposal.quorumRequirement}
+              quorumMet={proposal.quorumMet}
+              totalVotesCast={proposal.totalVotesCast}
+              eligibleVotingPowerSnapshot={proposal.eligibleVotingPowerSnapshot}
+              eligibleVotingPower={results.eligibleVotingPower}
+              style={{ marginBottom: '1.5rem' }}
+            />
+          )}
+          
           <div style={{ marginBottom: '1.5rem' }}>
             <strong>Total Voting Power:</strong> {results.totalVotingPower.toFixed(2)}
           </div>
@@ -674,19 +760,25 @@ export const AdminProposalDetailPage: React.FC = () => {
                 const percentage = results.totalVotingPower > 0
                   ? (result.totalVotingPower / results.totalVotingPower * 100).toFixed(1)
                   : '0.0';
+                const isWinner = results.winningOptionId === result.optionId;
                 
                 return (
                   <div
                     key={result.optionId}
                     style={{
                       padding: '1rem',
-                      border: '1px solid #dee2e6',
+                      border: isWinner ? '2px solid #28a745' : '1px solid #dee2e6',
                       borderRadius: '4px',
-                      backgroundColor: '#f8f9fa',
+                      backgroundColor: isWinner ? '#f0fff4' : '#f8f9fa',
                     }}
                   >
                     <div style={{ marginBottom: '0.5rem' }}>
                       <strong>{result.optionText}</strong>
+                      {isWinner && (
+                        <span style={{ marginLeft: '0.5rem', color: '#28a745', fontSize: '0.875rem' }}>
+                          🏆 Winner
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem', color: '#666' }}>
                       <span><strong>Votes:</strong> {result.voteCount}</span>
