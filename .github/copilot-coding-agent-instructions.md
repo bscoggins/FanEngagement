@@ -409,6 +409,77 @@ Located in `frontend/src/components/`:
 4. **Add visual indicators** where appropriate (badges, labels)
 5. **Test permission logic** with unit tests using mocked `usePermissions` hook
 
+### Proposal Lifecycle & Governance UX Patterns
+
+> **✅ COMPLETE:** Frontend now provides comprehensive UX for proposal lifecycle, eligibility, and results.
+
+**Reusable Components for Proposals:**
+
+- **`ProposalStatusBadge`**: Displays colored status badge (Draft/Open/Closed/Finalized)
+  - Usage: `<ProposalStatusBadge status={proposal.status} />`
+  - Colors: Draft (gray), Open (green), Closed (red), Finalized (blue)
+
+- **`ProposalTimingInfo`**: Shows relative timing messages ("Opens in 2 hours", "Closes in 3 days", "Currently accepting votes")
+  - Usage: `<ProposalTimingInfo status={proposal.status} startAt={proposal.startAt} endAt={proposal.endAt} />`
+  - Auto-updates messaging based on status and timing
+
+- **`QuorumInfo`**: Displays quorum requirement, status, and voting power metrics
+  - Usage: `<QuorumInfo quorumRequirement={...} quorumMet={...} totalVotesCast={...} eligibleVotingPowerSnapshot={...} />`
+  - Shows: requirement %, eligible voting power, required votes, total votes cast, quorum met status
+
+**Utility Functions (`proposalUtils.ts`):**
+
+- `checkVotingEligibility(status, startAt, endAt, hasVoted, votingPower)`: Returns eligibility status with reason
+- `formatRelativeTime(dateStr)`: Formats dates as relative time ("in 2 hours", "3 days ago")
+- `getProposalTimingMessage(status, startAt, endAt)`: Gets human-readable timing message
+- `isProposalOpenForVoting(status, startAt, endAt)`: Checks if proposal is currently accepting votes
+- `getStatusBadgeColor(status)`: Gets color for status badge
+- `getStatusLabel(status)`: Gets display label for status
+
+**User-Facing Pages (Member Self-Service):**
+
+- **`MyProposalPage`** (`/me/proposals/:proposalId`):
+  - Shows proposal details with status badge and timing
+  - Displays user's voting power and eligibility status
+  - For eligible users: shows radio buttons to select option and "Cast Vote" button
+  - For ineligible users: shows options without voting controls + reason (already voted, no voting power, wrong timing, etc.)
+  - Shows real-time results for Open proposals, final results for Closed/Finalized
+  - Displays winning option with trophy emoji
+  - Shows quorum information for Closed/Finalized proposals
+
+**Admin Pages:**
+
+- **`AdminProposalDetailPage`** (`/admin/organizations/:orgId/proposals/:proposalId`):
+  - Shows lifecycle action buttons based on state:
+    - Draft → "Open Proposal" button (green)
+    - Open → "Close Proposal" button (red)
+    - Closed → "Finalize" button (gray)
+  - Displays governance metadata: eligible voting power snapshot, total votes cast, quorum met status, closed at, winning option
+  - Shows proposal timing with `ProposalTimingInfo`
+  - Displays quorum information with `QuorumInfo` component for Closed/Finalized proposals
+
+- **`AdminOrganizationProposalsPage`** (`/admin/organizations/:orgId/proposals`):
+  - Lists proposals with status badges
+  - Shows timing info for each proposal
+  - Displays quorum met status for Closed/Finalized proposals
+
+**Testing Proposals:**
+
+When testing proposal pages:
+- Use future dates for `startAt` (e.g., `2020-01-15`) and far future dates for `endAt` (e.g., `2099-02-15`) to ensure proposals are within voting period
+- Mock `shareBalancesApi.getBalances()` to provide user voting power
+- Mock `proposalsApi.getResults()` for proposals showing results (Open/Closed/Finalized status)
+- Test eligibility scenarios: eligible to vote, already voted, no voting power, wrong timing
+
+**When Adding/Modifying Proposal Features:**
+
+1. **Use existing components** (`ProposalStatusBadge`, `ProposalTimingInfo`, `QuorumInfo`) for consistency
+2. **Check eligibility** using `checkVotingEligibility()` before showing voting UI
+3. **Show results** for Open/Closed/Finalized proposals (per architecture docs)
+4. **Display governance fields** from backend: `winningOptionId`, `quorumMet`, `totalVotesCast`, `eligibleVotingPowerSnapshot`, `closedAt`
+5. **Handle timing** properly: proposals can have `startAt` (not yet started) and `endAt` (voting ended) constraints
+6. **Respect lifecycle** state machine: Draft → Open → Closed → Finalized (no skipping states)
+
 ## How To Ask Copilot Agent To Work
 
 Use the GitHub Copilot coding agent by adding a comment containing the hashtag below to a new or existing issue, or by opening a conversation and concluding with the hashtag. The agent will create a branch, implement changes, and open a PR.

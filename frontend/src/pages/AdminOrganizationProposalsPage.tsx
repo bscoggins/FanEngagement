@@ -5,6 +5,8 @@ import { useAuth } from '../auth/AuthContext';
 import { organizationsApi } from '../api/organizationsApi';
 import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
+import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
+import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import type { Proposal, Organization, CreateProposalRequest, ProposalStatus, PagedResult } from '../types/api';
 
 export const AdminOrganizationProposalsPage: React.FC = () => {
@@ -170,21 +172,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleString();
-  };
-
-  const getStatusBadgeColor = (status: ProposalStatus) => {
-    switch (status) {
-      case 'Draft':
-        return '#6c757d';
-      case 'Open':
-        return '#28a745';
-      case 'Closed':
-        return '#dc3545';
-      case 'Finalized':
-        return '#007bff';
-      default:
-        return '#6c757d';
-    }
   };
 
   if (isLoading) {
@@ -494,28 +481,32 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 marginBottom: '1rem'
               }}>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ marginTop: 0, marginBottom: '0.5rem' }}>{proposal.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <h3 style={{ marginTop: 0, marginBottom: 0 }}>{proposal.title}</h3>
+                    <ProposalStatusBadge status={proposal.status} />
+                  </div>
                   {proposal.description && (
-                    <p style={{ color: '#666', marginBottom: '0.5rem' }}>{proposal.description}</p>
+                    <p style={{ color: '#666', marginBottom: '0.5rem', marginTop: '0.5rem' }}>{proposal.description}</p>
                   )}
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', color: '#666' }}>
-                    <span>
-                      <strong>Status:</strong>{' '}
-                      <span style={{
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        backgroundColor: getStatusBadgeColor(proposal.status),
-                        color: 'white',
-                        fontSize: '0.85rem',
-                        fontWeight: 'bold',
-                      }}>
-                        {proposal.status}
-                      </span>
-                    </span>
+                  <ProposalTimingInfo
+                    status={proposal.status}
+                    startAt={proposal.startAt}
+                    endAt={proposal.endAt}
+                    style={{ marginBottom: '0.5rem' }}
+                  />
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.875rem', color: '#6c757d' }}>
                     <span><strong>Start:</strong> {formatDate(proposal.startAt)}</span>
                     <span><strong>End:</strong> {formatDate(proposal.endAt)}</span>
                     {proposal.quorumRequirement !== null && proposal.quorumRequirement !== undefined && (
                       <span><strong>Quorum:</strong> {proposal.quorumRequirement}%</span>
+                    )}
+                    {proposal.quorumMet !== undefined && proposal.quorumMet !== null && (
+                      <span style={{ 
+                        color: proposal.quorumMet ? '#28a745' : '#dc3545',
+                        fontWeight: 'bold'
+                      }}>
+                        {proposal.quorumMet ? '✓ Quorum Met' : '✗ Quorum Not Met'}
+                      </span>
                     )}
                   </div>
                 </div>

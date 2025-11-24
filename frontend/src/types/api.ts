@@ -134,6 +134,12 @@ export interface Proposal {
   quorumRequirement?: number;
   createdByUserId: string;
   createdAt: string;
+  // Governance result fields (populated when closed/finalized)
+  winningOptionId?: string;
+  quorumMet?: boolean;
+  totalVotesCast?: number;
+  closedAt?: string;
+  eligibleVotingPowerSnapshot?: number;
 }
 
 export interface ProposalOption {
@@ -155,6 +161,12 @@ export interface ProposalDetails {
   createdByUserId: string;
   createdAt: string;
   options: ProposalOption[];
+  // Governance result fields (populated when closed/finalized)
+  winningOptionId?: string;
+  quorumMet?: boolean;
+  totalVotesCast?: number;
+  closedAt?: string;
+  eligibleVotingPowerSnapshot?: number;
 }
 
 export interface CreateProposalRequest {
@@ -187,6 +199,9 @@ export interface ProposalResults {
   proposalId: string;
   optionResults: OptionResult[];
   totalVotingPower: number;
+  quorumMet?: boolean;
+  eligibleVotingPower?: number;
+  winningOptionId?: string;
 }
 
 export interface Vote {

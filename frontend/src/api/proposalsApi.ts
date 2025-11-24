@@ -72,10 +72,26 @@ export const proposalsApi = {
   },
 
   /**
+   * Open a proposal (transitions from Draft to Open status)
+   */
+  async open(proposalId: string): Promise<Proposal> {
+    const response = await apiClient.post(`/proposals/${proposalId}/open`);
+    return response.data;
+  },
+
+  /**
    * Close a proposal (transitions to Closed status)
    */
   async close(proposalId: string): Promise<Proposal> {
     const response = await apiClient.post(`/proposals/${proposalId}/close`);
+    return response.data;
+  },
+
+  /**
+   * Finalize a proposal (transitions to Finalized status)
+   */
+  async finalize(proposalId: string): Promise<Proposal> {
+    const response = await apiClient.post(`/proposals/${proposalId}/finalize`);
     return response.data;
   },
 
