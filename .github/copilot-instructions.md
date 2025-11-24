@@ -445,6 +445,65 @@ Backend uses policy-based authorization with custom handlers:
 
 For the complete current vs. intended permissions matrix and security gap analysis, see the **Roles & Permissions** section in `docs/architecture.md`.
 
+### Proposal Lifecycle & Governance UX
+
+The frontend provides comprehensive UX for proposal lifecycle, eligibility checking, and results display using reusable components and utility functions.
+
+#### Reusable Components
+
+**ProposalStatusBadge** (`frontend/src/components/ProposalStatusBadge.tsx`)
+- Displays colored badge for proposal status
+- Usage: `<ProposalStatusBadge status={proposal.status} />`
+- Colors: Draft (gray), Open (green), Closed (red), Finalized (blue)
+
+**ProposalTimingInfo** (`frontend/src/components/ProposalTimingInfo.tsx`)
+- Shows relative timing messages ("Opens in 2 hours", "Closes in 3 days", "Currently accepting votes")
+- Usage: `<ProposalTimingInfo status={proposal.status} startAt={proposal.startAt} endAt={proposal.endAt} />`
+- Auto-colors based on status: green for Open, red for Closed
+
+**QuorumInfo** (`frontend/src/components/QuorumInfo.tsx`)
+- Displays quorum requirement, eligible voting power, required votes, total votes cast, and quorum met status
+- Usage: `<QuorumInfo quorumRequirement={...} quorumMet={...} totalVotesCast={...} eligibleVotingPowerSnapshot={...} />`
+- Shows success/error styling based on whether quorum was met
+
+#### Utility Functions (`frontend/src/utils/proposalUtils.ts`)
+
+- **`checkVotingEligibility(status, startAt, endAt, hasVoted, votingPower)`**: Returns `{ eligible: boolean, reason?: string }` with full eligibility check
+- **`formatRelativeTime(dateStr)`**: Converts dates to relative format ("in 2 hours", "3 days ago")
+- **`getProposalTimingMessage(status, startAt, endAt)`**: Gets contextual timing message based on proposal state
+- **`isProposalOpenForVoting(status, startAt, endAt)`**: Boolean check if proposal is currently accepting votes
+- **`getStatusBadgeColor(status)`** and **`getStatusLabel(status)`**: Helper functions for status display
+
+#### Page Patterns
+
+**MyProposalPage** (`/me/proposals/:proposalId`) - Member Self-Service
+- Fetches proposal, user's share balances (for voting power), existing vote, and results
+- Shows eligibility panel with user's voting power and eligibility reason if not eligible
+- Displays voting UI (radio buttons + "Cast Vote" button) only when eligible
+- Shows results for Open/Closed/Finalized proposals with winning option highlighted
+- Uses `checkVotingEligibility()` to determine if voting UI should be shown
+
+**AdminProposalDetailPage** (`/admin/organizations/:orgId/proposals/:proposalId`)
+- Shows lifecycle action buttons: "Open Proposal" (Draft), "Close Proposal" (Open), "Finalize" (Closed)
+- Displays governance metadata: eligible voting power snapshot, total votes cast, quorum met, closed at, winning option
+- Uses `ProposalTimingInfo` for relative timing display
+- Uses `QuorumInfo` to show quorum information for Closed/Finalized proposals
+- Shows results with winning option highlighted
+
+**AdminOrganizationProposalsPage** (`/admin/organizations/:orgId/proposals`)
+- Lists proposals with `ProposalStatusBadge` and `ProposalTimingInfo` components
+- Shows quorum met status for Closed/Finalized proposals
+
+#### When Working with Proposals
+
+1. **Always use the reusable components** for consistency across pages
+2. **Check eligibility** before showing voting controls - use `checkVotingEligibility()` utility
+3. **Show results** for Open/Closed/Finalized proposals (not for Draft)
+4. **Display governance fields** from backend: `winningOptionId`, `quorumMet`, `totalVotesCast`, `eligibleVotingPowerSnapshot`, `closedAt`
+5. **Handle timing properly**: proposals can have `startAt` (not yet open) and `endAt` (voting closed) constraints
+6. **Respect lifecycle** state machine: Draft → Open → Closed → Finalized (no skipping states)
+7. **Test with appropriate dates**: use past `startAt` and future `endAt` for testing Open proposals
+
 ### Current Entities
 
 - `Organization`: Top-level organization entity
@@ -494,7 +553,9 @@ For the complete current vs. intended permissions matrix and security gap analys
     - `GET /organizations/{organizationId}/proposals` → List proposals by organization
     - `GET /proposals/{proposalId}` → Get proposal by ID
     - `PUT /proposals/{proposalId}` → Update proposal
-    - `POST /proposals/{proposalId}/close` → Close proposal
+    - `POST /proposals/{proposalId}/open` → Open proposal (transitions Draft → Open, captures voting power snapshot)
+    - `POST /proposals/{proposalId}/close` → Close proposal (transitions Open → Closed, computes results)
+    - `POST /proposals/{proposalId}/finalize` → Finalize proposal (transitions Closed → Finalized, terminal state)
     - `POST /proposals/{proposalId}/options` → Add proposal option
     - `DELETE /proposals/{proposalId}/options/{optionId}` → Delete proposal option
     - `POST /proposals/{proposalId}/votes` → Cast vote
