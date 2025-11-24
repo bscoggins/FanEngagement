@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using FanEngagement.Domain.Enums;
+using FanEngagement.Infrastructure.Metrics;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,6 +67,7 @@ public class WebhookDeliveryBackgroundService(
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+        var metrics = scope.ServiceProvider.GetService<FanEngagementMetrics>();
 
         // Get pending events - Note: In production with multiple workers, consider using
         // database-level locking (e.g., FOR UPDATE SKIP LOCKED) to prevent duplicate processing
@@ -80,23 +82,35 @@ public class WebhookDeliveryBackgroundService(
             return;
         }
 
-        logger.LogInformation("Processing {Count} pending webhook events", pendingEvents.Count);
+        logger.LogInformation(
+            "Processing {Count} pending webhook events",
+            pendingEvents.Count);
 
         foreach (var outboundEvent in pendingEvents)
         {
             try
             {
-                await ProcessEventAsync(dbContext, outboundEvent, cancellationToken);
+                await ProcessEventAsync(dbContext, outboundEvent, metrics, cancellationToken);
                 // Save changes after each event to isolate failures
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (HttpRequestException ex)
             {
-                logger.LogError(ex, "HTTP error processing event {EventId}", outboundEvent.Id);
+                logger.LogError(
+                    ex,
+                    "HTTP error processing event {EventId} (EventType: {EventType}, OrgId: {OrganizationId})",
+                    outboundEvent.Id,
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId);
             }
             catch (DbUpdateException ex)
             {
-                logger.LogError(ex, "Database update error processing event {EventId}", outboundEvent.Id);
+                logger.LogError(
+                    ex,
+                    "Database update error processing event {EventId} (EventType: {EventType}, OrgId: {OrganizationId})",
+                    outboundEvent.Id,
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -105,7 +119,12 @@ public class WebhookDeliveryBackgroundService(
             }
             catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
             {
-                logger.LogError(ex, "Unexpected error processing event {EventId}", outboundEvent.Id);
+                logger.LogError(
+                    ex,
+                    "Unexpected error processing event {EventId} (EventType: {EventType}, OrgId: {OrganizationId})",
+                    outboundEvent.Id,
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId);
             }
         }
     }
@@ -113,6 +132,7 @@ public class WebhookDeliveryBackgroundService(
     private async Task ProcessEventAsync(
         FanEngagementDbContext dbContext,
         Domain.Entities.OutboundEvent outboundEvent,
+        FanEngagementMetrics? metrics,
         CancellationToken cancellationToken)
     {
         // Find active webhook endpoints for this organization subscribed to this event type
@@ -130,9 +150,10 @@ public class WebhookDeliveryBackgroundService(
         if (matchingEndpoints.Count == 0)
         {
             logger.LogWarning(
-                "No active webhook endpoints found for organization {OrganizationId} and event type {EventType}. Event remains Pending.",
+                "No active webhook endpoints found for organization {OrganizationId} and event type {EventType} (EventId: {EventId}). Event remains Pending.",
                 outboundEvent.OrganizationId,
-                outboundEvent.EventType);
+                outboundEvent.EventType,
+                outboundEvent.Id);
             
             // Keep event as Pending to allow for future webhook subscriptions
             // This prevents losing events when endpoints are added later
@@ -156,15 +177,21 @@ public class WebhookDeliveryBackgroundService(
                 {
                     allSucceeded = false;
                 }
+                
+                // Record metrics for each delivery attempt
+                metrics?.RecordWebhookDelivery(success, outboundEvent.EventType, outboundEvent.OrganizationId);
             }
             catch (HttpRequestException ex)
             {
                 logger.LogError(
                     ex,
-                    "HTTP error delivering event {EventId} to endpoint {EndpointId}",
+                    "HTTP error delivering event {EventId} (EventType: {EventType}) to endpoint {EndpointId} (OrgId: {OrganizationId})",
                     outboundEvent.Id,
-                    endpoint.Id);
+                    outboundEvent.EventType,
+                    endpoint.Id,
+                    outboundEvent.OrganizationId);
                 allSucceeded = false;
+                metrics?.RecordWebhookDelivery(false, outboundEvent.EventType, outboundEvent.OrganizationId);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -174,10 +201,13 @@ public class WebhookDeliveryBackgroundService(
             {
                 logger.LogError(
                     ex,
-                    "Unexpected error delivering event {EventId} to endpoint {EndpointId}",
+                    "Unexpected error delivering event {EventId} (EventType: {EventType}) to endpoint {EndpointId} (OrgId: {OrganizationId})",
                     outboundEvent.Id,
-                    endpoint.Id);
+                    outboundEvent.EventType,
+                    endpoint.Id,
+                    outboundEvent.OrganizationId);
                 allSucceeded = false;
+                metrics?.RecordWebhookDelivery(false, outboundEvent.EventType, outboundEvent.OrganizationId);
             }
         }
 
@@ -189,22 +219,28 @@ public class WebhookDeliveryBackgroundService(
         {
             outboundEvent.Status = OutboundEventStatus.Delivered;
             logger.LogInformation(
-                "Successfully delivered event {EventId} to all endpoints",
-                outboundEvent.Id);
+                "Successfully delivered event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to all endpoints",
+                outboundEvent.Id,
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId);
         }
         else if (outboundEvent.AttemptCount >= MaxRetries)
         {
             outboundEvent.Status = OutboundEventStatus.Failed;
             logger.LogWarning(
-                "Event {EventId} failed after {AttemptCount} attempts",
+                "Event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) failed after {AttemptCount} attempts",
                 outboundEvent.Id,
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId,
                 outboundEvent.AttemptCount);
         }
         else
         {
             logger.LogWarning(
-                "Event {EventId} delivery partially failed, will retry (attempt {AttemptCount}/{MaxRetries})",
+                "Event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) delivery partially failed, will retry (attempt {AttemptCount}/{MaxRetries})",
                 outboundEvent.Id,
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId,
                 outboundEvent.AttemptCount,
                 MaxRetries);
         }
@@ -242,18 +278,25 @@ public class WebhookDeliveryBackgroundService(
             if (response.IsSuccessStatusCode)
             {
                 logger.LogInformation(
-                    "Successfully delivered event {EventId} to endpoint {EndpointUrl}",
+                    "Successfully delivered event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId}), Status: {StatusCode}",
                     outboundEvent.Id,
-                    endpoint.Url);
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId,
+                    endpoint.Url,
+                    endpoint.Id,
+                    (int)response.StatusCode);
                 return true;
             }
             else
             {
                 logger.LogWarning(
-                    "Failed to deliver event {EventId} to endpoint {EndpointUrl}. Status: {StatusCode}",
+                    "Failed to deliver event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId}). Status: {StatusCode}",
                     outboundEvent.Id,
+                    outboundEvent.EventType,
+                    outboundEvent.OrganizationId,
                     endpoint.Url,
-                    response.StatusCode);
+                    endpoint.Id,
+                    (int)response.StatusCode);
                 return false;
             }
         }
@@ -261,26 +304,35 @@ public class WebhookDeliveryBackgroundService(
         {
             logger.LogError(
                 ex,
-                "HTTP error delivering event {EventId} to endpoint {EndpointUrl}",
+                "HTTP error delivering event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId})",
                 outboundEvent.Id,
-                endpoint.Url);
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId,
+                endpoint.Url,
+                endpoint.Id);
             return false;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(
-                "Delivery of event {EventId} to endpoint {EndpointUrl} was cancelled",
+                "Delivery of event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId}) was cancelled",
                 outboundEvent.Id,
-                endpoint.Url);
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId,
+                endpoint.Url,
+                endpoint.Id);
             return false;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException && ex is not StackOverflowException)
         {
             logger.LogError(
                 ex,
-                "Unexpected error delivering event {EventId} to endpoint {EndpointUrl}",
+                "Unexpected error delivering event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId})",
                 outboundEvent.Id,
-                endpoint.Url);
+                outboundEvent.EventType,
+                outboundEvent.OrganizationId,
+                endpoint.Url,
+                endpoint.Id);
             return false;
         }
     }

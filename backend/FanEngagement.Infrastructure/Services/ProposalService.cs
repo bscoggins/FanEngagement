@@ -5,12 +5,18 @@ using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Domain.Services;
+using FanEngagement.Infrastructure.Metrics;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventService outboundEventService) : IProposalService
+public class ProposalService(
+    FanEngagementDbContext dbContext, 
+    IOutboundEventService outboundEventService,
+    FanEngagementMetrics metrics,
+    ILogger<ProposalService> logger) : IProposalService
 {
     public async Task<ProposalDto> CreateAsync(Guid organizationId, CreateProposalRequest request, CancellationToken cancellationToken = default)
     {
@@ -187,14 +193,22 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
 
         if (proposal is null)
         {
+            logger.LogWarning("Proposal {ProposalId} not found for opening", proposalId);
             return null;
         }
+
+        var oldStatus = proposal.Status;
 
         // Use domain service for validation
         var governanceService = new ProposalGovernanceService();
         var validation = governanceService.ValidateCanOpen(proposal);
         if (!validation.IsValid)
         {
+            logger.LogWarning(
+                "Cannot open proposal {ProposalId} (OrgId: {OrganizationId}): {ValidationError}",
+                proposal.Id,
+                proposal.OrganizationId,
+                validation.ErrorMessage);
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
@@ -211,6 +225,19 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // Log structured transition
+        logger.LogInformation(
+            "Proposal lifecycle transition: {ProposalId} (OrgId: {OrganizationId}, Title: {Title}) transitioned from {OldStatus} to {NewStatus}, EligibleVotingPower: {EligibleVotingPower}",
+            proposal.Id,
+            proposal.OrganizationId,
+            proposal.Title,
+            oldStatus,
+            proposal.Status,
+            proposal.EligibleVotingPowerSnapshot);
+
+        // Record metrics
+        metrics.RecordProposalTransition(oldStatus.ToString(), proposal.Status.ToString(), proposal.OrganizationId);
+
         // Enqueue outbound event
         await EnqueueProposalEventAsync(proposal, "ProposalOpened", cancellationToken);
 
@@ -226,14 +253,22 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
 
         if (proposal is null)
         {
+            logger.LogWarning("Proposal {ProposalId} not found for closing", proposalId);
             return null;
         }
+
+        var oldStatus = proposal.Status;
 
         // Use domain service for validation
         var governanceService = new ProposalGovernanceService();
         var validation = governanceService.ValidateCanClose(proposal);
         if (!validation.IsValid)
         {
+            logger.LogWarning(
+                "Cannot close proposal {ProposalId} (OrgId: {OrganizationId}): {ValidationError}",
+                proposal.Id,
+                proposal.OrganizationId,
+                validation.ErrorMessage);
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
@@ -249,6 +284,21 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // Log structured transition with results
+        logger.LogInformation(
+            "Proposal lifecycle transition: {ProposalId} (OrgId: {OrganizationId}, Title: {Title}) transitioned from {OldStatus} to {NewStatus}, QuorumMet: {QuorumMet}, TotalVotesCast: {TotalVotesCast}, WinningOptionId: {WinningOptionId}",
+            proposal.Id,
+            proposal.OrganizationId,
+            proposal.Title,
+            oldStatus,
+            proposal.Status,
+            proposal.QuorumMet,
+            proposal.TotalVotesCast,
+            proposal.WinningOptionId);
+
+        // Record metrics
+        metrics.RecordProposalTransition(oldStatus.ToString(), proposal.Status.ToString(), proposal.OrganizationId);
+
         // Enqueue outbound event
         await EnqueueProposalEventAsync(proposal, "ProposalClosed", cancellationToken);
 
@@ -262,20 +312,40 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
 
         if (proposal is null)
         {
+            logger.LogWarning("Proposal {ProposalId} not found for finalizing", proposalId);
             return null;
         }
+
+        var oldStatus = proposal.Status;
 
         // Use domain service for validation
         var governanceService = new ProposalGovernanceService();
         var validation = governanceService.ValidateCanFinalize(proposal);
         if (!validation.IsValid)
         {
+            logger.LogWarning(
+                "Cannot finalize proposal {ProposalId} (OrgId: {OrganizationId}): {ValidationError}",
+                proposal.Id,
+                proposal.OrganizationId,
+                validation.ErrorMessage);
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
         proposal.Status = ProposalStatus.Finalized;
         
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Log structured transition
+        logger.LogInformation(
+            "Proposal lifecycle transition: {ProposalId} (OrgId: {OrganizationId}, Title: {Title}) transitioned from {OldStatus} to {NewStatus} (final state)",
+            proposal.Id,
+            proposal.OrganizationId,
+            proposal.Title,
+            oldStatus,
+            proposal.Status);
+
+        // Record metrics
+        metrics.RecordProposalTransition(oldStatus.ToString(), proposal.Status.ToString(), proposal.OrganizationId);
 
         // Enqueue outbound event
         await EnqueueProposalEventAsync(proposal, "ProposalFinalized", cancellationToken);
@@ -365,12 +435,17 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
 
         if (proposal is null)
         {
+            logger.LogWarning("Proposal {ProposalId} not found for voting", proposalId);
             return null;
         }
 
         // Verify the option belongs to this proposal
         if (!proposal.Options.Any(o => o.Id == request.ProposalOptionId))
         {
+            logger.LogWarning(
+                "Invalid proposal option {ProposalOptionId} for proposal {ProposalId}",
+                request.ProposalOptionId,
+                proposalId);
             throw new InvalidOperationException("Invalid proposal option.");
         }
 
@@ -383,6 +458,12 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
         var validation = governanceService.ValidateCanVote(proposal, hasVoted);
         if (!validation.IsValid)
         {
+            logger.LogWarning(
+                "Vote validation failed for user {UserId} on proposal {ProposalId} (OrgId: {OrganizationId}): {ValidationError}",
+                request.UserId,
+                proposalId,
+                proposal.OrganizationId,
+                validation.ErrorMessage);
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
@@ -392,6 +473,7 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
         
         if (!userExists)
         {
+            logger.LogWarning("User {UserId} not found for voting", request.UserId);
             throw new InvalidOperationException($"User with ID {request.UserId} does not exist.");
         }
 
@@ -402,6 +484,11 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
         var votingPowerCalc = new VotingPowerCalculator();
         if (!votingPowerCalc.IsEligibleToVote(votingPower))
         {
+            logger.LogWarning(
+                "User {UserId} has no voting power in organization {OrganizationId} for proposal {ProposalId}",
+                request.UserId,
+                proposal.OrganizationId,
+                proposalId);
             throw new InvalidOperationException("User has no voting power in this organization.");
         }
 
@@ -417,6 +504,17 @@ public class ProposalService(FanEngagementDbContext dbContext, IOutboundEventSer
 
         dbContext.Votes.Add(vote);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Log vote cast (minimal PII)
+        logger.LogInformation(
+            "Vote cast: ProposalId: {ProposalId}, OrgId: {OrganizationId}, OptionId: {ProposalOptionId}, VotingPower: {VotingPower}",
+            proposalId,
+            proposal.OrganizationId,
+            request.ProposalOptionId,
+            votingPower);
+
+        // Record metrics
+        metrics.RecordVoteCast(proposalId, proposal.OrganizationId);
 
         return new VoteDto
         {

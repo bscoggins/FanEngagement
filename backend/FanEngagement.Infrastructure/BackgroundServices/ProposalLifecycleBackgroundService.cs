@@ -117,8 +117,9 @@ public class ProposalLifecycleBackgroundService(
             {
                 logger.LogError(
                     ex,
-                    "Error opening proposal {ProposalId} (Title: {Title})",
+                    "Error opening proposal {ProposalId} (OrgId: {OrganizationId}, Title: {Title})",
                     proposal.Id,
+                    proposal.OrganizationId,
                     proposal.Title);
             }
         }
@@ -138,8 +139,9 @@ public class ProposalLifecycleBackgroundService(
             {
                 logger.LogError(
                     ex,
-                    "Error closing proposal {ProposalId} (Title: {Title})",
+                    "Error closing proposal {ProposalId} (OrgId: {OrganizationId}, Title: {Title})",
                     proposal.Id,
+                    proposal.OrganizationId,
                     proposal.Title);
             }
         }
@@ -157,9 +159,17 @@ public class ProposalLifecycleBackgroundService(
         if (result != null)
         {
             logger.LogInformation(
-                "Automatically opened proposal {ProposalId} (Title: {Title})",
+                "Automatically opened proposal {ProposalId} (OrgId: {OrganizationId}, Title: {Title})",
                 proposal.Id,
+                proposal.OrganizationId,
                 proposal.Title);
+        }
+        else
+        {
+            logger.LogWarning(
+                "Failed to automatically open proposal {ProposalId} (OrgId: {OrganizationId}) - proposal not found",
+                proposal.Id,
+                proposal.OrganizationId);
         }
     }
 
@@ -175,10 +185,18 @@ public class ProposalLifecycleBackgroundService(
         if (result != null)
         {
             logger.LogInformation(
-                "Automatically closed proposal {ProposalId} (Title: {Title}, Quorum Met: {QuorumMet})",
+                "Automatically closed proposal {ProposalId} (OrgId: {OrganizationId}, Title: {Title}, Quorum Met: {QuorumMet})",
                 proposal.Id,
+                proposal.OrganizationId,
                 proposal.Title,
                 result.QuorumMet);
+        }
+        else
+        {
+            logger.LogWarning(
+                "Failed to automatically close proposal {ProposalId} (OrgId: {OrganizationId}) - proposal not found",
+                proposal.Id,
+                proposal.OrganizationId);
         }
     }
 }
