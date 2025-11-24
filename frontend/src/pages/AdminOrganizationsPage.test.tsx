@@ -304,9 +304,8 @@ describe('AdminOrganizationsPage', () => {
       vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
       
       // Mock create to never resolve to test loading state
-      let resolveCreate: (value: Organization) => void;
-      const createPromise = new Promise<Organization>((resolve) => {
-        resolveCreate = resolve;
+      const createPromise = new Promise<Organization>(() => {
+        // Never resolves
       });
       vi.mocked(organizationsApi.create).mockReturnValue(createPromise);
       

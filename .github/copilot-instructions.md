@@ -445,6 +445,68 @@ Backend uses policy-based authorization with custom handlers:
 
 For the complete current vs. intended permissions matrix and security gap analysis, see the **Roles & Permissions** section in `docs/architecture.md`.
 
+### Organization Onboarding
+
+FanEngagement provides a streamlined organization creation flow with automatic role assignment.
+
+#### Creating Organizations
+
+**Who Can Create Organizations:**
+- Currently restricted to **GlobalAdmin** users only
+- Authorization enforced via `[Authorize(Policy = "GlobalAdmin")]` on `POST /organizations` endpoint
+- Future: Could be enabled for all authenticated users with approval workflows
+
+**Backend Endpoint:**
+```csharp
+POST /organizations
+{
+  "name": "Manchester United Supporters Club",
+  "description": "Official fan governance organization"
+}
+```
+
+**Automatic OrgAdmin Membership:**
+- When a GlobalAdmin creates an organization, the system automatically:
+  1. Creates the organization record
+  2. Creates an `OrganizationMembership` for the creator with `OrganizationRole.OrgAdmin`
+  3. Saves both in a single transaction
+- The creator immediately has full administrative control over the new organization
+
+**Frontend UI (`/admin/organizations`):**
+- "Create Organization" button visible to GlobalAdmin only
+- Collapsible create form with Name (required, max 200 chars) and Description (optional, max 1000 chars)
+- On success: navigates to `/admin/organizations/{orgId}/edit`
+- Uses notification system for success/error feedback
+
+**API Client:**
+```typescript
+import { organizationsApi } from '../api/organizationsApi';
+
+const newOrg = await organizationsApi.create({
+  name: 'My Organization',
+  description: 'Organization description'
+});
+```
+
+**Initial Organization Setup:**
+After creating an organization, the creator (now OrgAdmin) should:
+1. **Add Members**: Invite other users via `POST /organizations/{orgId}/memberships`
+2. **Configure Share Types**: Define share types with voting weights
+3. **Issue Shares**: Distribute shares to establish voting power
+4. **Create Proposals**: Set up governance proposals for voting
+5. **Configure Webhooks** (optional): Set up integrations for notifications
+
+**Security Considerations:**
+- Creator user validation occurs before org creation
+- Transaction safety ensures consistency (no orphaned orgs/memberships)
+- JSON serialization uses `ReferenceHandler.IgnoreCycles` for navigation properties
+
+**Testing:**
+- Backend: `OrganizationCreationTests.cs` (6 integration tests)
+- Frontend: `AdminOrganizationsPage.test.tsx` (create org tests included)
+
+**See also:** Complete documentation in `docs/architecture.md` → **Organization Onboarding** section
+
 ### Proposal Lifecycle & Governance UX
 
 The frontend provides comprehensive UX for proposal lifecycle, eligibility checking, and results display using reusable components and utility functions.
