@@ -12,7 +12,7 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
             .MaximumLength(200).WithMessage("Organization name must not exceed 200 characters.");
 
         RuleFor(x => x.Description)
-            .MaximumLength(1000).WithMessage("Description must not exceed 1000 characters.")
+            .MaximumLength(2000).WithMessage("Description must not exceed 2000 characters.")
             .When(x => x.Description != null);
 
         RuleFor(x => x.LogoUrl)

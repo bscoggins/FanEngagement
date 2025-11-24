@@ -324,9 +324,9 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     type="text"
                     id="primaryColor"
                     name="primaryColor"
-                    value={formData.primaryColor}
+                    value={formData.primaryColor || ''}
                     onChange={handleChange}
-                    placeholder="#0066cc"
+                    placeholder="#0066cc (default)"
                     style={{
                       flex: 1,
                       padding: '0.75rem',
@@ -360,9 +360,9 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     type="text"
                     id="secondaryColor"
                     name="secondaryColor"
-                    value={formData.secondaryColor}
+                    value={formData.secondaryColor || ''}
                     onChange={handleChange}
-                    placeholder="#6c757d"
+                    placeholder="#6c757d (default)"
                     style={{
                       flex: 1,
                       padding: '0.75rem',
