@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
 import { MyProposalPage } from './MyProposalPage';
 import { proposalsApi } from '../api/proposalsApi';
+import { shareBalancesApi } from '../api/shareBalancesApi';
 
 vi.mock('../api/proposalsApi');
+vi.mock('../api/shareBalancesApi');
 
 const renderWithAuth = (proposalId: string, userId: string) => {
   const mockUser = {
@@ -35,6 +37,24 @@ describe('MyProposalPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    
+    // Mock share balances by default - can be overridden in specific tests
+    vi.mocked(shareBalancesApi.getBalances).mockResolvedValue([
+      {
+        shareTypeId: 'share-type-1',
+        shareTypeName: 'Test Share',
+        shareTypeSymbol: 'TST',
+        balance: 100,
+        updatedAt: '2024-01-01T00:00:00Z',
+      },
+    ]);
+    
+    // Mock results by default (empty for most cases)
+    vi.mocked(proposalsApi.getResults).mockResolvedValue({
+      proposalId: 'proposal-1',
+      optionResults: [],
+      totalVotingPower: 0,
+    });
   });
 
   it('displays proposal details with options', async () => {
@@ -44,11 +64,11 @@ describe('MyProposalPage', () => {
       title: 'Test Proposal',
       description: 'A test proposal description',
       status: 'Open' as const,
-      startAt: '2024-01-15T00:00:00Z',
-      endAt: '2024-02-15T00:00:00Z',
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
       quorumRequirement: 50,
       createdByUserId: 'user-2',
-      createdAt: '2024-01-10T00:00:00Z',
+      createdAt: '2020-01-10T00:00:00Z',
       options: [
         {
           id: 'option-1',
@@ -89,11 +109,11 @@ describe('MyProposalPage', () => {
       title: 'Test Proposal',
       description: '',
       status: 'Open' as const,
-      startAt: '2024-01-15T00:00:00Z',
-      endAt: '2024-02-15T00:00:00Z',
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
       quorumRequirement: undefined,
       createdByUserId: 'user-2',
-      createdAt: '2024-01-10T00:00:00Z',
+      createdAt: '2020-01-10T00:00:00Z',
       options: [
         {
           id: 'option-1',
@@ -116,12 +136,22 @@ describe('MyProposalPage', () => {
       proposalOptionId: 'option-1',
       userId: 'user-1',
       votingPower: 100,
-      castAt: '2024-01-16T00:00:00Z',
+      castAt: '2020-01-16T00:00:00Z',
+    };
+
+    const mockResults = {
+      proposalId: 'proposal-1',
+      optionResults: [
+        { optionId: 'option-1', optionText: 'Option A', voteCount: 1, totalVotingPower: 100 },
+        { optionId: 'option-2', optionText: 'Option B', voteCount: 0, totalVotingPower: 0 },
+      ],
+      totalVotingPower: 100,
     };
 
     vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
     vi.mocked(proposalsApi.getUserVote).mockRejectedValue({ response: { status: 404 } });
     vi.mocked(proposalsApi.castVote).mockResolvedValue(mockVote);
+    vi.mocked(proposalsApi.getResults).mockResolvedValue(mockResults);
 
     renderWithAuth('proposal-1', 'user-1');
 
@@ -157,11 +187,11 @@ describe('MyProposalPage', () => {
       title: 'Test Proposal',
       description: '',
       status: 'Open' as const,
-      startAt: '2024-01-15T00:00:00Z',
-      endAt: '2024-02-15T00:00:00Z',
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
       quorumRequirement: undefined,
       createdByUserId: 'user-2',
-      createdAt: '2024-01-10T00:00:00Z',
+      createdAt: '2020-01-10T00:00:00Z',
       options: [
         {
           id: 'option-1',
@@ -200,11 +230,11 @@ describe('MyProposalPage', () => {
       title: 'Test Proposal',
       description: '',
       status: 'Open' as const,
-      startAt: '2024-01-15T00:00:00Z',
-      endAt: '2024-02-15T00:00:00Z',
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
       quorumRequirement: undefined,
       createdByUserId: 'user-2',
-      createdAt: '2024-01-10T00:00:00Z',
+      createdAt: '2020-01-10T00:00:00Z',
       options: [
         {
           id: 'option-1',
@@ -227,7 +257,7 @@ describe('MyProposalPage', () => {
       proposalOptionId: 'option-1',
       userId: 'user-1',
       votingPower: 100,
-      castAt: '2024-01-16T00:00:00Z',
+      castAt: '2020-01-16T00:00:00Z',
     };
 
     vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
@@ -251,11 +281,11 @@ describe('MyProposalPage', () => {
       title: 'Test Proposal',
       description: '',
       status: 'Closed' as const,
-      startAt: '2024-01-15T00:00:00Z',
-      endAt: '2024-02-15T00:00:00Z',
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
       quorumRequirement: undefined,
       createdByUserId: 'user-2',
-      createdAt: '2024-01-10T00:00:00Z',
+      createdAt: '2020-01-10T00:00:00Z',
       options: [
         {
           id: 'option-1',
@@ -315,11 +345,11 @@ describe('MyProposalPage', () => {
       title: 'Test Proposal',
       description: '',
       status: 'Open' as const,
-      startAt: '2024-01-15T00:00:00Z',
-      endAt: '2024-02-15T00:00:00Z',
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
       quorumRequirement: undefined,
       createdByUserId: 'user-2',
-      createdAt: '2024-01-10T00:00:00Z',
+      createdAt: '2020-01-10T00:00:00Z',
       options: [
         {
           id: 'option-1',
