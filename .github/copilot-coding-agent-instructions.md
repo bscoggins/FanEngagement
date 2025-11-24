@@ -441,6 +441,142 @@ const newOrg = await organizationsApi.create({
 - Complete details: `docs/architecture.md` → **Organization Onboarding** section
 - Usage guide: `.github/copilot-instructions.md` → **Organization Onboarding** section
 
+### Organization Context Selection and Multi-Organization Support
+
+> **✅ IMPLEMENTED:** Users can belong to multiple organizations and switch between them via organization context.
+
+**Core Principles:**
+1. **Multi-Org Membership:** Users can be members of multiple organizations simultaneously
+2. **Active Organization Context:** Frontend maintains an active organization that determines which org's data is displayed
+3. **Auto-Selection:** Single-org users have their org auto-selected; multi-org users auto-select first org or restore previous selection
+4. **Persistence:** Active organization is persisted to localStorage across page reloads
+5. **Organization Switcher:** Multi-org users see a dropdown selector in the header to switch organizations
+
+#### Backend Implementation
+
+**API Endpoint:**
+- `GET /users/me/organizations` → Returns current user's organization memberships with org details and roles
+- Uses JWT token to identify current user automatically
+- Returns `MembershipWithOrganizationDto[]` with org ID, name, and user's role
+
+**Authorization:**
+- Requires authentication via `[Authorize]` attribute
+- Returns only memberships for the authenticated user
+
+#### Frontend Implementation
+
+**Organization Context (`OrgContext`):**
+- Provides `useActiveOrganization()` hook for accessing active organization
+- Automatically fetches user's memberships on authentication
+- Auto-selects first organization on login (or restores previous selection from localStorage)
+- Persists active org selection to localStorage
+- Clears selection on logout
+
+**Organization Selector (`OrganizationSelector`):**
+- Dropdown selector shown in Layout header for authenticated users
+- Only displays when `hasMultipleOrgs === true` (user belongs to 2+ organizations)
+- Shows org name with role badge (Admin/Member)
+- Updates active org context on selection change
+
+**Usage Pattern:**
+```typescript
+import { useActiveOrganization } from '../contexts/OrgContext';
+
+const MyOrgPage = () => {
+  const { activeOrg, hasMultipleOrgs } = useActiveOrganization();
+
+  // Use active org for API calls
+  const proposals = await proposalsApi.getByOrganization(activeOrg.id);
+
+  return (
+    <div>
+      <h1>{activeOrg?.name}</h1>
+      <p>Your role: {activeOrg?.role}</p>
+    </div>
+  );
+};
+```
+
+#### When Building Org-Scoped Features
+
+**Always follow these rules:**
+
+1. **Use Active Organization Context:**
+   - Import and use `useActiveOrganization()` hook in org-scoped pages
+   - Use `activeOrg.id` for API calls when not using explicit route param
+   - Check `activeOrg?.role` for permission decisions
+
+2. **Handle No Active Org:**
+   - Check if `activeOrg` is null and show appropriate UI
+   - Show "Please select an organization" message if needed
+
+3. **Respect Explicit Route Params:**
+   - If route includes `organizationId`, use that ID for API calls
+   - Optionally synchronize active org with route param on navigation
+
+4. **Show Org Selector Conditionally:**
+   - Only show selector when `hasMultipleOrgs === true`
+   - Single-org users don't need to see the selector
+
+5. **Permission Checks:**
+   - Use `isOrgAdmin(activeOrg.id)` to check admin permissions
+   - Use `isOrgMember(activeOrg.id)` to check membership
+   - Use `activeOrg.role` directly for role-specific UI
+
+6. **Branding Integration:**
+   - Use `useOrgBranding(activeOrg.id)` to fetch branding for active org
+   - Apply branding to headers and primary actions
+
+**Example Patterns:**
+
+```typescript
+// Pattern 1: Use active org for data fetching
+const MyComponent = () => {
+  const { activeOrg } = useActiveOrganization();
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    if (activeOrg) {
+      proposalsApi.getByOrganization(activeOrg.id).then(setData);
+    }
+  }, [activeOrg]);
+};
+
+// Pattern 2: Sync active org with route param
+const OrgDetailPage = () => {
+  const { orgId } = useParams();
+  const { activeOrg, setActiveOrg, memberships } = useActiveOrganization();
+
+  useEffect(() => {
+    if (orgId && activeOrg?.id !== orgId) {
+      const membership = memberships.find(m => m.organizationId === orgId);
+      if (membership) {
+        setActiveOrg({
+          id: membership.organizationId,
+          name: membership.organizationName,
+          role: membership.role,
+        });
+      }
+    }
+  }, [orgId, activeOrg, memberships, setActiveOrg]);
+};
+
+// Pattern 3: Check permissions in active org
+const AdminPanel = () => {
+  const { activeOrg } = useActiveOrganization();
+  const { isOrgAdmin } = usePermissions();
+
+  if (!activeOrg) return <div>Select an organization</div>;
+  if (!isOrgAdmin(activeOrg.id)) return <div>Admin access required</div>;
+
+  return <div>Admin controls for {activeOrg.name}</div>;
+};
+```
+
+**Documentation:**
+- Complete details: `docs/architecture.md` → **Multi-Organization Membership and Context Selection** section
+- Usage guide: `.github/copilot-instructions.md` → **Organization Context Selection and Switching** section
+
 ### Frontend Permission Helpers
 
 > **✅ COMPLETE:** Frontend permission system is now fully implemented with hooks, components, and route guards.

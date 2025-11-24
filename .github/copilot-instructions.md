@@ -584,6 +584,151 @@ await organizationsApi.update(orgId, {
 
 **See also:** Complete documentation in `docs/architecture.md` → **Organization Branding** section
 
+### Organization Context Selection and Switching
+
+FanEngagement supports users belonging to multiple organizations. The frontend provides an active organization context that determines which organization's data is displayed and which organization actions target.
+
+#### Active Organization Context
+
+**`OrgContext` and `useActiveOrganization()` Hook** (`frontend/src/contexts/OrgContext.tsx`):
+
+```typescript
+import { useActiveOrganization } from '../contexts/OrgContext';
+
+const MyComponent = () => {
+  const { 
+    activeOrg,         // Current active organization (id, name, role, branding)
+    setActiveOrg,      // Function to switch active org
+    memberships,       // All user's organization memberships
+    hasMultipleOrgs,   // Boolean: does user belong to >1 org?
+    isLoading,         // Boolean: are memberships being loaded?
+    refreshMemberships // Function to refresh memberships
+  } = useActiveOrganization();
+
+  // Use active org for API calls
+  if (activeOrg) {
+    const proposals = await proposalsApi.getByOrganization(activeOrg.id);
+  }
+
+  return (
+    <div>
+      <h1>Organization: {activeOrg?.name}</h1>
+      <p>Your role: {activeOrg?.role}</p>
+    </div>
+  );
+};
+```
+
+**Key Features:**
+- **Automatic Selection**: When user logs in, automatically selects:
+  - Their only org if they belong to one organization
+  - First org if they belong to multiple organizations (if no previous selection stored)
+- **Persistence**: Active organization is stored in `localStorage` and restored on page reload
+- **Multi-Org Switching**: Users with multiple organizations can switch via `OrganizationSelector` dropdown
+- **Synchronization**: When navigating to org-scoped routes with explicit `organizationId`, the context can be synchronized
+
+#### Organization Selector UI
+
+**`OrganizationSelector` Component** (`frontend/src/components/OrganizationSelector.tsx`):
+
+The organization selector dropdown is displayed in the main `Layout` header for authenticated users.
+
+**Behavior:**
+- Only shown when `hasMultipleOrgs === true` (user belongs to 2+ organizations)
+- Shows all user's organizations with role badges (Admin/Member)
+- Selecting an org updates the active context and persists to localStorage
+- Displays current role badge next to the dropdown
+
+**Integration:**
+```tsx
+import { OrganizationSelector } from '../components/OrganizationSelector';
+
+// In Layout.tsx header
+<header>
+  <nav>
+    {isAuthenticated && (
+      <>
+        <Link to="/me">My Account</Link>
+        <OrganizationSelector />  {/* Auto-hidden if single org */}
+        <span>Logged in as {user?.email}</span>
+      </>
+    )}
+  </nav>
+</header>
+```
+
+#### Using Active Organization in Pages
+
+**Pattern 1: Use Active Org for API Calls**
+```typescript
+const MyOrgPage = () => {
+  const { activeOrg } = useActiveOrganization();
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    if (activeOrg) {
+      proposalsApi.getByOrganization(activeOrg.id)
+        .then(setData);
+    }
+  }, [activeOrg]);
+
+  return <div>Data for {activeOrg?.name}</div>;
+};
+```
+
+**Pattern 2: Sync Active Org with Route Param**
+```typescript
+const MyOrgDetailPage = () => {
+  const { orgId } = useParams();
+  const { activeOrg, setActiveOrg, memberships } = useActiveOrganization();
+
+  useEffect(() => {
+    // Sync active org when navigating to org-scoped route
+    if (orgId && activeOrg?.id !== orgId) {
+      const membership = memberships.find(m => m.organizationId === orgId);
+      if (membership) {
+        setActiveOrg({
+          id: membership.organizationId,
+          name: membership.organizationName,
+          role: membership.role,
+        });
+      }
+    }
+  }, [orgId, activeOrg, memberships, setActiveOrg]);
+
+  return <div>Details for organization {orgId}</div>;
+};
+```
+
+**Pattern 3: Check User's Role in Active Org**
+```typescript
+const OrgAdminPanel = () => {
+  const { activeOrg } = useActiveOrganization();
+  const { isOrgAdmin } = usePermissions();
+
+  if (!activeOrg) {
+    return <div>Please select an organization</div>;
+  }
+
+  if (!isOrgAdmin(activeOrg.id)) {
+    return <div>You must be an OrgAdmin to access this page</div>;
+  }
+
+  return <div>Admin controls for {activeOrg.name}</div>;
+};
+```
+
+#### When Building Org-Scoped Features
+
+**Guidelines:**
+1. **Always use active org context** when building pages that show/modify org data
+2. **Respect explicit route params**: If route includes `organizationId`, use that ID for API calls (and optionally sync active org)
+3. **Show org selector** only when `hasMultipleOrgs === true`
+4. **Handle no active org**: Check if `activeOrg` is null and show appropriate UI (e.g., "Please select an organization")
+5. **Use role from active org**: When checking permissions, use `activeOrg.role` or `isOrgAdmin(activeOrg.id)`
+
+**See also:** Complete documentation in `docs/architecture.md` → **Multi-Organization Membership and Context Selection** section
+
 ### Proposal Lifecycle & Governance UX
 
 The frontend provides comprehensive UX for proposal lifecycle, eligibility checking, and results display using reusable components and utility functions.

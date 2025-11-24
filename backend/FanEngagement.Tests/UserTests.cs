@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FanEngagement.Application.Users;
+using FanEngagement.Domain.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit.Abstractions;
 
@@ -276,5 +277,55 @@ public class UserTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetMyOrganizations_ReturnsCurrentUsersMemberships()
+    {
+        // Arrange
+        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(token);
+
+        // Create an organization and add the user as a member (requires admin)
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+        
+        var orgRequest = new FanEngagement.Application.Organizations.CreateOrganizationRequest
+        {
+            Name = $"Test Org {Guid.NewGuid()}"
+        };
+        var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
+        var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
+
+        var membershipRequest = new FanEngagement.Application.Memberships.CreateMembershipRequest
+        {
+            UserId = user.Id,
+            Role = FanEngagement.Domain.Enums.OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{org!.Id}/memberships", membershipRequest);
+
+        // Switch back to the user's token
+        _client.AddAuthorizationHeader(token);
+
+        // Act
+        var response = await _client.GetAsync("/users/me/organizations");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var memberships = await response.Content.ReadFromJsonAsync<List<FanEngagement.Application.Memberships.MembershipWithOrganizationDto>>();
+        Assert.NotNull(memberships);
+        Assert.Contains(memberships!, m => m.OrganizationId == org.Id);
+    }
+
+    [Fact]
+    public async Task GetMyOrganizations_RequiresAuthentication()
+    {
+        // Arrange - no authentication token
+
+        // Act
+        var response = await _client.GetAsync("/users/me/organizations");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

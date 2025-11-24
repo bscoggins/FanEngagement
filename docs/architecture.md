@@ -809,6 +809,116 @@ These tests use `WebApplicationFactory` for end-to-end integration testing, cove
 - Create initial proposal templates
 - Set up default governance rules based on organization size or type
 
+## Multi-Organization Membership and Context Selection
+
+FanEngagement is a true multi-tenant platform where users can belong to multiple organizations simultaneously. Each membership is independent, with its own role assignment (Member or OrgAdmin) per organization.
+
+### Multi-Organization Support
+
+**Core Principles:**
+- **Multiple Memberships**: A single user can be a member of any number of organizations
+- **Independent Roles**: A user's role in one organization (e.g., OrgAdmin) has no bearing on their role in another organization
+- **Per-Organization Data**: All org-scoped resources (share types, proposals, votes, webhooks) are isolated per organization
+- **Global Admin Override**: Users with `UserRole.Admin` (Global Admin) have implicit access to all organizations regardless of membership
+
+**Membership Model:**
+- Each membership is represented by an `OrganizationMembership` record linking a User to an Organization
+- The same user can have multiple `OrganizationMembership` records, one for each organization they belong to
+- Example: Alice can be an `OrgAdmin` in "Manchester United FC" and a regular `Member` in "Liverpool FC Supporters Club"
+
+### Frontend Organization Context
+
+To support users belonging to multiple organizations, the frontend implements an **active organization context** that determines which organization's data is displayed and which organization actions are performed against.
+
+#### Active Organization Selection
+
+**Endpoint:** `GET /users/me/organizations`
+- Returns the current authenticated user's organization memberships
+- Includes organization details (ID, name) and the user's role in each organization
+- Used by the frontend to populate the organization selector and determine available organizations
+
+**Context Storage:**
+- The active organization is stored in the browser's `localStorage` for persistence across page reloads
+- The context includes: organization ID, name, and optional branding information (logo URL, colors)
+- When a user logs in:
+  - If they belong to **one organization**: That organization is automatically set as active
+  - If they belong to **multiple organizations**: Either prompt for selection or default to the first/most recent, allowing easy switching via UI
+
+**Organization Selector UI:**
+- For users with multiple organizations, an organization switcher dropdown is displayed in the header/navigation
+- The selector shows:
+  - Organization name
+  - User's role in each organization (displayed as a badge: "OrgAdmin" or "Member")
+- Switching organizations updates the active context and reloads or redirects to show data for the newly selected organization
+
+#### Route Integration
+
+**Organization-Scoped Routes:**
+- Routes that include `organizationId` in the URL (e.g., `/me/organizations/:orgId`, `/admin/organizations/:orgId/proposals`) continue to use the explicit ID from the route
+- The active organization context synchronizes with the `orgId` parameter when navigating to org-scoped routes
+- This ensures URLs remain bookmarkable and shareable while maintaining context awareness
+
+**Context-Aware Components:**
+- Org-scoped pages use the active organization context to:
+  - Make API calls with the correct `organizationId`
+  - Display organization branding (logo, colors)
+  - Check permissions using the user's role in the active organization
+- Permission helpers (e.g., `isOrgAdmin(orgId)`) use the active organization by default when no explicit orgId is provided
+
+#### Context Hook and Provider
+
+**Frontend Implementation:**
+- `OrgContext` / `useActiveOrganization()` hook provides access to the active organization
+- Components can:
+  - Read the active organization (ID, name, role, branding)
+  - Switch the active organization
+  - Check if a user belongs to multiple organizations (to show/hide the selector)
+
+**Example Usage:**
+```typescript
+const { activeOrg, setActiveOrg, hasMultipleOrgs } = useActiveOrganization();
+
+// Use active org for API calls
+const proposals = await proposalsApi.getByOrganization(activeOrg.id);
+
+// Show org selector only if user has multiple orgs
+{hasMultipleOrgs && <OrganizationSelector />}
+```
+
+### Multi-Organization Scenarios
+
+**Scenario 1: User with Single Organization**
+- Alice is only a member of "Manchester United FC"
+- On login, "Manchester United FC" is automatically set as her active organization
+- No organization selector is shown (no need to switch)
+- All org-scoped pages show data for "Manchester United FC"
+
+**Scenario 2: User with Multiple Organizations**
+- Bob is a member of "Manchester United FC" (OrgAdmin) and "Liverpool FC" (Member)
+- On login, one of his organizations is set as active (e.g., most recent or first alphabetically)
+- Organization selector dropdown is shown in the header
+- Bob can switch between organizations via the dropdown
+- When he switches to "Liverpool FC", all org-scoped views update to show Liverpool's data
+- His permissions change based on the active org: OrgAdmin actions available for Manchester, not for Liverpool
+
+**Scenario 3: Global Admin**
+- Carol is a Global Admin (`UserRole.Admin`)
+- She has implicit access to all organizations, regardless of membership
+- She can view and manage any organization via the admin panel
+- When she navigates to org-scoped pages, the active org context still applies for UI purposes (branding, focused data view)
+- Authorization checks recognize her as Global Admin and bypass org-level permissions
+
+### API Endpoint Summary
+
+**Organization Membership Queries:**
+- `GET /users/me/organizations`: Get current user's organization memberships (for org selector)
+- `GET /users/{userId}/memberships`: Get any user's memberships (admin use case)
+- `GET /organizations/{orgId}/memberships`: Get all members of a specific organization (requires OrgAdmin or Global Admin)
+
+**Usage:**
+- Frontend uses `/users/me/organizations` on login to populate the org selector and determine if the user belongs to multiple orgs
+- The endpoint returns `MembershipWithOrganizationDto[]`, including org name and user role, suitable for building the UI selector
+
 ## Organization Branding
 
 Organizations can customize their visual identity with optional branding fields that are displayed in the UI when users interact with organization-scoped pages.
