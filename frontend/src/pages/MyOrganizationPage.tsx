@@ -166,7 +166,7 @@ export const MyOrganizationPage: React.FC = () => {
         <div style={{ 
           marginTop: '1rem', 
           padding: '1rem', 
-          backgroundColor: branding.primaryColor ? `${branding.primaryColor}15` : '#e7f3ff', 
+          backgroundColor: branding.primaryColor ? `color-mix(in srgb, ${branding.primaryColor} 8%, transparent)` : '#e7f3ff', 
           borderLeft: `4px solid ${branding.primaryColor || '#17a2b8'}`,
           borderRadius: '4px'
         }}>

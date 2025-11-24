@@ -16,7 +16,8 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
             .When(x => x.Description != null);
 
         RuleFor(x => x.LogoUrl)
-            .Must(BeAValidUrl).WithMessage("Logo URL must be a valid absolute URL.")
+            .Must(UrlValidationHelpers.IsValidPublicHttpUrl)
+            .WithMessage("Logo URL must be a valid public HTTP/HTTPS URL (localhost and private IPs are not allowed).")
             .MaximumLength(2048).WithMessage("Logo URL must not exceed 2048 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.LogoUrl));
 
@@ -27,14 +28,5 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
         RuleFor(x => x.SecondaryColor)
             .MaximumLength(50).WithMessage("Secondary color must not exceed 50 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.SecondaryColor));
-    }
-
-    private bool BeAValidUrl(string? url)
-    {
-        if (string.IsNullOrWhiteSpace(url))
-            return true;
-
-        return Uri.TryCreate(url, UriKind.Absolute, out var uriResult)
-            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 }
