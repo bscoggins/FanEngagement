@@ -378,7 +378,7 @@ const newOrg = await organizationsApi.create({
   name: 'Organization Name',
   description: 'Optional description'
 });
-// Returns Organization object with id, name, description, createdAt
+// Returns Organization object with id, name, description, createdAt, logoUrl, primaryColor, secondaryColor
 ```
 
 **Testing:**
@@ -398,6 +398,7 @@ const newOrg = await organizationsApi.create({
    - Only GlobalAdmins can create organizations
    - Always create OrgAdmin membership for creator
    - Save org + membership transactionally
+   - Optionally include branding fields (logoUrl, primaryColor, secondaryColor)
 
 2. **Initial Organization Setup (by creator/OrgAdmin):**
    - Add members: `POST /organizations/{orgId}/memberships`
@@ -405,18 +406,36 @@ const newOrg = await organizationsApi.create({
    - Issue shares: `POST /organizations/{orgId}/share-issuances`
    - Create proposals: `POST /organizations/{orgId}/proposals`
    - Configure webhooks (optional): `POST /organizations/{orgId}/webhooks`
+   - Configure branding: Update organization with logoUrl and color fields
 
-3. **Authorization:**
+3. **Organization Branding:**
+   - Organizations have optional branding fields: `logoUrl`, `primaryColor`, `secondaryColor`
+   - Branding is displayed on organization-scoped pages using `useOrgBranding` hook
+   - Logo URL must be a valid absolute HTTP/HTTPS URL (validated on backend)
+   - Colors can be hex, RGB, or CSS color values (max 50 chars)
+   - Frontend provides defaults (#0066cc primary, #6c757d secondary) if not set
+   - Admin edit page includes branding controls with color pickers and logo preview
+
+4. **Authorization:**
    - Organization creation requires GlobalAdmin policy
-   - Organization management (edit, add members) requires OrgAdmin policy
+   - Organization management (edit, add members, update branding) requires OrgAdmin policy
    - Organization viewing requires OrgMember policy
 
-4. **Future Enhancements:**
+5. **Frontend Branding Usage:**
+   - Always use `useOrgBranding(orgId)` hook when building org-scoped pages
+   - Apply branding to headers, primary buttons, and accent elements
+   - Design UI to work with or without branding (use defaults)
+   - Show logo in headers when available
+   - Use primary color for header backgrounds and primary action buttons
+
+6. **Future Enhancements:**
    - Could add self-service org creation for all users
    - Could add approval workflow for new organizations
    - Could add organization types (Sports Club, Non-Profit, etc.)
    - Could add default share types on org creation
    - Could add onboarding wizard
+   - Could add file upload for logos (currently URL-based)
+
 
 **Documentation:**
 - Complete details: `docs/architecture.md` → **Organization Onboarding** section
