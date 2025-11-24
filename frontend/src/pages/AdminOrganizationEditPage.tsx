@@ -11,6 +11,9 @@ export const AdminOrganizationEditPage: React.FC = () => {
   const [formData, setFormData] = useState<UpdateOrganizationRequest>({
     name: '',
     description: '',
+    logoUrl: '',
+    primaryColor: '',
+    secondaryColor: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -35,6 +38,9 @@ export const AdminOrganizationEditPage: React.FC = () => {
         setFormData({
           name: orgData.name,
           description: orgData.description || '',
+          logoUrl: orgData.logoUrl || '',
+          primaryColor: orgData.primaryColor || '',
+          secondaryColor: orgData.secondaryColor || '',
         });
       } catch (err) {
         console.error('Failed to fetch organization:', err);
@@ -79,6 +85,9 @@ export const AdminOrganizationEditPage: React.FC = () => {
       setFormData({
         name: updatedOrg.name,
         description: updatedOrg.description || '',
+        logoUrl: updatedOrg.logoUrl || '',
+        primaryColor: updatedOrg.primaryColor || '',
+        secondaryColor: updatedOrg.secondaryColor || '',
       });
     } catch (err) {
       console.error('Failed to update organization:', err);
@@ -246,6 +255,125 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 fontFamily: 'inherit',
               }}
             />
+          </div>
+
+          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Branding</h3>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label htmlFor="logoUrl" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                Logo URL
+              </label>
+              <input
+                type="url"
+                id="logoUrl"
+                name="logoUrl"
+                value={formData.logoUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/logo.png"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                }}
+              />
+              {formData.logoUrl && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Preview:</div>
+                  <img 
+                    src={formData.logoUrl} 
+                    alt="Organization logo preview" 
+                    style={{ 
+                      maxWidth: '200px', 
+                      maxHeight: '100px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      padding: '0.5rem',
+                      backgroundColor: '#f9f9f9',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label htmlFor="primaryColor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Primary Color
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="color"
+                    id="primaryColorPicker"
+                    value={formData.primaryColor || '#0066cc'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
+                    style={{
+                      width: '50px',
+                      height: '40px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    id="primaryColor"
+                    name="primaryColor"
+                    value={formData.primaryColor}
+                    onChange={handleChange}
+                    placeholder="#0066cc"
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="secondaryColor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                  Secondary Color
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="color"
+                    id="secondaryColorPicker"
+                    value={formData.secondaryColor || '#6c757d'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                    style={{
+                      width: '50px',
+                      height: '40px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    id="secondaryColor"
+                    name="secondaryColor"
+                    value={formData.secondaryColor}
+                    onChange={handleChange}
+                    placeholder="#6c757d"
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem' }}>
