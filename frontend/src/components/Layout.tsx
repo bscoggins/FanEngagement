@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { OrganizationSelector } from './OrganizationSelector';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
@@ -36,6 +37,7 @@ export const Layout: React.FC = () => {
               <Link to="/me/organizations">My Organizations</Link>
               <Link to="/users">Users</Link>
               {isAdmin && <Link to="/admin">Admin</Link>}
+              <OrganizationSelector />
               <span className="user-info">
                 Logged in as {user?.email}
               </span>

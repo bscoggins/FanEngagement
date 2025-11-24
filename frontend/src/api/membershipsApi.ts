@@ -17,6 +17,11 @@ export const membershipsApi = {
     return response.data;
   },
 
+  getMyOrganizations: async (): Promise<MembershipWithOrganizationDto[]> => {
+    const response = await apiClient.get<MembershipWithOrganizationDto[]>('/users/me/organizations');
+    return response.data;
+  },
+
   create: async (organizationId: string, request: CreateMembershipRequest): Promise<Membership> => {
     const response = await apiClient.post<Membership>(`/organizations/${organizationId}/memberships`, request);
     return response.data;
