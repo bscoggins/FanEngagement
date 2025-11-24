@@ -26,6 +26,9 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
             Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
+            LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl,
+            PrimaryColor = string.IsNullOrWhiteSpace(request.PrimaryColor) ? null : request.PrimaryColor,
+            SecondaryColor = string.IsNullOrWhiteSpace(request.SecondaryColor) ? null : request.SecondaryColor,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -105,6 +108,9 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
 
         organization.Name = request.Name;
         organization.Description = request.Description;
+        organization.LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl;
+        organization.PrimaryColor = string.IsNullOrWhiteSpace(request.PrimaryColor) ? null : request.PrimaryColor;
+        organization.SecondaryColor = string.IsNullOrWhiteSpace(request.SecondaryColor) ? null : request.SecondaryColor;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

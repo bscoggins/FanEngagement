@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
+import { useOrgBranding, DEFAULT_PRIMARY_COLOR } from '../hooks/useOrgBranding';
 import { organizationsApi } from '../api/organizationsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
 import { proposalsApi } from '../api/proposalsApi';
@@ -11,6 +12,7 @@ export const MyOrganizationPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
   const { user } = useAuth();
   const { isOrgAdmin } = usePermissions();
+  const branding = useOrgBranding(orgId);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [balances, setBalances] = useState<ShareBalance[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -81,34 +83,91 @@ export const MyOrganizationPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-        <h1 style={{ margin: 0 }}>{organization.name}</h1>
-        {orgId && isOrgAdmin(orgId) && (
-          <span style={{ 
-            padding: '0.25rem 0.75rem', 
-            backgroundColor: '#17a2b8', 
-            color: 'white', 
-            borderRadius: '4px',
-            fontSize: '0.875rem',
-            fontWeight: 'bold'
-          }}>
-            Org Admin
-          </span>
+    <div>
+      {/* Branded Header */}
+      {branding.logoUrl || branding.primaryColor !== DEFAULT_PRIMARY_COLOR ? (
+        <div
+          style={{
+            backgroundColor: branding.primaryColor,
+            color: 'white',
+            padding: '1.5rem 2rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+          }}
+        >
+          {branding.logoUrl && (
+            <img
+              src={branding.logoUrl}
+              alt={`${organization.name} logo`}
+              style={{
+                maxHeight: '60px',
+                maxWidth: '120px',
+                objectFit: 'contain',
+              }}
+            />
+          )}
+          <div>
+            <h1 style={{ margin: 0, color: 'white' }}>{organization.name}</h1>
+            {organization.description && (
+              <p style={{ margin: '0.25rem 0 0 0', opacity: 0.9, fontSize: '0.95rem' }}>
+                {organization.description}
+              </p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      <div style={{ padding: '0 2rem 2rem 2rem' }}>
+        {/* Show traditional header if no branding */}
+        {!branding.logoUrl && branding.primaryColor === DEFAULT_PRIMARY_COLOR && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+              <h1 style={{ margin: 0 }}>{organization.name}</h1>
+              {orgId && isOrgAdmin(orgId) && (
+                <span style={{ 
+                  padding: '0.25rem 0.75rem', 
+                  backgroundColor: '#17a2b8', 
+                  color: 'white', 
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold'
+                }}>
+                  Org Admin
+                </span>
+              )}
+            </div>
+            {organization.description && (
+              <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>
+                {organization.description}
+              </p>
+            )}
+          </>
         )}
-      </div>
-      {organization.description && (
-        <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>
-          {organization.description}
-        </p>
-      )}
+
+        {/* Admin badge for branded header */}
+        {(branding.logoUrl || branding.primaryColor !== DEFAULT_PRIMARY_COLOR) && orgId && isOrgAdmin(orgId) && (
+          <div style={{ marginBottom: '1rem' }}>
+            <span style={{ 
+              padding: '0.25rem 0.75rem', 
+              backgroundColor: '#17a2b8', 
+              color: 'white', 
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              fontWeight: 'bold'
+            }}>
+              Org Admin
+            </span>
+          </div>
+        )}
       
       {orgId && isOrgAdmin(orgId) && (
         <div style={{ 
           marginTop: '1rem', 
           padding: '1rem', 
-          backgroundColor: '#e7f3ff', 
-          borderLeft: '4px solid #17a2b8',
+          backgroundColor: branding.primaryColor ? `color-mix(in srgb, ${branding.primaryColor} 8%, transparent)` : '#e7f3ff', 
+          borderLeft: `4px solid ${branding.primaryColor || '#17a2b8'}`,
           borderRadius: '4px'
         }}>
           <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Admin Actions:</p>
@@ -203,7 +262,7 @@ export const MyOrganizationPage: React.FC = () => {
                     style={{
                       display: 'inline-block',
                       padding: '0.5rem 1rem',
-                      backgroundColor: '#007bff',
+                      backgroundColor: branding.primaryColor,
                       color: 'white',
                       textDecoration: 'none',
                       borderRadius: '4px',
@@ -216,6 +275,7 @@ export const MyOrganizationPage: React.FC = () => {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

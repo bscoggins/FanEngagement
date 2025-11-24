@@ -47,16 +47,25 @@ export interface Organization {
   name: string;
   description?: string;
   createdAt: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export interface CreateOrganizationRequest {
   name: string;
   description?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export interface UpdateOrganizationRequest {
   name: string;
   description?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export interface Membership {

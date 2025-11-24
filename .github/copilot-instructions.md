@@ -507,6 +507,83 @@ After creating an organization, the creator (now OrgAdmin) should:
 
 **See also:** Complete documentation in `docs/architecture.md` → **Organization Onboarding** section
 
+### Organization Branding
+
+Organizations can customize their visual identity with optional branding fields (logo URL and colors). The branding is automatically applied when users interact with organization-scoped pages.
+
+#### Branding Fields
+
+The Organization entity includes three optional branding fields:
+- **`logoUrl`** (string): URL to organization's logo image (validated as absolute HTTP/HTTPS URL)
+- **`primaryColor`** (string): Primary brand color for headers and buttons (hex, RGB, or CSS color)
+- **`secondaryColor`** (string): Secondary brand color for UI elements (hex, RGB, or CSS color)
+
+#### Using Branding in Frontend
+
+**`useOrgBranding` Hook** (`frontend/src/hooks/useOrgBranding.ts`):
+```typescript
+import { useOrgBranding } from '../hooks/useOrgBranding';
+
+const MyPage = () => {
+  const { orgId } = useParams();
+  const branding = useOrgBranding(orgId);
+  
+  // branding.logoUrl - Organization logo URL (or undefined)
+  // branding.primaryColor - Primary color (defaults to #0066cc)
+  // branding.secondaryColor - Secondary color (defaults to #6c757d)
+  // branding.isLoading - Loading state
+  // branding.error - Error message if fetch failed
+  
+  return (
+    <div style={{ backgroundColor: branding.primaryColor }}>
+      {branding.logoUrl && <img src={branding.logoUrl} alt="Logo" />}
+      {/* Your content */}
+    </div>
+  );
+};
+```
+
+**Automatic Application:**
+- The hook fetches organization data and returns branding with sensible defaults
+- Returns default colors (#0066cc primary, #6c757d secondary) if not configured
+- Handles loading states and errors gracefully
+
+**Current Usage:**
+- `MyOrganizationPage`: Shows branded header with logo and custom colors when configured
+- Admin action sections use primary color for accents
+- Action buttons use primary color for backgrounds
+
+#### Admin Branding Management
+
+**Admin UI** (`/admin/organizations/:orgId/edit`):
+- Branding section with fields for logo URL, primary color, and secondary color
+- Color pickers with text input for flexibility
+- Live preview of logo when URL is provided
+- Color swatches show selected colors
+
+**Creating/Updating Organizations:**
+```typescript
+import { organizationsApi } from '../api/organizationsApi';
+
+// Include branding fields in create/update requests
+await organizationsApi.update(orgId, {
+  name: 'Organization Name',
+  description: 'Description',
+  logoUrl: 'https://cdn.example.com/logo.png',
+  primaryColor: '#dc143c',
+  secondaryColor: '#ffd700'
+});
+```
+
+#### Best Practices
+
+- **Logo URLs**: Host logos externally (CDN, public bucket) and provide absolute URLs
+- **Color Contrast**: Ensure primary color has good contrast with white text for headers
+- **Fallback**: Always design UI to work without branding (defaults should look professional)
+- **Testing**: Test with and without branding to ensure graceful degradation
+
+**See also:** Complete documentation in `docs/architecture.md` → **Organization Branding** section
+
 ### Proposal Lifecycle & Governance UX
 
 The frontend provides comprehensive UX for proposal lifecycle, eligibility checking, and results display using reusable components and utility functions.
@@ -568,7 +645,7 @@ The frontend provides comprehensive UX for proposal lifecycle, eligibility check
 
 ### Current Entities
 
-- `Organization`: Top-level organization entity
+- `Organization`: Top-level organization entity with optional branding (LogoUrl, PrimaryColor, SecondaryColor)
 - `OrganizationMembership`: User membership in organizations with roles (Member or OrgAdmin)
 - `User`: User/member entity with Email, DisplayName, PasswordHash, Role (User or Admin), CreatedAt
 - `ShareType`: Type of shares issued by organization

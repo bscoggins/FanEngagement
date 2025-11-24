@@ -13,6 +13,7 @@ FanEngagement is a multi-tenant fan governance platform. Organizations (teams, c
 - **Organization**
   - Team/club/entity.
   - Configures its own governance rules and share types.
+  - **Branding**: Organizations can customize their visual identity with branding fields (see Branding section below).
 
 - **OrganizationMembership**
   - Links a User to an Organization with a role:
@@ -807,6 +808,97 @@ These tests use `WebApplicationFactory` for end-to-end integration testing, cove
 - Apply default share types on organization creation
 - Create initial proposal templates
 - Set up default governance rules based on organization size or type
+
+## Organization Branding
+
+Organizations can customize their visual identity with optional branding fields that are displayed in the UI when users interact with organization-scoped pages.
+
+### Branding Fields
+
+The `Organization` entity includes the following optional branding fields:
+
+**`LogoUrl` (string, max 2048 characters)**
+- URL to the organization's logo image
+- Must be a valid absolute HTTP/HTTPS URL
+- Displayed in headers and navigation for organization-scoped pages
+- If not set, no logo is shown
+- **Example:** `https://cdn.example.com/org-logos/manchester-united.png`
+
+**`PrimaryColor` (string, max 50 characters)**
+- Primary brand color for the organization
+- Used for headers, primary buttons, and accent elements
+- Accepts CSS color values (hex, rgb, named colors)
+- Defaults to `#0066cc` (platform default blue) if not set
+- **Examples:** 
+  - `#dc143c` (crimson red)
+  - `rgb(220, 20, 60)` (RGB format)
+  - `#1e90ff` (dodger blue)
+
+**`SecondaryColor` (string, max 50 characters)**
+- Secondary brand color for the organization
+- Used for secondary buttons and UI elements
+- Accepts CSS color values (hex, rgb, named colors)
+- Defaults to `#6c757d` (platform default gray) if not set
+- **Examples:**
+  - `#696969` (dim gray)
+  - `#ffd700` (gold)
+
+### Implementation Details
+
+**Backend:**
+- Fields are nullable with appropriate length constraints
+- `LogoUrl` is validated to ensure it's a well-formed absolute URL (HTTP/HTTPS only)
+- No file upload/storage is implemented - admins provide hosted URLs
+- Branding fields are included in all Organization API responses and update requests
+
+**Frontend:**
+- `useOrgBranding(orgId)` hook fetches organization branding
+- Returns default colors if branding is not configured
+- Branding is applied automatically to:
+  - Organization page headers with logo display
+  - Primary action buttons (View & Vote, etc.)
+  - Admin action sections
+- Falls back gracefully to platform defaults if branding is not set
+
+**UI Application:**
+- Branded header appears on organization-scoped pages when logo or custom colors are set
+- Logo displays with max dimensions (60px height, 120px width)
+- Primary color used for header background and primary buttons
+- Secondary color used for secondary UI elements
+- Traditional header shown when no branding is configured
+
+### Usage Examples
+
+**Setting Branding via Admin UI:**
+1. Navigate to `/admin/organizations/{orgId}/edit`
+2. Fill in the "Branding" section:
+   - Logo URL: URL to hosted logo image
+   - Primary Color: Use color picker or enter hex/CSS color
+   - Secondary Color: Use color picker or enter hex/CSS color
+3. Preview shows logo (if valid URL) and color swatches
+4. Save changes to apply branding
+
+**API Request Example:**
+```json
+PUT /organizations/{orgId}
+{
+  "name": "Manchester United Supporters Club",
+  "description": "Official fan governance",
+  "logoUrl": "https://cdn.example.com/mu-logo.png",
+  "primaryColor": "#da291c",
+  "secondaryColor": "#fbe122"
+}
+```
+
+### Future Enhancements
+
+Potential improvements for branding (not currently implemented):
+- File upload for logos (stored in blob storage)
+- Theme preview before saving
+- Additional color slots (accent, success, warning colors)
+- Custom fonts or typography
+- Dark mode theme support
+- Logo variants (light/dark versions for different backgrounds)
 
 ## Tech Stack
 
