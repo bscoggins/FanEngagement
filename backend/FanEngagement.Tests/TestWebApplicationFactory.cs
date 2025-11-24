@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace FanEngagement.Tests;
 
@@ -47,18 +48,17 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 options.UseInMemoryDatabase(_databaseName);
             });
 
-            // Remove PostgreSQL health check registration (can't connect to DB in test environment)
-            // Keep only the DbContext and BackgroundServices checks which work with InMemory DB
-            var healthCheckRegistrations = services
-                .Where(d => d.ImplementationType != null && 
-                           d.ImplementationType.Namespace != null &&
-                           d.ImplementationType.Namespace.StartsWith("HealthChecks.NpgSql"))
-                .ToList();
-            
-            foreach (var registration in healthCheckRegistrations)
+            // Remove PostgreSQL health check by reconfiguring health check options
+            // This is more robust than trying to remove service descriptors by namespace
+            services.Configure<HealthCheckServiceOptions>(options =>
             {
-                services.Remove(registration);
-            }
+                // Remove the "postgresql" health check registration that requires real DB connection
+                var postgresCheck = options.Registrations.FirstOrDefault(r => r.Name == "postgresql");
+                if (postgresCheck != null)
+                {
+                    options.Registrations.Remove(postgresCheck);
+                }
+            });
 
             // Build the service provider and ensure database is created
             var serviceProvider = services.BuildServiceProvider();

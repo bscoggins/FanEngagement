@@ -26,8 +26,11 @@ public class CorrelationIdMiddleware
         var correlationId = context.Request.Headers[CorrelationIdHeaderName].FirstOrDefault()
             ?? Guid.NewGuid().ToString();
 
-        // Add to response headers
-        context.Response.Headers[CorrelationIdHeaderName] = correlationId;
+        // Add to response headers (only if response hasn't started yet)
+        if (!context.Response.HasStarted)
+        {
+            context.Response.Headers[CorrelationIdHeaderName] = correlationId;
+        }
 
         // Add to logger scope for all subsequent logging in this request
         using (_logger.BeginScope(new Dictionary<string, object>

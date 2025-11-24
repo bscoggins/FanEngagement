@@ -52,7 +52,8 @@ public static class DependencyInjection
         services.AddHostedService<WebhookDeliveryBackgroundService>();
         services.AddHostedService<ProposalLifecycleBackgroundService>();
 
-        // Configure metrics
+        // Configure metrics - AddMetrics() registers IMeterFactory
+        services.AddMetrics();
         services.AddSingleton<FanEngagementMetrics>();
 
         // Configure health checks
