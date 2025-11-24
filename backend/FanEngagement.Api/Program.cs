@@ -194,6 +194,9 @@ if (app.Environment.IsDevelopment())
     // Don't use UseDeveloperExceptionPage - we use our global exception handler
 }
 
+// Add correlation ID middleware (before exception handler to ensure correlation IDs in error logs)
+app.UseMiddleware<CorrelationIdMiddleware>();
+
 // Add global exception handling middleware
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
@@ -206,6 +209,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map health check endpoints
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // No checks, just liveness (app is running)
+});
+
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready") // Only readiness checks
+});
 
 app.Run();
 

@@ -10,11 +10,14 @@ using FanEngagement.Application.Users;
 using FanEngagement.Application.WebhookEndpoints;
 using FanEngagement.Infrastructure.BackgroundServices;
 using FanEngagement.Infrastructure.Configuration;
+using FanEngagement.Infrastructure.HealthChecks;
+using FanEngagement.Infrastructure.Metrics;
 using FanEngagement.Infrastructure.Persistence;
 using FanEngagement.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace FanEngagement.Infrastructure;
 
@@ -48,6 +51,26 @@ public static class DependencyInjection
         services.AddHttpClient();
         services.AddHostedService<WebhookDeliveryBackgroundService>();
         services.AddHostedService<ProposalLifecycleBackgroundService>();
+
+        // Configure metrics - AddMetrics() registers IMeterFactory
+        services.AddMetrics();
+        services.AddSingleton<FanEngagementMetrics>();
+
+        // Configure health checks
+        services.AddHealthChecks()
+            .AddCheck<BackgroundServicesHealthCheck>(
+                "background_services",
+                failureStatus: HealthStatus.Degraded,
+                tags: new[] { "ready" })
+            .AddDbContextCheck<FanEngagementDbContext>(
+                "database",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { "ready", "db" })
+            .AddNpgSql(
+                connectionString,
+                name: "postgresql",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { "ready", "db" });
 
         return services;
     }

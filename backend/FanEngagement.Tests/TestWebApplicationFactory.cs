@@ -1,12 +1,15 @@
 using FanEngagement.Api;
 using FanEngagement.Infrastructure.BackgroundServices;
+using FanEngagement.Infrastructure.HealthChecks;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace FanEngagement.Tests;
 
@@ -43,6 +46,18 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContext<FanEngagementDbContext>(options =>
             {
                 options.UseInMemoryDatabase(_databaseName);
+            });
+
+            // Remove PostgreSQL health check by reconfiguring health check options
+            // This is more robust than trying to remove service descriptors by namespace
+            services.Configure<HealthCheckServiceOptions>(options =>
+            {
+                // Remove the "postgresql" health check registration that requires real DB connection
+                var postgresCheck = options.Registrations.FirstOrDefault(r => r.Name == "postgresql");
+                if (postgresCheck != null)
+                {
+                    options.Registrations.Remove(postgresCheck);
+                }
             });
 
             // Build the service provider and ensure database is created

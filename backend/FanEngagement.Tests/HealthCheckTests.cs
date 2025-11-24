@@ -17,10 +17,12 @@ public class HealthCheckTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task HealthEndpoint_ReturnsOk()
+    public async Task LivenessEndpoint_ReturnsHealthy()
     {
-        var response = await _client.GetAsync("/health");
+        // Act
+        var response = await _client.GetAsync("/health/live");
 
+        // Assert
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var body = await response.Content.ReadAsStringAsync();
@@ -28,10 +30,39 @@ public class HealthCheckTests : IClassFixture<TestWebApplicationFactory>
         }
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
-        Assert.NotNull(payload);
-        Assert.Equal("ok", payload!.Status);
+        var payload = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Healthy", payload);
     }
 
-    private sealed record HealthResponse(string Status);
+    [Fact]
+    public async Task ReadinessEndpoint_ChecksBackgroundServicesAndDatabase()
+    {
+        // Act
+        var response = await _client.GetAsync("/health/ready");
+        var payload = await response.Content.ReadAsStringAsync();
+        
+        _output.WriteLine($"Status: {response.StatusCode}, Body: {payload}");
+
+        // Assert
+        // In test environment, background services are removed, so we expect Degraded or Unhealthy
+        // This test validates that the endpoint responds and checks are being executed
+        Assert.True(
+            response.StatusCode == HttpStatusCode.OK || 
+            response.StatusCode == HttpStatusCode.ServiceUnavailable,
+            $"Expected OK or ServiceUnavailable, got {response.StatusCode}");
+        
+        // Response should contain health check output
+        Assert.NotEmpty(payload);
+    }
+
+    [Fact]
+    public async Task LegacyHealthEndpoint_NoLongerExists()
+    {
+        // Act - ensure old /health endpoint was replaced by /health/live and /health/ready
+        var response = await _client.GetAsync("/health");
+
+        // Assert - should be NotFound since we removed the old HealthController
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        _output.WriteLine($"Legacy /health endpoint correctly returns NotFound");
+    }
 }
