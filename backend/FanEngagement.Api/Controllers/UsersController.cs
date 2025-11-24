@@ -64,6 +64,20 @@ public class UsersController(IUserService userService, IMembershipService member
         return Ok(user);
     }
 
+    [HttpGet("me/organizations")]
+    public async Task<ActionResult> GetMyOrganizations(CancellationToken cancellationToken)
+    {
+        // Get the current user's ID from the JWT token
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var memberships = await membershipService.GetByUserIdAsync(userId, cancellationToken);
+        return Ok(memberships);
+    }
+
     [HttpGet("{id:guid}/memberships")]
     public async Task<ActionResult> GetUserMemberships(Guid id, CancellationToken cancellationToken)
     {
