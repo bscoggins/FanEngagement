@@ -889,6 +889,111 @@ The frontend provides comprehensive UX for proposal lifecycle, eligibility check
 - Log errors appropriately (use `ILogger<T>`)
 - Avoid exposing internal details in production error responses
 
+## Observability
+
+FanEngagement has comprehensive observability features. Follow these guidelines when making changes.
+
+### Structured Logging
+
+**Always use structured logging with contextual properties:**
+
+```csharp
+// ✅ CORRECT: Structured logging with properties
+logger.LogInformation(
+    "Proposal lifecycle transition: {ProposalId} (OrgId: {OrganizationId}) transitioned from {OldStatus} to {NewStatus}",
+    proposalId, organizationId, oldStatus, newStatus);
+
+// ❌ WRONG: String interpolation
+logger.LogInformation($"Proposal {proposalId} transitioned from {oldStatus} to {newStatus}");
+```
+
+**Key areas requiring structured logging:**
+- Lifecycle transitions (proposals, webhooks, etc.) - include entity ID, org ID, old/new status
+- Critical operations (votes, payments, etc.) - include relevant IDs and amounts
+- Background service operations - include batch counts, success/failure counts
+- External API calls - include endpoint, status codes, response times
+
+**Minimal PII in logs:**
+- Log IDs, not names or emails (except in debug/development)
+- For votes: log proposal ID and voting power, not user ID
+- For user operations: log user ID only when necessary
+
+**Correlation ID:**
+- Correlation ID is automatically added to logger scope by `CorrelationIdMiddleware`
+- Include it in any manual log correlation (already in scope, no action needed)
+- Available in all request logging via `CorrelationId` scope property
+
+### Metrics
+
+**When to add metrics:**
+- **Counters** for significant events (votes cast, proposals created, API calls, errors)
+- **Observable gauges** for current state (pending events, active proposals, queue depths)
+
+**How to add metrics:**
+
+1. Inject `FanEngagementMetrics` into your service:
+```csharp
+public class MyService(
+    FanEngagementDbContext dbContext,
+    FanEngagementMetrics metrics,
+    ILogger<MyService> logger) : IMyService
+```
+
+2. Record events at appropriate points:
+```csharp
+// After successful operation
+metrics.RecordVoteCast(proposalId, organizationId);
+metrics.RecordProposalTransition(oldStatus.ToString(), newStatus.ToString(), orgId);
+metrics.RecordWebhookDelivery(success, eventType, orgId);
+```
+
+3. For new metrics types, add to `FanEngagementMetrics`:
+```csharp
+// In FanEngagementMetrics constructor
+_myCounter = _meter.CreateCounter<long>(
+    "my_operation_total",
+    description: "Total number of my operations");
+
+// Add public method
+public void RecordMyOperation(Guid entityId) 
+{
+    _myCounter.Add(1, new KeyValuePair<string, object?>("entity_id", entityId.ToString()));
+}
+```
+
+**Metric naming conventions:**
+- Use snake_case (e.g., `votes_cast_total`)
+- End counters with `_total`
+- Use descriptive tags (dimensions): `event_type`, `organization_id`, `success`
+
+### Health Checks
+
+Health checks are configured in `DependencyInjection.cs`. When adding critical dependencies:
+
+1. Add health check for new external dependencies (databases, APIs, etc.):
+```csharp
+services.AddHealthChecks()
+    .AddCheck<MyServiceHealthCheck>(
+        "my_service",
+        failureStatus: HealthStatus.Degraded,
+        tags: new[] { "ready" });
+```
+
+2. Tag appropriately:
+   - `ready` - Required for application to serve traffic
+   - `live` - Leave empty (no checks needed for liveness)
+
+3. Test health checks in test environment - ensure they work with in-memory database
+
+### When Adding New Services
+
+For any new background service or critical flow:
+1. **Add structured logging** for start, stop, and key operations
+2. **Add metrics** for throughput and error rates
+3. **Add health check** if service is critical for readiness
+4. **Use correlation ID** for request-scoped operations (already in scope)
+5. **Log errors with context** (entity IDs, operation type, error details)
+
 ## Database Migrations
 
 ### Creating Migrations

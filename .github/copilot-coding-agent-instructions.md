@@ -1473,3 +1473,253 @@ getAllPaged: async (page: number, pageSize: number, filters?: string): Promise<P
 }
 ```
 
+
+
+## Observability Requirements
+
+All new backend features and modifications MUST include appropriate observability instrumentation.
+
+### Structured Logging Requirements
+
+**When to add structured logging:**
+- Lifecycle transitions (proposals, votes, webhooks, etc.)
+- Critical operations (authentication, authorization, payment, etc.)
+- Background service operations (batch processing, scheduled tasks)
+- External API calls (webhooks, third-party services)
+- Error conditions (validation failures, exceptions)
+
+**Structured logging guidelines:**
+
+1. **Always use structured properties, never string interpolation:**
+   ```csharp
+   // ✅ CORRECT
+   logger.LogInformation(
+       "Proposal transition: {ProposalId} (OrgId: {OrganizationId}) from {OldStatus} to {NewStatus}",
+       proposalId, organizationId, oldStatus, newStatus);
+   
+   // ❌ WRONG
+   logger.LogInformation($"Proposal {proposalId} transitioned from {oldStatus} to {newStatus}");
+   ```
+
+2. **Include relevant context:**
+   - Entity IDs (ProposalId, OrganizationId, UserId, etc.)
+   - Old and new states for transitions
+   - Quantitative data (counts, amounts, voting power)
+   - Error details (validation messages, exception types)
+
+3. **Minimize PII in logs:**
+   - Log IDs, not names or email addresses
+   - For user operations: log user ID only when necessary
+   - For votes: log proposal and organization IDs, not user ID
+
+4. **Use appropriate log levels:**
+   - `LogInformation` - Successful operations, state transitions
+   - `LogWarning` - Validation failures, retryable errors, degraded operations
+   - `LogError` - Exceptions, unrecoverable errors, critical failures
+   - `LogDebug` - Detailed diagnostic information (development only)
+
+5. **Correlation ID is automatic:**
+   - `CorrelationIdMiddleware` adds it to all request-scoped logs
+   - No need to manually add CorrelationId to log statements
+
+### Metrics Requirements
+
+**When to add metrics:**
+- **Counters** for significant business events:
+  - Entity created/updated/deleted (proposals, votes, etc.)
+  - API calls and requests
+  - Errors and exceptions
+  - External service calls
+- **Observable gauges** for current state:
+  - Queue depths (pending events, background jobs)
+  - Active entities by status
+  - Resource utilization
+
+**How to add metrics:**
+
+1. **Inject `FanEngagementMetrics` into service:**
+   ```csharp
+   public class MyService(
+       FanEngagementDbContext dbContext,
+       FanEngagementMetrics metrics,
+       ILogger<MyService> logger) : IMyService
+   {
+       // Service implementation
+   }
+   ```
+
+2. **Record metrics after successful operations:**
+   ```csharp
+   await dbContext.SaveChangesAsync(cancellationToken);
+   
+   // Record metric
+   metrics.RecordProposalTransition(
+       oldStatus.ToString(), 
+       newStatus.ToString(), 
+       proposal.OrganizationId);
+   ```
+
+3. **For new metric types, extend `FanEngagementMetrics`:**
+   ```csharp
+   // Add counter in constructor
+   _myOperationCounter = _meter.CreateCounter<long>(
+       "my_operation_total",
+       description: "Total number of my operations");
+   
+   // Add public method
+   public void RecordMyOperation(bool success, string operationType, Guid orgId)
+   {
+       _myOperationCounter.Add(1,
+           new KeyValuePair<string, object?>("success", success),
+           new KeyValuePair<string, object?>("operation_type", operationType),
+           new KeyValuePair<string, object?>("organization_id", orgId.ToString()));
+   }
+   ```
+
+4. **Metric naming conventions:**
+   - Use `snake_case` (e.g., `webhook_deliveries_total`)
+   - End counters with `_total`
+   - Use descriptive tags: `success`, `event_type`, `organization_id`, `status`
+
+### Health Check Requirements
+
+**When to add health checks:**
+- New external dependencies (databases, APIs, message queues)
+- Critical background services
+- Third-party integrations
+
+**How to add health checks:**
+
+1. **Create health check class:**
+   ```csharp
+   public class MyServiceHealthCheck : IHealthCheck
+   {
+       public async Task<HealthCheckResult> CheckHealthAsync(
+           HealthCheckContext context,
+           CancellationToken cancellationToken = default)
+       {
+           try
+           {
+               // Perform health check operation
+               var isHealthy = await CheckServiceAsync(cancellationToken);
+               
+               return isHealthy
+                   ? HealthCheckResult.Healthy("Service is responsive")
+                   : HealthCheckResult.Degraded("Service is slow");
+           }
+           catch (Exception ex)
+           {
+               return HealthCheckResult.Unhealthy("Service is unavailable", ex);
+           }
+       }
+   }
+   ```
+
+2. **Register in `DependencyInjection.cs`:**
+   ```csharp
+   services.AddHealthChecks()
+       .AddCheck<MyServiceHealthCheck>(
+           "my_service",
+           failureStatus: HealthStatus.Degraded,  // or Unhealthy
+           tags: new[] { "ready" });  // Include in readiness check
+   ```
+
+3. **Test in test environment:**
+   - Health checks must work with in-memory database
+   - Remove or adjust checks in `TestWebApplicationFactory` if needed
+
+### Background Services Observability
+
+**Requirements for all background services:**
+1. **Structured logging:**
+   - Log service start/stop
+   - Log batch operation start with count
+   - Log each operation result with entity IDs
+   - Log errors with context (entity ID, operation, error details)
+
+2. **Metrics:**
+   - Counter for total operations processed
+   - Counter for successes and failures
+   - Observable gauge for queue depth (if applicable)
+
+3. **Health check:**
+   - Add to `BackgroundServicesHealthCheck` if critical for readiness
+   - Service must be registered in DI container
+
+**Example pattern:**
+```csharp
+public class MyBackgroundService(
+    IServiceProvider serviceProvider,
+    ILogger<MyBackgroundService> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        logger.LogInformation("MyBackgroundService started");
+        
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await ProcessBatchAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error processing batch");
+            }
+            
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+        }
+        
+        logger.LogInformation("MyBackgroundService stopped");
+    }
+    
+    private async Task ProcessBatchAsync(CancellationToken cancellationToken)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+        var metrics = scope.ServiceProvider.GetService<FanEngagementMetrics>();
+        
+        var items = await dbContext.MyEntities
+            .Where(e => e.Status == Status.Pending)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+        
+        logger.LogInformation("Processing {Count} items", items.Count);
+        
+        foreach (var item in items)
+        {
+            try
+            {
+                await ProcessItemAsync(item, cancellationToken);
+                logger.LogInformation(
+                    "Processed item {ItemId} (OrgId: {OrganizationId})",
+                    item.Id, item.OrganizationId);
+                metrics?.RecordMyOperation(true, "process", item.OrganizationId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(
+                    ex,
+                    "Error processing item {ItemId} (OrgId: {OrganizationId})",
+                    item.Id, item.OrganizationId);
+                metrics?.RecordMyOperation(false, "process", item.OrganizationId);
+            }
+        }
+    }
+}
+```
+
+### Pre-Completion Checklist
+
+Before completing any task that modifies backend services or adds new features:
+
+- [ ] Added structured logging to key operations with appropriate context
+- [ ] Added metrics for significant events (if applicable)
+- [ ] Verified correlation ID is available in request scope
+- [ ] Minimized PII in log statements
+- [ ] Used appropriate log levels (Info/Warning/Error)
+- [ ] Added health check for new external dependencies (if applicable)
+- [ ] Tested that logging doesn't break tests
+- [ ] Documented metrics in code comments
+
+See `docs/architecture.md` → **Observability & Health** section for complete details.

@@ -455,6 +455,233 @@ Processes pending webhook delivery events.
 
 **Details:** See Webhook & Events Management section.
 
+## Observability & Health
+
+FanEngagement implements comprehensive observability features including health checks, structured logging with correlation IDs, and metrics hooks for monitoring.
+
+### Health Checks
+
+The application provides two health check endpoints suitable for container orchestration platforms (Docker, Kubernetes):
+
+#### `/health/live` - Liveness Check
+- **Purpose:** Indicates the application is running and can accept requests
+- **Checks:** None (always returns Healthy if the app is running)
+- **HTTP Response:**
+  - `200 OK` - Application is alive
+- **Use Case:** Container orchestration liveness probes
+
+#### `/health/ready` - Readiness Check
+- **Purpose:** Indicates the application is ready to serve traffic
+- **Checks:**
+  1. **PostgreSQL Database** (`postgresql`)
+     - Verifies database connection
+     - Tags: `ready`, `db`
+  2. **Database Context** (`database`)
+     - Verifies EF Core DbContext can connect
+     - Tags: `ready`, `db`
+  3. **Background Services** (`background_services`)
+     - Verifies critical background services are registered:
+       - `ProposalLifecycleBackgroundService`
+       - `WebhookDeliveryBackgroundService`
+     - Status: `Degraded` if services missing, `Healthy` if configured
+     - Tags: `ready`
+- **HTTP Response:**
+  - `200 OK` - All checks passed (Healthy)
+  - `503 Service Unavailable` - One or more checks failed (Unhealthy/Degraded)
+- **Use Case:** Container orchestration readiness probes, load balancer health checks
+
+**Implementation:**
+- Health checks registered in `FanEngagement.Infrastructure/DependencyInjection.cs`
+- Background services check: `FanEngagement.Infrastructure/HealthChecks/BackgroundServicesHealthCheck.cs`
+- Endpoints configured in `FanEngagement.Api/Program.cs`
+
+### Structured Logging
+
+All key operations use structured logging with contextual properties for better observability and debugging.
+
+#### Correlation ID
+- **Middleware:** `CorrelationIdMiddleware` (runs early in pipeline)
+- **Header:** `X-Correlation-ID`
+- **Behavior:**
+  - Reads correlation ID from request header if present
+  - Generates new GUID if not present
+  - Adds to response headers
+  - Adds to `ILogger` scope for all subsequent logging in the request
+- **Scope Properties:**
+  - `CorrelationId` - Unique request identifier
+  - `RequestPath` - Request path (e.g., `/api/proposals/123`)
+  - `RequestMethod` - HTTP method (GET, POST, etc.)
+
+#### Structured Log Examples
+
+**Proposal Lifecycle Transitions:**
+```csharp
+logger.LogInformation(
+    "Proposal lifecycle transition: {ProposalId} (OrgId: {OrganizationId}, Title: {Title}) transitioned from {OldStatus} to {NewStatus}, EligibleVotingPower: {EligibleVotingPower}",
+    proposal.Id, proposal.OrganizationId, proposal.Title, oldStatus, proposal.Status, proposal.EligibleVotingPowerSnapshot);
+```
+
+**Vote Cast (minimal PII):**
+```csharp
+logger.LogInformation(
+    "Vote cast: ProposalId: {ProposalId}, OrgId: {OrganizationId}, OptionId: {ProposalOptionId}, VotingPower: {VotingPower}",
+    proposalId, proposal.OrganizationId, request.ProposalOptionId, votingPower);
+```
+
+**Webhook Delivery:**
+```csharp
+logger.LogInformation(
+    "Successfully delivered event {EventId} (EventType: {EventType}, OrgId: {OrganizationId}) to endpoint {EndpointUrl} (EndpointId: {EndpointId}), Status: {StatusCode}",
+    outboundEvent.Id, outboundEvent.EventType, outboundEvent.OrganizationId, endpoint.Url, endpoint.Id, (int)response.StatusCode);
+```
+
+**Background Service Operations:**
+```csharp
+logger.LogInformation(
+    "Automatically opened proposal {ProposalId} (OrgId: {OrganizationId}, Title: {Title})",
+    proposal.Id, proposal.OrganizationId, proposal.Title);
+```
+
+#### Key Areas with Structured Logging
+
+1. **ProposalService** (`FanEngagement.Infrastructure/Services/ProposalService.cs`)
+   - Lifecycle transitions (Open, Close, Finalize)
+   - Vote casting
+   - Validation failures with context
+
+2. **WebhookDeliveryBackgroundService** (`FanEngagement.Infrastructure/BackgroundServices/WebhookDeliveryBackgroundService.cs`)
+   - Event processing batch operations
+   - Individual delivery attempts
+   - Success/failure with endpoint details
+   - Retry attempts and final failures
+
+3. **ProposalLifecycleBackgroundService** (`FanEngagement.Infrastructure/BackgroundServices/ProposalLifecycleBackgroundService.cs`)
+   - Automatic proposal transitions
+   - Validation errors
+   - Processing failures
+
+4. **GlobalExceptionHandlerMiddleware** (`FanEngagement.Api/Middleware/GlobalExceptionHandlerMiddleware.cs`)
+   - Unhandled exceptions with stack traces
+
+### Metrics
+
+FanEngagement uses `System.Diagnostics.Metrics` for instrumentation. Metrics can be exported to monitoring systems like Prometheus, Grafana, Application Insights, etc.
+
+**Metrics Service:** `FanEngagement.Infrastructure/Metrics/FanEngagementMetrics.cs`
+
+#### Available Metrics
+
+**Counters (cumulative totals):**
+
+1. **`webhook_deliveries_total`**
+   - Description: Total number of webhook delivery attempts
+   - Tags:
+     - `success` (bool) - Whether delivery succeeded
+     - `event_type` (string) - Type of event (e.g., "ProposalOpened")
+     - `organization_id` (string) - Organization ID
+   - Recorded: After each webhook delivery attempt
+
+2. **`proposal_transitions_total`**
+   - Description: Total number of proposal state transitions
+   - Tags:
+     - `from_status` (string) - Previous status (e.g., "Draft")
+     - `to_status` (string) - New status (e.g., "Open")
+     - `organization_id` (string) - Organization ID
+   - Recorded: After each successful proposal transition
+
+3. **`votes_cast_total`**
+   - Description: Total number of votes cast
+   - Tags:
+     - `proposal_id` (string) - Proposal ID
+     - `organization_id` (string) - Organization ID
+   - Recorded: After each successful vote
+
+**Observable Gauges (current state):**
+
+4. **`outbound_events_pending`**
+   - Description: Number of pending outbound webhook events
+   - Update: On-demand when scraped (requires provider function to be set)
+
+5. **`proposals_by_status`**
+   - Description: Number of proposals by status
+   - Tags:
+     - `status` (string) - Proposal status
+   - Update: On-demand when scraped (requires provider function to be set)
+
+#### Integrating Metrics
+
+Metrics are injected into services as needed:
+
+```csharp
+public class ProposalService(
+    FanEngagementDbContext dbContext,
+    IOutboundEventService outboundEventService,
+    FanEngagementMetrics metrics,  // Inject metrics
+    ILogger<ProposalService> logger) : IProposalService
+{
+    // Record transition
+    metrics.RecordProposalTransition(
+        oldStatus.ToString(), 
+        proposal.Status.ToString(), 
+        proposal.OrganizationId);
+
+    // Record vote
+    metrics.RecordVoteCast(proposalId, proposal.OrganizationId);
+}
+```
+
+#### Exporting Metrics
+
+To export metrics to a monitoring system:
+
+1. **OpenTelemetry** (recommended):
+   - Add `OpenTelemetry.Exporter.Prometheus.AspNetCore` package
+   - Configure in `Program.cs`:
+     ```csharp
+     builder.Services.AddOpenTelemetry()
+         .WithMetrics(metrics => metrics
+             .AddMeter("FanEngagement")
+             .AddPrometheusExporter());
+     
+     app.MapPrometheusScrapingEndpoint(); // Exposes /metrics
+     ```
+
+2. **Application Insights**:
+   - Add `Microsoft.ApplicationInsights.AspNetCore` package
+   - Metrics automatically collected
+
+3. **Custom Exporter**:
+   - Implement `System.Diagnostics.Metrics` listener
+   - Subscribe to `FanEngagement` meter
+
+#### Observable Gauge Providers
+
+To populate real-time gauge values, set provider functions:
+
+```csharp
+// In a startup service or background worker
+var metrics = services.GetRequiredService<FanEngagementMetrics>();
+
+metrics.SetPendingOutboundEventsProvider(() =>
+{
+    using var scope = services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+    return dbContext.OutboundEvents.Count(e => e.Status == OutboundEventStatus.Pending);
+});
+
+metrics.SetProposalsByStatusProvider(() =>
+{
+    using var scope = services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+    return dbContext.Proposals
+        .GroupBy(p => p.Status)
+        .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+        .ToDictionary(x => x.Status, x => x.Count);
+});
+```
+
+**Note:** Observable gauges currently require manual provider setup. Consider adding a background service to periodically update cached values for high-traffic scenarios.
+
 ## Roles & Permissions
 
 FanEngagement defines a two-tier role model: **Global Roles** (platform-wide) and **Organization Roles** (per-organization). The role model is implemented in the domain entities, but **authorization enforcement is currently incomplete** and varies by endpoint.
