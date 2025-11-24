@@ -16,7 +16,7 @@ public class UpdateOrganizationRequestValidator : AbstractValidator<UpdateOrgani
             .When(x => x.Description != null);
 
         RuleFor(x => x.LogoUrl)
-            .Must(UrlValidationHelpers.IsValidPublicHttpUrl)
+            .Must(url => UrlValidationHelpers.IsValidPublicHttpUrl(url))
             .WithMessage("Logo URL must be a valid public HTTP/HTTPS URL (localhost and private IPs are not allowed).")
             .MaximumLength(2048).WithMessage("Logo URL must not exceed 2048 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.LogoUrl));

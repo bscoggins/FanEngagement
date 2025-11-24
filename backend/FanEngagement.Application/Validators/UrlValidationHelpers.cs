@@ -9,11 +9,12 @@ public static class UrlValidationHelpers
     /// Blocks localhost and private IP ranges to prevent Server-Side Request Forgery attacks.
     /// </summary>
     /// <param name="url">The URL to validate</param>
+    /// <param name="allowEmpty">If true, null or empty URLs are considered valid. If false, they are invalid.</param>
     /// <returns>True if the URL is valid and safe; false otherwise</returns>
-    public static bool IsValidPublicHttpUrl(string? url)
+    public static bool IsValidPublicHttpUrl(string? url, bool allowEmpty = true)
     {
         if (string.IsNullOrWhiteSpace(url))
-            return true;
+            return allowEmpty;
 
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uriResult))
             return false;
