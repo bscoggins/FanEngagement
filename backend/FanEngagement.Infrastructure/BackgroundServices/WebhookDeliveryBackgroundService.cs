@@ -395,6 +395,13 @@ public class WebhookDeliveryBackgroundService(
             return error;
         }
 
-        return error.Length <= MaxErrorLength ? error : error[..MaxErrorLength];
+        if (error.Length <= MaxErrorLength)
+        {
+            return error;
+        }
+
+        // Truncate and add suffix to indicate the error message was cut off
+        const string truncationSuffix = "...";
+        return error[..(MaxErrorLength - truncationSuffix.Length)] + truncationSuffix;
     }
 }

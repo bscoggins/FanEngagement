@@ -31,7 +31,9 @@ const getStatusBadgeStyle = (status: OutboundEventStatus): React.CSSProperties =
   }
 };
 
-const truncateError = (error: string | undefined, maxLength: number = 50): string => {
+const MAX_TRUNCATE_LENGTH = 50;
+
+const truncateError = (error: string | undefined, maxLength: number = MAX_TRUNCATE_LENGTH): string => {
   if (!error) return '-';
   return error.length > maxLength ? `${error.substring(0, maxLength)}...` : error;
 };
@@ -500,6 +502,9 @@ export const AdminWebhookEventsPage: React.FC = () => {
                     }}
                   >
                     {(() => {
+                      if (!selectedEvent.payload) {
+                        return '(No payload)';
+                      }
                       try {
                         return JSON.stringify(JSON.parse(selectedEvent.payload), null, 2);
                       } catch {
