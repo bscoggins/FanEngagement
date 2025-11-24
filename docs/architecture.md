@@ -852,7 +852,7 @@ The `Organization` entity includes the following optional branding fields:
 - Branding fields are included in all Organization API responses and update requests
 
 **Frontend:**
-- `useOrgBranding(orgId)` hook fetches and caches organization branding
+- `useOrgBranding(orgId)` hook fetches organization branding
 - Returns default colors if branding is not configured
 - Branding is applied automatically to:
   - Organization page headers with logo display

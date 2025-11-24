@@ -27,6 +27,16 @@ public static class UrlValidationHelpers
         if (host == "localhost" || host == "127.0.0.1" || host == "::1")
             return false;
         
+        // Block hostnames with common internal TLDs
+        var lowerHost = host.ToLowerInvariant();
+        if (lowerHost.EndsWith(".local") || lowerHost.EndsWith(".internal") || lowerHost.EndsWith(".localhost"))
+            return false;
+        
+        // Block hostnames without a public TLD (no dot in hostname, likely internal-only)
+        // Examples: "myserver", "internal", etc.
+        if (!lowerHost.Contains('.'))
+            return false;
+        
         // Block private, link-local, CGNAT, and reserved IP ranges
         if (IPAddress.TryParse(host, out var ipAddress))
         {
