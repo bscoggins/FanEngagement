@@ -29,7 +29,20 @@ const loadActiveOrgFromStorage = (): ActiveOrganization | null => {
   const stored = localStorage.getItem(ACTIVE_ORG_KEY);
   if (stored) {
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Validate the structure of the parsed data
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        typeof parsed.id === 'string' &&
+        typeof parsed.name === 'string' &&
+        (parsed.role === 'OrgAdmin' || parsed.role === 'Member')
+      ) {
+        return parsed as ActiveOrganization;
+      } else {
+        console.warn('Invalid stored organization data structure, clearing...');
+        localStorage.removeItem(ACTIVE_ORG_KEY);
+      }
     } catch (error) {
       console.error('Failed to parse stored active organization:', error);
       localStorage.removeItem(ACTIVE_ORG_KEY);
@@ -139,7 +152,7 @@ export const OrgProvider: React.FC<{ children: ReactNode; isAuthenticated: boole
     memberships,
     hasMultipleOrgs: memberships.length > 1,
     isLoading,
-    refreshMemberships: () => fetchMemberships(undefined),
+    refreshMemberships: () => fetchMemberships(),
   };
 
   return <OrgContext.Provider value={value}>{children}</OrgContext.Provider>;
