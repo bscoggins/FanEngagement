@@ -1,14 +1,26 @@
-import type { ProposalStatus, ShareBalance } from '../types/api';
+import type { ProposalStatus, ShareBalance, ShareType } from '../types/api';
 
 /**
- * Calculate voting power from share balances
+ * Calculate voting power from share balances and share types.
  * VotingPower = Sum(Balance × VotingWeight)
+ * @param balances Array of ShareBalance objects
+ * @param shareTypes Array of ShareType objects (must include votingWeight)
+ * @returns Total voting power
  */
-export function calculateVotingPower(balances: ShareBalance[]): number {
-  // Note: ShareBalance doesn't include votingWeight, so we can't calculate it here
-  // This would need to be fetched from ShareType data
-  // For now, return the sum of balances as a placeholder
-  return balances.reduce((sum, balance) => sum + balance.balance, 0);
+export function calculateVotingPower(
+  balances: ShareBalance[],
+  shareTypes: ShareType[]
+): number {
+  // Build a map of shareTypeId to votingWeight for quick lookup
+  const votingWeightMap: Record<string, number> = {};
+  for (const type of shareTypes) {
+    votingWeightMap[type.id] = type.votingWeight ?? 1;
+  }
+  // Sum balance × votingWeight for each balance
+  return balances.reduce((sum, balance) => {
+    const weight = votingWeightMap[balance.shareTypeId] ?? 1;
+    return sum + balance.balance * weight;
+  }, 0);
 }
 
 /**

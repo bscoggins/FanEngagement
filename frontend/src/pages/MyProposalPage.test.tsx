@@ -6,9 +6,11 @@ import { AuthProvider } from '../auth/AuthContext';
 import { MyProposalPage } from './MyProposalPage';
 import { proposalsApi } from '../api/proposalsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
+import { shareTypesApi } from '../api/shareTypesApi';
 
 vi.mock('../api/proposalsApi');
 vi.mock('../api/shareBalancesApi');
+vi.mock('../api/shareTypesApi');
 
 const renderWithAuth = (proposalId: string, userId: string) => {
   const mockUser = {
@@ -46,6 +48,19 @@ describe('MyProposalPage', () => {
         shareTypeSymbol: 'TST',
         balance: 100,
         updatedAt: '2024-01-01T00:00:00Z',
+      },
+    ]);
+    
+    // Mock share types by default - can be overridden in specific tests
+    vi.mocked(shareTypesApi.getByOrganization).mockResolvedValue([
+      {
+        id: 'share-type-1',
+        organizationId: 'org-1',
+        name: 'Test Share',
+        symbol: 'TST',
+        votingWeight: 1,
+        isTransferable: true,
+        createdAt: '2024-01-01T00:00:00Z',
       },
     ]);
     

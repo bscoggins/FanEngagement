@@ -3,12 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { proposalsApi } from '../api/proposalsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
+import { shareTypesApi } from '../api/shareTypesApi';
 import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
 import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import { QuorumInfo } from '../components/QuorumInfo';
-import { checkVotingEligibility } from '../utils/proposalUtils';
+import { checkVotingEligibility, calculateVotingPower } from '../utils/proposalUtils';
 import { parseApiError } from '../utils/errorUtils';
-import type { ProposalDetails, Vote, ProposalResults, ShareBalance } from '../types/api';
+import type { ProposalDetails, Vote, ProposalResults, ShareBalance, ShareType } from '../types/api';
 
 export const MyProposalPage: React.FC = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
@@ -17,6 +18,7 @@ export const MyProposalPage: React.FC = () => {
   const [userVote, setUserVote] = useState<Vote | null>(null);
   const [results, setResults] = useState<ProposalResults | null>(null);
   const [balances, setBalances] = useState<ShareBalance[]>([]);
+  const [shareTypes, setShareTypes] = useState<ShareType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -34,15 +36,16 @@ export const MyProposalPage: React.FC = () => {
         const proposalData = await proposalsApi.getById(proposalId);
         setProposal(proposalData);
 
-        // Fetch user's share balances to calculate voting power
+        // Fetch share types and user's share balances to calculate voting power
         try {
-          const balanceData = await shareBalancesApi.getBalances(
-            proposalData.organizationId,
-            user.userId
-          );
+          const [balanceData, shareTypeData] = await Promise.all([
+            shareBalancesApi.getBalances(proposalData.organizationId, user.userId),
+            shareTypesApi.getByOrganization(proposalData.organizationId),
+          ]);
           setBalances(balanceData);
+          setShareTypes(shareTypeData);
         } catch (err) {
-          console.error('Failed to fetch balances:', err);
+          console.error('Failed to fetch balances or share types:', err);
         }
 
         // Try to get user's vote
@@ -71,8 +74,7 @@ export const MyProposalPage: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to fetch proposal:', err);
-        const errorMessage = parseApiError(err);
-        setError(errorMessage);
+        setError('Failed to load proposal information.');
       } finally {
         setLoading(false);
       }
@@ -100,13 +102,11 @@ export const MyProposalPage: React.FC = () => {
       setSelectedOptionId('');
       
       // Refetch results to show updated vote counts
-      if (proposalId) {
-        try {
-          const resultsData = await proposalsApi.getResults(proposalId);
-          setResults(resultsData);
-        } catch (err) {
-          console.error('Failed to fetch updated results:', err);
-        }
+      try {
+        const resultsData = await proposalsApi.getResults(proposalId);
+        setResults(resultsData);
+      } catch (err) {
+        console.error('Failed to fetch updated results:', err);
       }
     } catch (err: any) {
       console.error('Failed to cast vote:', err);
@@ -129,9 +129,8 @@ export const MyProposalPage: React.FC = () => {
     return <div style={{ padding: '2rem' }}>Proposal not found.</div>;
   }
 
-  // Calculate user's voting power (simplified - just sum of balances)
-  // In a real implementation, this would factor in votingWeight from ShareType
-  const userVotingPower = balances.reduce((sum, b) => sum + b.balance, 0);
+  // Calculate user's voting power using share types and balances
+  const userVotingPower = calculateVotingPower(balances, shareTypes);
 
   // Check eligibility
   const eligibilityCheck = checkVotingEligibility(
