@@ -1,11 +1,13 @@
 using FanEngagement.Api;
 using FanEngagement.Infrastructure.BackgroundServices;
+using FanEngagement.Infrastructure.HealthChecks;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
 namespace FanEngagement.Tests;
@@ -44,6 +46,19 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             {
                 options.UseInMemoryDatabase(_databaseName);
             });
+
+            // Remove PostgreSQL health check registration (can't connect to DB in test environment)
+            // Keep only the DbContext and BackgroundServices checks which work with InMemory DB
+            var healthCheckRegistrations = services
+                .Where(d => d.ImplementationType != null && 
+                           d.ImplementationType.Namespace != null &&
+                           d.ImplementationType.Namespace.StartsWith("HealthChecks.NpgSql"))
+                .ToList();
+            
+            foreach (var registration in healthCheckRegistrations)
+            {
+                services.Remove(registration);
+            }
 
             // Build the service provider and ensure database is created
             var serviceProvider = services.BuildServiceProvider();
