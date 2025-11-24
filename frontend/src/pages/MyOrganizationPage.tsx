@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { useOrgBranding } from '../hooks/useOrgBranding';
+import { useOrgBranding, DEFAULT_PRIMARY_COLOR } from '../hooks/useOrgBranding';
 import { organizationsApi } from '../api/organizationsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
 import { proposalsApi } from '../api/proposalsApi';
@@ -85,7 +85,7 @@ export const MyOrganizationPage: React.FC = () => {
   return (
     <div>
       {/* Branded Header */}
-      {branding.logoUrl || branding.primaryColor !== '#0066cc' ? (
+      {branding.logoUrl || branding.primaryColor !== DEFAULT_PRIMARY_COLOR ? (
         <div
           style={{
             backgroundColor: branding.primaryColor,
@@ -121,7 +121,7 @@ export const MyOrganizationPage: React.FC = () => {
 
       <div style={{ padding: '0 2rem 2rem 2rem' }}>
         {/* Show traditional header if no branding */}
-        {!branding.logoUrl && branding.primaryColor === '#0066cc' && (
+        {!branding.logoUrl && branding.primaryColor === DEFAULT_PRIMARY_COLOR && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
               <h1 style={{ margin: 0 }}>{organization.name}</h1>
@@ -147,7 +147,7 @@ export const MyOrganizationPage: React.FC = () => {
         )}
 
         {/* Admin badge for branded header */}
-        {(branding.logoUrl || branding.primaryColor !== '#0066cc') && orgId && isOrgAdmin(orgId) && (
+        {(branding.logoUrl || branding.primaryColor !== DEFAULT_PRIMARY_COLOR) && orgId && isOrgAdmin(orgId) && (
           <div style={{ marginBottom: '1rem' }}>
             <span style={{ 
               padding: '0.25rem 0.75rem', 

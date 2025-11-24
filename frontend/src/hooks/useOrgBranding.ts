@@ -9,8 +9,8 @@ export interface OrgBranding {
   error?: string;
 }
 
-const DEFAULT_PRIMARY_COLOR = '#0066cc';
-const DEFAULT_SECONDARY_COLOR = '#6c757d';
+export const DEFAULT_PRIMARY_COLOR = '#0066cc';
+export const DEFAULT_SECONDARY_COLOR = '#6c757d';
 
 /**
  * Hook to fetch and provide organization branding information.
