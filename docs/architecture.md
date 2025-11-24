@@ -329,7 +329,40 @@ Proposals can optionally specify `StartAt` and `EndAt` to restrict voting window
 - **Deadline**: Set `EndAt` to enforce a voting deadline; votes rejected after that time
 - **No Time Bounds**: Leave both `null` for open-ended voting (manual close required)
 
-**Note:** Time bounds are **advisory only** in current implementation. Proposals do not auto-open or auto-close based on these times. An OrgAdmin must manually close the proposal.
+**Automatic Lifecycle Processing:**
+
+The `ProposalLifecycleBackgroundService` automatically processes proposal transitions based on time constraints:
+
+- **Auto-Open**: Draft proposals with `StartAt <= now` are automatically transitioned to Open status
+- **Auto-Close**: Open proposals with `EndAt <= now` are automatically transitioned to Closed status
+- **Polling Interval**: Configurable via `ProposalLifecycle:PollingIntervalSeconds` (default: 60 seconds)
+- **Batch Processing**: Processes up to `ProposalLifecycle:MaxProposalsPerBatch` proposals per cycle (default: 100)
+
+**Manual Operations:**
+
+- Proposals can be manually opened via `POST /proposals/{id}/open` (requires 2+ options)
+- Proposals can be manually closed via `POST /proposals/{id}/close`
+- Finalize is always manual via `POST /proposals/{id}/finalize` (requires proposal to be Closed)
+
+**Configuration:**
+
+```json
+{
+  "ProposalLifecycle": {
+    "PollingIntervalSeconds": 60,
+    "MaxProposalsPerBatch": 100
+  }
+}
+```
+
+**Implementation Details:**
+
+- Background service runs continuously with configurable polling interval
+- Uses scoped `DbContext` and `IProposalService` per execution cycle
+- Validates transitions using `ProposalGovernanceService` domain logic
+- Enqueues outbound events for state changes (ProposalOpened, ProposalClosed)
+- Logs all automatic transitions for audit trail
+- Handles errors gracefully without stopping service
 
 #### No-Quorum Voting
 
@@ -361,23 +394,65 @@ See the **Roles & Permissions** section below for detailed authorization rules.
 
 The following are **not** implemented in this governance model:
 
-1. **Automatic Transitions**: Proposals do not auto-open or auto-close based on `StartAt`/`EndAt`
-   - Future enhancement: Background job to close proposals at `EndAt`
-
-2. **Vote Changes**: Users cannot change or revoke their vote once cast
+1. **Vote Changes**: Users cannot change or revoke their vote once cast
    - Future enhancement: Allow vote changes before proposal closes
 
-3. **Delegated Voting**: Users cannot delegate their voting power to another user
+2. **Delegated Voting**: Users cannot delegate their voting power to another user
    - Future enhancement: Implement proxy voting
 
-4. **Weighted Options**: All options are equal; no concept of ranked choice or weighted voting
+3. **Weighted Options**: All options are equal; no concept of ranked choice or weighted voting
    - Future enhancement: Ranked choice voting
 
-5. **Conditional Quorum**: Quorum is a simple percentage; no complex rules (e.g., "50% quorum OR 100 votes")
+4. **Conditional Quorum**: Quorum is a simple percentage; no complex rules (e.g., "50% quorum OR 100 votes")
    - Future enhancement: Custom quorum formulas
 
-6. **On-Chain Voting**: All voting is off-chain within the platform database
+5. **On-Chain Voting**: All voting is off-chain within the platform database
    - Future enhancement: Blockchain integration for immutable vote records
+
+## Background Services
+
+### ProposalLifecycleBackgroundService
+
+Automatically processes proposal lifecycle transitions based on time constraints.
+
+**Location:** `backend/FanEngagement.Infrastructure/BackgroundServices/ProposalLifecycleBackgroundService.cs`
+
+**Configuration:** `backend/FanEngagement.Api/appsettings.json` → `ProposalLifecycle` section
+
+**Responsibilities:**
+- Polls database at configurable interval (default: 60 seconds)
+- Opens Draft proposals when `StartAt <= now`
+- Closes Open proposals when `EndAt <= now`
+- Validates all transitions using domain services
+- Enqueues outbound events for state changes
+- Logs all automatic transitions
+
+**Workflow:**
+1. Query proposals due for opening: `Status == Draft AND StartAt <= now`
+2. Query proposals due for closing: `Status == Open AND EndAt <= now`
+3. For each proposal:
+   - Validate transition using `ProposalGovernanceService`
+   - Call appropriate service method (`OpenAsync` or `CloseAsync`)
+   - Log success or failure
+4. Wait for configured interval and repeat
+
+**Error Handling:**
+- Individual proposal failures don't stop processing of other proposals
+- All errors are logged with proposal ID and title
+- Service continues running even if entire cycle fails
+
+**Testing:**
+- Background service is disabled in test environment via `TestWebApplicationFactory`
+- Integration tests directly call service methods to test lifecycle logic
+- Time-based transitions tested with past/future dates
+
+### WebhookDeliveryBackgroundService
+
+Processes pending webhook delivery events.
+
+**Location:** `backend/FanEngagement.Infrastructure/BackgroundServices/WebhookDeliveryBackgroundService.cs`
+
+**Details:** See Webhook & Events Management section.
 
 ## Roles & Permissions
 

@@ -35,11 +35,37 @@ public class ProposalsController(IProposalService proposalService) : ControllerB
         return Ok(proposal);
     }
 
+    [HttpPost("{proposalId:guid}/open")]
+    [Authorize(Policy = "ProposalManager")]
+    public async Task<ActionResult> Open(Guid proposalId, CancellationToken cancellationToken)
+    {
+        var proposal = await proposalService.OpenAsync(proposalId, cancellationToken);
+        if (proposal is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(proposal);
+    }
+
     [HttpPost("{proposalId:guid}/close")]
     [Authorize(Policy = "ProposalManager")]
     public async Task<ActionResult> Close(Guid proposalId, CancellationToken cancellationToken)
     {
         var proposal = await proposalService.CloseAsync(proposalId, cancellationToken);
+        if (proposal is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(proposal);
+    }
+
+    [HttpPost("{proposalId:guid}/finalize")]
+    [Authorize(Policy = "ProposalManager")]
+    public async Task<ActionResult> Finalize(Guid proposalId, CancellationToken cancellationToken)
+    {
+        var proposal = await proposalService.FinalizeAsync(proposalId, cancellationToken);
         if (proposal is null)
         {
             return NotFound();

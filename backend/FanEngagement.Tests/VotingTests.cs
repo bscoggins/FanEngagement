@@ -100,6 +100,17 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
         var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
         var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
 
+        // Add second option (required to open proposal)
+        var option2Request = new AddProposalOptionRequest
+        {
+            Text = "Option 2",
+            Description = "Second option"
+        };
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", option2Request);
+
+        // Open the proposal
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         return (org.Id, user.Id, shareType.Id, proposal.Id, option!.Id);
     }
 
@@ -360,7 +371,7 @@ public class VotingTests : IClassFixture<TestWebApplicationFactory>
         var results = await response.Content.ReadFromJsonAsync<ProposalResultsDto>();
         Assert.NotNull(results);
         Assert.Equal(proposalId, results!.ProposalId);
-        Assert.Equal(2, results.OptionResults.Count);
+        Assert.Equal(3, results.OptionResults.Count);  // Changed from 2 to 3 (SetupTestDataAsync adds 2 options + test adds 1)
         Assert.Equal(175.0m, results.TotalVotingPower); // 100 + 75
 
         var option1Result = results.OptionResults.First(r => r.OptionId == option1Id);

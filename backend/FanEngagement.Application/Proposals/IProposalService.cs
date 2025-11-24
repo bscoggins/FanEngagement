@@ -10,7 +10,9 @@ public interface IProposalService
     Task<PagedResult<ProposalDto>> GetByOrganizationAsync(Guid organizationId, int page, int pageSize, ProposalStatus? status = null, string? search = null, CancellationToken cancellationToken = default);
     Task<ProposalDetailsDto?> GetByIdAsync(Guid proposalId, CancellationToken cancellationToken = default);
     Task<ProposalDto?> UpdateAsync(Guid proposalId, UpdateProposalRequest request, CancellationToken cancellationToken = default);
+    Task<ProposalDto?> OpenAsync(Guid proposalId, CancellationToken cancellationToken = default);
     Task<ProposalDto?> CloseAsync(Guid proposalId, CancellationToken cancellationToken = default);
+    Task<ProposalDto?> FinalizeAsync(Guid proposalId, CancellationToken cancellationToken = default);
     
     Task<ProposalOptionDto?> AddOptionAsync(Guid proposalId, AddProposalOptionRequest request, CancellationToken cancellationToken = default);
     Task<bool> DeleteOptionAsync(Guid proposalId, Guid optionId, CancellationToken cancellationToken = default);

@@ -245,7 +245,7 @@ public class PaginationTests : IClassFixture<TestWebApplicationFactory>
         var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
         Assert.NotNull(org);
 
-        // Create proposals (they start as Open by default based on service implementation)
+        // Create proposals (they start in Draft status)
         for (int i = 0; i < 3; i++)
         {
             var proposalRequest = new CreateProposalRequest
@@ -254,7 +254,13 @@ public class PaginationTests : IClassFixture<TestWebApplicationFactory>
                 Description = $"Description {i}",
                 CreatedByUserId = userId
             };
-            await _client.PostAsJsonAsync($"/organizations/{org!.Id}/proposals", proposalRequest);
+            var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{org!.Id}/proposals", proposalRequest);
+            var proposal = await proposalResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+            // Add options and open the proposal
+            await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+            await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+            await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
         }
 
         // Act - Filter by Open status

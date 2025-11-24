@@ -9,6 +9,7 @@ using FanEngagement.Application.ShareTypes;
 using FanEngagement.Application.Users;
 using FanEngagement.Application.WebhookEndpoints;
 using FanEngagement.Infrastructure.BackgroundServices;
+using FanEngagement.Infrastructure.Configuration;
 using FanEngagement.Infrastructure.Persistence;
 using FanEngagement.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -40,8 +41,13 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
 
+        // Configure background services
+        services.Configure<ProposalLifecycleOptions>(
+            configuration.GetSection("ProposalLifecycle"));
+        
         services.AddHttpClient();
         services.AddHostedService<WebhookDeliveryBackgroundService>();
+        services.AddHostedService<ProposalLifecycleBackgroundService>();
 
         return services;
     }

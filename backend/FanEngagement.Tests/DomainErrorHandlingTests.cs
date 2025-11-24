@@ -52,8 +52,13 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         });
         var proposal = await proposalResponse.Content.ReadFromJsonAsync<FanEngagement.Application.Proposals.ProposalDto>();
 
+        // Add options and open the proposal
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         // Close the proposal
-        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
 
         // Act - Try to update closed proposal
         var updateResponse = await _client.PutAsJsonAsync($"/proposals/{proposal.Id}", new UpdateProposalRequest
@@ -274,8 +279,13 @@ public class DomainErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
         });
         var proposal = await proposalResponse.Content.ReadFromJsonAsync<FanEngagement.Application.Proposals.ProposalDto>();
 
+        // Add options and open the proposal
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new FanEngagement.Application.Proposals.AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new FanEngagement.Application.Proposals.AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
         // Close the proposal
-        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
 
         // Act - Try to add option to closed proposal
         var response = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new FanEngagement.Application.Proposals.AddProposalOptionRequest
