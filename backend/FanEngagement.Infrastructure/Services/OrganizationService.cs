@@ -26,6 +26,9 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
             Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
+            LogoUrl = request.LogoUrl,
+            PrimaryColor = request.PrimaryColor,
+            SecondaryColor = request.SecondaryColor,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -105,6 +108,9 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
 
         organization.Name = request.Name;
         organization.Description = request.Description;
+        organization.LogoUrl = request.LogoUrl;
+        organization.PrimaryColor = request.PrimaryColor;
+        organization.SecondaryColor = request.SecondaryColor;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
