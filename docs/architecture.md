@@ -647,6 +647,167 @@ To implement the intended model, the following work is required:
 - **Current Approach**: Mixed use of `[Authorize]`, `[Authorize(Roles = "Admin")]`, and manual `User.IsInRole()` checks
 - **Target Approach**: Consistent policy-based authorization with custom requirements and handlers
 
+## Organization Onboarding
+
+FanEngagement implements a streamlined organization onboarding process where organizations can be created through the API, with automatic role assignment for the creator.
+
+### Who Can Create Organizations
+
+**Current Implementation:**
+- **Global Admins Only**: Organization creation is restricted to users with `UserRole.Admin` (Global Admin)
+- Authorization is enforced via the `GlobalAdmin` policy on the `POST /organizations` endpoint
+- The endpoint is protected by `[Authorize(Policy = "GlobalAdmin")]` in `OrganizationsController`
+
+**Rationale:**
+- This approach ensures controlled onboarding where platform administrators manage organization creation
+- Prevents spam or unauthorized organizations from being created
+- Allows for potential future enhancements like approval workflows or tiered organization types
+
+**Future Considerations:**
+- Self-service organization creation could be enabled for all authenticated users
+- Could implement an approval workflow where regular users can request organization creation
+- Could add organization tiers (free, premium) with different capabilities
+
+### Automatic OrgAdmin Membership
+
+When a Global Admin creates an organization, the system automatically:
+
+1. **Creates the Organization**: Validates and saves the organization with provided name and description
+2. **Creates OrgAdmin Membership**: Automatically creates an `OrganizationMembership` record with:
+   - `UserId`: The ID of the user who created the organization (extracted from JWT claims)
+   - `OrganizationId`: The newly created organization's ID
+   - `Role`: `OrganizationRole.OrgAdmin` (administrator for the specific organization)
+   - `CreatedAt`: Current timestamp
+
+3. **Transactional Operation**: Both the organization and membership are saved in a single database transaction, ensuring consistency
+
+**Benefits:**
+- The creator immediately has full administrative control over the new organization
+- No separate step needed to grant the creator access
+- Ensures every organization has at least one administrator from creation
+- Follows the principle of least surprise - creator expects to manage their organization
+
+### Organization Creation Flow
+
+**API Endpoint:** `POST /organizations`
+
+**Request Body:**
+```json
+{
+  "name": "Manchester United Supporters Club",
+  "description": "Official fan governance organization for MUSC"
+}
+```
+
+**Authorization:**
+- Requires JWT authentication
+- Requires `UserRole.Admin` (Global Admin role)
+- Returns `401 Unauthorized` if not authenticated
+- Returns `403 Forbidden` if user is not a Global Admin
+
+**Validation:**
+- `Name`: Required, maximum 200 characters
+- `Description`: Optional, maximum 1000 characters
+
+**Response:** `201 Created`
+```json
+{
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "Manchester United Supporters Club",
+  "description": "Official fan governance organization for MUSC",
+  "createdAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Behind the Scenes:**
+1. Controller extracts user ID from JWT claims (`ClaimTypes.NameIdentifier`)
+2. Service validates the creator user exists in the database
+3. Service creates the organization record
+4. Service creates the OrgAdmin membership record for the creator
+5. Both records are saved in a single transaction
+6. Organization is returned to the caller
+
+### Initial Organization Setup
+
+After an organization is created with automatic OrgAdmin membership, the creator can:
+
+1. **Add Members**: Invite other users to join the organization
+   - Endpoint: `POST /organizations/{orgId}/memberships`
+   - Can assign roles: `OrgAdmin` or `Member`
+
+2. **Configure Share Types**: Define the types of shares the organization will issue
+   - Endpoint: `POST /organizations/{orgId}/share-types`
+   - Configure voting weights, transferability, max supply, etc.
+
+3. **Issue Shares**: Distribute shares to organization members
+   - Endpoint: `POST /organizations/{orgId}/share-issuances`
+   - Establishes voting power for members
+
+4. **Create Proposals**: Set up governance proposals for voting
+   - Endpoint: `POST /organizations/{orgId}/proposals`
+   - Define proposal options, quorum requirements, voting periods
+
+5. **Configure Webhooks**: Set up integrations for external notifications
+   - Endpoint: `POST /organizations/{orgId}/webhooks`
+   - Subscribe to events like proposal finalization
+
+### Security Considerations
+
+**User Validation:**
+- Before creating an organization, the service validates that the creator user exists
+- If user does not exist, operation fails with `InvalidOperationException`
+- Prevents orphaned organizations or dangling membership records
+
+**Authorization Enforcement:**
+- The `GlobalAdmin` policy is enforced at the controller level
+- Policy checks `User.IsInRole("Admin")` via JWT claims
+- Non-admin users receive `403 Forbidden` before service methods are called
+
+**Transaction Safety:**
+- Organization and membership creation use a single `SaveChangesAsync` call
+- If either operation fails, the entire transaction is rolled back
+- Ensures database consistency (no organizations without OrgAdmins, no memberships for non-existent orgs)
+
+**Circular Reference Handling:**
+- JSON serialization is configured with `ReferenceHandler.IgnoreCycles`
+- Prevents infinite loops when serializing entities with navigation properties
+- Allows returning entity objects directly without creating separate DTOs
+
+### Testing
+
+Organization creation behavior is covered by comprehensive integration tests in `OrganizationCreationTests.cs`:
+
+- ✅ `CreateOrganization_AsGlobalAdmin_CreatesOrgAndOrgAdminMembership`: Verifies org creation and automatic membership
+- ✅ `CreateOrganization_AsNonAdmin_ReturnsForbidden`: Verifies authorization policy enforcement
+- ✅ `CreateOrganization_WithoutAuthentication_ReturnsUnauthorized`: Verifies authentication requirement
+- ✅ `CreateOrganization_WithEmptyName_ReturnsBadRequest`: Verifies name validation
+- ✅ `CreateOrganization_WithTooLongName_ReturnsBadRequest`: Verifies length validation
+- ✅ `CreateOrganization_MultipleOrgsWithSameAdmin_CreatesMultipleMemberships`: Verifies multi-org support
+
+These tests use `WebApplicationFactory` for end-to-end integration testing, covering the full request flow from HTTP to database.
+
+### Future Enhancements
+
+**Self-Service Registration:**
+- Allow regular users to create organizations
+- Implement approval workflow for new organizations
+- Add email verification for organization creators
+
+**Organization Types:**
+- Support different organization types (e.g., Sports Club, Non-Profit, Corporate)
+- Different default configurations per type
+- Type-specific features and limitations
+
+**Onboarding Wizard:**
+- Guided setup flow for new organizations
+- Step-by-step configuration of shares, members, and proposals
+- Templates for common organization structures
+
+**Default Configuration:**
+- Apply default share types on organization creation
+- Create initial proposal templates
+- Set up default governance rules based on organization size or type
+
 ## Tech Stack
 
 - Runtime: .NET 9

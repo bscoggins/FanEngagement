@@ -313,6 +313,115 @@ public async Task<ActionResult> GetUserData(Guid id, ...)
 
 For the complete current vs. intended permissions matrix, see **Roles & Permissions** in `docs/architecture.md`.
 
+### Organization Creation and Onboarding
+
+**✅ IMPLEMENTED:** Organization creation with automatic OrgAdmin membership.
+
+#### Backend Implementation
+
+**Who Can Create Organizations:**
+- Only users with `UserRole.Admin` (GlobalAdmin) can create organizations
+- Enforced via `[Authorize(Policy = "GlobalAdmin")]` on `POST /organizations`
+- Future enhancement: Could enable self-service for all users with approval workflow
+
+**Endpoint:** `POST /organizations`
+```csharp
+// Request
+{
+  "name": "Organization Name",        // Required, max 200 chars
+  "description": "Description text"   // Optional, max 1000 chars
+}
+
+// Controller extracts current user ID from JWT claims
+var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+// Service creates organization AND OrgAdmin membership transactionally
+var organization = await organizationService.CreateAsync(request, creatorUserId, cancellationToken);
+```
+
+**Automatic OrgAdmin Membership:**
+- `OrganizationService.CreateAsync()` automatically creates an `OrganizationMembership` for the creator
+- Membership has `OrganizationRole.OrgAdmin` role
+- Both organization and membership are saved in a single transaction
+- Creator immediately has full administrative control
+
+**Implementation Details:**
+- Service validates that creator user exists before creating org
+- Returns `InvalidOperationException` if creator doesn't exist
+- JSON serialization uses `ReferenceHandler.IgnoreCycles` to handle navigation properties
+
+**Testing:**
+- `backend/FanEngagement.Tests/OrganizationCreationTests.cs`:
+  - Tests GlobalAdmin creating org + membership
+  - Tests non-admin rejection (403 Forbidden)
+  - Tests unauthenticated rejection (401 Unauthorized)
+  - Tests validation (empty name, too long name)
+  - Tests multiple org creation by same admin
+
+#### Frontend Implementation
+
+**UI Location:** `/admin/organizations` (AdminOrganizationsPage)
+
+**Features:**
+- "Create Organization" button (visible to GlobalAdmin only via AdminRoute guard)
+- Collapsible create form with Name and Description fields
+- On success: navigates to `/admin/organizations/{orgId}/edit`
+- Uses notification system for feedback (success toast, error toast)
+- Properly disables form during submission
+
+**API Client:**
+```typescript
+import { organizationsApi } from '../api/organizationsApi';
+
+// Create organization
+const newOrg = await organizationsApi.create({
+  name: 'Organization Name',
+  description: 'Optional description'
+});
+// Returns Organization object with id, name, description, createdAt
+```
+
+**Testing:**
+- `frontend/src/pages/AdminOrganizationsPage.test.tsx`:
+  - Tests button visibility
+  - Tests form show/hide
+  - Tests successful creation + navigation
+  - Tests error handling
+  - Tests validation
+  - Tests loading state
+
+#### When Building Organization-Related Features
+
+**Always respect these rules:**
+
+1. **Organization Creation:**
+   - Only GlobalAdmins can create organizations
+   - Always create OrgAdmin membership for creator
+   - Save org + membership transactionally
+
+2. **Initial Organization Setup (by creator/OrgAdmin):**
+   - Add members: `POST /organizations/{orgId}/memberships`
+   - Configure share types: `POST /organizations/{orgId}/share-types`
+   - Issue shares: `POST /organizations/{orgId}/share-issuances`
+   - Create proposals: `POST /organizations/{orgId}/proposals`
+   - Configure webhooks (optional): `POST /organizations/{orgId}/webhooks`
+
+3. **Authorization:**
+   - Organization creation requires GlobalAdmin policy
+   - Organization management (edit, add members) requires OrgAdmin policy
+   - Organization viewing requires OrgMember policy
+
+4. **Future Enhancements:**
+   - Could add self-service org creation for all users
+   - Could add approval workflow for new organizations
+   - Could add organization types (Sports Club, Non-Profit, etc.)
+   - Could add default share types on org creation
+   - Could add onboarding wizard
+
+**Documentation:**
+- Complete details: `docs/architecture.md` → **Organization Onboarding** section
+- Usage guide: `.github/copilot-instructions.md` → **Organization Onboarding** section
+
 ### Frontend Permission Helpers
 
 > **✅ COMPLETE:** Frontend permission system is now fully implemented with hooks, components, and route guards.

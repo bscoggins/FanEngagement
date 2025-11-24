@@ -5,7 +5,7 @@ namespace FanEngagement.Application.Organizations;
 
 public interface IOrganizationService
 {
-    Task<Organization> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default);
+    Task<Organization> CreateAsync(CreateOrganizationRequest request, Guid creatorUserId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Organization>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<PagedResult<Organization>> GetAllAsync(int page, int pageSize, string? search = null, CancellationToken cancellationToken = default);
     Task<Organization?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

@@ -1,6 +1,7 @@
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Domain.Entities;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,18 @@ namespace FanEngagement.Infrastructure.Services;
 
 public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizationService
 {
-    public async Task<Organization> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default)
+    public async Task<Organization> CreateAsync(CreateOrganizationRequest request, Guid creatorUserId, CancellationToken cancellationToken = default)
     {
+        // Validate that the creator user exists
+        var userExists = await dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == creatorUserId, cancellationToken);
+
+        if (!userExists)
+        {
+            throw new InvalidOperationException($"User {creatorUserId} not found");
+        }
+
         var organization = new Organization
         {
             Id = Guid.NewGuid(),
@@ -19,6 +30,20 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
         };
 
         dbContext.Organizations.Add(organization);
+
+        // Automatically create OrgAdmin membership for the creator
+        var membership = new OrganizationMembership
+        {
+            Id = Guid.NewGuid(),
+            OrganizationId = organization.Id,
+            UserId = creatorUserId,
+            Role = OrganizationRole.OrgAdmin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.OrganizationMemberships.Add(membership);
+
+        // Save both in a single transaction
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return organization;

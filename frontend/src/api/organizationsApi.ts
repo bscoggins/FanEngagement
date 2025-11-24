@@ -1,7 +1,12 @@
 import { apiClient } from './client';
-import type { Organization, UpdateOrganizationRequest, PagedResult } from '../types/api';
+import type { Organization, UpdateOrganizationRequest, CreateOrganizationRequest, PagedResult } from '../types/api';
 
 export const organizationsApi = {
+  create: async (request: CreateOrganizationRequest): Promise<Organization> => {
+    const response = await apiClient.post<Organization>('/organizations', request);
+    return response.data;
+  },
+
   getAll: async (): Promise<Organization[]> => {
     const response = await apiClient.get<Organization[]>('/organizations');
     return response.data;

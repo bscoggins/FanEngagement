@@ -16,7 +16,14 @@ public class OrganizationsController(IOrganizationService organizationService) :
     [Authorize(Policy = "GlobalAdmin")]
     public async Task<ActionResult> Create([FromBody] CreateOrganizationRequest request, CancellationToken cancellationToken)
     {
-        var organization = await organizationService.CreateAsync(request, cancellationToken);
+        // Get the current user ID from claims
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var creatorUserId))
+        {
+            return Unauthorized();
+        }
+
+        var organization = await organizationService.CreateAsync(request, creatorUserId, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = organization.Id }, organization);
     }
 
