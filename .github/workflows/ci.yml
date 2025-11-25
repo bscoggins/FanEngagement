@@ -83,3 +83,84 @@ jobs:
       - name: Teardown
         if: always()
         run: docker compose -f docker-compose.yml down -v
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    # Only run E2E tests on main branch or when manually triggered
+    # This keeps PR builds fast while still testing the full stack regularly
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+        working-directory: ./frontend
+
+      - name: Start full stack with Docker Compose
+        run: |
+          docker compose -f docker-compose.yml up -d db api frontend
+          
+          # Wait for database
+          echo "Waiting for database..."
+          for i in {1..60}; do
+            if docker compose exec -T db pg_isready -U fanengagement > /dev/null 2>&1; then
+              echo "Database is ready"
+              break
+            fi
+            sleep 2
+          done
+          
+          # Wait for API
+          echo "Waiting for API..."
+          for i in {1..60}; do
+            if curl -s http://localhost:8080/health > /dev/null 2>&1; then
+              echo "API is ready"
+              break
+            fi
+            sleep 2
+          done
+          
+          # Wait for frontend
+          echo "Waiting for frontend..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Frontend is ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run E2E tests
+        run: |
+          E2E_BASE_URL=http://localhost:3000 E2E_NO_SERVER=true npx playwright test
+        working-directory: ./frontend
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-test-results
+          path: frontend/playwright-report/
+
+      - name: Upload E2E screenshots
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-screenshots
+          path: frontend/test-results/
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f docker-compose.yml down -v
