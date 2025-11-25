@@ -1,22 +1,27 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
 # Build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+# Copy solution file for restore
+COPY backend/FanEngagement.sln ./backend/
 # Copy project files for restore
 COPY backend/FanEngagement.Api/FanEngagement.Api.csproj backend/FanEngagement.Api/
 COPY backend/FanEngagement.Application/FanEngagement.Application.csproj backend/FanEngagement.Application/
 COPY backend/FanEngagement.Domain/FanEngagement.Domain.csproj backend/FanEngagement.Domain/
 COPY backend/FanEngagement.Infrastructure/FanEngagement.Infrastructure.csproj backend/FanEngagement.Infrastructure/
 # Restore dependencies
-RUN dotnet restore backend/FanEngagement.Api/FanEngagement.Api.csproj
+RUN dotnet restore backend/FanEngagement.sln
 # Copy source files
 COPY backend/ ./backend/
 WORKDIR /src/backend/FanEngagement.Api
 RUN dotnet publish -c Release -o /app/publish
 
 # Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENV ASPNETCORE_URLS=http://0.0.0.0:80
-EXPOSE 80
+ENV ASPNETCORE_URLS=http://+:8080
 ENTRYPOINT ["dotnet", "FanEngagement.Api.dll"]
