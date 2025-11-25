@@ -3,6 +3,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
 import type { UpdateOrganizationRequest, Organization } from '../types/api';
 
+const navLinkStyle: React.CSSProperties = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#f0f0f0',
+  color: '#333',
+  borderRadius: '4px',
+  textDecoration: 'none',
+  fontSize: '0.875rem',
+};
+
 export const AdminOrganizationEditPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
@@ -178,53 +187,25 @@ export const AdminOrganizationEditPage: React.FC = () => {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <Link
               to={`/admin/organizations/${orgId}/memberships`}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f0f0f0',
-                color: '#333',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-              }}
+              style={navLinkStyle}
             >
               Memberships
             </Link>
             <Link
               to={`/admin/organizations/${orgId}/share-types`}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f0f0f0',
-                color: '#333',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-              }}
+              style={navLinkStyle}
             >
               Share Types
             </Link>
             <Link
               to={`/admin/organizations/${orgId}/proposals`}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f0f0f0',
-                color: '#333',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-              }}
+              style={navLinkStyle}
             >
               Proposals
             </Link>
             <Link
               to={`/admin/organizations/${orgId}/webhook-events`}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#f0f0f0',
-                color: '#333',
-                borderRadius: '4px',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-              }}
+              style={navLinkStyle}
             >
               Webhook Events
             </Link>
