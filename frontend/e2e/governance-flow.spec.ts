@@ -122,10 +122,11 @@ test.describe('Governance Flow', () => {
       
       // Fill in share type details
       await page.getByLabel('Name').fill(newShareTypeName);
+      await page.getByLabel('Symbol').fill('E2EST');
       await page.getByLabel('Voting Weight').fill('2');
       
-      // Submit
-      await page.getByRole('button', { name: /create$/i }).click();
+      // Submit with exact button text
+      await page.getByRole('button', { name: 'Create Share Type' }).click();
       
       // Verify share type appears in list
       await expect(page.getByText(newShareTypeName)).toBeVisible({ timeout: 5000 });
