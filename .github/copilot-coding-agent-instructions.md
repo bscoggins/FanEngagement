@@ -1825,6 +1825,7 @@ Before completing a PR that modifies critical flows:
 - [ ] Tested multi-tenancy if feature is org-scoped
 - [ ] Tested outbound event enqueue if feature triggers lifecycle transitions
 - [ ] All tests pass: `dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release`
+- [ ] Added E2E tests for major new user flows (see E2E Testing Requirements below)
 
 ### Test Patterns to Follow
 
@@ -1875,3 +1876,108 @@ public async Task OpeningProposal_EnqueuesProposalOpenedEvent()
 ```
 
 See `docs/architecture.md` → **Testing Strategy** section for complete details.
+
+## E2E Testing Requirements
+
+When implementing major new user flows that span frontend and backend, E2E tests should be added to catch regressions.
+
+### When to Add E2E Tests
+
+Add E2E tests for:
+- New user journeys that involve multiple pages/steps
+- Critical flows like authentication, voting, organization management
+- Features with complex role-based access (admin vs member views)
+- Integrations that involve multiple API calls and UI state changes
+
+### E2E Test Location
+
+E2E tests are located in `frontend/e2e/`:
+- `helpers/auth.ts` - Authentication helpers (loginAsAdmin, loginAs, logout)
+- `helpers/data.ts` - API data creation helpers (createOrganization, createProposal, etc.)
+- `*.spec.ts` - Test spec files
+
+### Running E2E Tests
+
+```bash
+# Docker Compose mode (for CI)
+docker compose up -d --build
+cd frontend
+npm run e2e
+
+# Development mode (with Vite dev server)
+cd frontend
+npm run test:e2e        # Headless
+npm run test:e2e:ui     # Interactive UI
+```
+
+### E2E Test Pattern
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { loginAsAdmin, logout } from './helpers/auth';
+import { generateUniqueName, createOrganization } from './helpers/data';
+
+test.describe('Feature Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await logout(page);
+  });
+
+  test('admin can perform action', async ({ page }) => {
+    const uniqueName = generateUniqueName('E2E-Test');
+    
+    // Navigate
+    await page.getByRole('link', { name: 'Admin' }).click();
+    
+    // Perform action
+    await page.getByRole('button', { name: /create/i }).click();
+    await page.getByLabel('Name').fill(uniqueName);
+    await page.getByRole('button', { name: /submit/i }).click();
+    
+    // Assert result
+    await expect(page.getByText(uniqueName)).toBeVisible();
+  });
+});
+```
+
+### E2E Data Isolation
+
+- Use `generateUniqueName()` to create unique names per test run
+- Use API helpers in `test.beforeAll` for shared setup
+- Clean up test data where possible (or rely on Docker Compose teardown)
+
+### Current E2E Coverage
+
+The following flows are covered by E2E tests:
+
+1. **Admin Flow** (`admin-flow.spec.ts`):
+   - Login as admin
+   - Create organization
+   - Configure organization settings
+   - Navigate to Users page
+   - Access organization memberships and share types
+
+2. **Governance Flow** (`governance-flow.spec.ts`):
+   - Create share types and issue shares
+   - Create proposal with options
+   - Member views organizations and proposals
+   - Member casts vote
+   - View proposal results after closing
+
+3. **Webhook Visibility** (`webhook-visibility.spec.ts`):
+   - Access webhook events page
+   - View events after proposal lifecycle transitions
+   - Filter events by status and type
+
+### E2E Checklist for New Features
+
+When adding a new major feature:
+
+- [ ] Does the feature involve a complete user journey? → Add E2E test
+- [ ] Does the feature have different behavior for admin vs member? → Test both roles
+- [ ] Does the feature involve form submission and navigation? → Test the flow
+- [ ] Are there success and error states to verify? → Test both paths
+- [ ] E2E tests pass: `cd frontend && npm run e2e`

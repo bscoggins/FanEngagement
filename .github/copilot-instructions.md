@@ -210,6 +210,96 @@ npm ci
 npm test           # or: npm run test:watch
 ```
 
+### Running E2E Tests
+
+End-to-end tests use Playwright to test the full stack (backend + frontend). E2E tests are located in `frontend/e2e/`.
+
+**Prerequisites:**
+- Docker Compose stack running (API at http://localhost:8080, Frontend at http://localhost:3000)
+- OR Vite dev server with backend API available
+
+**Docker Compose mode (recommended for CI):**
+```bash
+# Start the full stack
+docker compose up -d --build
+
+# Wait for services to be ready, then run E2E tests
+cd frontend
+npm ci
+npm run e2e
+
+# Teardown
+docker compose down -v
+```
+
+**Development mode (uses Vite dev server):**
+```bash
+# Requires backend API running at localhost:5049
+cd frontend
+npm ci
+npm run test:e2e        # Headless mode
+npm run test:e2e:ui     # Interactive Playwright UI
+npm run test:e2e:headed # Headed browser mode
+```
+
+**E2E Test Scripts:**
+- `npm run e2e` - Run E2E tests against Docker Compose stack (localhost:3000)
+- `npm run e2e:dev` - Interactive UI mode against Docker Compose stack
+- `npm run test:e2e` - Run E2E tests against Vite dev server (localhost:5173)
+- `npm run test:e2e:ui` - Interactive Playwright UI mode
+- `npm run test:e2e:headed` - Run with visible browser
+
+**E2E Test Structure:**
+```
+frontend/e2e/
+├── helpers/
+│   ├── auth.ts          # Login/logout utilities
+│   ├── data.ts          # Test data creation via API
+│   └── index.ts         # Re-exports
+├── login.spec.ts        # Login flow tests
+├── admin-flow.spec.ts   # Admin user flow tests
+├── governance-flow.spec.ts  # Proposal/voting flow tests
+└── webhook-visibility.spec.ts  # Webhook events visibility tests
+```
+
+**Writing E2E Tests:**
+
+1. Use the helper functions in `e2e/helpers/`:
+   ```typescript
+   import { loginAsAdmin, logout } from './helpers/auth';
+   import { generateUniqueName, createOrganization } from './helpers/data';
+   ```
+
+2. Follow the test patterns:
+   ```typescript
+   test.describe('Feature Flow', () => {
+     test.beforeEach(async ({ page }) => {
+       await loginAsAdmin(page);
+     });
+
+     test.afterEach(async ({ page }) => {
+       await logout(page);
+     });
+
+     test('should do something', async ({ page }) => {
+       // Test implementation
+     });
+   });
+   ```
+
+3. Use API helpers for data setup when needed:
+   ```typescript
+   test.beforeAll(async ({ request }) => {
+     const token = await getAuthToken(request, email, password);
+     const org = await createOrganization(request, token, 'Test Org');
+   });
+   ```
+
+**E2E Tests in CI:**
+- E2E tests run automatically in CI via the `frontend-e2e` job
+- Tests run against a Docker Compose stack
+- Playwright reports are uploaded as artifacts on failure
+
 ### Building
 
 ```bash
