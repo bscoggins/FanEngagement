@@ -1875,3 +1875,92 @@ public async Task OpeningProposal_EnqueuesProposalOpenedEvent()
 ```
 
 See `docs/architecture.md` → **Testing Strategy** section for complete details.
+
+## E2E Testing Requirements
+
+End-to-end tests using Playwright verify complete user journeys across the full stack (backend + frontend).
+
+### When to Add E2E Tests
+
+Add E2E tests for:
+- **New major user flows**: Complete workflows like org creation → share type setup → proposal creation → voting
+- **Critical user journeys**: Login, logout, registration, password reset
+- **Role-based features**: Verify admin vs member capabilities in UI
+- **Form submissions**: Multi-step forms, validation feedback, success/error states
+
+### E2E Test Files
+
+| Flow | Test Location |
+|------|---------------|
+| Login/logout | `frontend/e2e/login.spec.ts` |
+| Admin user journeys | `frontend/e2e/admin-flow.spec.ts` |
+| Governance/voting flows | `frontend/e2e/governance-flow.spec.ts` |
+| Webhook visibility | `frontend/e2e/webhook-visibility.spec.ts` |
+
+### E2E Test Patterns
+
+**Login helper:**
+```typescript
+async function loginAsAdmin(page: Page): Promise<void> {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill('admin@example.com');
+  await page.getByLabel('Password').fill('Admin123!');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.waitForURL('/users');
+}
+```
+
+**Unique test data:**
+```typescript
+function uniqueName(baseName: string): string {
+  return `${baseName}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+}
+```
+
+**Testing role-based access:**
+```typescript
+test('admin can see admin navigation', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin');
+  await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
+});
+
+test('member cannot access admin area', async ({ page }) => {
+  await loginAsUser(page, 'alice@example.com', 'Password123!');
+  await page.goto('/admin');
+  // Should be redirected or show access denied
+});
+```
+
+### E2E Checklist for New Features
+
+When implementing new user-facing features:
+
+- [ ] Added E2E test for happy path user journey
+- [ ] Added E2E test for role-based access if applicable (admin vs member)
+- [ ] Added E2E test for form validation and error states
+- [ ] Verified E2E tests pass locally: `cd frontend && npm run e2e`
+- [ ] Test uses unique names to avoid flakiness
+- [ ] Test properly waits for UI elements and API responses
+
+### Running E2E Tests Locally
+
+```bash
+# Quick start with helper script
+./scripts/run-e2e-tests.sh
+
+# Or manually:
+# 1. Start backend
+docker compose up -d db api
+
+# 2. Run E2E tests
+cd frontend
+npm run e2e
+
+# Interactive mode for debugging
+npm run e2e:dev
+```
+
+### CI Integration
+
+E2E tests run in the `frontend-e2e` job in CI. The job is configured with `continue-on-error: true` to avoid blocking PRs due to E2E test flakiness. Review E2E test failures but don't let them block PRs for unrelated issues.

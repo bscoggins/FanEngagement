@@ -210,6 +210,72 @@ npm ci
 npm test           # or: npm run test:watch
 ```
 
+### Running E2E Tests
+
+End-to-end tests use Playwright to test the full stack (backend + frontend) and verify complete user journeys.
+
+**Prerequisites:**
+- Docker and Docker Compose installed
+- Node.js 20+ installed
+- Backend API running (via Docker Compose or bare dotnet)
+
+**Quick start (using helper script):**
+```bash
+# Run E2E tests headless
+./scripts/run-e2e-tests.sh
+
+# Run E2E tests in headed mode (see browser)
+./scripts/run-e2e-tests.sh --headed
+
+# Run E2E tests in interactive UI mode
+./scripts/run-e2e-tests.sh --ui
+
+# Clean up after tests
+./scripts/run-e2e-tests.sh --teardown
+```
+
+**Manual setup:**
+```bash
+# 1. Start backend services
+docker compose up -d db api
+
+# 2. Wait for API to be healthy
+curl http://localhost:8080/health
+
+# 3. Install frontend dependencies
+cd frontend
+npm ci
+
+# 4. Install Playwright browsers (first time only)
+npx playwright install chromium
+
+# 5. Run E2E tests
+npm run e2e              # Headless mode
+npm run e2e:dev          # Interactive UI mode  
+npm run test:e2e:headed  # Headed browser mode
+```
+
+**E2E test files:**
+- `frontend/e2e/login.spec.ts` - Login flow tests
+- `frontend/e2e/admin-flow.spec.ts` - Admin user journey tests
+- `frontend/e2e/governance-flow.spec.ts` - Proposal and voting flow tests
+- `frontend/e2e/webhook-visibility.spec.ts` - Webhook events visibility tests
+
+**Test data:**
+- E2E tests use the dev seeding endpoint (`POST /admin/seed-dev-data`) to create test users
+- Each test uses unique names to avoid conflicts between parallel runs
+- Seeded users: `admin@example.com` (Admin123!), `alice@example.com` (Password123!), `bob@example.com` (Password123!)
+
+**CI Integration:**
+E2E tests run in the `frontend-e2e` job in CI (see `.github/workflows/ci.yml`). The job is configured with `continue-on-error: true` to avoid blocking PRs due to E2E test flakiness.
+
+**Extending E2E tests:**
+When adding new user-facing features, consider adding E2E tests to cover:
+- Happy path user journeys
+- Role-based access (admin vs member)
+- Form submissions and validations
+- Navigation flows
+
 ### Building
 
 ```bash
