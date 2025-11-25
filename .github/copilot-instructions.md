@@ -350,6 +350,7 @@ if (proposal.Status != ProposalStatus.Draft) {
     - `/admin/organizations/:orgId/share-types` (manage organization share types)
     - `/admin/organizations/:orgId/proposals` (list proposals for organization)
     - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results)
+    - `/admin/organizations/:orgId/webhook-events` (monitor webhook delivery events, retry failed events)
     - `/admin/dev-tools`
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
@@ -851,9 +852,9 @@ The frontend provides comprehensive UX for proposal lifecycle, eligibility check
     - `GET /organizations/{organizationId}/webhooks/{webhookId}` → Get webhook endpoint
     - `PUT /organizations/{organizationId}/webhooks/{webhookId}` → Update webhook endpoint
     - `DELETE /organizations/{organizationId}/webhooks/{webhookId}` → Delete webhook endpoint
-    - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status/type)
-    - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details
-    - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry outbound event
+    - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status, eventType, fromDate, toDate)
+    - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details (includes payload and lastError)
+    - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry failed outbound event (resets to Pending)
  - Admin & Dev Utilities:
      - `POST /admin/seed-dev-data` → Seed development data (Development only, Admin role required)
      - `GET /users/admin/stats` → Basic user statistics (Admin role required)

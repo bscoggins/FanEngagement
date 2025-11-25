@@ -15,9 +15,11 @@ public class OutboundEventsController(IOutboundEventService outboundEventService
         Guid organizationId,
         [FromQuery] OutboundEventStatus? status = null,
         [FromQuery] string? eventType = null,
+        [FromQuery] DateTimeOffset? fromDate = null,
+        [FromQuery] DateTimeOffset? toDate = null,
         CancellationToken cancellationToken = default)
     {
-        var events = await outboundEventService.GetAllAsync(organizationId, status, eventType, cancellationToken);
+        var events = await outboundEventService.GetAllAsync(organizationId, status, eventType, fromDate, toDate, cancellationToken);
         return Ok(events);
     }
 

@@ -17,6 +17,7 @@ public class OutboundEventConfiguration : IEntityTypeConfiguration<OutboundEvent
         builder.Property(x => x.Status).IsRequired();
         builder.Property(x => x.AttemptCount).IsRequired();
         builder.Property(x => x.LastAttemptAt);
+        builder.Property(x => x.LastError).HasMaxLength(1000);
         builder.Property(x => x.CreatedAt).IsRequired();
 
         builder.HasOne(x => x.Organization)

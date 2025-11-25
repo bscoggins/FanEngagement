@@ -70,6 +70,53 @@ FanEngagement is a multi-tenant fan governance platform. Organizations (teams, c
     - `Status` (`Pending`, `Delivered`, `Failed`)
     - `AttemptCount`
     - `LastAttemptAt`
+    - `LastError` (short error message from last failed delivery attempt, max 1000 chars)
+
+### Webhook Delivery & Observability
+
+FanEngagement provides comprehensive observability for webhook deliveries to help admins diagnose integration issues.
+
+#### Delivery Status Tracking
+
+Each `OutboundEvent` tracks its delivery lifecycle:
+- **Pending**: Event created, awaiting delivery
+- **Delivered**: Successfully sent to all matching webhook endpoints
+- **Failed**: Delivery failed after maximum retry attempts (3 by default)
+
+The `LastError` field captures the reason for the most recent failure, including:
+- HTTP status codes and reason phrases (e.g., "HTTP 500 Internal Server Error from https://example.com/webhook")
+- Connection timeouts (e.g., "Request timeout to https://example.com/webhook")
+- Network errors (e.g., "HTTP error: Connection refused")
+
+#### Admin UI Fields
+
+The webhook events admin page (`/admin/organizations/:orgId/webhook-events`) displays:
+
+| Field | Description |
+|-------|-------------|
+| Event Type | The type of event (e.g., `ProposalCreated`, `VoteCast`) |
+| Status | Current delivery status with color-coded badges |
+| Attempt Count | Number of delivery attempts made |
+| Last Attempt | Timestamp of the most recent delivery attempt |
+| Last Error | Truncated error message (full message in detail view) |
+
+#### Retry Behavior
+
+Failed events can be manually retried by OrgAdmins or GlobalAdmins:
+
+1. **Automatic Retries**: The background worker retries failed deliveries up to 3 times
+2. **Manual Retry**: Admins can click "Retry" on failed events to reset them to `Pending`
+3. **Retry API**: `POST /organizations/{orgId}/outbound-events/{eventId}/retry`
+   - Only works for events in `Failed` status
+   - Resets status to `Pending` and clears `LastError`
+   - Returns 404 if event not found or not in retryable state
+
+#### Filtering Options
+
+Events can be filtered by:
+- **Status**: Pending, Delivered, Failed
+- **Event Type**: Dropdown populated with observed event types
+- **Date Range**: Optional `fromDate` and `toDate` query parameters
 
 ## Proposal Governance Rules
 

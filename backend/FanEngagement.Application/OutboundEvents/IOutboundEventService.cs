@@ -13,7 +13,9 @@ public interface IOutboundEventService
     Task<IReadOnlyList<OutboundEventDto>> GetAllAsync(
         Guid organizationId, 
         OutboundEventStatus? status = null, 
-        string? eventType = null, 
+        string? eventType = null,
+        DateTimeOffset? fromDate = null,
+        DateTimeOffset? toDate = null,
         CancellationToken cancellationToken = default);
 
     Task<OutboundEventDetailsDto?> GetByIdAsync(

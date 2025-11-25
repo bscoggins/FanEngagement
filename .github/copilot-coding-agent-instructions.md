@@ -149,9 +149,9 @@ Notes:
    - `GET /organizations/{organizationId}/webhooks/{webhookId}` → Get webhook endpoint
    - `PUT /organizations/{organizationId}/webhooks/{webhookId}` → Update webhook endpoint
    - `DELETE /organizations/{organizationId}/webhooks/{webhookId}` → Delete webhook endpoint
-   - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status/type)
-   - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details
-   - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry outbound event
+   - `GET /organizations/{organizationId}/outbound-events` → List outbound events (filter by status, eventType, fromDate, toDate)
+   - `GET /organizations/{organizationId}/outbound-events/{eventId}` → Get outbound event details (includes payload, lastError)
+   - `POST /organizations/{organizationId}/outbound-events/{eventId}/retry` → Retry failed outbound event (resets to Pending)
 - Admin & Dev Utilities:
    - `POST /admin/seed-dev-data` → Seed development data (Development only, Admin role required)
    - `GET /users/admin/stats` → Basic user statistics (Admin role required)
@@ -1723,3 +1723,47 @@ Before completing any task that modifies backend services or adds new features:
 - [ ] Documented metrics in code comments
 
 See `docs/architecture.md` → **Observability & Health** section for complete details.
+
+### Background Process & Outbound Integration Visibility
+
+**IMPORTANT:** When introducing new background processes or outbound integrations, ALWAYS provide similar visibility and retry mechanisms as the webhook delivery system.
+
+**Required for all new background processes:**
+
+1. **Status Tracking Entity:**
+   - Create entity to track processing status (e.g., `Pending`, `Processing`, `Completed`, `Failed`)
+   - Include `AttemptCount` for retry tracking
+   - Include `LastAttemptAt` timestamp
+   - Include `LastError` field (max 1000 chars) to capture failure reasons
+
+2. **Admin Observability API:**
+   - `GET` endpoint to list items with filters (status, type, date range)
+   - `GET` endpoint to retrieve single item details (including full error message and payload summary)
+   - `POST` endpoint to retry failed items (if applicable)
+   - Protect endpoints with appropriate authorization (OrgAdmin policy for org-scoped items)
+
+3. **Admin UI:**
+   - Create admin page to list items with status badges
+   - Support filtering by status and other relevant fields
+   - Show truncated errors in table, full errors in detail modal
+   - Provide retry button for failed items (admin only)
+   - Use consistent patterns with existing admin pages
+
+4. **Error Capture:**
+   - Capture meaningful error messages when operations fail
+   - Include HTTP status codes for external calls
+   - Include timeout information
+   - Truncate errors to fit database column constraints
+   - Clear error on successful retry
+
+5. **Retry Logic:**
+   - Implement max retry count (3 is standard)
+   - Clear `LastError` when retrying
+   - Reset status to `Pending` for manual retries
+   - Log retry attempts with context
+
+**Reference Implementation:** The webhook delivery system serves as the reference implementation:
+- Entity: `OutboundEvent` with `Status`, `AttemptCount`, `LastAttemptAt`, `LastError`
+- Background service: `WebhookDeliveryBackgroundService`
+- API: `OutboundEventsController` with list/detail/retry endpoints
+- Frontend: `AdminWebhookEventsPage` with filters, detail modal, retry button

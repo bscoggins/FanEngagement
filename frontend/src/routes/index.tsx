@@ -22,6 +22,7 @@ import { AdminOrganizationMembershipsPage } from '../pages/AdminOrganizationMemb
 import { AdminOrganizationShareTypesPage } from '../pages/AdminOrganizationShareTypesPage';
 import { AdminOrganizationProposalsPage } from '../pages/AdminOrganizationProposalsPage';
 import { AdminProposalDetailPage } from '../pages/AdminProposalDetailPage';
+import { AdminWebhookEventsPage } from '../pages/AdminWebhookEventsPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 
 export const router = createBrowserRouter([
@@ -168,6 +169,14 @@ export const router = createBrowserRouter([
         element: (
           <OrgAdminRoute>
             <AdminProposalDetailPage />
+          </OrgAdminRoute>
+        ),
+      },
+      {
+        path: 'organizations/:orgId/webhook-events',
+        element: (
+          <OrgAdminRoute>
+            <AdminWebhookEventsPage />
           </OrgAdminRoute>
         ),
       },
