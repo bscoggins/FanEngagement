@@ -73,7 +73,8 @@ export async function createOrganization(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to create organization: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to create organization: ${response.status()} - ${errorBody}`);
   }
   
   return await response.json();
@@ -102,7 +103,8 @@ export async function createUser(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to create user: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to create user: ${response.status()} - ${errorBody}`);
   }
   
   return await response.json();
@@ -127,7 +129,8 @@ export async function getAuthToken(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to login: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to login: ${response.status()} - ${errorBody}`);
   }
   
   const data = await response.json();
@@ -156,7 +159,8 @@ export async function addMembership(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to add membership: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to add membership: ${response.status()} - ${errorBody}`);
   }
 }
 
@@ -170,6 +174,14 @@ export async function createShareType(
   name: string,
   votingWeight: number = 1
 ): Promise<{ id: string; name: string }> {
+  // Generate a unique symbol from the name (max 10 chars as per API validation)
+  // Remove non-alphanumeric chars and uppercase, fall back to timestamp-based symbol if empty
+  const MAX_SYMBOL_LENGTH = 10;
+  let symbol = name.replace(/[^A-Za-z0-9]/g, '').substring(0, MAX_SYMBOL_LENGTH).toUpperCase();
+  if (symbol.length === 0) {
+    symbol = `SYM${Date.now().toString().slice(-7)}`;
+  }
+  
   const response = await request.post(`/api/organizations/${organizationId}/share-types`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -177,13 +189,14 @@ export async function createShareType(
     },
     data: {
       name,
+      symbol,
       description: `Share type ${name}`,
       votingWeight,
     },
   });
   
   if (!response.ok()) {
-    const errorBody = await response.text().catch(() => 'No error body');
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
     throw new Error(`Failed to create share type: ${response.status()} - ${errorBody}`);
   }
   
@@ -215,7 +228,8 @@ export async function issueShares(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to issue shares: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to issue shares: ${response.status()} - ${errorBody}`);
   }
 }
 
@@ -245,7 +259,8 @@ export async function createProposal(
   });
   
   if (!createResponse.ok()) {
-    throw new Error(`Failed to create proposal: ${createResponse.status()}`);
+    const errorBody = await createResponse.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to create proposal: ${createResponse.status()} - ${errorBody}`);
   }
   
   const proposal = await createResponse.json();
@@ -263,7 +278,8 @@ export async function createProposal(
     });
     
     if (!optionResponse.ok()) {
-      throw new Error(`Failed to add option: ${optionResponse.status()}`);
+      const errorBody = await optionResponse.text().catch(() => 'Unable to read error response body');
+      throw new Error(`Failed to add option: ${optionResponse.status()} - ${errorBody}`);
     }
   }
   
@@ -285,7 +301,8 @@ export async function openProposal(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to open proposal: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to open proposal: ${response.status()} - ${errorBody}`);
   }
 }
 
@@ -304,7 +321,8 @@ export async function closeProposal(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to close proposal: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to close proposal: ${response.status()} - ${errorBody}`);
   }
 }
 
@@ -328,7 +346,8 @@ export async function castVote(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to cast vote: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to cast vote: ${response.status()} - ${errorBody}`);
   }
 }
 
@@ -347,7 +366,8 @@ export async function getProposal(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to get proposal: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to get proposal: ${response.status()} - ${errorBody}`);
   }
   
   return await response.json();
@@ -376,7 +396,8 @@ export async function createWebhookEndpoint(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to create webhook: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'Unable to read error response body');
+    throw new Error(`Failed to create webhook: ${response.status()} - ${errorBody}`);
   }
   
   return await response.json();

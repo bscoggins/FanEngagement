@@ -37,7 +37,10 @@ test.describe('Webhook Visibility Flow', () => {
     });
     const users = await adminUserResponse.json();
     const adminUser = users.find((u: { email: string }) => u.email === ADMIN_CREDENTIALS.email);
-    adminUserId = adminUser?.id;
+    if (!adminUser) {
+      throw new Error('Admin user not found - cannot proceed with webhook tests');
+    }
+    adminUserId = adminUser.id;
 
     // Create share type and issue shares
     const shareType = await createShareType(
