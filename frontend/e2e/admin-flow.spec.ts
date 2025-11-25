@@ -60,7 +60,7 @@ test.describe('Admin Flow', () => {
     await page.waitForTimeout(500); // Small buffer for any client-side validation
     
     // Submit the form - wait for the button to be visible and enabled
-    const submitButton = page.getByRole('button', { name: /^create$/i });
+    const submitButton = page.getByRole('button', { name: 'Create Organization' });
     await submitButton.waitFor({ state: 'visible', timeout: 30000 });
     await expect(submitButton).toBeEnabled({ timeout: 5000 });
     await submitButton.click();
@@ -90,7 +90,7 @@ test.describe('Admin Flow', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
     
-    const createButton = page.getByRole('button', { name: /^create$/i });
+    const createButton = page.getByRole('button', { name: 'Create Organization' });
     await createButton.waitFor({ state: 'visible', timeout: 30000 });
     await expect(createButton).toBeEnabled({ timeout: 5000 });
     await createButton.click();
@@ -151,7 +151,7 @@ test.describe('Admin Flow', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
     
-    const createButton = page.getByRole('button', { name: /^create$/i });
+    const createButton = page.getByRole('button', { name: 'Create Organization' });
     await createButton.waitFor({ state: 'visible', timeout: 30000 });
     await expect(createButton).toBeEnabled({ timeout: 5000 });
     await createButton.click();
@@ -187,7 +187,7 @@ test.describe('Admin Flow', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
     
-    const createButton = page.getByRole('button', { name: /^create$/i });
+    const createButton = page.getByRole('button', { name: 'Create Organization' });
     await createButton.waitFor({ state: 'visible', timeout: 30000 });
     await expect(createButton).toBeEnabled({ timeout: 5000 });
     await createButton.click();

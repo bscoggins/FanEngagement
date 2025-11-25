@@ -47,12 +47,10 @@ test.describe('Login Flow', () => {
     // Submit the form
     await page.getByRole('button', { name: 'Log In' }).click();
 
-    // Wait for error message to appear (use various possible error selectors)
-    // The error could appear as an alert, text, or styled message
+    // Wait for error message to appear - it's styled with red background
     await expect(
-      page.locator('[role="alert"], .error, .text-red-600, [class*="error"]').first()
-        .or(page.getByText(/invalid|error|failed|incorrect/i).first())
-    ).toBeVisible({ timeout: 5000 });
+      page.locator('div').filter({ hasText: /invalid|unauthorized|incorrect|failed/i }).first()
+    ).toBeVisible({ timeout: 10000 });
     
     // Verify we're still on the login page
     expect(page.url()).toContain('/login');

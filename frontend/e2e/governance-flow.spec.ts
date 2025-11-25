@@ -105,8 +105,9 @@ test.describe('Governance Flow', () => {
       await page.getByRole('link', { name: 'Admin' }).click();
       await page.getByRole('link', { name: 'Organizations' }).first().click();
       
-      // Find and click on our test organization
-      await page.getByRole('link', { name: organizationName }).click();
+      // Find the row with our test organization and click Edit
+      const orgRow = page.locator('tr', { hasText: organizationName });
+      await orgRow.getByRole('link', { name: 'Edit' }).click();
       await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
       
       // Navigate to share types
@@ -139,8 +140,9 @@ test.describe('Governance Flow', () => {
       await page.getByRole('link', { name: 'Admin' }).click();
       await page.getByRole('link', { name: 'Organizations' }).first().click();
       
-      // Find and click on our test organization
-      await page.getByRole('link', { name: organizationName }).click();
+      // Find the row with our test organization and click Edit
+      const orgRow = page.locator('tr', { hasText: organizationName });
+      await orgRow.getByRole('link', { name: 'Edit' }).click();
       await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
       
       // Navigate to share types
@@ -162,8 +164,9 @@ test.describe('Governance Flow', () => {
       await page.getByRole('link', { name: 'Admin' }).click();
       await page.getByRole('link', { name: 'Organizations' }).first().click();
       
-      // Find and click on our test organization
-      await page.getByRole('link', { name: organizationName }).click();
+      // Find the row with our test organization and click Edit
+      const orgRow = page.locator('tr', { hasText: organizationName });
+      await orgRow.getByRole('link', { name: 'Edit' }).click();
       await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
       
       // Navigate to proposals

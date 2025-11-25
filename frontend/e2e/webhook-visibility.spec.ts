@@ -76,8 +76,10 @@ test.describe('Webhook Visibility Flow', () => {
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.getByRole('link', { name: 'Organizations' }).first().click();
 
-    // Find and click on our test organization
-    await page.getByRole('link', { name: organizationName }).click();
+    // Find the row with our test organization and click Edit
+    // Look for the organization name in the table, then find the Edit link in the same row
+    const orgRow = page.locator('tr', { hasText: organizationName });
+    await orgRow.getByRole('link', { name: 'Edit' }).click();
     await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
 
     // Navigate to webhook events page
@@ -115,10 +117,10 @@ test.describe('Webhook Visibility Flow', () => {
 
     // If there are webhook endpoints configured, we should see events
     // Check for event type or status indicators
-    // Note: Events might show as "Pending", "Completed", or "Failed" depending on webhook delivery status
+    // Note: Events might show as "Pending", "Delivered", or "Failed" depending on webhook delivery status
     
     // Look for any events in the list or empty state
-    const hasEvents = await page.getByText(/ProposalOpened|pending|completed|failed/i).isVisible().catch(() => false);
+    const hasEvents = await page.getByText(/ProposalOpened|pending|delivered|failed/i).isVisible().catch(() => false);
     const hasEmptyState = await page.getByText(/no.*events|no webhooks/i).isVisible().catch(() => false);
     
     // Either we have events or an empty state - both are valid
@@ -163,7 +165,7 @@ test.describe('Webhook Visibility Flow', () => {
       await statusFilter.selectOption('Pending');
       await page.waitForLoadState('networkidle');
       
-      await statusFilter.selectOption('Completed');
+      await statusFilter.selectOption('Delivered');
       await page.waitForLoadState('networkidle');
       
       await statusFilter.selectOption('Failed');
