@@ -1592,6 +1592,11 @@ public async Task CreateProposal_NonMember_ReturnsForbidden()
     _client.AddAuthorizationHeader(nonMemberToken);
     
     // Act
+    var request = new CreateProposalRequest 
+    { 
+        Title = "Test Proposal",
+        CreatedByUserId = nonMember.Id 
+    };
     var response = await _client.PostAsJsonAsync($"/organizations/{org.Id}/proposals", request);
     
     // Assert

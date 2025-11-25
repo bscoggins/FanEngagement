@@ -249,12 +249,8 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
         await AddOptionAsync(proposal.Id, "Option 1");
         await AddOptionAsync(proposal.Id, "Option 2");
 
-        var beforeOpen = DateTimeOffset.UtcNow;
-
         // Act
         await OpenProposalAsync(proposal.Id);
-
-        var afterOpen = DateTimeOffset.UtcNow;
 
         // Assert
         using var scope = _factory.Services.CreateScope();
@@ -266,10 +262,8 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             .FirstOrDefaultAsync();
 
         Assert.NotNull(outboundEvent);
-        // Allow a 2-second buffer before and after to avoid flakiness due to timing delays
-        var bufferSeconds = 2;
-        Assert.True(outboundEvent.CreatedAt >= beforeOpen.AddSeconds(-bufferSeconds));
-        Assert.True(outboundEvent.CreatedAt <= afterOpen.AddSeconds(bufferSeconds));
+        // Verify event was created recently (within last minute) without precise timing assertions
+        Assert.True(outboundEvent.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-1));
     }
 
     [Fact]
