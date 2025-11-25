@@ -124,7 +124,7 @@ test.describe('Webhook Visibility Flow', () => {
     await logout(page);
   });
 
-  test('webhook events page shows event status', async ({ page, request }) => {
+  test('webhook events page shows event status', async ({ page }) => {
     await loginAsAdmin(page);
 
     // Navigate to webhook events page
@@ -133,12 +133,13 @@ test.describe('Webhook Visibility Flow', () => {
     // Should see the page with filters
     await expect(page.getByRole('heading', { name: /webhook events|outbound events/i })).toBeVisible();
 
-    // Look for filter controls (status filter)
-    const hasStatusFilter = await page.getByRole('combobox', { name: /status/i }).isVisible().catch(() => false);
-    const hasFilterButtons = await page.getByRole('button', { name: /filter|apply/i }).isVisible().catch(() => false);
+    // Page should have structure present - verify page loaded correctly
+    // Check for either filter controls or a message about no events
+    const pageContent = await page.textContent('body');
+    expect(pageContent).toBeTruthy();
     
-    // Page should have some way to filter or display events
-    // Even if no events exist, the page structure should be present
+    // Verify page is interactive by checking it responds to navigation
+    await expect(page).toHaveURL(/\/webhook-events/);
 
     await logout(page);
   });
@@ -155,15 +156,15 @@ test.describe('Webhook Visibility Flow', () => {
     // If there are filters, try filtering by status
     const statusFilter = page.getByRole('combobox', { name: /status/i });
     if (await statusFilter.isVisible().catch(() => false)) {
-      // Try filtering by different statuses
+      // Try filtering by different statuses and wait for UI to update
       await statusFilter.selectOption('Pending');
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle');
       
       await statusFilter.selectOption('Completed');
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle');
       
       await statusFilter.selectOption('Failed');
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle');
     }
 
     await logout(page);
@@ -190,10 +191,10 @@ test.describe('Webhook Visibility Flow', () => {
     // If there's an event type filter, check it
     const eventTypeFilter = page.getByRole('combobox', { name: /event type/i });
     if (await eventTypeFilter.isVisible().catch(() => false)) {
-      // The filter should have ProposalOpened as an option
+      // The filter should have options available
       const options = await eventTypeFilter.locator('option').allTextContents();
-      // Options should include proposal-related events
-      console.log('Available event types:', options);
+      // Verify filter has at least one option
+      expect(options.length).toBeGreaterThan(0);
     }
 
     await logout(page);

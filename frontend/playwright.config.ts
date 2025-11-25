@@ -19,7 +19,7 @@ import { defineConfig, devices } from '@playwright/test';
 // E2E_BASE_URL=http://localhost:3000 for Docker Compose
 // Default to localhost:5173 for Vite dev server
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:5173';
-const isDockerCompose = baseURL.includes(':3000');
+const isDockerCompose = baseURL === 'http://localhost:3000';
 
 export default defineConfig({
   testDir: './e2e',

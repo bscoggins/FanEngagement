@@ -89,9 +89,8 @@ test.describe('Admin Flow', () => {
     // Save changes
     await page.getByRole('button', { name: /save/i }).click();
     
-    // Wait for success indication (could be notification or page reload)
-    // Check that the changes were saved by verifying the name is still there
-    await page.waitForTimeout(1000); // Brief wait for save
+    // Wait for save to complete by checking input value is still correct
+    // The form should retain the updated name after successful save
     await expect(page.getByLabel('Name')).toHaveValue(updatedName);
   });
 

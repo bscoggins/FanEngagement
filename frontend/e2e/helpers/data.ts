@@ -47,8 +47,8 @@ export async function seedDevData(page: Page): Promise<void> {
   const seedButton = page.getByRole('button', { name: /seed/i });
   if (await seedButton.isVisible()) {
     await seedButton.click();
-    // Wait for seed operation to complete
-    await page.waitForTimeout(2000);
+    // Wait for seed operation to complete by checking for success message
+    await page.getByText(/seeded|success|complete/i).waitFor({ state: 'visible', timeout: 10000 });
   }
 }
 

@@ -10,9 +10,11 @@ import {
   issueShares,
   createProposal,
   openProposal,
-  getProposal,
   closeProposal,
 } from './helpers/data';
+
+// Run governance flow tests serially to avoid race conditions when closing shared proposal
+test.describe.configure({ mode: 'serial' });
 
 test.describe('Governance Flow', () => {
   // Shared test data that will be set up in beforeAll
@@ -22,7 +24,6 @@ test.describe('Governance Flow', () => {
   let memberEmail: string;
   let memberPassword: string;
   let memberId: string;
-  let shareTypeId: string;
   let proposalId: string;
   let proposalTitle: string;
 
@@ -62,7 +63,6 @@ test.describe('Governance Flow', () => {
       'Voting Shares',
       1
     );
-    shareTypeId = shareType.id;
 
     // Issue shares to admin (who is OrgAdmin)
     // Need to get admin user ID first
@@ -76,10 +76,10 @@ test.describe('Governance Flow', () => {
       throw new Error('Admin user not found - cannot proceed with governance flow tests');
     }
     
-    await issueShares(request, adminToken, organizationId, adminUser.id, shareTypeId, 100);
+    await issueShares(request, adminToken, organizationId, adminUser.id, shareType.id, 100);
 
     // Issue shares to member
-    await issueShares(request, adminToken, organizationId, memberId, shareTypeId, 50);
+    await issueShares(request, adminToken, organizationId, memberId, shareType.id, 50);
 
     // Create proposal with options
     proposalTitle = generateUniqueName('E2E-Proposal');
@@ -234,7 +234,7 @@ test.describe('Governance Flow', () => {
       await logout(page);
     });
 
-    test('member can cast a vote on proposal', async ({ page, request }) => {
+    test('member can cast a vote on proposal', async ({ page }) => {
       await loginAs(page, memberEmail, memberPassword);
       
       // Navigate directly to the proposal page
