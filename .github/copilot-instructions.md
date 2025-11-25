@@ -1540,3 +1540,100 @@ const MyPage = () => {
 };
 ```
 
+
+## Testing Guidelines for Backend Changes
+
+When making backend changes, follow these testing guidelines:
+
+### Adding or Modifying Domain Services
+
+1. **Add domain-level unit tests** for new business logic:
+   - Create test file in `backend/FanEngagement.Tests/` named `<ServiceName>Tests.cs`
+   - Test all validation scenarios (valid and invalid inputs)
+   - Test edge cases (boundary values, null inputs, empty collections)
+   - Test state transition rules if applicable
+
+2. **Example domain test pattern:**
+```csharp
+[Fact]
+public void ValidateCanVote_UserHasAlreadyVoted_ReturnsInvalid()
+{
+    // Arrange
+    var proposal = CreateOpenProposal();
+    
+    // Act
+    var result = _governanceService.ValidateCanVote(proposal, hasExistingVote: true);
+    
+    // Assert
+    Assert.False(result.IsValid);
+    Assert.Contains("already voted", result.ErrorMessage);
+}
+```
+
+### Adding or Modifying API Endpoints
+
+1. **Add integration tests** using `WebApplicationFactory<Program>`:
+   - Test success paths with correct HTTP status codes
+   - Test authorization (forbidden for unauthorized users)
+   - Test validation errors (bad request for invalid input)
+   - Test not found for non-existent resources
+
+2. **Example integration test pattern:**
+```csharp
+[Fact]
+public async Task CreateProposal_NonMember_ReturnsForbidden()
+{
+    // Arrange
+    var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+    _client.AddAuthorizationHeader(adminToken);
+    var org = await CreateOrganizationAsync("Test Org");
+    
+    var (nonMember, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+    _client.AddAuthorizationHeader(nonMemberToken);
+    
+    // Act
+    var request = new CreateProposalRequest 
+    { 
+        Title = "Test Proposal",
+        CreatedByUserId = nonMember.Id 
+    };
+    var response = await _client.PostAsJsonAsync($"/organizations/{org.Id}/proposals", request);
+    
+    // Assert
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+}
+```
+
+### Adding Multi-Tenant Features
+
+1. **Add multi-tenancy tests** to verify org isolation:
+   - Test that users in Org A cannot access Org B's resources
+   - Test that GlobalAdmin can access all organizations
+   - Test that OrgAdmin permissions are scoped to their org
+
+### Adding Webhook/Event Features
+
+1. **Add outbound event tests** to verify event enqueue:
+   - Test that events are created with correct event type
+   - Test that event payloads contain required metadata
+   - Test that events are scoped to correct organization
+
+### Running Tests Locally
+
+```bash
+# Run all backend tests
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
+
+# Run specific test file
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --filter "FullyQualifiedName~MultiTenancyTests"
+
+# Run with verbose output
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --verbosity normal
+```
+
+### Test Coverage Requirements
+
+- **Domain services**: All validation methods must have tests for valid and invalid cases
+- **API endpoints**: All endpoints must have tests for authorized access, forbidden access, and not found
+- **Multi-tenancy**: Cross-organization access must be tested for all org-scoped endpoints
+- **Outbound events**: Lifecycle transitions that emit events must have tests verifying event creation

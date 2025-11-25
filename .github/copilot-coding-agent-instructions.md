@@ -1767,3 +1767,111 @@ See `docs/architecture.md` → **Observability & Health** section for complete d
 - Background service: `WebhookDeliveryBackgroundService`
 - API: `OutboundEventsController` with list/detail/retry endpoints
 - Frontend: `AdminWebhookEventsPage` with filters, detail modal, retry button
+
+## Backend Testing Requirements
+
+When implementing backend features affecting critical flows, you MUST add/extend tests following these patterns.
+
+### Critical Flows Requiring Tests
+
+The following flows are critical and require comprehensive testing:
+
+1. **Proposal Lifecycle Transitions**
+   - Draft → Open → Closed → Finalized state machine
+   - Validation of required options before opening
+   - Capture of voting power snapshot on open
+   - Computation of results on close
+
+2. **Voting and Eligibility**
+   - Single-vote per user enforcement
+   - Voting power calculation from share balances
+   - Time window enforcement (StartAt/EndAt)
+   - Quorum calculation and verification
+
+3. **Multi-Tenancy**
+   - Organization-scoped resource access
+   - Cross-org access prevention
+   - GlobalAdmin override behavior
+
+4. **Authorization**
+   - GlobalAdmin, OrgAdmin, OrgMember, ProposalManager policies
+   - Self-access for users viewing their own data
+   - Proposal creator permissions
+
+5. **Outbound Events**
+   - Event enqueue on lifecycle transitions
+   - Correct event type and payload metadata
+   - Organization ID in event data
+
+### Test File Organization
+
+| Flow | Test Location |
+|------|---------------|
+| Proposal lifecycle domain logic | `ProposalGovernanceServiceTests.cs`, `ProposalGovernanceEdgeCaseTests.cs` |
+| Voting power calculation | `VotingPowerCalculatorTests.cs` |
+| End-to-end proposal workflows | `EndToEndProposalWorkflowTests.cs` |
+| Multi-tenancy | `MultiTenancyTests.cs` |
+| Authorization | `AuthorizationIntegrationTests.cs` |
+| Outbound events | `OutboundEventEnqueueTests.cs` |
+
+### Mandatory Testing Checklist
+
+Before completing a PR that modifies critical flows:
+
+- [ ] Added domain-level tests for new/modified business logic
+- [ ] Added integration tests for new/modified API endpoints
+- [ ] Verified existing tests still pass
+- [ ] Tested authorization for different user roles
+- [ ] Tested multi-tenancy if feature is org-scoped
+- [ ] Tested outbound event enqueue if feature triggers lifecycle transitions
+- [ ] All tests pass: `dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release`
+
+### Test Patterns to Follow
+
+**Domain service tests:**
+```csharp
+[Fact]
+public void ValidateStatusTransition_DraftToOpen_IsValid()
+{
+    var proposal = CreateDraftProposalWithOptions();
+    var result = _service.ValidateStatusTransition(proposal, ProposalStatus.Open);
+    Assert.True(result.IsValid);
+}
+```
+
+**Integration tests:**
+```csharp
+[Fact]
+public async Task CompleteWorkflow_AllStepsSucceed()
+{
+    // Setup: org, users, shares
+    // Act: create proposal → add options → open → vote → close → finalize
+    // Assert: each step succeeds, final state is Finalized
+}
+```
+
+**Multi-tenancy tests:**
+```csharp
+[Fact]
+public async Task UserInOrgA_CannotAccessResourceInOrgB()
+{
+    // Create two separate orgs
+    // Create user in OrgA only
+    // Try to access resource in OrgB
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+}
+```
+
+**Outbound event tests:**
+```csharp
+[Fact]
+public async Task OpeningProposal_EnqueuesProposalOpenedEvent()
+{
+    // Open proposal via API
+    // Check database for OutboundEvent with EventType == "ProposalOpened"
+    Assert.NotNull(outboundEvent);
+    Assert.Equal(orgId, outboundEvent.OrganizationId);
+}
+```
+
+See `docs/architecture.md` → **Testing Strategy** section for complete details.

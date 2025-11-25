@@ -1533,3 +1533,116 @@ const { data, loading } = await usersApi.getAllPaged(page, pageSize, searchQuery
 - Tests:
   - Domain unit tests for entities and domain services.
   - Integration tests hitting a test DB for core endpoints.
+
+## Testing Strategy
+
+FanEngagement employs a comprehensive testing strategy covering domain logic, integration flows, authorization, and multi-tenancy. Tests are located in `backend/FanEngagement.Tests/`.
+
+### Domain/Unit Tests
+
+Domain services contain pure business logic with no infrastructure dependencies, making them ideal for unit testing:
+
+| Test File | Coverage |
+|-----------|----------|
+| `ProposalGovernanceServiceTests.cs` | Proposal lifecycle state transitions, validation rules |
+| `ProposalGovernanceEdgeCaseTests.cs` | Edge cases: disallowed transitions, quorum edge cases, tied results |
+| `VotingPowerCalculatorTests.cs` | Voting power calculation from share balances |
+
+**Key Domain Tests:**
+- **State Transitions**: Validates all allowed/disallowed proposal status transitions (Draft → Open → Closed → Finalized)
+- **Quorum Calculation**: Tests quorum met/not met at various thresholds including edge cases (0%, 100%, exact threshold)
+- **Voting Power**: Tests voting power calculation across multiple share types with different weights
+- **Time Windows**: Validates voting eligibility based on `StartAt` and `EndAt` constraints
+
+### Integration Tests
+
+Integration tests use `WebApplicationFactory<Program>` with an in-memory database to test full HTTP flows:
+
+| Test File | Coverage |
+|-----------|----------|
+| `ProposalLifecycleTests.cs` | Proposal CRUD, lifecycle transitions via API |
+| `EndToEndProposalWorkflowTests.cs` | Complete proposal flow from creation through finalization |
+| `AuthorizationIntegrationTests.cs` | Role-based access control for all endpoints |
+| `MultiTenancyTests.cs` | Cross-organization access restrictions |
+| `OutboundEventEnqueueTests.cs` | Webhook event creation during lifecycle transitions |
+
+**Key Integration Tests:**
+- **End-to-End Workflow**: Create org → Share types → Issue shares → Create proposal → Vote → Close → Finalize
+- **Multi-Tenancy**: Users in Org A cannot access resources in Org B (proposals, share types, memberships)
+- **Authorization Matrix**: GlobalAdmin, OrgAdmin, OrgMember, and non-member access verification
+- **Outbound Events**: Verifies `ProposalOpened`, `ProposalClosed`, `ProposalFinalized` events are enqueued with correct payloads
+
+### Running Tests Locally
+
+**Using bare dotnet (in-memory database):**
+```bash
+# Run all tests
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
+
+# Run with verbose output
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release --verbosity normal
+
+# Run specific test class
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release --filter "FullyQualifiedName~ProposalGovernanceEdgeCaseTests"
+
+# Run specific test
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release --filter "FullyQualifiedName~CompleteProposalLifecycle_FromDraftToFinalized_AllStepsSucceed"
+```
+
+**Using Docker Compose (PostgreSQL database):**
+```bash
+# Start database
+docker compose up -d db
+
+# Run tests
+docker compose run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
+
+# Tear down
+docker compose down -v
+```
+
+### Test Patterns
+
+**Setting up test data:**
+```csharp
+// Create admin and get auth token
+var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+_client.AddAuthorizationHeader(adminToken);
+
+// Create organization
+var org = await CreateOrganizationAsync("Test Org");
+
+// Create user with shares
+var (user, userToken) = await CreateMemberWithSharesAsync(org.Id, shareTypeId, 100m);
+```
+
+**Testing authorization:**
+```csharp
+// Test that non-member cannot access org resource
+_client.AddAuthorizationHeader(nonMemberToken);
+var response = await _client.GetAsync($"/organizations/{org.Id}");
+Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+```
+
+**Testing domain validation:**
+```csharp
+// Test invalid state transition
+var result = _governanceService.ValidateStatusTransition(proposal, ProposalStatus.Finalized);
+Assert.False(result.IsValid);
+Assert.Contains("Closed", result.ErrorMessage);
+```
+
+### Coverage Summary
+
+The table below shows test counts for the new/expanded test categories in this PR. The 280+ total includes these plus existing tests for controllers, services, and other infrastructure.
+
+| Category | Test Count | Key Scenarios |
+|----------|------------|---------------|
+| Domain Services | 68 | State transitions, quorum, voting power |
+| Authorization | 30 | GlobalAdmin, OrgAdmin, OrgMember, ProposalManager |
+| Multi-Tenancy | 12 | Cross-org access denied, same-org access allowed |
+| Proposal Lifecycle | 26 | Draft→Open→Closed→Finalized, voting rules |
+| Outbound Events | 17 | Event enqueue on lifecycle transitions |
+| End-to-End Flows | 8 | Complete workflows from creation to finalization |
+| Other (existing) | 119+ | Controllers, services, infrastructure |
+| **Total** | **280+** | Full test suite |
