@@ -166,8 +166,12 @@ test.describe('Admin Flow', () => {
     // Should see memberships heading
     await expect(page.getByRole('heading', { name: /memberships/i })).toBeVisible();
     
+    // Wait for table to load
+    await page.waitForLoadState('networkidle');
+    
     // Admin user should be listed as OrgAdmin (automatically added when org created)
-    await expect(page.getByText('admin@example.com')).toBeVisible();
+    // The email might be in a table cell, so we use a more flexible selector
+    await expect(page.locator('text=admin@example.com')).toBeVisible({ timeout: 10000 });
   });
 
   test('should access organization share types page', async ({ page }) => {
