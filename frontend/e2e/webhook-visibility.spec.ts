@@ -13,9 +13,12 @@ async function loginAsAdmin(page: Page): Promise<void> {
 
 /**
  * Helper to generate unique names for test data to avoid conflicts
+ * Uses timestamp and counter for guaranteed uniqueness within a test run
  */
+let uniqueCounter = 0;
 function uniqueName(baseName: string): string {
-  return `${baseName}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  uniqueCounter++;
+  return `${baseName}-${Date.now()}-${uniqueCounter}`;
 }
 
 test.describe('Webhook Events Visibility', () => {

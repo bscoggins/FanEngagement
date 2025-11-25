@@ -145,7 +145,10 @@ fi
 
 # Install Playwright browsers if needed
 echo -e "${YELLOW}Checking Playwright browsers...${NC}"
-npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium
+if ! npx playwright install chromium --with-deps 2>/dev/null; then
+  echo -e "${YELLOW}--with-deps option not available, installing chromium only...${NC}"
+  npx playwright install chromium
+fi
 
 # Run E2E tests
 echo -e "${GREEN}Running E2E tests...${NC}"
@@ -155,7 +158,7 @@ echo ""
 export E2E_BASE_URL="${E2E_BASE_URL:-http://localhost:5173}"
 
 if [ -n "$PLAYWRIGHT_ARGS" ]; then
-  npm run e2e -- $PLAYWRIGHT_ARGS
+  npm run e2e -- "$PLAYWRIGHT_ARGS"
 else
   npm run e2e
 fi

@@ -92,6 +92,8 @@ jobs:
     needs: [build-and-test]  # Only run E2E tests if backend builds successfully
     # Continue even if E2E tests fail (they can be flaky in CI)
     continue-on-error: true
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
