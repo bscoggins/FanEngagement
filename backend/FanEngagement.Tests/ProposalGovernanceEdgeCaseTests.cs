@@ -379,11 +379,10 @@ public class ProposalGovernanceEdgeCaseTests
     [Fact]
     public void ValidateCanVote_PastStartTime_IsValid()
     {
-        // Arrange - use a clearly past time for determinism
-        var now = DateTimeOffset.UtcNow;
+        // Arrange - use clearly deterministic past/future times
         var proposal = CreateProposal(ProposalStatus.Open);
-        proposal.StartAt = now.AddMinutes(-5); // Started 5 minutes ago
-        proposal.EndAt = now.AddHours(1);
+        proposal.StartAt = DateTimeOffset.UtcNow.AddHours(-1); // Clearly in the past
+        proposal.EndAt = DateTimeOffset.UtcNow.AddHours(1); // Clearly in the future
 
         // Act
         var result = _governanceService.ValidateCanVote(proposal, hasExistingVote: false);
@@ -395,11 +394,10 @@ public class ProposalGovernanceEdgeCaseTests
     [Fact]
     public void ValidateCanVote_PastEndTime_IsInvalid()
     {
-        // Arrange - use a clearly past time for determinism
-        var now = DateTimeOffset.UtcNow;
+        // Arrange - use clearly deterministic past times
         var proposal = CreateProposal(ProposalStatus.Open);
-        proposal.StartAt = now.AddHours(-2);
-        proposal.EndAt = now.AddMinutes(-5); // Ended 5 minutes ago
+        proposal.StartAt = DateTimeOffset.UtcNow.AddHours(-2);
+        proposal.EndAt = DateTimeOffset.UtcNow.AddHours(-1); // Clearly ended 1 hour ago
 
         // Act
         var result = _governanceService.ValidateCanVote(proposal, hasExistingVote: false);

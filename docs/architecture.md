@@ -1634,6 +1634,8 @@ Assert.Contains("Closed", result.ErrorMessage);
 
 ### Coverage Summary
 
+The table below shows test counts for the new/expanded test categories in this PR. The 280+ total includes these plus existing tests for controllers, services, and other infrastructure.
+
 | Category | Test Count | Key Scenarios |
 |----------|------------|---------------|
 | Domain Services | 68 | State transitions, quorum, voting power |
@@ -1642,4 +1644,5 @@ Assert.Contains("Closed", result.ErrorMessage);
 | Proposal Lifecycle | 26 | Draft→Open→Closed→Finalized, voting rules |
 | Outbound Events | 17 | Event enqueue on lifecycle transitions |
 | End-to-End Flows | 8 | Complete workflows from creation to finalization |
+| Other (existing) | 119+ | Controllers, services, infrastructure |
 | **Total** | **280+** | Full test suite |
