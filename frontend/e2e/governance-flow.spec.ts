@@ -139,8 +139,9 @@ test.describe('Governance Flow', () => {
     await page.getByText(proposalTitle).click();
     await page.waitForTimeout(500);
     
-    // Get proposal ID from URL if we navigated to detail page
-    let proposalId = page.url().match(/proposals\/([^/]+)/)?.[1];
+    // Get proposal ID from URL if we navigated to detail page (for debugging)
+    const proposalId = page.url().match(/proposals\/([^/]+)/)?.[1];
+    console.log('Proposal ID:', proposalId);
     
     // Step 5: Add options to the proposal
     // Look for add option button
