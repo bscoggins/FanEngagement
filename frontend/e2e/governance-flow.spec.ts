@@ -113,12 +113,17 @@ test.describe('Governance Flow', () => {
       // Navigate to share types
       await page.getByRole('link', { name: /share types/i }).first().click();
       await page.waitForURL(/\/admin\/organizations\/.*\/share-types/);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500); // Give time for client-side JS to hydrate
       
       // Create a new share type
       const newShareTypeName = generateUniqueName('E2E-ShareType');
       
-      // Look for create button
-      await page.getByRole('button', { name: /create share type/i }).click();
+      // Look for create button and wait for it to be visible and enabled
+      const createButton = page.getByRole('button', { name: /create share type/i });
+      await createButton.waitFor({ state: 'visible', timeout: 30000 });
+      await expect(createButton).toBeEnabled();
+      await createButton.click();
       
       // Fill in share type details
       await page.getByLabel('Name').fill(newShareTypeName);
@@ -126,7 +131,10 @@ test.describe('Governance Flow', () => {
       await page.getByLabel('Voting Weight').fill('2');
       
       // Submit with exact button text
-      await page.getByRole('button', { name: 'Create Share Type' }).click();
+      const submitButton = page.getByRole('button', { name: 'Create Share Type' });
+      await submitButton.waitFor({ state: 'visible', timeout: 30000 });
+      await expect(submitButton).toBeEnabled();
+      await submitButton.click();
       
       // Verify share type appears in list
       await expect(page.getByText(newShareTypeName)).toBeVisible({ timeout: 5000 });

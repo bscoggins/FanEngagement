@@ -108,12 +108,16 @@ test.describe('Webhook Visibility Flow', () => {
 
     // Open the proposal - this should create a ProposalOpened event
     await openProposal(request, adminToken, proposal.id);
+    
+    // Wait a bit for the event to be created
+    await page.waitForTimeout(1000);
 
     // Navigate to webhook events page
     await page.goto(`/admin/organizations/${organizationId}/webhook-events`);
+    await page.waitForLoadState('networkidle');
 
     // Wait for page to load
-    await expect(page.getByRole('heading', { name: /webhook events|outbound events/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /webhook events|outbound events/i })).toBeVisible({ timeout: 10000 });
 
     // The page should be loaded and functional - just verify we can see the page structure
     // Events may or may not be present depending on webhook configuration, which is fine

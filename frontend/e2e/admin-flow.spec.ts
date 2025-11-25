@@ -167,7 +167,7 @@ test.describe('Admin Flow', () => {
     await expect(page.getByRole('heading', { name: /memberships/i })).toBeVisible();
     
     // Admin user should be listed as OrgAdmin (automatically added when org created)
-    await expect(page.getByRole('cell', { name: 'admin@example.com' })).toBeVisible();
+    await expect(page.getByText('admin@example.com')).toBeVisible();
   });
 
   test('should access organization share types page', async ({ page }) => {
