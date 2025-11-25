@@ -16,8 +16,28 @@ export function generateUniqueName(prefix: string): string {
 }
 
 /**
- * Seed development data using the admin API endpoint
- * Note: This requires being logged in as admin and backend in Development mode
+ * Seed development data using the admin API endpoint.
+ * 
+ * This function navigates to the admin dev-tools page and triggers the seed
+ * operation. It's useful when you need a pre-populated database for tests
+ * that don't want to set up all data programmatically.
+ * 
+ * **Prerequisites:**
+ * - Must be logged in as admin
+ * - Backend must be in Development mode
+ * 
+ * **When to use:**
+ * - When tests need a realistic data set
+ * - When testing against seeded development data
+ * - Not recommended for isolated tests that need specific data states
+ * 
+ * @example
+ * ```typescript
+ * test.beforeAll(async ({ page }) => {
+ *   await loginAsAdmin(page);
+ *   await seedDevData(page);
+ * });
+ * ```
  */
 export async function seedDevData(page: Page): Promise<void> {
   // Navigate to dev tools page and seed data

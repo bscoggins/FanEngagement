@@ -9,9 +9,16 @@ test.describe('Admin Flow', () => {
   });
 
   test.afterEach(async ({ page }) => {
-    // Logout after each test
-    if (await page.getByRole('button', { name: 'Logout' }).isVisible({ timeout: 1000 }).catch(() => false)) {
-      await logout(page);
+    // Logout after each test if still logged in
+    // Using try-catch to handle cases where the test failed before login completed
+    try {
+      const logoutButton = page.getByRole('button', { name: 'Logout' });
+      const isVisible = await logoutButton.isVisible({ timeout: 1000 });
+      if (isVisible) {
+        await logout(page);
+      }
+    } catch {
+      // Ignore errors in cleanup - test might have failed before login
     }
   });
 

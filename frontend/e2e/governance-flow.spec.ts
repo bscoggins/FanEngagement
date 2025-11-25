@@ -72,9 +72,11 @@ test.describe('Governance Flow', () => {
     const users = await adminUserResponse.json();
     const adminUser = users.find((u: { email: string }) => u.email === ADMIN_CREDENTIALS.email);
     
-    if (adminUser) {
-      await issueShares(request, adminToken, organizationId, adminUser.id, shareTypeId, 100);
+    if (!adminUser) {
+      throw new Error('Admin user not found - cannot proceed with governance flow tests');
     }
+    
+    await issueShares(request, adminToken, organizationId, adminUser.id, shareTypeId, 100);
 
     // Issue shares to member
     await issueShares(request, adminToken, organizationId, memberId, shareTypeId, 50);
@@ -85,7 +87,7 @@ test.describe('Governance Flow', () => {
       request,
       adminToken,
       organizationId,
-      adminUser?.id || memberId,
+      adminUser.id,
       proposalTitle,
       ['Option A', 'Option B', 'Option C']
     );

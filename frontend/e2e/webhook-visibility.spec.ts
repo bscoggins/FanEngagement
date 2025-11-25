@@ -51,6 +51,7 @@ test.describe('Webhook Visibility Flow', () => {
 
     // Create a webhook endpoint (using a fake URL since we're just testing visibility)
     // Note: This webhook won't actually receive events, but will show in the events page
+    // Webhook creation might fail if URL validation is strict, which is acceptable for this test
     try {
       await createWebhookEndpoint(
         request,
@@ -59,9 +60,9 @@ test.describe('Webhook Visibility Flow', () => {
         'https://webhook.example.com/e2e-test',
         ['ProposalOpened', 'ProposalClosed']
       );
-    } catch (e) {
-      // Webhook creation might fail if URL validation is strict, which is fine for this test
-      console.log('Webhook endpoint creation skipped (might require valid URL)');
+    } catch {
+      // Webhook creation failed - continue without webhook endpoint
+      // The tests will still verify the webhook events UI works correctly
     }
   });
 
