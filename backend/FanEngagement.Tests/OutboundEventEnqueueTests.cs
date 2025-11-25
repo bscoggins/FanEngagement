@@ -325,6 +325,7 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             Description = "Test Organization"
         };
         var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
+        Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
         var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
         return (adminToken, org!);
     }
@@ -339,6 +340,7 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             IsTransferable = true
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ShareType>())!;
     }
 
@@ -352,6 +354,7 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             Password = password
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
+        Assert.Equal(HttpStatusCode.Created, userResponse.StatusCode);
         var user = await userResponse.Content.ReadFromJsonAsync<UserDto>();
 
         var membershipRequest = new CreateMembershipRequest
@@ -359,7 +362,8 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             UserId = user!.Id,
             Role = OrganizationRole.Member
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        var membershipResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        Assert.Equal(HttpStatusCode.Created, membershipResponse.StatusCode);
 
         var issuanceRequest = new CreateShareIssuanceRequest
         {
@@ -368,9 +372,11 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             Quantity = shares,
             Reason = "Test allocation"
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", issuanceRequest);
+        var issuanceResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", issuanceRequest);
+        Assert.Equal(HttpStatusCode.Created, issuanceResponse.StatusCode);
 
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", new { Email = userRequest.Email, Password = password });
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<FanEngagement.Application.Authentication.LoginResponse>();
 
         return (user, loginResult!.Token);
@@ -384,6 +390,7 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             CreatedByUserId = createdByUserId
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalDto>())!;
     }
 
@@ -396,6 +403,7 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             QuorumRequirement = quorum
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalDto>())!;
     }
 
@@ -403,6 +411,7 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
     {
         var request = new AddProposalOptionRequest { Text = text };
         var response = await _client.PostAsJsonAsync($"/proposals/{proposalId}/options", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalOptionDto>())!;
     }
 

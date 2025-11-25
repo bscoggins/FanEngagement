@@ -320,6 +320,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             Description = name
         };
         var response = await _client.PostAsJsonAsync("/organizations", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<Organization>())!;
     }
 
@@ -333,6 +334,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             IsTransferable = true
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ShareType>())!;
     }
 
@@ -346,6 +348,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             Password = password
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
+        Assert.Equal(HttpStatusCode.Created, userResponse.StatusCode);
         var user = await userResponse.Content.ReadFromJsonAsync<UserDto>();
 
         var membershipRequest = new CreateMembershipRequest
@@ -353,9 +356,11 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             UserId = user!.Id,
             Role = OrganizationRole.Member
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        var membershipResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        Assert.Equal(HttpStatusCode.Created, membershipResponse.StatusCode);
 
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", new { Email = userRequest.Email, Password = password });
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<FanEngagement.Application.Authentication.LoginResponse>();
 
         return (user, loginResult!.Token);
@@ -371,6 +376,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             Password = password
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
+        Assert.Equal(HttpStatusCode.Created, userResponse.StatusCode);
         var user = await userResponse.Content.ReadFromJsonAsync<UserDto>();
 
         var membershipRequest = new CreateMembershipRequest
@@ -378,9 +384,11 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             UserId = user!.Id,
             Role = OrganizationRole.OrgAdmin
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        var membershipResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        Assert.Equal(HttpStatusCode.Created, membershipResponse.StatusCode);
 
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", new { Email = userRequest.Email, Password = password });
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<FanEngagement.Application.Authentication.LoginResponse>();
 
         return (user, loginResult!.Token);
@@ -402,7 +410,8 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             Quantity = quantity,
             Reason = "Test allocation"
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", request);
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     private async Task<ProposalDto> CreateProposalAsync(Guid orgId, Guid createdByUserId)
@@ -413,6 +422,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
             CreatedByUserId = createdByUserId
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalDto>())!;
     }
 
@@ -420,12 +430,14 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
     {
         var request = new AddProposalOptionRequest { Text = text };
         var response = await _client.PostAsJsonAsync($"/proposals/{proposalId}/options", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalOptionDto>())!;
     }
 
     private async Task<ProposalDto> OpenProposalAsync(Guid proposalId)
     {
         var response = await _client.PostAsync($"/proposals/{proposalId}/open", null);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalDto>())!;
     }
 

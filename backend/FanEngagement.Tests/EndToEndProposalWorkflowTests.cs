@@ -280,6 +280,7 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             Description = "Test Organization"
         };
         var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
+        Assert.Equal(HttpStatusCode.Created, orgResponse.StatusCode);
         var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
         return (adminToken, org!);
     }
@@ -299,6 +300,7 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             IsTransferable = true
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ShareType>())!;
     }
 
@@ -319,6 +321,7 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             Password = "TestPassword123!"
         };
         var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
+        Assert.Equal(HttpStatusCode.Created, userResponse.StatusCode);
         var user = await userResponse.Content.ReadFromJsonAsync<UserDto>();
 
         // Add membership
@@ -327,10 +330,12 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             UserId = user!.Id,
             Role = OrganizationRole.Member
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        var membershipResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", membershipRequest);
+        Assert.Equal(HttpStatusCode.Created, membershipResponse.StatusCode);
 
         // Login for token
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", new { Email = userRequest.Email, Password = userRequest.Password });
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<FanEngagement.Application.Authentication.LoginResponse>();
 
         return (user, loginResult!.Token);
@@ -345,7 +350,8 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             Quantity = quantity,
             Reason = "Test allocation"
         };
-        await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", request);
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     private async Task<ProposalDto> CreateProposalAsync(Guid orgId, Guid createdByUserId)
@@ -357,6 +363,7 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             CreatedByUserId = createdByUserId
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalDto>())!;
     }
 
@@ -370,6 +377,7 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
             QuorumRequirement = quorum
         };
         var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalDto>())!;
     }
 
@@ -377,6 +385,7 @@ public class EndToEndProposalWorkflowTests : IClassFixture<TestWebApplicationFac
     {
         var request = new AddProposalOptionRequest { Text = text };
         var response = await _client.PostAsJsonAsync($"/proposals/{proposalId}/options", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ProposalOptionDto>())!;
     }
 
