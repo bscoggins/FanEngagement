@@ -212,7 +212,7 @@ export async function issueShares(
   organizationId: string,
   userId: string,
   shareTypeId: string,
-  amount: number
+  quantity: number
 ): Promise<void> {
   const response = await request.post(`/api/organizations/${organizationId}/share-issuances`, {
     headers: {
@@ -222,7 +222,7 @@ export async function issueShares(
     data: {
       userId,
       shareTypeId,
-      amount,
+      quantity,
       reason: 'E2E test issuance',
     },
   });

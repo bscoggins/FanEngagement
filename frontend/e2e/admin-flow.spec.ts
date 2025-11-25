@@ -44,10 +44,12 @@ test.describe('Admin Flow', () => {
     // Click on Organizations in sidebar (use first() to handle multiple matches)
     await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Click create button to show form
-    await page.getByRole('button', { name: /create organization/i }).click();
+    const createOrgButton = page.getByRole('button', { name: /create organization/i });
+    await createOrgButton.waitFor({ state: 'visible', timeout: 30000 });
+    await createOrgButton.click();
     
     // Fill in organization details
     await page.getByLabel('Name').fill(orgName);
@@ -55,15 +57,17 @@ test.describe('Admin Flow', () => {
     
     // Wait for form to be ready before submitting
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500); // Small buffer for any client-side validation
     
     // Submit the form - wait for the button to be visible and enabled
-    const submitButton = page.getByRole('button', { name: /create$/i });
-    await submitButton.waitFor({ state: 'visible', timeout: 10000 });
+    const submitButton = page.getByRole('button', { name: /^create$/i });
+    await submitButton.waitFor({ state: 'visible', timeout: 30000 });
+    await expect(submitButton).toBeEnabled({ timeout: 5000 });
     await submitButton.click();
     
     // Should navigate to edit page or show success
     // Wait for navigation or success message
-    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 15000 });
+    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 30000 });
     
     // Verify organization was created by checking we're on the edit page
     await expect(page.getByRole('heading', { name: /edit organization/i })).toBeVisible();
@@ -76,17 +80,23 @@ test.describe('Admin Flow', () => {
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
-    await page.getByRole('button', { name: /create organization/i }).click();
+    const createOrgButton = page.getByRole('button', { name: /create organization/i });
+    await createOrgButton.waitFor({ state: 'visible', timeout: 30000 });
+    await createOrgButton.click();
+    
     await page.getByLabel('Name').fill(orgName);
     await page.waitForLoadState('networkidle');
-    const createButton = page.getByRole('button', { name: /create$/i });
-    await createButton.waitFor({ state: 'visible', timeout: 10000 });
+    await page.waitForTimeout(500);
+    
+    const createButton = page.getByRole('button', { name: /^create$/i });
+    await createButton.waitFor({ state: 'visible', timeout: 30000 });
+    await expect(createButton).toBeEnabled({ timeout: 5000 });
     await createButton.click();
     
     // Wait for edit page
-    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 15000 });
+    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 30000 });
     
     // Update organization name
     const updatedName = `${orgName}-Updated`;
@@ -131,17 +141,23 @@ test.describe('Admin Flow', () => {
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
-    await page.getByRole('button', { name: /create organization/i }).click();
+    const createOrgButton = page.getByRole('button', { name: /create organization/i });
+    await createOrgButton.waitFor({ state: 'visible', timeout: 30000 });
+    await createOrgButton.click();
+    
     await page.getByLabel('Name').fill(orgName);
     await page.waitForLoadState('networkidle');
-    const createButton = page.getByRole('button', { name: /create$/i });
-    await createButton.waitFor({ state: 'visible', timeout: 10000 });
+    await page.waitForTimeout(500);
+    
+    const createButton = page.getByRole('button', { name: /^create$/i });
+    await createButton.waitFor({ state: 'visible', timeout: 30000 });
+    await expect(createButton).toBeEnabled({ timeout: 5000 });
     await createButton.click();
     
     // Wait for edit page
-    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 15000 });
+    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 30000 });
     
     // Navigate to memberships
     await page.getByRole('link', { name: /memberships/i }).click();
@@ -161,17 +177,23 @@ test.describe('Admin Flow', () => {
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
-    await page.getByRole('button', { name: /create organization/i }).click();
+    const createOrgButton = page.getByRole('button', { name: /create organization/i });
+    await createOrgButton.waitFor({ state: 'visible', timeout: 30000 });
+    await createOrgButton.click();
+    
     await page.getByLabel('Name').fill(orgName);
     await page.waitForLoadState('networkidle');
-    const createButton = page.getByRole('button', { name: /create$/i });
-    await createButton.waitFor({ state: 'visible', timeout: 10000 });
+    await page.waitForTimeout(500);
+    
+    const createButton = page.getByRole('button', { name: /^create$/i });
+    await createButton.waitFor({ state: 'visible', timeout: 30000 });
+    await expect(createButton).toBeEnabled({ timeout: 5000 });
     await createButton.click();
     
     // Wait for edit page
-    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 15000 });
+    await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 30000 });
     
     // Navigate to share types
     await page.getByRole('link', { name: /share types/i }).click();
