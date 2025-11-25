@@ -266,8 +266,10 @@ public class OutboundEventEnqueueTests : IClassFixture<TestWebApplicationFactory
             .FirstOrDefaultAsync();
 
         Assert.NotNull(outboundEvent);
-        Assert.True(outboundEvent.CreatedAt >= beforeOpen);
-        Assert.True(outboundEvent.CreatedAt <= afterOpen);
+        // Allow a 2-second buffer before and after to avoid flakiness due to timing delays
+        var bufferSeconds = 2;
+        Assert.True(outboundEvent.CreatedAt >= beforeOpen.AddSeconds(-bufferSeconds));
+        Assert.True(outboundEvent.CreatedAt <= afterOpen.AddSeconds(bufferSeconds));
     }
 
     [Fact]

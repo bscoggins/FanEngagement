@@ -41,7 +41,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
         var orgB = await CreateOrganizationAsync("Organization B");
 
         // Create users in each org
-        var (userA, userAToken) = await CreateUserInOrgAsync(orgA.Id);
+        var (_, userAToken) = await CreateUserInOrgAsync(orgA.Id);
         var (userB, _) = await CreateUserInOrgAsync(orgB.Id);
 
         // Create proposal in OrgB
@@ -177,7 +177,7 @@ public class MultiTenancyTests : IClassFixture<TestWebApplicationFactory>
     public async Task GlobalAdmin_CanAccessProposalsInAnyOrg()
     {
         // Arrange
-        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var orgA = await CreateOrganizationAsync("Organization A");
