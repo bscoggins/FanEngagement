@@ -41,8 +41,8 @@ test.describe('Admin Flow', () => {
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.waitForURL(/\/admin/);
     
-    // Click on Organizations in sidebar
-    await page.getByRole('link', { name: 'Organizations' }).click();
+    // Click on Organizations in sidebar (use first() to handle multiple matches)
+    await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
     
     // Click create button to show form
@@ -68,7 +68,7 @@ test.describe('Admin Flow', () => {
     
     // First create an organization
     await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByRole('link', { name: 'Organizations' }).click();
+    await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
     
     await page.getByRole('button', { name: /create organization/i }).click();
@@ -99,8 +99,8 @@ test.describe('Admin Flow', () => {
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.waitForURL(/\/admin/);
     
-    // Click on Users in sidebar
-    await page.getByRole('link', { name: 'Users' }).click();
+    // Click on Users in sidebar (use first() to handle multiple matches)
+    await page.getByRole('link', { name: 'Users' }).first().click();
     await page.waitForURL(/\/admin\/users/);
     
     // Should see Users heading
@@ -118,7 +118,7 @@ test.describe('Admin Flow', () => {
     
     // Create an organization first
     await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByRole('link', { name: 'Organizations' }).click();
+    await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
     
     await page.getByRole('button', { name: /create organization/i }).click();
@@ -144,7 +144,7 @@ test.describe('Admin Flow', () => {
     
     // Create an organization first
     await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByRole('link', { name: 'Organizations' }).click();
+    await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
     
     await page.getByRole('button', { name: /create organization/i }).click();

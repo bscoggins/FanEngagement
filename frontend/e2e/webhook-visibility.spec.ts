@@ -71,14 +71,14 @@ test.describe('Webhook Visibility Flow', () => {
 
     // Navigate to organizations
     await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByRole('link', { name: 'Organizations' }).click();
+    await page.getByRole('link', { name: 'Organizations' }).first().click();
 
     // Find and click on our test organization
     await page.getByRole('link', { name: organizationName }).click();
     await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
 
     // Navigate to webhook events page
-    await page.getByRole('link', { name: /webhook events/i }).click();
+    await page.getByRole('link', { name: /webhook events/i }).first().click();
     await page.waitForURL(/\/admin\/organizations\/.*\/webhook-events/);
 
     // Should see webhook events page heading
@@ -223,8 +223,9 @@ test.describe('Webhook Events - Empty State', () => {
     await expect(page.getByRole('heading', { name: /webhook events|outbound events/i })).toBeVisible();
 
     // With no webhooks or events, should show empty state or "no events" message
+    // Use first() to handle multiple possible matches
     await expect(
-      page.getByText(/no.*events|no outbound events|empty|configure webhooks/i)
+      page.getByText(/no.*events|no outbound events|empty|configure webhooks/i).first()
     ).toBeVisible({ timeout: 5000 });
 
     await logout(page);

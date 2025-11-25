@@ -183,7 +183,8 @@ export async function createShareType(
   });
   
   if (!response.ok()) {
-    throw new Error(`Failed to create share type: ${response.status()}`);
+    const errorBody = await response.text().catch(() => 'No error body');
+    throw new Error(`Failed to create share type: ${response.status()} - ${errorBody}`);
   }
   
   return await response.json();

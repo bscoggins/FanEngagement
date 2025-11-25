@@ -103,14 +103,14 @@ test.describe('Governance Flow', () => {
       
       // Navigate to organizations
       await page.getByRole('link', { name: 'Admin' }).click();
-      await page.getByRole('link', { name: 'Organizations' }).click();
+      await page.getByRole('link', { name: 'Organizations' }).first().click();
       
       // Find and click on our test organization
       await page.getByRole('link', { name: organizationName }).click();
       await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
       
       // Navigate to share types
-      await page.getByRole('link', { name: /share types/i }).click();
+      await page.getByRole('link', { name: /share types/i }).first().click();
       await page.waitForURL(/\/admin\/organizations\/.*\/share-types/);
       
       // Create a new share type
@@ -137,14 +137,14 @@ test.describe('Governance Flow', () => {
       
       // Navigate to organizations
       await page.getByRole('link', { name: 'Admin' }).click();
-      await page.getByRole('link', { name: 'Organizations' }).click();
+      await page.getByRole('link', { name: 'Organizations' }).first().click();
       
       // Find and click on our test organization
       await page.getByRole('link', { name: organizationName }).click();
       await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
       
       // Navigate to share types
-      await page.getByRole('link', { name: /share types/i }).click();
+      await page.getByRole('link', { name: /share types/i }).first().click();
       await page.waitForURL(/\/admin\/organizations\/.*\/share-types/);
       
       // Should see the "Voting Shares" share type we created in beforeAll
@@ -160,14 +160,14 @@ test.describe('Governance Flow', () => {
       
       // Navigate to organizations
       await page.getByRole('link', { name: 'Admin' }).click();
-      await page.getByRole('link', { name: 'Organizations' }).click();
+      await page.getByRole('link', { name: 'Organizations' }).first().click();
       
       // Find and click on our test organization
       await page.getByRole('link', { name: organizationName }).click();
       await page.waitForURL(/\/admin\/organizations\/.*\/edit/);
       
       // Navigate to proposals
-      await page.getByRole('link', { name: /proposals/i }).click();
+      await page.getByRole('link', { name: /proposals/i }).first().click();
       await page.waitForURL(/\/admin\/organizations\/.*\/proposals/);
       
       // Should see the proposal we created
@@ -312,7 +312,7 @@ test.describe('Governance Flow - Create New Proposal via UI', () => {
     const orgName = generateUniqueName('E2E-ProposalOrg');
     
     await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByRole('link', { name: 'Organizations' }).click();
+    await page.getByRole('link', { name: 'Organizations' }).first().click();
     await page.waitForURL(/\/admin\/organizations/);
     
     // Create organization
@@ -322,7 +322,7 @@ test.describe('Governance Flow - Create New Proposal via UI', () => {
     await page.waitForURL(/\/admin\/organizations\/.*\/edit/, { timeout: 10000 });
     
     // Navigate to proposals
-    await page.getByRole('link', { name: /proposals/i }).click();
+    await page.getByRole('link', { name: /proposals/i }).first().click();
     await page.waitForURL(/\/admin\/organizations\/.*\/proposals/);
     
     // Create a new proposal
