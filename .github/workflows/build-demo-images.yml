@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build-api:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,7 +35,28 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-api:demo
-            ${{ env.IMAGE_PREFIX }}-api:demo-latest
+            ${{ env.IMAGE_PREFIX }}-api:demo-${{ github.sha }}
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/fanengagement
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push frontend image
         uses: docker/build-push-action@v6
@@ -45,4 +66,4 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}-frontend:demo
-            ${{ env.IMAGE_PREFIX }}-frontend:demo-latest
+            ${{ env.IMAGE_PREFIX }}-frontend:demo-${{ github.sha }}
