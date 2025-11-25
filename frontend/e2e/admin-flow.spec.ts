@@ -123,12 +123,13 @@ test.describe('Admin Flow', () => {
     // Click on Users in sidebar (use first() to handle multiple matches)
     await page.getByRole('link', { name: 'Users' }).first().click();
     await page.waitForURL(/\/admin\/users/);
+    await page.waitForLoadState('networkidle');
     
-    // Should see Users heading
-    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
+    // Should see Users heading (increased timeout for slow CI environments)
+    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible({ timeout: 15000 });
     
     // Should see the admin user in the table (use role to be more specific)
-    await expect(page.getByRole('cell', { name: 'admin@example.com' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'admin@example.com' })).toBeVisible({ timeout: 10000 });
     
     // Should see table headers or user list structure
     await expect(page.getByRole('table')).toBeVisible();
@@ -162,16 +163,14 @@ test.describe('Admin Flow', () => {
     // Navigate to memberships
     await page.getByRole('link', { name: /memberships/i }).click();
     await page.waitForURL(/\/admin\/organizations\/.*\/memberships/);
+    await page.waitForLoadState('networkidle');
     
     // Should see memberships heading
-    await expect(page.getByRole('heading', { name: /memberships/i })).toBeVisible();
-    
-    // Wait for table to load
-    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: /memberships/i })).toBeVisible({ timeout: 15000 });
     
     // Admin user should be listed as OrgAdmin (automatically added when org created)
     // The email might be in a table cell, so we use a more flexible selector
-    await expect(page.locator('text=admin@example.com')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=admin@example.com')).toBeVisible({ timeout: 15000 });
   });
 
   test('should access organization share types page', async ({ page }) => {

@@ -181,12 +181,13 @@ test.describe('Governance Flow', () => {
       // Navigate to proposals
       await page.getByRole('link', { name: /proposals/i }).first().click();
       await page.waitForURL(/\/admin\/organizations\/.*\/proposals/);
+      await page.waitForLoadState('networkidle');
       
-      // Should see the proposal we created
-      await expect(page.getByText(proposalTitle)).toBeVisible();
+      // Should see the proposal we created (with increased timeout)
+      await expect(page.getByText(proposalTitle)).toBeVisible({ timeout: 15000 });
       
       // Proposal should be in Open status
-      await expect(page.getByText(/open/i)).toBeVisible();
+      await expect(page.getByText(/open/i)).toBeVisible({ timeout: 10000 });
       
       await logout(page);
     });

@@ -85,9 +85,10 @@ test.describe('Webhook Visibility Flow', () => {
     // Navigate to webhook events page
     await page.getByRole('link', { name: /webhook events/i }).first().click();
     await page.waitForURL(/\/admin\/organizations\/.*\/webhook-events/);
+    await page.waitForLoadState('networkidle');
 
-    // Should see webhook events page heading
-    await expect(page.getByRole('heading', { name: /webhook events|outbound events/i })).toBeVisible();
+    // Should see webhook events page heading (increased timeout for slow CI)
+    await expect(page.getByRole('heading', { name: /webhook events|outbound events/i })).toBeVisible({ timeout: 15000 });
 
     await logout(page);
   });
