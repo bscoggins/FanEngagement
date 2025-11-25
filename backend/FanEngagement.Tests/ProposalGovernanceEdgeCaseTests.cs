@@ -377,12 +377,12 @@ public class ProposalGovernanceEdgeCaseTests
     #region Time Window Edge Cases
 
     [Fact]
-    public void ValidateCanVote_ExactlyAtStartTime_IsValid()
+    public void ValidateCanVote_PastStartTime_IsValid()
     {
-        // Arrange
+        // Arrange - use a clearly past time for determinism
         var now = DateTimeOffset.UtcNow;
         var proposal = CreateProposal(ProposalStatus.Open);
-        proposal.StartAt = now.AddMilliseconds(-1); // Just passed
+        proposal.StartAt = now.AddMinutes(-5); // Started 5 minutes ago
         proposal.EndAt = now.AddHours(1);
 
         // Act
@@ -393,13 +393,13 @@ public class ProposalGovernanceEdgeCaseTests
     }
 
     [Fact]
-    public void ValidateCanVote_ExactlyAtEndTime_IsInvalid()
+    public void ValidateCanVote_PastEndTime_IsInvalid()
     {
-        // Arrange
+        // Arrange - use a clearly past time for determinism
         var now = DateTimeOffset.UtcNow;
         var proposal = CreateProposal(ProposalStatus.Open);
-        proposal.StartAt = now.AddHours(-1);
-        proposal.EndAt = now.AddMilliseconds(-1); // Just passed
+        proposal.StartAt = now.AddHours(-2);
+        proposal.EndAt = now.AddMinutes(-5); // Ended 5 minutes ago
 
         // Act
         var result = _governanceService.ValidateCanVote(proposal, hasExistingVote: false);

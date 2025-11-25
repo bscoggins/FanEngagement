@@ -1636,9 +1636,10 @@ Assert.Contains("Closed", result.ErrorMessage);
 
 | Category | Test Count | Key Scenarios |
 |----------|------------|---------------|
-| Domain Services | ~50 | State transitions, quorum, voting power |
-| Authorization | ~30 | GlobalAdmin, OrgAdmin, OrgMember, ProposalManager |
-| Multi-Tenancy | ~12 | Cross-org access denied, same-org access allowed |
-| Proposal Lifecycle | ~25 | Draft→Open→Closed→Finalized, voting rules |
-| Outbound Events | ~8 | Event enqueue on lifecycle transitions |
-| End-to-End Flows | ~10 | Complete workflows from creation to finalization |
+| Domain Services | 68 | State transitions, quorum, voting power |
+| Authorization | 30 | GlobalAdmin, OrgAdmin, OrgMember, ProposalManager |
+| Multi-Tenancy | 12 | Cross-org access denied, same-org access allowed |
+| Proposal Lifecycle | 26 | Draft→Open→Closed→Finalized, voting rules |
+| Outbound Events | 17 | Event enqueue on lifecycle transitions |
+| End-to-End Flows | 8 | Complete workflows from creation to finalization |
+| **Total** | **280+** | Full test suite |
