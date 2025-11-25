@@ -1,0 +1,13 @@
+# Build
+FROM node:20 AS build
+WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ .
+RUN npm run build
+
+# Static nginx
+FROM nginx:alpine
+COPY deploy/nginx-frontend.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
