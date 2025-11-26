@@ -43,9 +43,9 @@ export const MemberDashboardPage: React.FC = () => {
               organizationName: membership.organizationName,
             });
           });
-        } catch {
+        } catch (err) {
           // Continue even if one org fails to load
-          console.warn(`Failed to fetch proposals for org ${membership.organizationId}`);
+          console.warn(`Failed to fetch proposals for org ${membership.organizationId}:`, err);
         }
       }
 
@@ -232,7 +232,7 @@ export const MemberDashboardPage: React.FC = () => {
                 fontSize: '0.875rem',
               }}
             >
-              View My First Organization →
+              Explore Organizations →
             </Link>
           )}
         </div>

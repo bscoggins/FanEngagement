@@ -67,7 +67,7 @@ describe('LoginPage', () => {
       userId: 'user-123',
       email: 'test@example.com',
       displayName: 'Test User',
-      role: 'User',
+      role: 'User' as const,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -99,7 +99,7 @@ describe('LoginPage', () => {
       userId: 'admin-123',
       email: 'admin@example.com',
       displayName: 'Admin User',
-      role: 'Admin',
+      role: 'Admin' as const,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -126,7 +126,7 @@ describe('LoginPage', () => {
       userId: 'orgadmin-123',
       email: 'orgadmin@example.com',
       displayName: 'OrgAdmin User',
-      role: 'User',
+      role: 'User' as const,
     };
 
     const mockMemberships = [
@@ -252,7 +252,7 @@ describe('LoginPage', () => {
         userId: 'user-123',
         email: 'test@example.com',
         displayName: 'Test User',
-        role: 'User',
+        role: 'User' as const,
       }), 100));
     });
 

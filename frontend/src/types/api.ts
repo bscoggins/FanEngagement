@@ -8,7 +8,7 @@ export interface LoginResponse {
   userId: string;
   email: string;
   displayName: string;
-  role: string;
+  role: 'User' | 'Admin';
 }
 
 // Pagination types
