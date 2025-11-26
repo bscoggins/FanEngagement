@@ -13,6 +13,7 @@ import { MyAccountPage } from '../pages/MyAccountPage';
 import { MyOrganizationsPage } from '../pages/MyOrganizationsPage';
 import { MyOrganizationPage } from '../pages/MyOrganizationPage';
 import { MyProposalPage } from '../pages/MyProposalPage';
+import { MemberDashboardPage } from '../pages/MemberDashboardPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/AdminUsersPage';
 import { AdminUserDetailPage } from '../pages/AdminUserDetailPage';
@@ -67,6 +68,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MyAccountPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'me/home',
+        element: (
+          <ProtectedRoute>
+            <MemberDashboardPage />
           </ProtectedRoute>
         ),
       },

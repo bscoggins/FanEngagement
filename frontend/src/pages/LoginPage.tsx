@@ -2,22 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { getDefaultRouteForUser } from '../utils/routeUtils';
+import { membershipsApi } from '../api/membershipsApi';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const { showSuccess, showError } = useNotifications();
   const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/users');
-    }
-  }, [isAuthenticated, navigate]);
+    const redirectAuthenticatedUser = async () => {
+      if (isAuthenticated && user) {
+        // For admins, redirect immediately
+        if (user.role === 'Admin') {
+          navigate(getDefaultRouteForUser(user));
+          return;
+        }
+        // For non-admins, fetch memberships to determine if they're OrgAdmin
+        try {
+          const memberships = await membershipsApi.getByUserId(user.userId);
+          navigate(getDefaultRouteForUser(user, memberships));
+        } catch {
+          // On error, use default route without memberships
+          navigate(getDefaultRouteForUser(user));
+        }
+      }
+    };
+    redirectAuthenticatedUser();
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +45,24 @@ export const LoginPage: React.FC = () => {
     try {
       await login({ email, password });
       showSuccess('Login successful!');
-      // After successful login, navigate to /users
-      navigate('/users');
+      
+      // After successful login, navigate based on user role
+      // Get the user from localStorage since login stores it there
+      const storedUser = localStorage.getItem('authUser');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.role === 'Admin') {
+          navigate(getDefaultRouteForUser(parsedUser));
+        } else {
+          // For non-admins, fetch memberships to determine route
+          try {
+            const memberships = await membershipsApi.getByUserId(parsedUser.userId);
+            navigate(getDefaultRouteForUser(parsedUser, memberships));
+          } catch {
+            navigate(getDefaultRouteForUser(parsedUser));
+          }
+        }
+      }
     } catch (err) {
       // Handle login errors
       console.error('Login error:', err);
