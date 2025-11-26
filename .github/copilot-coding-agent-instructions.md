@@ -61,6 +61,30 @@ docker compose up --build
 # Frontend: http://localhost:3000
 ```
 
+### Development Scripts
+
+The repository includes convenience scripts for common workflows:
+
+```sh
+# Start database + backend in watch mode
+./scripts/dev-up
+
+# Start full stack (database + backend + frontend)
+./scripts/dev-up --full
+
+# Stop development environment
+./scripts/dev-down
+
+# Stop and remove all data (clean slate)
+./scripts/dev-down --clean
+
+# Run backend tests
+./scripts/test-backend
+
+# Run frontend tests
+./scripts/test-frontend
+```
+
 Run tests via Docker Compose:
 
 ```sh
@@ -102,6 +126,22 @@ Notes:
 - Startup throws if any JWT Issuer/Audience/SigningKey values are missing or empty (validated in `Program.cs`).
 - Development auto-seeds an admin user (`admin@example.com`) or elevates existing user to Admin; update/remove for production.
 - If `Cors:AllowedOrigins` not set, CORS defaults to `http://localhost:3000` and `http://localhost:5173`.
+
+### Dev Data Seeding Scenarios
+
+The seeding endpoint supports multiple scenarios:
+
+- **BasicDemo** (default): 2 organizations, 3 users, sample proposals and votes
+- **HeavyProposals**: 50+ proposals for pagination and performance testing  
+- **WebhookFailures**: Webhook endpoints and outbound events with various statuses
+
+```sh
+# Seed with a specific scenario
+curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=HeavyProposals" \
+  -H "Authorization: Bearer <admin-token>"
+```
+
+Scenarios can also be selected in the Admin Dev Tools UI (`/admin/dev-tools`).
 
 ## Current API Endpoints
 
@@ -1906,3 +1946,52 @@ public async Task OpeningProposal_EnqueuesProposalOpenedEvent()
 ```
 
 See `docs/architecture.md` → **Testing Strategy** section for complete details.
+
+## Development Scripts and Scenarios Maintenance
+
+When implementing new features, keep the development scripts and seeding scenarios up to date:
+
+### Scripts (`scripts/` directory)
+
+- **dev-up**: Start development environment (database + backend, optionally frontend)
+- **dev-down**: Stop development environment (optionally with data cleanup)
+- **test-backend**: Run backend tests with optional filters
+- **test-frontend**: Run frontend tests with optional watch mode
+
+**When to update scripts:**
+- Adding new services or containers to the stack
+- Changing port configurations
+- Adding new test suites or test runners
+
+### Dev Data Seeding Scenarios
+
+Scenarios are defined in `backend/FanEngagement.Infrastructure/Services/DevDataSeedingService.cs`:
+
+- **BasicDemo**: Default scenario with sample organizations, users, and proposals
+- **HeavyProposals**: Extended data for pagination and performance testing
+- **WebhookFailures**: Webhook events with various statuses for observability testing
+
+**When to add/modify scenarios:**
+- When introducing a major new feature that benefits from dedicated test data
+- When adding new entity types that should be included in sample data
+- When existing scenarios no longer cover common development/testing needs
+
+**Scenario requirements:**
+1. Scenarios must be idempotent (running twice produces no duplicates)
+2. Each scenario should build on BasicDemo to ensure base data is always present
+3. Update `SeedScenarioInfo` descriptions to clearly explain use cases
+4. Add backend tests in `AdminSeedingTests.cs` to verify scenario behavior
+5. Update `AdminDevToolsPage` frontend component if UI changes are needed
+
+### Developer Documentation
+
+- **Quick start guide**: `docs/development.md`
+- **Architecture overview**: `docs/architecture.md`
+- **Copilot instructions**: `.github/copilot-instructions.md`
+- **Agent instructions**: `.github/copilot-coding-agent-instructions.md`
+
+**When to update documentation:**
+- Adding new scripts or commands
+- Changing environment setup requirements
+- Adding new seeding scenarios
+- Modifying test procedures

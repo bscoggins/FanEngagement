@@ -160,6 +160,32 @@ public async Task<ActionResult> GetUserMemberships(Guid id, ...)
 
 ## Development Environment
 
+### Quick Start with Development Scripts
+
+The repository includes convenience scripts for common workflows:
+
+```bash
+# Start database + backend in watch mode
+./scripts/dev-up
+
+# Start full stack (database + backend + frontend)
+./scripts/dev-up --full
+
+# Stop development environment
+./scripts/dev-down
+
+# Stop and remove all data
+./scripts/dev-down --clean
+
+# Run backend tests
+./scripts/test-backend
+
+# Run frontend tests
+./scripts/test-frontend
+```
+
+See [Developer Quick Start](docs/development.md) for complete documentation.
+
 ### Running the Application
 
 **Preferred method (Docker Compose):**
@@ -191,7 +217,14 @@ npm run dev
 
 ### Running Tests
 
-**Docker Compose (recommended):**
+**Using development scripts (recommended):**
+```bash
+./scripts/test-backend        # Backend tests
+./scripts/test-frontend       # Frontend tests
+./scripts/run-e2e.sh          # End-to-end tests
+```
+
+**Docker Compose:**
 ```bash
 docker compose up -d db
 docker compose run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
@@ -220,6 +253,23 @@ cd frontend
 npm ci
 npm test           # or: npm run test:watch
 ```
+
+### Dev Data Seeding Scenarios
+
+The seeding endpoint supports multiple scenarios via query parameter:
+
+```bash
+# Basic demo (default) - 2 orgs, sample data
+curl -X POST http://localhost:5049/admin/seed-dev-data -H "Authorization: Bearer <token>"
+
+# Heavy proposals - 50+ proposals for pagination testing
+curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=HeavyProposals" -H "Authorization: Bearer <token>"
+
+# Webhook failures - webhook events with various statuses
+curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=WebhookFailures" -H "Authorization: Bearer <token>"
+```
+
+Scenarios can also be selected in the Admin Dev Tools UI (`/admin/dev-tools`).
 
 ### Building
 

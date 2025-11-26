@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# dev-up: Start the development environment
+#
+# Usage:
+#   ./scripts/dev-up           # Start database + backend in watch mode
+#   ./scripts/dev-up --full    # Start database + backend + frontend
+#
+# This script starts PostgreSQL via Docker Compose, waits for it to be healthy,
+# and then starts the backend API in watch mode for hot reload development.
+# Use --full to also start the frontend dev server.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
+
+FULL_STACK=false
+if [[ "${1:-}" == "--full" ]]; then
+  FULL_STACK=true
+fi
+
+echo "=== FanEngagement Dev Environment ==="
+echo ""
+
+# Start database
+echo "Starting PostgreSQL database..."
+docker compose up -d db
+
+# Wait for database to be healthy
+echo "Waiting for database to be healthy..."
+db_ready=false
+for attempt in {1..30}; do
+  if docker compose exec -T db pg_isready -U fanengagement >/dev/null 2>&1; then
+    db_ready=true
+    break
+  fi
+  echo "  Database not ready yet (attempt $attempt). Retrying in 2s..."
+  sleep 2
+done
+
+if [[ "$db_ready" == false ]]; then
+  echo "ERROR: Database did not become healthy in time." >&2
+  exit 1
+fi
+
+echo "✓ Database is ready!"
+echo ""
+
+if [[ "$FULL_STACK" == true ]]; then
+  echo "Starting full stack (backend + frontend)..."
+  echo ""
+  echo "Backend will be available at: http://localhost:5049"
+  echo "Frontend will be available at: http://localhost:5173"
+  echo ""
+  echo "Press Ctrl+C to stop all services."
+  echo ""
+  
+  # Create temporary directory for PIDs
+  TEMP_DIR=$(mktemp -d)
+  trap "rm -rf $TEMP_DIR; kill 0" EXIT
+  
+  # Start backend in watch mode
+  (cd backend && dotnet watch run --project FanEngagement.Api/FanEngagement.Api.csproj --launch-profile http) &
+  BACKEND_PID=$!
+  echo $BACKEND_PID > "$TEMP_DIR/backend.pid"
+  
+  # Wait a moment for backend to start compiling
+  sleep 5
+  
+  # Start frontend dev server
+  (cd frontend && npm run dev) &
+  FRONTEND_PID=$!
+  echo $FRONTEND_PID > "$TEMP_DIR/frontend.pid"
+  
+  # Wait for both processes
+  wait
+else
+  echo "Starting backend API in watch mode..."
+  echo ""
+  echo "Backend will be available at: http://localhost:5049"
+  echo ""
+  echo "To also start the frontend, run: cd frontend && npm run dev"
+  echo "Or use: ./scripts/dev-up --full"
+  echo ""
+  echo "Press Ctrl+C to stop the backend."
+  echo ""
+  
+  cd backend
+  dotnet watch run --project FanEngagement.Api/FanEngagement.Api.csproj --launch-profile http
+fi

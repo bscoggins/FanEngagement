@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { adminApi, type DevDataSeedingResult, type TestDataResetResult } from '../api/adminApi';
+import React, { useEffect, useState } from 'react';
+import { adminApi, type DevDataSeedingResult, type TestDataResetResult, type SeedScenario, type SeedScenarioInfo } from '../api/adminApi';
 
 export const AdminDevToolsPage: React.FC = () => {
+  const [scenarios, setScenarios] = useState<SeedScenarioInfo[]>([]);
+  const [selectedScenario, setSelectedScenario] = useState<SeedScenario>('BasicDemo');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DevDataSeedingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -9,13 +11,30 @@ export const AdminDevToolsPage: React.FC = () => {
   const [resetResult, setResetResult] = useState<TestDataResetResult | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchScenarios = async () => {
+      try {
+        const scenarioList = await adminApi.getSeedScenarios();
+        setScenarios(scenarioList);
+      } catch {
+        // If we can't fetch scenarios, use default list
+        setScenarios([
+          { scenario: 'BasicDemo', name: 'Basic Demo', description: 'Basic demo data with organizations, users, and proposals.' },
+          { scenario: 'HeavyProposals', name: 'Heavy Proposals', description: 'Many proposals for pagination testing.' },
+          { scenario: 'WebhookFailures', name: 'Webhook Failures', description: 'Webhook events with various statuses for observability testing.' }
+        ]);
+      }
+    };
+    fetchScenarios();
+  }, []);
+
   const handleSeedDevData = async () => {
     setIsLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const seedResult = await adminApi.seedDevData();
+      const seedResult = await adminApi.seedDevData(selectedScenario);
       setResult(seedResult);
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
@@ -63,6 +82,8 @@ export const AdminDevToolsPage: React.FC = () => {
     }
   };
 
+  const selectedScenarioInfo = scenarios.find(s => s.scenario === selectedScenario);
+
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>Developer Tools</h1>
@@ -71,9 +92,40 @@ export const AdminDevToolsPage: React.FC = () => {
       <div style={{ marginTop: '30px', padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
         <h2>Seed Development Data</h2>
         <p>
-          Populate the database with sample data for testing. This includes organizations, users,
-          memberships, share types, issuances, proposals, and votes.
+          Populate the database with sample data for testing. Choose a scenario based on what you want to test.
         </p>
+
+        <div style={{ marginTop: '15px', marginBottom: '15px' }}>
+          <label htmlFor="scenario-select" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+            Select Scenario:
+          </label>
+          <select
+            id="scenario-select"
+            value={selectedScenario}
+            onChange={(e) => setSelectedScenario(e.target.value as SeedScenario)}
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '10px',
+              fontSize: '16px',
+              borderRadius: '4px',
+              border: '1px solid #ccc',
+              backgroundColor: isLoading ? '#f5f5f5' : 'white',
+            }}
+          >
+            {scenarios.map((s) => (
+              <option key={s.scenario} value={s.scenario}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          {selectedScenarioInfo && (
+            <p style={{ color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
+              {selectedScenarioInfo.description}
+            </p>
+          )}
+        </div>
+
         <p style={{ color: '#666', fontSize: '0.9em' }}>
           Note: This endpoint is only available in Development environment.
           Seeding is idempotent - running it multiple times will not create duplicate data.
@@ -93,7 +145,7 @@ export const AdminDevToolsPage: React.FC = () => {
             marginTop: '10px',
           }}
         >
-          {isLoading ? 'Seeding...' : 'Seed Dev Data'}
+          {isLoading ? 'Seeding...' : `Seed ${selectedScenarioInfo?.name || 'Dev Data'}`}
         </button>
 
         {result && (
@@ -107,7 +159,7 @@ export const AdminDevToolsPage: React.FC = () => {
               borderRadius: '4px',
             }}
           >
-            <h3 style={{ marginTop: 0 }}>✓ Success!</h3>
+            <h3 style={{ marginTop: 0 }}>✓ Success! ({result.scenario})</h3>
             <p style={{ marginBottom: '10px' }}>Development data seeded successfully:</p>
             <ul style={{ marginBottom: 0 }}>
               <li>{result.organizationsCreated} organization(s) created</li>
@@ -117,6 +169,12 @@ export const AdminDevToolsPage: React.FC = () => {
               <li>{result.shareIssuancesCreated} share issuance(s) created</li>
               <li>{result.proposalsCreated} proposal(s) created</li>
               <li>{result.votesCreated} vote(s) created</li>
+              {result.webhookEndpointsCreated > 0 && (
+                <li>{result.webhookEndpointsCreated} webhook endpoint(s) created</li>
+              )}
+              {result.outboundEventsCreated > 0 && (
+                <li>{result.outboundEventsCreated} outbound event(s) created</li>
+              )}
             </ul>
           </div>
         )}

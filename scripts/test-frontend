@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# test-frontend: Run frontend unit tests
+#
+# Usage:
+#   ./scripts/test-frontend           # Run all frontend tests
+#   ./scripts/test-frontend --watch   # Run in watch mode
+#   ./scripts/test-frontend --coverage  # Run with coverage report
+#
+# This script runs the frontend test suite using Vitest.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR/frontend"
+
+WATCH=""
+COVERAGE=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --watch|-w)
+      WATCH="--watch"
+      shift
+      ;;
+    --coverage|-c)
+      COVERAGE="--coverage"
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo ""
+      echo "Usage: ./scripts/test-frontend [--watch] [--coverage]"
+      exit 1
+      ;;
+  esac
+done
+
+echo "=== Running Frontend Tests ==="
+echo ""
+
+# Ensure dependencies are installed
+if [[ ! -d "node_modules" ]]; then
+  echo "Installing dependencies..."
+  npm ci
+  echo ""
+fi
+
+echo "Running tests..."
+# shellcheck disable=SC2086
+npm test -- $WATCH $COVERAGE
+
+echo ""
+echo "✓ Frontend tests complete!"

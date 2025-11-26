@@ -14,6 +14,13 @@ public class DevDataSeedingService : IDevDataSeedingService
     private readonly IAuthService _authService;
     private readonly ILogger<DevDataSeedingService> _logger;
 
+    private static readonly IReadOnlyList<SeedScenarioInfo> AvailableScenarios = new List<SeedScenarioInfo>
+    {
+        new() { Scenario = SeedScenario.BasicDemo, Name = "Basic Demo", Description = "Basic demo data with 2 organizations, 3 users, share types, and sample proposals. Good for general development and testing." },
+        new() { Scenario = SeedScenario.HeavyProposals, Name = "Heavy Proposals", Description = "Extended data with 50+ proposals across multiple organizations. Useful for pagination testing and performance validation." },
+        new() { Scenario = SeedScenario.WebhookFailures, Name = "Webhook Failures", Description = "Creates webhook endpoints and outbound events with various statuses including failures. Useful for testing observability and retry mechanisms." }
+    };
+
     public DevDataSeedingService(
         FanEngagementDbContext dbContext,
         IAuthService authService,
@@ -24,7 +31,28 @@ public class DevDataSeedingService : IDevDataSeedingService
         _logger = logger;
     }
 
-    public async Task<DevDataSeedingResult> SeedDevDataAsync(CancellationToken cancellationToken = default)
+    public IReadOnlyList<SeedScenarioInfo> GetAvailableScenarios() => AvailableScenarios;
+
+    public Task<DevDataSeedingResult> SeedDevDataAsync(CancellationToken cancellationToken = default)
+        => SeedDevDataAsync(SeedScenario.BasicDemo, cancellationToken);
+
+    public async Task<DevDataSeedingResult> SeedDevDataAsync(SeedScenario scenario, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Starting dev data seeding with scenario {Scenario}...", scenario);
+
+        var result = scenario switch
+        {
+            SeedScenario.BasicDemo => await SeedBasicDemoAsync(cancellationToken),
+            SeedScenario.HeavyProposals => await SeedHeavyProposalsAsync(cancellationToken),
+            SeedScenario.WebhookFailures => await SeedWebhookFailuresAsync(cancellationToken),
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario), scenario, "Unknown seed scenario")
+        };
+
+        result.Scenario = scenario.ToString();
+        return result;
+    }
+
+    private async Task<DevDataSeedingResult> SeedBasicDemoAsync(CancellationToken cancellationToken)
     {
         var result = new DevDataSeedingResult();
 
@@ -428,9 +456,254 @@ public class DevDataSeedingService : IDevDataSeedingService
             }
         }
 
-        _logger.LogInformation("Dev data seeding completed. Created: {OrganizationsCreated} orgs, {UsersCreated} users, {MembershipsCreated} memberships, {ShareTypesCreated} share types, {ShareIssuancesCreated} issuances, {ProposalsCreated} proposals, {VotesCreated} votes",
+        _logger.LogInformation("Basic demo seeding completed. Created: {OrganizationsCreated} orgs, {UsersCreated} users, {MembershipsCreated} memberships, {ShareTypesCreated} share types, {ShareIssuancesCreated} issuances, {ProposalsCreated} proposals, {VotesCreated} votes",
             result.OrganizationsCreated, result.UsersCreated, result.MembershipsCreated, result.ShareTypesCreated, result.ShareIssuancesCreated, result.ProposalsCreated, result.VotesCreated);
 
+        return result;
+    }
+
+    /// <summary>
+    /// Seeds the HeavyProposals scenario: many proposals for pagination/performance testing.
+    /// First seeds basic demo data, then adds additional organizations with many proposals.
+    /// </summary>
+    private async Task<DevDataSeedingResult> SeedHeavyProposalsAsync(CancellationToken cancellationToken)
+    {
+        // First, seed basic demo data
+        var result = await SeedBasicDemoAsync(cancellationToken);
+
+        _logger.LogInformation("Adding heavy proposals scenario data...");
+
+        // Create an additional organization for heavy proposals testing
+        var heavyOrg = await EnsureOrganizationAsync("Performance Test Org", "Organization with many proposals for pagination testing", cancellationToken);
+        if (heavyOrg != null) result.OrganizationsCreated++;
+
+        // Fetch the org
+        var performanceOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Performance Test Org", cancellationToken);
+        var alice = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "alice@example.com", cancellationToken);
+
+        if (performanceOrg != null && alice != null)
+        {
+            // Add Alice as OrgAdmin for this org if not already
+            var existingMembership = await _dbContext.OrganizationMemberships
+                .FirstOrDefaultAsync(m => m.OrganizationId == performanceOrg.Id && m.UserId == alice.Id, cancellationToken);
+
+            if (existingMembership == null)
+            {
+                _dbContext.OrganizationMemberships.Add(new OrganizationMembership
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = performanceOrg.Id,
+                    UserId = alice.Id,
+                    Role = OrganizationRole.OrgAdmin,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                result.MembershipsCreated++;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            // Add a share type for this org
+            var existingShareType = await _dbContext.ShareTypes
+                .FirstOrDefaultAsync(st => st.OrganizationId == performanceOrg.Id && st.Symbol == "PERF", cancellationToken);
+
+            if (existingShareType == null)
+            {
+                _dbContext.ShareTypes.Add(new ShareType
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = performanceOrg.Id,
+                    Name = "Performance Token",
+                    Symbol = "PERF",
+                    Description = "Token for performance testing",
+                    VotingWeight = 1.0m,
+                    IsTransferable = true,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                result.ShareTypesCreated++;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            // Create 50 proposals with various statuses
+            var existingProposalTitles = await _dbContext.Proposals
+                .Where(p => p.OrganizationId == performanceOrg.Id)
+                .Select(p => p.Title)
+                .ToListAsync(cancellationToken);
+
+            var proposalsToAdd = new List<Proposal>();
+            var statuses = new[] { ProposalStatus.Draft, ProposalStatus.Open, ProposalStatus.Closed, ProposalStatus.Finalized };
+
+            for (var i = 1; i <= 50; i++)
+            {
+                var title = $"Performance Test Proposal {i:D3}";
+                if (existingProposalTitles.Contains(title)) continue;
+
+                var status = statuses[i % statuses.Length];
+                var proposal = new Proposal
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = performanceOrg.Id,
+                    CreatedByUserId = alice.Id,
+                    Title = title,
+                    Description = $"Test proposal {i} for pagination and performance testing. This is a sample proposal with some descriptive text to make it more realistic.",
+                    Status = status,
+                    StartAt = status != ProposalStatus.Draft ? DateTimeOffset.UtcNow.AddDays(-i) : null,
+                    EndAt = status == ProposalStatus.Open ? DateTimeOffset.UtcNow.AddDays(30 - i) : (status != ProposalStatus.Draft ? DateTimeOffset.UtcNow.AddDays(-1) : null),
+                    CreatedAt = DateTimeOffset.UtcNow.AddDays(-i - 10)
+                };
+
+                proposalsToAdd.Add(proposal);
+                result.ProposalsCreated++;
+            }
+
+            if (proposalsToAdd.Count > 0)
+            {
+                _dbContext.Proposals.AddRange(proposalsToAdd);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                // Add 2 options to each proposal
+                var optionsToAdd = new List<ProposalOption>();
+                foreach (var proposal in proposalsToAdd)
+                {
+                    optionsToAdd.Add(new ProposalOption
+                    {
+                        Id = Guid.NewGuid(),
+                        ProposalId = proposal.Id,
+                        Text = "Approve",
+                        Description = "Approve this proposal"
+                    });
+                    optionsToAdd.Add(new ProposalOption
+                    {
+                        Id = Guid.NewGuid(),
+                        ProposalId = proposal.Id,
+                        Text = "Reject",
+                        Description = "Reject this proposal"
+                    });
+                }
+
+                _dbContext.ProposalOptions.AddRange(optionsToAdd);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        _logger.LogInformation("Heavy proposals scenario seeding completed. Total proposals: {ProposalsCreated}", result.ProposalsCreated);
+        return result;
+    }
+
+    /// <summary>
+    /// Seeds the WebhookFailures scenario: webhook endpoints and outbound events with various statuses.
+    /// First seeds basic demo data, then adds webhook configurations and sample events.
+    /// </summary>
+    private async Task<DevDataSeedingResult> SeedWebhookFailuresAsync(CancellationToken cancellationToken)
+    {
+        // First, seed basic demo data
+        var result = await SeedBasicDemoAsync(cancellationToken);
+
+        _logger.LogInformation("Adding webhook failures scenario data...");
+
+        // Get the Tech Innovators org for webhook setup
+        var techOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Tech Innovators", cancellationToken);
+
+        if (techOrg != null)
+        {
+            // Create webhook endpoints
+            var webhookEndpointsToAdd = new List<WebhookEndpoint>();
+
+            var existingWebhooks = await _dbContext.WebhookEndpoints
+                .Where(w => w.OrganizationId == techOrg.Id)
+                .Select(w => w.Url)
+                .ToListAsync(cancellationToken);
+
+            var webhookSpecs = new[]
+            {
+                new { Url = "https://example.com/webhooks/success", SubscribedEvents = "*" },
+                new { Url = "https://example.com/webhooks/failure", SubscribedEvents = "ProposalCreated,ProposalOpened" },
+                new { Url = "https://example.com/webhooks/timeout", SubscribedEvents = "VoteCast" }
+            };
+
+            foreach (var spec in webhookSpecs)
+            {
+                if (existingWebhooks.Contains(spec.Url)) continue;
+
+                var webhook = new WebhookEndpoint
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = techOrg.Id,
+                    Url = spec.Url,
+                    Secret = Guid.NewGuid().ToString("N"),
+                    SubscribedEvents = spec.SubscribedEvents,
+                    IsActive = true,
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+                webhookEndpointsToAdd.Add(webhook);
+                result.WebhookEndpointsCreated++;
+            }
+
+            if (webhookEndpointsToAdd.Count > 0)
+            {
+                _dbContext.WebhookEndpoints.AddRange(webhookEndpointsToAdd);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            // Get all webhook endpoints for this org
+            var webhooks = await _dbContext.WebhookEndpoints
+                .Where(w => w.OrganizationId == techOrg.Id)
+                .ToListAsync(cancellationToken);
+
+            if (webhooks.Count > 0)
+            {
+                // Create sample outbound events with various statuses
+                var eventsToAdd = new List<OutboundEvent>();
+
+                var existingEventTypes = await _dbContext.OutboundEvents
+                    .Where(e => e.OrganizationId == techOrg.Id)
+                    .Select(e => new { e.WebhookEndpointId, e.EventType, e.Status })
+                    .ToListAsync(cancellationToken);
+
+                var eventTypes = new[] { "ProposalCreated", "ProposalOpened", "ProposalClosed", "VoteCast" };
+                var statuses = new[] { OutboundEventStatus.Pending, OutboundEventStatus.Delivered, OutboundEventStatus.Failed, OutboundEventStatus.Failed };
+                var errors = new[] { null, null, "Connection refused: endpoint unreachable", "HTTP 500: Internal Server Error" };
+
+                for (var i = 0; i < webhooks.Count; i++)
+                {
+                    var webhook = webhooks[i];
+
+                    for (var j = 0; j < eventTypes.Length; j++)
+                    {
+                        // Check if similar event already exists
+                        var alreadyExists = existingEventTypes.Any(e => 
+                            e.WebhookEndpointId == webhook.Id && 
+                            e.EventType == eventTypes[j] && 
+                            e.Status == statuses[j]);
+
+                        if (alreadyExists) continue;
+
+                        var evt = new OutboundEvent
+                        {
+                            Id = Guid.NewGuid(),
+                            OrganizationId = techOrg.Id,
+                            WebhookEndpointId = webhook.Id,
+                            EventType = eventTypes[j],
+                            Payload = $"{{\"type\":\"{eventTypes[j]}\",\"data\":{{\"sample\":true}}}}",
+                            Status = statuses[j],
+                            AttemptCount = statuses[j] == OutboundEventStatus.Pending ? 0 : (statuses[j] == OutboundEventStatus.Delivered ? 1 : 3),
+                            LastAttemptAt = statuses[j] == OutboundEventStatus.Pending ? null : DateTimeOffset.UtcNow.AddMinutes(-j * 5),
+                            LastError = errors[j],
+                            CreatedAt = DateTimeOffset.UtcNow.AddHours(-j - i)
+                        };
+                        eventsToAdd.Add(evt);
+                        result.OutboundEventsCreated++;
+                    }
+                }
+
+                if (eventsToAdd.Count > 0)
+                {
+                    _dbContext.OutboundEvents.AddRange(eventsToAdd);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+            }
+        }
+
+        _logger.LogInformation("Webhook failures scenario seeding completed. Webhooks: {WebhooksCreated}, Events: {EventsCreated}",
+            result.WebhookEndpointsCreated, result.OutboundEventsCreated);
         return result;
     }
 

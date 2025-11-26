@@ -30,9 +30,9 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyn
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
         
-        // Delete organizations (cascades to memberships, shareTypes, shareIssuances, shareBalances, proposals, proposalOptions, votes)
+        // Delete organizations (cascades to memberships, shareTypes, shareIssuances, shareBalances, proposals, proposalOptions, votes, webhookEndpoints, outboundEvents)
         var orgs = await dbContext.Organizations
-            .Where(o => o.Name == "Tech Innovators" || o.Name == "Creative Studios")
+            .Where(o => o.Name == "Tech Innovators" || o.Name == "Creative Studios" || o.Name == "Performance Test Org")
             .ToListAsync();
         dbContext.Organizations.RemoveRange(orgs);
         
@@ -253,5 +253,207 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyn
         // Check proposals
         var proposals = await verifyDbContext.Proposals.ToListAsync();
         Assert.True(proposals.Count >= 2);
+    }
+
+    [Fact]
+    public async Task GetSeedScenarios_ReturnsAvailableScenarios()
+    {
+        // Arrange - Create an admin user and get token
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
+        var adminPassword = "AdminPass123!";
+        var adminUser = new FanEngagement.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = adminEmail,
+            DisplayName = "Admin User",
+            PasswordHash = authService.HashPassword(adminPassword),
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var loginRequest = new LoginRequest
+        {
+            Email = adminEmail,
+            Password = adminPassword
+        };
+
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        
+        _client.AddAuthorizationHeader(loginResult!.Token);
+
+        // Act
+        var response = await _client.GetAsync("/admin/seed-scenarios");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var scenarios = await response.Content.ReadFromJsonAsync<List<SeedScenarioInfo>>();
+        Assert.NotNull(scenarios);
+        Assert.True(scenarios!.Count >= 3);
+        Assert.Contains(scenarios, s => s.Name == "Basic Demo");
+        Assert.Contains(scenarios, s => s.Name == "Heavy Proposals");
+        Assert.Contains(scenarios, s => s.Name == "Webhook Failures");
+    }
+
+    [Fact]
+    public async Task SeedDevData_WithHeavyProposalsScenario_CreatesAdditionalProposals()
+    {
+        // Arrange - Create an admin user
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
+        var adminPassword = "AdminPass123!";
+        var adminUser = new FanEngagement.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = adminEmail,
+            DisplayName = "Admin User",
+            PasswordHash = authService.HashPassword(adminPassword),
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var loginRequest = new LoginRequest
+        {
+            Email = adminEmail,
+            Password = adminPassword
+        };
+
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        
+        _client.AddAuthorizationHeader(loginResult!.Token);
+
+        // Act
+        var response = await _client.PostAsync("/admin/seed-dev-data?scenario=HeavyProposals", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<DevDataSeedingResult>();
+        Assert.NotNull(result);
+        Assert.Equal("HeavyProposals", result!.Scenario);
+        
+        // HeavyProposals should create more proposals than BasicDemo
+        Assert.True(result.ProposalsCreated >= 50, $"Expected at least 50 proposals, got {result.ProposalsCreated}");
+        
+        _output.WriteLine($"HeavyProposals scenario created: {result.ProposalsCreated} proposals");
+    }
+
+    [Fact]
+    public async Task SeedDevData_WithWebhookFailuresScenario_CreatesWebhooksAndEvents()
+    {
+        // Arrange - Create an admin user
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
+        var adminPassword = "AdminPass123!";
+        var adminUser = new FanEngagement.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = adminEmail,
+            DisplayName = "Admin User",
+            PasswordHash = authService.HashPassword(adminPassword),
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var loginRequest = new LoginRequest
+        {
+            Email = adminEmail,
+            Password = adminPassword
+        };
+
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        
+        _client.AddAuthorizationHeader(loginResult!.Token);
+
+        // Act
+        var response = await _client.PostAsync("/admin/seed-dev-data?scenario=WebhookFailures", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<DevDataSeedingResult>();
+        Assert.NotNull(result);
+        Assert.Equal("WebhookFailures", result!.Scenario);
+        
+        // WebhookFailures should create webhook endpoints and outbound events
+        Assert.True(result.WebhookEndpointsCreated >= 3, $"Expected at least 3 webhook endpoints, got {result.WebhookEndpointsCreated}");
+        Assert.True(result.OutboundEventsCreated >= 1, $"Expected at least 1 outbound event, got {result.OutboundEventsCreated}");
+        
+        _output.WriteLine($"WebhookFailures scenario created: {result.WebhookEndpointsCreated} webhooks, {result.OutboundEventsCreated} events");
+    }
+
+    [Fact]
+    public async Task SeedDevData_ScenariosAreIdempotent()
+    {
+        // Arrange - Create an admin user
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+
+        var adminEmail = $"admin-{Guid.NewGuid()}@example.com";
+        var adminPassword = "AdminPass123!";
+        var adminUser = new FanEngagement.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = adminEmail,
+            DisplayName = "Admin User",
+            PasswordHash = authService.HashPassword(adminPassword),
+            Role = UserRole.Admin,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Users.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        var loginRequest = new LoginRequest
+        {
+            Email = adminEmail,
+            Password = adminPassword
+        };
+
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        
+        _client.AddAuthorizationHeader(loginResult!.Token);
+
+        // Act - First call
+        var response1 = await _client.PostAsync("/admin/seed-dev-data?scenario=HeavyProposals", null);
+        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+        var result1 = await response1.Content.ReadFromJsonAsync<DevDataSeedingResult>();
+        Assert.NotNull(result1);
+
+        _output.WriteLine($"First HeavyProposals call: {result1!.ProposalsCreated} proposals");
+
+        // Act - Second call (should be idempotent)
+        var response2 = await _client.PostAsync("/admin/seed-dev-data?scenario=HeavyProposals", null);
+        Assert.Equal(HttpStatusCode.OK, response2.StatusCode);
+        var result2 = await response2.Content.ReadFromJsonAsync<DevDataSeedingResult>();
+        Assert.NotNull(result2);
+
+        _output.WriteLine($"Second HeavyProposals call: {result2!.ProposalsCreated} proposals");
+
+        // Assert - Second call should create nothing (idempotent)
+        Assert.Equal(0, result2.OrganizationsCreated);
+        Assert.Equal(0, result2.UsersCreated);
+        Assert.Equal(0, result2.ProposalsCreated);
     }
 }
