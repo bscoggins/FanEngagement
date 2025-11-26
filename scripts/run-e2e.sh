@@ -76,11 +76,13 @@ if [[ $E2E_EXIT_CODE -eq 0 ]]; then
   if [[ -z "$TOKEN" ]]; then
     echo "Warning: Could not parse token from login response. Skipping cleanup." >&2
   else
-    CLEANUP_RESPONSE=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "http://localhost:8080/admin/cleanup-e2e-data" -H "Authorization: Bearer $TOKEN")
-    if [[ "$CLEANUP_RESPONSE" == "200" ]]; then
+    CLEANUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:8080/admin/cleanup-e2e-data" -H "Authorization: Bearer $TOKEN")
+    if [[ "$CLEANUP_STATUS" == "200" ]]; then
       echo "Cleanup request completed."
     else
-      echo "Cleanup request failed with status $CLEANUP_RESPONSE" >&2
+      echo "Cleanup request failed with status $CLEANUP_STATUS" >&2
+      # Print response body for debugging
+      curl -s -X POST "http://localhost:8080/admin/cleanup-e2e-data" -H "Authorization: Bearer $TOKEN" >&2
     fi
   fi
 else

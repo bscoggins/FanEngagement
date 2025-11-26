@@ -10,6 +10,8 @@ namespace FanEngagement.Infrastructure.Services;
 
 public class DevDataSeedingService : IDevDataSeedingService
 {
+    private const string AdminEmail = "admin@example.com";
+    
     private readonly FanEngagementDbContext _dbContext;
     private readonly IAuthService _authService;
     private readonly ILogger<DevDataSeedingService> _logger;
@@ -440,7 +442,7 @@ public class DevDataSeedingService : IDevDataSeedingService
 
         // Identify organizations created by E2E tests (by naming convention)
         var e2eOrgs = await _dbContext.Organizations
-            .Where(o => EF.Functions.Like(o.Name, "E2E %") || EF.Functions.Like(o.Name, "E2E%"))
+            .Where(o => EF.Functions.Like(o.Name, "E2E%"))
             .ToListAsync(cancellationToken);
 
         var deletedOrgs = e2eOrgs.Count;
@@ -470,9 +472,8 @@ public class DevDataSeedingService : IDevDataSeedingService
         }
 
         // 2) Delete all users except the seeded admin account
-        var adminEmail = "admin@example.com";
         var usersToDelete = await _dbContext.Users
-            .Where(u => u.Email != adminEmail)
+            .Where(u => u.Email != AdminEmail)
             .ToListAsync(cancellationToken);
         var usersDeleted = usersToDelete.Count;
         if (usersDeleted > 0)

@@ -22,16 +22,7 @@ async function ensureButton(page: Page, name: string | RegExp, timeout = 15000) 
   await expect(page.getByRole('button', { name })).toBeVisible({ timeout });
 }
 
-function captureNetwork(page: Page, proposalId: string) {
-  const events: { url: string; status: number; method: string }[] = [];
-  page.on('response', resp => {
-    const url = resp.url();
-    if (url.includes(`/proposals/${proposalId}`)) {
-      events.push({ url, status: resp.status(), method: resp.request().method() });
-    }
-  });
-  return events;
-}
+
 
 test.describe.serial('Admin and member governance flows', () => {
   let adminToken: string;
@@ -108,7 +99,6 @@ test.describe.serial('Admin and member governance flows', () => {
     await createShareTypeResponse;
 
     // Form should close and table should show the new share type
-    await page.waitForTimeout(1000); // Brief wait for form to close and table to render
     const shareTypesTable = page.getByTestId('share-types-table');
     await expect(shareTypesTable).toBeVisible({ timeout: 15000 });
     await expect(shareTypesTable.getByTestId('share-type-name').filter({ hasText: shareTypeName }).first()).toBeVisible({ timeout: 15000 });
@@ -136,20 +126,24 @@ test.describe.serial('Admin and member governance flows', () => {
   test('admin issues shares via API', async ({ page, request }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
-    let id: string | null = null;
-    for (let attempt = 0; attempt < 10 && !id; attempt++) {
-      const resp = await request.get(`${API_BASE_URL}/organizations/${orgId}/share-types`, {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-      if (resp.ok()) {
-        const shareTypes = await resp.json();
-        const match = shareTypes.find((s: { name: string; id: string }) => s.name === shareTypeName);
-        if (match) id = match.id;
-      }
-      if (!id) await page.waitForTimeout(500);
-    }
-    if (!id) throw new Error(`Share type ${shareTypeName} not found after retries`);
-    shareTypeId = id;
+    
+    // Wait for the share type to appear in the UI table (deterministic wait)
+    await page.goto(`/admin/organizations/${orgId}/share-types`);
+    const shareTypesTable = page.getByTestId('share-types-table');
+    await expect(
+      shareTypesTable.getByTestId('share-type-name').filter({ hasText: shareTypeName }).first()
+    ).toBeVisible({ timeout: 10000 });
+    
+    // Get shareTypeId from API (single request after UI confirms visibility)
+    const resp = await request.get(`${API_BASE_URL}/organizations/${orgId}/share-types`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    if (!resp.ok()) throw new Error('Failed to fetch share types');
+    const shareTypes = await resp.json();
+    const match = shareTypes.find((s: { name: string; id: string }) => s.name === shareTypeName);
+    if (!match) throw new Error(`Share type ${shareTypeName} not found`);
+    shareTypeId = match.id;
+    
     const alice = await getUserByEmail(request, adminToken, MEMBER_EMAIL);
     if (!alice) throw new Error('Seeded member alice@example.com not found');
     await issueShares(request, adminToken, orgId, shareTypeId, alice.id, 100);
@@ -195,10 +189,6 @@ test.describe.serial('Admin and member governance flows', () => {
     await expect(page.getByText('No')).toBeVisible({ timeout: 10000 });
 
     // Open the proposal for voting (await backend transition)
-    // Instrument network responses for debugging
-      const networkLog = captureNetwork(page, proposalId);
-
-    // Open the proposal
     await ensureButton(page, 'Open Proposal');
     await Promise.all([
       page.waitForResponse(r => r.url().includes(`/proposals/${proposalId}/open`) && r.request().method() === 'POST'),
@@ -206,7 +196,6 @@ test.describe.serial('Admin and member governance flows', () => {
     ]);
     await expect(page.getByText('Open', { exact: true })).toBeVisible({ timeout: 15000 });
     await ensureButton(page, 'Close Proposal');
-    if (networkLog.length) console.log('Proposal network events', networkLog);
 
   });
 
@@ -218,6 +207,7 @@ test.describe.serial('Admin and member governance flows', () => {
     await expect(page.locator('input[type=radio][name="option"]')).toHaveCount(2, { timeout: 10000 });
     await page.getByLabel('Yes').check();
     await page.getByRole('button', { name: 'Cast Vote' }).click();
+    await expect(page.getByText('Vote cast successfully')).toBeVisible();
     await expect(page.getByText('You have already voted!')).toBeVisible();
   });
 
