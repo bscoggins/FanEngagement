@@ -6,7 +6,7 @@
     "esbenp.prettier-vscode",
     "ms-azuretools.vscode-docker",
     "ms-playwright.playwright",
-    "orta.vscode-jest",
+    "ZixuanChen.vitest-explorer",
     "bradlc.vscode-tailwindcss",
     "GitHub.copilot",
     "GitHub.copilot-chat"
