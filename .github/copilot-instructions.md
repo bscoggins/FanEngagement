@@ -200,7 +200,7 @@ docker compose down -v
 
 **End-to-end (Playwright):**
 - Tests live in `frontend/e2e` and use the running frontend + backend stack.
-- Quick start: `./scripts/run-e2e.sh` (starts Postgres + API via Docker Compose, waits for `/health`, runs `npm run e2e` with `VITE_API_BASE_URL=http://localhost:8080`).
+- Quick start: `./scripts/run-e2e.sh` (starts Postgres + API via Docker Compose, waits for `/health/live`, runs `npm run e2e` with `VITE_API_BASE_URL=http://localhost:8080`).
 - Manual run (if backend already running locally on port 5049):
   ```bash
   cd frontend

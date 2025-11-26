@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-API_HEALTH_URL="http://localhost:8080/health"
+API_HEALTH_URL="http://localhost:8080/health/live"
 
 cd "$ROOT_DIR"
 
