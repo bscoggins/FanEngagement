@@ -12,8 +12,12 @@ public class AdminController(IDevDataSeedingService devDataSeedingService, IHost
     [HttpPost("seed-dev-data")]
     public async Task<ActionResult<DevDataSeedingResult>> SeedDevData(CancellationToken cancellationToken)
     {
-        // Only allow in Development environment
-        if (!hostEnvironment.IsDevelopment())
+        // Allow Dev + Demo only
+        var isDevOrDemo =
+            hostEnvironment.IsDevelopment() ||
+            string.Equals(hostEnvironment.EnvironmentName, "Demo", StringComparison.OrdinalIgnoreCase);
+
+        if (!isDevOrDemo)
         {
             return Forbid();
         }
