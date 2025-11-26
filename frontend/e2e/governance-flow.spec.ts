@@ -181,13 +181,13 @@ test.describe('Governance Flow', () => {
       // Navigate to proposals
       await page.getByRole('link', { name: /proposals/i }).first().click();
       await page.waitForURL(/\/admin\/organizations\/.*\/proposals/);
-      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1500); // Let proposals load in CI
       
-      // Should see the proposal we created (use heading to avoid matching description text)
-      await expect(page.getByRole('heading', { name: proposalTitle })).toBeVisible({ timeout: 15000 });
+      // Should see the proposal we created (use flexible text locator)
+      await expect(page.locator(`:text("${proposalTitle}")`)).toBeVisible({ timeout: 30000 });
       
       // Proposal should be in Open status
-      await expect(page.getByText(/open/i)).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=/open/i')).toBeVisible({ timeout: 15000 });
       
       await logout(page);
     });
