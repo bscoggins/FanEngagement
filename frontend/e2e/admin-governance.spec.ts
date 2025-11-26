@@ -206,7 +206,10 @@ test.describe.serial('Admin and member governance flows', () => {
     ]);
     await expect(page.getByText('Open', { exact: true })).toBeVisible({ timeout: 15000 });
     await ensureButton(page, 'Close Proposal');
-    if (networkLog.length) console.log('Proposal network events', networkLog);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((globalThis as any).process?.env?.E2E_DEBUG === '1' && networkLog.length) {
+      console.log('Proposal network events', networkLog);
+    }
 
   });
 

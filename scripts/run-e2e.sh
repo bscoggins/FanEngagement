@@ -13,8 +13,11 @@ docker compose up -d --build db api frontend
 cleanup() {
   echo "Stopping Compose services..."
   # Best-effort stop/remove any lingering Playwright-related containers first
-  docker rm -f fanengagement-e2e >/dev/null 2>&1 || true
-  docker rm -f fanengagement-playwright-mcp >/dev/null 2>&1 || true
+  # Remove any service or one-off containers whose names match our Playwright services
+  docker ps -aq --filter "name=fanengagement-e2e" | xargs -r docker rm -f >/dev/null 2>&1 || true
+  docker ps -aq --filter "name=fanengagement-playwright-mcp" | xargs -r docker rm -f >/dev/null 2>&1 || true
+  # Remove any one-off containers created by `docker compose run e2e`
+  docker compose rm -f -s -v e2e >/dev/null 2>&1 || true
   # Bring down the compose stack and remove orphans so the network can be cleaned up
   docker compose down --remove-orphans || true
 }
@@ -55,7 +58,8 @@ fi
 
 echo "Running Playwright E2E suite inside Docker..."
 set +e
-docker compose --profile e2e run --rm e2e
+# Forward optional E2E_DEBUG from host if set, to toggle verbose logs in tests
+docker compose --profile e2e run --rm -e E2E_DEBUG e2e
 E2E_EXIT_CODE=$?
 set -e
 
