@@ -123,10 +123,13 @@ test.describe('Admin Flow', () => {
     // Click on Users in sidebar (use first() to handle multiple matches)
     await page.getByRole('link', { name: 'Users' }).first().click();
     await page.waitForURL(/\/admin\/users/);
+    
+    // Wait for page to fully load
     await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // Should see Users heading (increased timeout for slow CI environments)
-    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible({ timeout: 20000 });
     
     // Should see the admin user in the table (use role to be more specific)
     await expect(page.getByRole('cell', { name: 'admin@example.com' })).toBeVisible({ timeout: 10000 });

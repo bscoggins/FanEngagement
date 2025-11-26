@@ -183,8 +183,8 @@ test.describe('Governance Flow', () => {
       await page.waitForURL(/\/admin\/organizations\/.*\/proposals/);
       await page.waitForLoadState('networkidle');
       
-      // Should see the proposal we created (with increased timeout)
-      await expect(page.getByText(proposalTitle)).toBeVisible({ timeout: 15000 });
+      // Should see the proposal we created (use heading to avoid matching description text)
+      await expect(page.getByRole('heading', { name: proposalTitle })).toBeVisible({ timeout: 15000 });
       
       // Proposal should be in Open status
       await expect(page.getByText(/open/i)).toBeVisible({ timeout: 10000 });
