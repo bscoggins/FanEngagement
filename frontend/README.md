@@ -19,6 +19,8 @@ This directory contains the React + TypeScript frontend for the FanEngagement pl
 - `npm run test` — Run tests
 - `npm run test:watch` — Run tests in watch mode
 - `npm run lint` — Run ESLint
+- `npm run e2e` — Run headless Playwright E2E tests (requires backend + DB running)
+- `npm run e2e:dev` — Run Playwright E2E tests in UI mode
 
 ## Environment Configuration
 
@@ -64,6 +66,13 @@ src/
 2. Set `VITE_API_BASE_URL` in `.env.development`
 3. Run `npm install` then `npm run dev`
 4. Access frontend at http://localhost:5173
+
+### End-to-End Tests
+
+- The Playwright suite lives in `frontend/e2e`.
+- Ensure the backend and Postgres are running (Docker Compose or `dotnet run` on port 5049/8080) and set `VITE_API_BASE_URL` accordingly.
+- Run `npm run e2e` for headless execution or `npm run e2e:dev` for interactive runs.
+- A helper script at `scripts/run-e2e.sh` starts Docker Compose (db + api), waits for `/health`, and runs the suite with `VITE_API_BASE_URL=http://localhost:8080`.
 
 ## API Integration
 

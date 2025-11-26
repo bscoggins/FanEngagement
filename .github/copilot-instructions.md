@@ -198,6 +198,17 @@ docker compose run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagem
 docker compose down -v
 ```
 
+**End-to-end (Playwright):**
+- Tests live in `frontend/e2e` and use the running frontend + backend stack.
+- Quick start: `./scripts/run-e2e.sh` (starts Postgres + API via Docker Compose, waits for `/health`, runs `npm run e2e` with `VITE_API_BASE_URL=http://localhost:8080`).
+- Manual run (if backend already running locally on port 5049):
+  ```bash
+  cd frontend
+  # ensure VITE_API_BASE_URL points to your API (defaults to /api with Vite proxy to http://localhost:5049)
+  npm run e2e
+  ```
+- The suite seeds dev data through `POST /admin/seed-dev-data` using the default admin (`admin@example.com` / `Admin123!`) and member accounts (e.g., `alice@example.com` / `Password123!`) before creating test-specific orgs/proposals. When extending E2E coverage, prefer unique test data (timestamps) to avoid cross-test collisions.
+
 **Bare dotnet:**
 ```bash
 dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release

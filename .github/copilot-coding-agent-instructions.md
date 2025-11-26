@@ -894,6 +894,7 @@ The API applies pending migrations automatically on startup. Include generated m
 - Integration tests should exercise real HTTP routes via `WebApplicationFactory<Program>`.
 - Keep tests fast and deterministic; seed only necessary data per test.
 - Example: health check test (`HealthCheckTests.cs`) calls `GET /health` and asserts `200` with `{ status: "ok" }`.
+- For major user journeys (admin/member/org governance, voting, webhook visibility), extend Playwright E2E coverage under `frontend/e2e` to validate UI + backend integration. Seed via `/admin/seed-dev-data` and prefer unique identifiers to avoid collisions.
 
 Common commands:
  
