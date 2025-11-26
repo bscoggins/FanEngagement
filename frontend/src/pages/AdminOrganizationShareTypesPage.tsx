@@ -414,7 +414,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           overflow: 'hidden'
         }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table data-testid="share-types-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                 <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Name</th>
@@ -427,8 +427,10 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
             </thead>
             <tbody>
               {shareTypes.map((shareType) => (
-                <tr key={shareType.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '1rem' }}>{shareType.name}</td>
+                <tr key={shareType.id} data-testid="share-type-row" style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <td style={{ padding: '1rem' }}>
+                    <span data-testid="share-type-name">{shareType.name}</span>
+                  </td>
                   <td style={{ padding: '1rem', fontWeight: 500 }}>{shareType.symbol}</td>
                   <td style={{ padding: '1rem' }}>{shareType.votingWeight}</td>
                   <td style={{ padding: '1rem' }}>

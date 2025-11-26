@@ -198,6 +198,17 @@ docker compose run --rm tests dotnet test backend/FanEngagement.Tests/FanEngagem
 docker compose down -v
 ```
 
+**End-to-end (Playwright):**
+- Tests live in `frontend/e2e` and use the running frontend + backend stack.
+- Quick start: `./scripts/run-e2e.sh` (starts Postgres + API via Docker Compose, waits for `/health/live`, runs `npm run e2e` with `VITE_API_BASE_URL=http://localhost:8080`).
+- Manual run (if backend already running locally on port 5049):
+  ```bash
+  cd frontend
+  # ensure VITE_API_BASE_URL points to your API (defaults to /api with Vite proxy to http://localhost:5049)
+  npm run e2e
+  ```
+- The suite seeds dev data through `POST /admin/seed-dev-data` using the default admin (`admin@example.com` / `Admin123!`) and member accounts (e.g., `alice@example.com` / `Password123!`) before creating test-specific orgs/proposals. When extending E2E coverage, prefer unique test data (timestamps) to avoid cross-test collisions.
+
 **Bare dotnet:**
 ```bash
 dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --configuration Release
@@ -1539,6 +1550,49 @@ const MyPage = () => {
   );
 };
 ```
+
+
+## End-to-End (Playwright) Updates & Conventions
+
+The governance E2E flow has been stabilized and split into reliable, serialized tests. Follow these conventions when adding or updating Playwright tests and when tweaking UI to support stable selectors.
+
+### Local vs CI
+- Local runs: Playwright defaults to headed mode for easier debugging.
+- CI runs: Headless mode remains enabled automatically via `process.env.CI`.
+
+### Test Structure
+- Split long end-to-end journeys into multiple `test` cases within a `test.describe.serial` block to share state deterministically and isolate failures.
+- Capture identifiers from API responses and navigate deterministically. Example: read the `proposalId` from `POST /organizations/{orgId}/proposals` JSON, then navigate directly to `/admin/organizations/{orgId}/proposals/{proposalId}`.
+
+### Deterministic Waits
+- Always wait on network responses for mutating actions (status 200/201) before asserting UI:
+  - `POST /proposals/:id/options`
+  - `POST /proposals/:id/open`
+  - `POST /proposals/:id/close`
+  - `POST /proposals/:id/finalize`
+- Prefer `page.waitForResponse` filters or a small helper around it; avoid arbitrary timeouts.
+
+### Confirm Dialogs
+- Admin lifecycle actions (Open, Close, Finalize) present a confirm dialog. Tests should accept the confirm before waiting for the corresponding POST to resolve, then assert the resulting status badge (Open, Closed, Finalized).
+
+### Stable Selectors
+- Prefer `data-testid` selectors and role-based queries over brittle text matching.
+  - Add `data-testid` to page headings and primary action buttons. Example: Users page heading uses `data-testid="users-heading"`.
+  - For tables, assert using role-based cells when text is duplicated or strict mode conflicts: `getByRole('cell', { name: 'ProposalClosed' })`.
+  - Avoid relying on dynamic or styling text; keep test IDs in kebab-case and scoped (e.g., `org-name-input`, `add-option-button`).
+- Option creation UI: ensure the “Add Option” form is toggled open before filling the "Option Text" field.
+
+### Quick Commands
+```bash
+pushd frontend
+VITE_API_BASE_URL=http://localhost:8080 npx playwright test e2e/admin-governance.spec.ts --reporter=list
+popd
+```
+
+### Test Data & Seeding
+- The E2E suite seeds dev data via `POST /admin/seed-dev-data` using `admin@example.com` and member accounts like `alice@example.com`.
+- Use unique strings (timestamps) for names to avoid collisions across tests.
+
 
 
 ## Testing Guidelines for Backend Changes

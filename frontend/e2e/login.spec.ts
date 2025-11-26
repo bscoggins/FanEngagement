@@ -2,8 +2,15 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Login Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to login page before each test
+    // Navigate first so storage APIs are available on our origin
     await page.goto('/login');
+    // Clear any persisted auth state to avoid redirects between tests
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.context().clearCookies();
+    await page.reload();
   });
 
   test('should display login form', async ({ page }) => {
@@ -49,8 +56,8 @@ test.describe('Login Flow', () => {
 
     // Wait for error message to appear (handled by expect below)
 
-    // Verify error message is displayed
-    await expect(page.getByText(/invalid email or password/i)).toBeVisible();
+    // Verify error message is displayed (inline alert or toast)
+    await expect(page.getByTestId('login-error')).toHaveText(/invalid email or password/i);
     
     // Verify we're still on the login page
     expect(page.url()).toContain('/login');

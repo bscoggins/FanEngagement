@@ -1646,3 +1646,49 @@ The table below shows test counts for the new/expanded test categories in this P
 | End-to-End Flows | 8 | Complete workflows from creation to finalization |
 | Other (existing) | 119+ | Controllers, services, infrastructure |
 | **Total** | **280+** | Full test suite |
+
+## Frontend E2E Testing Strategy
+
+FanEngagement includes Playwright end-to-end tests validating the admin and member governance flows against a running stack (frontend + API + Postgres).
+
+- Headed locally, headless on CI: Configure Playwright to run headed when not on CI to aid debugging; CI runs headless.
+- Serialized suites: Long governance journeys are split into multiple tests inside a `test.describe.serial` block to share state deterministically and isolate failures.
+- Deterministic navigation: Capture IDs from POST responses (e.g., `proposalId` from `POST /organizations/{orgId}/proposals`) and navigate directly to pages using those IDs.
+- Confirm dialogs: Admin lifecycle actions (Open, Close, Finalize) require accepting a confirm dialog before asserting status; tests handle the dialog explicitly.
+- Network waits: Prefer `page.waitForResponse` and assert success for mutating endpoints, especially:
+  - `POST /proposals/:id/options`
+  - `POST /proposals/:id/open`
+  - `POST /proposals/:id/close`
+  - `POST /proposals/:id/finalize`
+- Stable selectors: Prefer `data-testid` hooks for headings and primary actions and role-based queries for tables. Example: Users page heading exposes `data-testid="users-heading"`; webhook events use `getByRole('cell', { name: 'ProposalClosed' })`.
+- Option UI: Ensure the “Add Option” form is toggled open before filling the "Option Text" field.
+- Environment: Run with `VITE_API_BASE_URL` pointing to the active API (`/api` with proxy in Vite, or `http://localhost:8080` with Docker Compose).
+
+Quick local run:
+
+```bash
+pushd frontend
+VITE_API_BASE_URL=http://localhost:8080 npx playwright test e2e/admin-governance.spec.ts --reporter=list
+popd
+```
+
+### On-Demand in Docker
+
+- Compose profiles: the `e2e` service is behind the `e2e` profile and does not start during a normal `docker compose up`. This keeps the stack fast by default.
+- Run the full suite on-demand with the helper script (starts the stack, runs tests headless in-container, cleans up E2E data on success, then stops services):
+
+```bash
+./scripts/run-e2e.sh
+```
+
+- Internals: the script uses `docker compose --profile e2e run --rm e2e` to execute tests, and sets `CI=1` so Playwright runs headless inside the Linux container.
+
+### Cleanup & Reset
+
+- Post-success cleanup: the E2E script calls `POST /admin/cleanup-e2e-data` (Admin-only, Dev/Demo only) to remove organizations created by tests (names starting with `E2E ...`). This is skipped on failures to preserve context for debugging.
+- Full reset (manual): the Admin Dev Tools page exposes a "Reset to Seed Data" action that deletes all organizations and non-admin users, then reseeds the original sample data via `POST /admin/reset-dev-data`.
+
+### CI/headless Behavior
+
+- Locally: Playwright runs headed by default to aid debugging.
+- In containers/CI: `CI=1` forces headless, one worker, and retry-friendly defaults; no X server is required.

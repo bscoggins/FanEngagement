@@ -49,7 +49,7 @@ export const AdminUsersPage: React.FC = () => {
   if (isLoading) {
     return (
       <div>
-        <h1>User Management</h1>
+        <h1 data-testid="users-heading">User Management</h1>
         <LoadingSpinner message="Loading users..." />
       </div>
     );
@@ -58,7 +58,7 @@ export const AdminUsersPage: React.FC = () => {
   if (error) {
     return (
       <div>
-        <h1>User Management</h1>
+        <h1 data-testid="users-heading">User Management</h1>
         <ErrorMessage message={error} onRetry={() => fetchUsers(currentPage, searchQuery)} />
       </div>
     );
@@ -69,7 +69,7 @@ export const AdminUsersPage: React.FC = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1>User Management</h1>
+        <h1 data-testid="users-heading">User Management</h1>
         <Link
           to="/users/new"
           style={{

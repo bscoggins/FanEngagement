@@ -894,12 +894,43 @@ The API applies pending migrations automatically on startup. Include generated m
 - Integration tests should exercise real HTTP routes via `WebApplicationFactory<Program>`.
 - Keep tests fast and deterministic; seed only necessary data per test.
 - Example: health check test (`HealthCheckTests.cs`) calls `GET /health` and asserts `200` with `{ status: "ok" }`.
+- For major user journeys (admin/member/org governance, voting, webhook visibility), extend Playwright E2E coverage under `frontend/e2e` to validate UI + backend integration. Seed via `/admin/seed-dev-data` and prefer unique identifiers to avoid collisions.
 
 Common commands:
  
 ```sh
 dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj -c Release
 ```
+
+## E2E Playwright Conventions (Frontend)
+
+When extending end-to-end coverage under `frontend/e2e`, follow these patterns to keep tests reliable and fast:
+
+- Headed locally, headless on CI: The Playwright config runs headed locally (non-CI) and headless on CI automatically.
+- Split long journeys: Use `test.describe.serial` to group related tests that share state (e.g., orgId, proposalId) and isolate failures across smaller `test()` cases.
+- Deterministic navigation: Await the `POST` response JSON (e.g., proposal creation) and navigate using the returned ID rather than relying on UI timing.
+- Confirm dialogs: Mutating admin actions (Open, Close, Finalize) show a confirm dialog—accept it before asserting status or waiting on the network response.
+- Network waits over sleeps: Prefer `page.waitForResponse` and assert 200/201 for key POSTs.
+- `/proposals/:id/options`
+- `/proposals/:id/open`
+- `/proposals/:id/close`
+- `/proposals/:id/finalize`
+- Stable selectors with `data-testid`: Add test IDs to primary headings and critical actions. Use role-based selectors for tables (`getByRole('cell', ...)`) to avoid strict text conflicts.
+- Option form toggle: Ensure the “Add Option” form is opened before filling inputs.
+
+### Local E2E Run
+
+```sh
+pushd frontend
+VITE_API_BASE_URL=http://localhost:8080 npx playwright test e2e/admin-governance.spec.ts --reporter=list
+popd
+```
+
+### Test Data & Seeding
+
+- Seed dev data via `POST /admin/seed-dev-data` using the default admin and member accounts.
+- Use unique identifiers (timestamps) in names to avoid cross-test collisions.
+
 
 ## Validation & Error Handling
 

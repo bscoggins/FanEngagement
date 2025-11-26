@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { parseApiError } from '../utils/errorUtils';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -24,6 +23,7 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+    const friendlyMessage = 'Invalid email or password. Please try again.';
 
     try {
       await login({ email, password });
@@ -33,9 +33,8 @@ export const LoginPage: React.FC = () => {
     } catch (err) {
       // Handle login errors
       console.error('Login error:', err);
-      const errorMessage = parseApiError(err);
-      setError(errorMessage);
-      showError(errorMessage);
+      setError(friendlyMessage);
+      showError(friendlyMessage);
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +83,11 @@ export const LoginPage: React.FC = () => {
           />
         </div>
         {error && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33' }}>
+          <div
+            role="alert"
+            data-testid="login-error"
+            style={{ padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33' }}
+          >
             {error}
           </div>
         )}
