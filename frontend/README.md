@@ -72,7 +72,7 @@ src/
 - The Playwright suite lives in `frontend/e2e`.
 - Ensure the backend and Postgres are running (Docker Compose or `dotnet run` on port 5049/8080) and set `VITE_API_BASE_URL` accordingly.
 - Run `npm run e2e` for headless execution or `npm run e2e:dev` for interactive runs.
-- A helper script at `scripts/run-e2e.sh` starts Docker Compose (db + api), waits for `/health`, and runs the suite with `VITE_API_BASE_URL=http://localhost:8080`.
+- A helper script at `scripts/run-e2e.sh` starts Docker Compose (db + api), waits for `/health/live`, and runs the suite with `VITE_API_BASE_URL=http://localhost:8080`.
 
 ## API Integration
 
