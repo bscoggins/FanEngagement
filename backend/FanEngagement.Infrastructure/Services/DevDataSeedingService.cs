@@ -658,35 +658,43 @@ public class DevDataSeedingService : IDevDataSeedingService
                     .Select(e => new { e.WebhookEndpointId, e.EventType, e.Status })
                     .ToListAsync(cancellationToken);
 
-                var eventTypes = new[] { "ProposalCreated", "ProposalOpened", "ProposalClosed", "VoteCast" };
-                var statuses = new[] { OutboundEventStatus.Pending, OutboundEventStatus.Delivered, OutboundEventStatus.Failed, OutboundEventStatus.Failed };
-                var errors = new[] { null, null, "Connection refused: endpoint unreachable", "HTTP 500: Internal Server Error" };
+                // Define sample events with their expected statuses and error messages
+                var sampleEvents = new[]
+                {
+                    (EventType: "ProposalCreated", Status: OutboundEventStatus.Pending, AttemptCount: 0, Error: (string?)null),
+                    (EventType: "ProposalOpened", Status: OutboundEventStatus.Delivered, AttemptCount: 1, Error: (string?)null),
+                    (EventType: "ProposalClosed", Status: OutboundEventStatus.Failed, AttemptCount: 3, Error: "Connection refused: endpoint unreachable"),
+                    (EventType: "VoteCast", Status: OutboundEventStatus.Failed, AttemptCount: 3, Error: "HTTP 500: Internal Server Error")
+                };
 
                 for (var i = 0; i < webhooks.Count; i++)
                 {
                     var webhook = webhooks[i];
 
-                    for (var j = 0; j < eventTypes.Length; j++)
+                    for (var j = 0; j < sampleEvents.Length; j++)
                     {
+                        var sample = sampleEvents[j];
+                        
                         // Check if similar event already exists
                         var alreadyExists = existingEventTypes.Any(e => 
                             e.WebhookEndpointId == webhook.Id && 
-                            e.EventType == eventTypes[j] && 
-                            e.Status == statuses[j]);
+                            e.EventType == sample.EventType && 
+                            e.Status == sample.Status);
 
                         if (alreadyExists) continue;
 
+                        var hasAttempted = sample.Status != OutboundEventStatus.Pending;
                         var evt = new OutboundEvent
                         {
                             Id = Guid.NewGuid(),
                             OrganizationId = techOrg.Id,
                             WebhookEndpointId = webhook.Id,
-                            EventType = eventTypes[j],
-                            Payload = $"{{\"type\":\"{eventTypes[j]}\",\"data\":{{\"sample\":true}}}}",
-                            Status = statuses[j],
-                            AttemptCount = statuses[j] == OutboundEventStatus.Pending ? 0 : (statuses[j] == OutboundEventStatus.Delivered ? 1 : 3),
-                            LastAttemptAt = statuses[j] == OutboundEventStatus.Pending ? null : DateTimeOffset.UtcNow.AddMinutes(-j * 5),
-                            LastError = errors[j],
+                            EventType = sample.EventType,
+                            Payload = $"{{\"type\":\"{sample.EventType}\",\"data\":{{\"sample\":true}}}}",
+                            Status = sample.Status,
+                            AttemptCount = sample.AttemptCount,
+                            LastAttemptAt = hasAttempted ? DateTimeOffset.UtcNow.AddMinutes(-j * 5) : null,
+                            LastError = sample.Error,
                             CreatedAt = DateTimeOffset.UtcNow.AddHours(-j - i)
                         };
                         eventsToAdd.Add(evt);

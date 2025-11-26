@@ -57,7 +57,22 @@ if [[ "$FULL_STACK" == true ]]; then
   
   # Create temporary directory for PIDs
   TEMP_DIR=$(mktemp -d)
-  trap "rm -rf $TEMP_DIR; kill 0" EXIT
+  BACKEND_PID=""
+  FRONTEND_PID=""
+  
+  cleanup() {
+    echo ""
+    echo "Stopping services..."
+    if [[ -n "$BACKEND_PID" ]] && kill -0 "$BACKEND_PID" 2>/dev/null; then
+      kill "$BACKEND_PID" 2>/dev/null || true
+    fi
+    if [[ -n "$FRONTEND_PID" ]] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
+      kill "$FRONTEND_PID" 2>/dev/null || true
+    fi
+    rm -rf "$TEMP_DIR"
+    exit 0
+  }
+  trap cleanup EXIT INT TERM
   
   # Start backend in watch mode
   (cd backend && dotnet watch run --project FanEngagement.Api/FanEngagement.Api.csproj --launch-profile http) &
