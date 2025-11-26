@@ -120,9 +120,6 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new ProposalManagerRequirement()));
 });
 
-// Add health checks
-builder.Services.AddHealthChecks();
-
 var app = builder.Build();
 
 var forwardedHeadersOptions = new ForwardedHeadersOptions
@@ -234,8 +231,5 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
 });
 
 app.Run();
-
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
 
 public partial class Program;
