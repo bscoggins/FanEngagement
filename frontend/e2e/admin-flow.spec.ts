@@ -119,18 +119,19 @@ test.describe('Admin Flow', () => {
     // Navigate to admin area
     await page.getByRole('link', { name: 'Admin' }).click();
     await page.waitForURL(/\/admin/);
-    await page.waitForTimeout(1000); // Let sidebar load in CI
+    await page.waitForTimeout(1500); // Let sidebar load in CI
     
     // Click on Users in sidebar (use first() to handle multiple matches)
     await page.getByRole('link', { name: 'Users' }).first().click();
     await page.waitForURL(/\/admin\/users/);
-    await page.waitForTimeout(1000); // Let page load in CI
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1500); // Let page load and render in CI
     
-    // Wait for content to be visible with generous timeout for CI
-    await expect(page.locator('h1, h2').filter({ hasText: 'Users' })).toBeVisible({ timeout: 30000 });
+    // Wait for the "User Management" heading to be visible
+    await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible({ timeout: 30000 });
     
-    // Should see the admin user email in the page (flexible locator)
-    await expect(page.locator(':text("admin@example.com")')).toBeVisible({ timeout: 30000 });
+    // Should see the admin user email in the page
+    await expect(page.locator('text=admin@example.com')).toBeVisible({ timeout: 30000 });
   });
 
   test('should access organization memberships page', async ({ page }) => {
