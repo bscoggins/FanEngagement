@@ -55,6 +55,43 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fanengagement;Username=fanengagement;Password=fanengagement
     command: ["dotnet", "test"]
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    container_name: fanengagement-e2e
+    working_dir: /workspace/frontend
+    command: ["sh", "-c", "npm ci && npm run e2e"]
+    environment:
+      E2E_BASE_URL: http://frontend
+      VITE_API_BASE_URL: http://api:8080
+    depends_on:
+      - frontend
+    volumes:
+      - ./frontend:/workspace/frontend
+      - playwright-cache:/root/.cache/ms-playwright
+      - frontend-node_modules:/workspace/frontend/node_modules
+
+  playwright-mcp:
+    image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    container_name: fanengagement-playwright-mcp
+    working_dir: /workspace
+    command: >
+      sh -c "
+      npm init -y >/dev/null 2>&1 || true &&
+      npm install @playwright/mcp@latest --no-audit --no-fund --silent &&
+      npx playwright install-deps &&
+      npx playwright install chromium &&
+      echo 'Playwright MCP ready. Keeping container alive...' &&
+      tail -f /dev/null
+      "
+    environment:
+      PLAYWRIGHT_MCP_BASE_URL: http://frontend
+    depends_on:
+      - frontend
+    volumes:
+      - ./frontend:/workspace/frontend:ro
+      - playwright-cache:/root/.cache/ms-playwright
 
 volumes:
   db_data:
+  playwright-cache:
+  frontend-node_modules:

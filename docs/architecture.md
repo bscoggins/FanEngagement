@@ -1646,3 +1646,28 @@ The table below shows test counts for the new/expanded test categories in this P
 | End-to-End Flows | 8 | Complete workflows from creation to finalization |
 | Other (existing) | 119+ | Controllers, services, infrastructure |
 | **Total** | **280+** | Full test suite |
+
+## Frontend E2E Testing Strategy
+
+FanEngagement includes Playwright end-to-end tests validating the admin and member governance flows against a running stack (frontend + API + Postgres).
+
+- Headed locally, headless on CI: Configure Playwright to run headed when not on CI to aid debugging; CI runs headless.
+- Serialized suites: Long governance journeys are split into multiple tests inside a `test.describe.serial` block to share state deterministically and isolate failures.
+- Deterministic navigation: Capture IDs from POST responses (e.g., `proposalId` from `POST /organizations/{orgId}/proposals`) and navigate directly to pages using those IDs.
+- Confirm dialogs: Admin lifecycle actions (Open, Close, Finalize) require accepting a confirm dialog before asserting status; tests handle the dialog explicitly.
+- Network waits: Prefer `page.waitForResponse` and assert success for mutating endpoints, especially:
+  - `POST /proposals/:id/options`
+  - `POST /proposals/:id/open`
+  - `POST /proposals/:id/close`
+  - `POST /proposals/:id/finalize`
+- Stable selectors: Prefer `data-testid` hooks for headings and primary actions and role-based queries for tables. Example: Users page heading exposes `data-testid="users-heading"`; webhook events use `getByRole('cell', { name: 'ProposalClosed' })`.
+- Option UI: Ensure the “Add Option” form is toggled open before filling the "Option Text" field.
+- Environment: Run with `VITE_API_BASE_URL` pointing to the active API (`/api` with proxy in Vite, or `http://localhost:8080` with Docker Compose).
+
+Quick local run:
+
+```bash
+pushd frontend
+VITE_API_BASE_URL=http://localhost:8080 npx playwright test e2e/admin-governance.spec.ts --reporter=list
+popd
+```

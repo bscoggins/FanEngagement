@@ -213,6 +213,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
               </label>
               <select
                 id="userId"
+                data-testid="membership-user-select"
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value)}
                 required
@@ -226,7 +227,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
               >
                 <option value="">-- Select a user --</option>
                 {availableUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
+                  <option key={user.id} value={user.id} data-testid={`membership-option-${user.email}`}>
                     {user.displayName} ({user.email})
                   </option>
                 ))}

@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const externalBaseUrl = process.env.E2E_BASE_URL;
+const baseURL = externalBaseUrl ?? 'http://localhost:5173';
+const shouldStartWebServer = !externalBaseUrl;
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -11,9 +15,11 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Force headed mode for local executions; keep headless on CI
+    headless: process.env.CI ? true : false,
   },
 
   projects: [
@@ -23,9 +29,11 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: true,
-  },
+  webServer: shouldStartWebServer
+    ? {
+        command: 'npm run dev',
+        url: baseURL,
+        reuseExistingServer: true,
+      }
+    : undefined,
 });
