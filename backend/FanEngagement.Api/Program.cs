@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -119,25 +120,36 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new ProposalManagerRequirement()));
 });
 
+// Add health checks
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
+
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Apply pending migrations on startup (best-effort; keep controllers thin)
 // Skip migrations for InMemory database (used in tests)
 using (var scope = app.Services.CreateScope())
 {
-    try
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+
+    if (dbContext.Database.IsRelational())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-        if (dbContext.Database.IsRelational())
+        try
         {
             dbContext.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
         }
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while applying database migrations.");
-        // Optionally: rethrow or exit, depending on requirements
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error applying database migrations. Shutting down.");
+            throw; // Important: let the container crash so Docker restarts it
+        }
     }
 }
 
@@ -222,5 +234,8 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
 });
 
 app.Run();
+
+app.MapHealthChecks("/health/live");
+app.MapHealthChecks("/health/ready");
 
 public partial class Program;
