@@ -13,17 +13,20 @@ else
   # Extract the first URL if multiple are specified (separated by semicolon)
   FIRST_URL=$(echo "$ASPNETCORE_URLS" | cut -d';' -f1)
 
-  # Extract port from the first URL (e.g., "http://+:8080" -> "8080" or "http://0.0.0.0:80" -> "80")
-  # The regex looks for a colon followed by digits at the end of the URL
-  PORT=$(echo "$FIRST_URL" | sed -E 's/.*:([0-9]+)$/\1/')
+  # Extract port from the first URL using a more specific pattern
+  # Matches: protocol://host:port (captures only the port from the host portion)
+  PORT=$(echo "$FIRST_URL" | sed -E 's|^[^:]+://[^:/]+:([0-9]+).*|\1|')
 
-  # If PORT equals FIRST_URL, it means no port was extracted (no match found)
-  # If PORT is empty or not a number, default to 8080
-  if [ "$PORT" = "$FIRST_URL" ] || ! echo "$PORT" | grep -qE '^[0-9]+$'; then
+  # Check if the extraction was successful (PORT should be different from FIRST_URL and numeric)
+  if [ "$PORT" = "$FIRST_URL" ] || [ -z "$PORT" ] || ! echo "$PORT" | grep -qE '^[0-9]+$'; then
     PORT=$DEFAULT_PORT
   fi
 fi
 
 # Perform the health check using the extracted port
 # Use HEALTH_HOST (defaults to 127.0.0.1) for better container compatibility
-curl -f "http://${HEALTH_HOST}:${PORT}/health/live" || exit 1
+HEALTH_URL="http://${HEALTH_HOST}:${PORT}/health/live"
+curl -f "$HEALTH_URL" || {
+  echo "Health check failed for $HEALTH_URL" >&2
+  exit 1
+}
