@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using FanEngagement.Api.Authorization;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,23 +123,43 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// Configure forwarded headers for nginx-proxy-manager reverse proxy
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+
+// Clear default values to restrict trusted sources
+forwardedHeadersOptions.KnownProxies.Clear();
+forwardedHeadersOptions.KnownNetworks.Clear();
+
+// Trust Docker subnet (172.24.0.0/16) where nginx-proxy-manager runs
+forwardedHeadersOptions.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(IPAddress.Parse("172.24.0.0"), 16));
+
+// Trust Docker gateway (nginx-proxy-manager host)
+forwardedHeadersOptions.KnownProxies.Add(IPAddress.Parse("172.24.0.1"));
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 // Apply pending migrations on startup (best-effort; keep controllers thin)
 // Skip migrations for InMemory database (used in tests)
 using (var scope = app.Services.CreateScope())
 {
-    try
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+
+    if (dbContext.Database.IsRelational())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-        if (dbContext.Database.IsRelational())
+        try
         {
             dbContext.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
         }
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while applying database migrations.");
-        // Optionally: rethrow or exit, depending on requirements
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error applying database migrations. Shutting down.");
+            throw; // Important: let the container crash so Docker restarts it
+        }
     }
 }
 
