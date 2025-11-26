@@ -97,3 +97,28 @@ npm run test:watch # Watch mode
 - For new pages, add a route in `src/routes/` and a component in `src/pages/`.
 
 For more details, see the root `README.md` and backend documentation.
+
+## Developer Tools (Admin-only)
+
+The Admin Dev Tools page provides convenient actions for development environments.
+
+- Route: `/admin/dev-tools`
+- Access: Admin users only (protected route)
+- Environment: Actions are available only in non-production environments (Development/Demo) at the API level.
+
+### Actions
+
+- Seed Development Data
+  - Calls `POST /admin/seed-dev-data`
+  - Populates sample organizations, users, memberships, share types, issuances, proposals, and votes
+  - Idempotent: running multiple times does not create duplicates
+
+- Reset to Seed Data
+  - Calls `POST /admin/reset-dev-data`
+  - Deletes all organizations and non-admin users, then re-runs the original seed
+  - Destructive: prompts for confirmation in the UI; gated by environment and Admin role
+
+Notes:
+
+- After successful E2E runs, the helper script triggers a cleanup endpoint to remove E2E-created organizations. Failures skip cleanup to preserve context for debugging.
+- API endpoints are restricted by role and environment, and will return `403` outside of allowed environments.

@@ -71,9 +71,9 @@ Key endpoints (current):
 
 ### Authentication & Authorization
 
-The API uses JWT bearer authentication. In development mode, an initial admin user is automatically created on startup:
+The API uses JWT bearer authentication. In non-production modes (Development, Demo, Staging), an initial admin user is automatically ensured on startup:
 
-**Development Admin Credentials:**
+**Admin Credentials (non-production):**
 - Email: `admin@example.com`
 - Password: `Admin123!`
 
@@ -137,6 +137,11 @@ docker compose up --build
 API is available at `http://localhost:8080` and uses the `db` service connection string automatically.
 The API applies EF Core migrations on startup.
 
+### Compose Profiles
+
+- The E2E test runner service is behind the `e2e` profile and will not start on a normal `docker compose up`.
+- A long-lived Playwright MCP helper is behind the `tools` profile and is also excluded by default.
+
 ## Tests
 
 Run all tests from `/backend`:
@@ -150,3 +155,14 @@ Or run tests in a container (requires Docker):
 ```bash
 docker compose run --rm tests
 ```
+
+### End-to-End (Playwright)
+
+- On-demand E2E run (starts stack, runs headless tests in container, cleans up test data on success, then stops services):
+
+```bash
+./scripts/run-e2e.sh
+```
+
+- Internals: the script enables the `e2e` compose profile (`docker compose --profile e2e run --rm e2e`) and sets `CI=1` so Playwright runs headless in the Linux container.
+ 

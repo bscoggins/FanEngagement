@@ -1671,3 +1671,24 @@ pushd frontend
 VITE_API_BASE_URL=http://localhost:8080 npx playwright test e2e/admin-governance.spec.ts --reporter=list
 popd
 ```
+
+### On-Demand in Docker
+
+- Compose profiles: the `e2e` service is behind the `e2e` profile and does not start during a normal `docker compose up`. This keeps the stack fast by default.
+- Run the full suite on-demand with the helper script (starts the stack, runs tests headless in-container, cleans up E2E data on success, then stops services):
+
+```bash
+./scripts/run-e2e.sh
+```
+
+- Internals: the script uses `docker compose --profile e2e run --rm e2e` to execute tests, and sets `CI=1` so Playwright runs headless inside the Linux container.
+
+### Cleanup & Reset
+
+- Post-success cleanup: the E2E script calls `POST /admin/cleanup-e2e-data` (Admin-only, Dev/Demo only) to remove organizations created by tests (names starting with `E2E ...`). This is skipped on failures to preserve context for debugging.
+- Full reset (manual): the Admin Dev Tools page exposes a "Reset to Seed Data" action that deletes all organizations and non-admin users, then reseeds the original sample data via `POST /admin/reset-dev-data`.
+
+### CI/headless Behavior
+
+- Locally: Playwright runs headed by default to aid debugging.
+- In containers/CI: `CI=1` forces headless, one worker, and retry-friendly defaults; no X server is required.

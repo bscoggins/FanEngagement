@@ -60,7 +60,9 @@ services:
     container_name: fanengagement-e2e
     working_dir: /workspace/frontend
     command: ["sh", "-c", "npm ci && npm run e2e"]
+    profiles: ["e2e"]
     environment:
+      CI: "1"
       E2E_BASE_URL: http://frontend
       VITE_API_BASE_URL: http://api:8080
     depends_on:
@@ -74,6 +76,7 @@ services:
     image: mcr.microsoft.com/playwright:v1.56.1-jammy
     container_name: fanengagement-playwright-mcp
     working_dir: /workspace
+    profiles: ["tools"]
     command: >
       sh -c "
       npm init -y >/dev/null 2>&1 || true &&

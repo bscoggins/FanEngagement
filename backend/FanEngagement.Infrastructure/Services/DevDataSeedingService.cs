@@ -434,6 +434,67 @@ public class DevDataSeedingService : IDevDataSeedingService
         return result;
     }
 
+    public async Task<E2eCleanupResult> CleanupE2eDataAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Starting E2E test data cleanup...");
+
+        // Identify organizations created by E2E tests (by naming convention)
+        var e2eOrgs = await _dbContext.Organizations
+            .Where(o => EF.Functions.Like(o.Name, "E2E %") || EF.Functions.Like(o.Name, "E2E%"))
+            .ToListAsync(cancellationToken);
+
+        var deletedOrgs = e2eOrgs.Count;
+        if (deletedOrgs > 0)
+        {
+            _dbContext.Organizations.RemoveRange(e2eOrgs);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        _logger.LogInformation("E2E cleanup completed. Deleted organizations: {Count}", deletedOrgs);
+        return new E2eCleanupResult { OrganizationsDeleted = deletedOrgs };
+    }
+
+    public async Task<TestDataResetResult> ResetToSeedDataAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Starting full reset to original seed data...");
+
+        await using var tx = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        // 1) Delete all organizations (cascades remove related data)
+        var allOrgs = await _dbContext.Organizations.ToListAsync(cancellationToken);
+        var orgsDeleted = allOrgs.Count;
+        if (orgsDeleted > 0)
+        {
+            _dbContext.Organizations.RemoveRange(allOrgs);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // 2) Delete all users except the seeded admin account
+        var adminEmail = "admin@example.com";
+        var usersToDelete = await _dbContext.Users
+            .Where(u => u.Email != adminEmail)
+            .ToListAsync(cancellationToken);
+        var usersDeleted = usersToDelete.Count;
+        if (usersDeleted > 0)
+        {
+            _dbContext.Users.RemoveRange(usersToDelete);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // 3) Re-seed development data to original state
+        var seedResult = await SeedDevDataAsync(cancellationToken);
+
+        await tx.CommitAsync(cancellationToken);
+
+        _logger.LogInformation("Full reset completed. Orgs deleted: {OrgsDeleted}, Users deleted (non-admin): {UsersDeleted}", orgsDeleted, usersDeleted);
+        return new TestDataResetResult
+        {
+            OrganizationsDeleted = orgsDeleted,
+            NonAdminUsersDeleted = usersDeleted,
+            SeedResult = seedResult
+        };
+    }
+
     private async Task<Organization?> EnsureOrganizationAsync(string name, string description, CancellationToken cancellationToken)
     {
         var existing = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == name, cancellationToken);

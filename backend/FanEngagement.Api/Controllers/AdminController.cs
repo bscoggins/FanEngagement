@@ -25,4 +25,36 @@ public class AdminController(IDevDataSeedingService devDataSeedingService, IHost
         var result = await devDataSeedingService.SeedDevDataAsync(cancellationToken);
         return Ok(result);
     }
+
+    [HttpPost("cleanup-e2e-data")]
+    public async Task<ActionResult<E2eCleanupResult>> CleanupE2eData(CancellationToken cancellationToken)
+    {
+        var isDevOrDemo =
+            hostEnvironment.IsDevelopment() ||
+            string.Equals(hostEnvironment.EnvironmentName, "Demo", StringComparison.OrdinalIgnoreCase);
+
+        if (!isDevOrDemo)
+        {
+            return Forbid();
+        }
+
+        var result = await devDataSeedingService.CleanupE2eDataAsync(cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("reset-dev-data")]
+    public async Task<ActionResult<TestDataResetResult>> ResetDevData(CancellationToken cancellationToken)
+    {
+        var isDevOrDemo =
+            hostEnvironment.IsDevelopment() ||
+            string.Equals(hostEnvironment.EnvironmentName, "Demo", StringComparison.OrdinalIgnoreCase);
+
+        if (!isDevOrDemo)
+        {
+            return Forbid();
+        }
+
+        var result = await devDataSeedingService.ResetToSeedDataAsync(cancellationToken);
+        return Ok(result);
+    }
 }

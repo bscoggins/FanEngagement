@@ -163,8 +163,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Seed initial admin user in development
-if (app.Environment.IsDevelopment())
+// Ensure admin user exists in non-production environments
+if (!app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
