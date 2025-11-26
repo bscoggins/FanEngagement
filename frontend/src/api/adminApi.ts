@@ -1,6 +1,15 @@
 import { apiClient } from './client';
 
+export type SeedScenario = 'BasicDemo' | 'HeavyProposals' | 'WebhookFailures';
+
+export interface SeedScenarioInfo {
+  scenario: SeedScenario;
+  name: string;
+  description: string;
+}
+
 export interface DevDataSeedingResult {
+  scenario: string;
   organizationsCreated: number;
   usersCreated: number;
   membershipsCreated: number;
@@ -8,6 +17,8 @@ export interface DevDataSeedingResult {
   shareIssuancesCreated: number;
   proposalsCreated: number;
   votesCreated: number;
+  webhookEndpointsCreated: number;
+  outboundEventsCreated: number;
 }
 
 export interface E2eCleanupResult {
@@ -21,8 +32,13 @@ export interface TestDataResetResult {
 }
 
 export const adminApi = {
-  seedDevData: async (): Promise<DevDataSeedingResult> => {
-    const response = await apiClient.post<DevDataSeedingResult>('/admin/seed-dev-data');
+  getSeedScenarios: async (): Promise<SeedScenarioInfo[]> => {
+    const response = await apiClient.get<SeedScenarioInfo[]>('/admin/seed-scenarios');
+    return response.data;
+  },
+  seedDevData: async (scenario?: SeedScenario): Promise<DevDataSeedingResult> => {
+    const params = scenario ? `?scenario=${scenario}` : '';
+    const response = await apiClient.post<DevDataSeedingResult>(`/admin/seed-dev-data${params}`);
     return response.data;
   },
   cleanupE2eData: async (): Promise<E2eCleanupResult> => {

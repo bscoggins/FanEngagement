@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# test-backend: Run backend tests
+#
+# Usage:
+#   ./scripts/test-backend              # Run all backend tests
+#   ./scripts/test-backend --verbose    # Run with verbose output
+#   ./scripts/test-backend --filter "TestName"  # Run specific tests
+#
+# This script runs the backend test suite using dotnet test.
+# Tests use an in-memory database by default.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
+
+VERBOSE=""
+FILTER=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --verbose|-v)
+      VERBOSE="--verbosity normal"
+      shift
+      ;;
+    --filter|-f)
+      FILTER="--filter $2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo ""
+      echo "Usage: ./scripts/test-backend [--verbose] [--filter TestName]"
+      exit 1
+      ;;
+  esac
+done
+
+echo "=== Running Backend Tests ==="
+echo ""
+
+# Build first to catch compilation errors
+echo "Building solution..."
+dotnet build backend/FanEngagement.sln --configuration Release --no-restore 2>/dev/null || dotnet build backend/FanEngagement.sln --configuration Release
+
+echo ""
+echo "Running tests..."
+# shellcheck disable=SC2086
+dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj \
+  --configuration Release \
+  --no-build \
+  $VERBOSE \
+  $FILTER
+
+echo ""
+echo "✓ Backend tests complete!"

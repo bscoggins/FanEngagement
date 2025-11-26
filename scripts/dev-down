@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# dev-down: Stop and clean up the development environment
+#
+# Usage:
+#   ./scripts/dev-down           # Stop services and remove containers
+#   ./scripts/dev-down --clean   # Also remove volumes (database data)
+#
+# This script stops all Docker Compose services and optionally removes
+# volumes for a completely clean state.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
+
+CLEAN_VOLUMES=false
+if [[ "${1:-}" == "--clean" ]]; then
+  CLEAN_VOLUMES=true
+fi
+
+echo "=== Stopping FanEngagement Dev Environment ==="
+echo ""
+
+if [[ "$CLEAN_VOLUMES" == true ]]; then
+  echo "Stopping services and removing containers, networks, and volumes..."
+  docker compose down -v --remove-orphans
+  echo ""
+  echo "✓ All services stopped and data removed."
+  echo "  Database will be empty on next start."
+else
+  echo "Stopping services and removing containers..."
+  docker compose down --remove-orphans
+  echo ""
+  echo "✓ All services stopped."
+  echo "  Database data preserved. Use --clean to also remove data."
+fi

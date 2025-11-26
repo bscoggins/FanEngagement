@@ -4,21 +4,30 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
 import { AdminDevToolsPage } from './AdminDevToolsPage';
-import { adminApi } from '../api/adminApi';
+import { adminApi, type SeedScenarioInfo } from '../api/adminApi';
 
 // Mock the adminApi
 vi.mock('../api/adminApi', () => ({
   adminApi: {
     seedDevData: vi.fn(),
+    getSeedScenarios: vi.fn(),
   },
 }));
 
 describe('AdminDevToolsPage', () => {
+  const mockScenarios: SeedScenarioInfo[] = [
+    { scenario: 'BasicDemo', name: 'Basic Demo', description: 'Basic demo data.' },
+    { scenario: 'HeavyProposals', name: 'Heavy Proposals', description: 'Many proposals.' },
+    { scenario: 'WebhookFailures', name: 'Webhook Failures', description: 'Webhook events.' }
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     // Suppress console.error for cleaner test output
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Default mock for getSeedScenarios
+    vi.mocked(adminApi.getSeedScenarios).mockResolvedValue(mockScenarios);
   });
 
   afterEach(() => {
@@ -50,53 +59,68 @@ describe('AdminDevToolsPage', () => {
     );
   };
 
-  it('renders dev tools page for admin users', () => {
+  const createMockResult = (overrides = {}) => ({
+    scenario: 'BasicDemo',
+    organizationsCreated: 2,
+    usersCreated: 3,
+    membershipsCreated: 4,
+    shareTypesCreated: 3,
+    shareIssuancesCreated: 5,
+    proposalsCreated: 2,
+    votesCreated: 2,
+    webhookEndpointsCreated: 0,
+    outboundEventsCreated: 0,
+    ...overrides,
+  });
+
+  it('renders dev tools page for admin users', async () => {
     renderAdminDevToolsPage(true);
 
     expect(screen.getByText('Developer Tools')).toBeInTheDocument();
     expect(screen.getByText(/Admin-only tools for development and testing/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /seed dev data/i })).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+  });
+
+  it('renders scenario selector', async () => {
+    renderAdminDevToolsPage(true);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/select scenario/i)).toBeInTheDocument();
+    });
   });
 
   it('calls seedDevData API when button is clicked', async () => {
-    const mockResult = {
-      organizationsCreated: 2,
-      usersCreated: 3,
-      membershipsCreated: 4,
-      shareTypesCreated: 3,
-      shareIssuancesCreated: 5,
-      proposalsCreated: 2,
-      votesCreated: 2,
-    };
-
+    const mockResult = createMockResult();
     vi.mocked(adminApi.seedDevData).mockResolvedValueOnce(mockResult);
 
     renderAdminDevToolsPage(true);
     const user = userEvent.setup();
 
-    const seedButton = screen.getByRole('button', { name: /seed dev data/i });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+
+    const seedButton = screen.getByRole('button', { name: /seed basic demo/i });
     await user.click(seedButton);
 
-    expect(adminApi.seedDevData).toHaveBeenCalledTimes(1);
+    expect(adminApi.seedDevData).toHaveBeenCalledWith('BasicDemo');
   });
 
   it('displays success message with summary after successful seeding', async () => {
-    const mockResult = {
-      organizationsCreated: 2,
-      usersCreated: 3,
-      membershipsCreated: 4,
-      shareTypesCreated: 3,
-      shareIssuancesCreated: 5,
-      proposalsCreated: 2,
-      votesCreated: 2,
-    };
-
+    const mockResult = createMockResult();
     vi.mocked(adminApi.seedDevData).mockResolvedValueOnce(mockResult);
 
     renderAdminDevToolsPage(true);
     const user = userEvent.setup();
 
-    const seedButton = screen.getByRole('button', { name: /seed dev data/i });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+
+    const seedButton = screen.getByRole('button', { name: /seed basic demo/i });
     await user.click(seedButton);
 
     await waitFor(() => {
@@ -127,7 +151,11 @@ describe('AdminDevToolsPage', () => {
     renderAdminDevToolsPage(true);
     const user = userEvent.setup();
 
-    const seedButton = screen.getByRole('button', { name: /seed dev data/i });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+
+    const seedButton = screen.getByRole('button', { name: /seed basic demo/i });
     await user.click(seedButton);
 
     await waitFor(() => {
@@ -141,7 +169,11 @@ describe('AdminDevToolsPage', () => {
     renderAdminDevToolsPage(true);
     const user = userEvent.setup();
 
-    const seedButton = screen.getByRole('button', { name: /seed dev data/i });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+
+    const seedButton = screen.getByRole('button', { name: /seed basic demo/i });
     await user.click(seedButton);
 
     await waitFor(() => {
@@ -150,22 +182,19 @@ describe('AdminDevToolsPage', () => {
   });
 
   it('disables button while seeding is in progress', async () => {
+    const mockResult = createMockResult();
     vi.mocked(adminApi.seedDevData).mockImplementation(() => {
-      return new Promise(resolve => setTimeout(() => resolve({
-        organizationsCreated: 2,
-        usersCreated: 3,
-        membershipsCreated: 4,
-        shareTypesCreated: 3,
-        shareIssuancesCreated: 5,
-        proposalsCreated: 2,
-        votesCreated: 2,
-      }), 100));
+      return new Promise(resolve => setTimeout(() => resolve(mockResult), 100));
     });
 
     renderAdminDevToolsPage(true);
     const user = userEvent.setup();
 
-    const seedButton = screen.getByRole('button', { name: /seed dev data/i });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+
+    const seedButton = screen.getByRole('button', { name: /seed basic demo/i });
     await user.click(seedButton);
 
     // Button should be disabled and show loading state
@@ -178,22 +207,17 @@ describe('AdminDevToolsPage', () => {
   });
 
   it('clears previous messages when seeding again', async () => {
-    const mockResult = {
-      organizationsCreated: 2,
-      usersCreated: 3,
-      membershipsCreated: 4,
-      shareTypesCreated: 3,
-      shareIssuancesCreated: 5,
-      proposalsCreated: 2,
-      votesCreated: 2,
-    };
-
+    const mockResult = createMockResult();
     vi.mocked(adminApi.seedDevData).mockResolvedValue(mockResult);
 
     renderAdminDevToolsPage(true);
     const user = userEvent.setup();
 
-    const seedButton = screen.getByRole('button', { name: /seed dev data/i });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /seed basic demo/i })).toBeInTheDocument();
+    });
+
+    const seedButton = screen.getByRole('button', { name: /seed basic demo/i });
     
     // First click - success
     await user.click(seedButton);
@@ -208,5 +232,35 @@ describe('AdminDevToolsPage', () => {
     await waitFor(() => {
       expect(screen.getAllByText(/Success!/i)).toHaveLength(1);
     });
+  });
+
+  it('displays webhook data when WebhookFailures scenario creates them', async () => {
+    const mockResult = createMockResult({
+      scenario: 'WebhookFailures',
+      webhookEndpointsCreated: 3,
+      outboundEventsCreated: 12,
+    });
+    vi.mocked(adminApi.seedDevData).mockResolvedValueOnce(mockResult);
+
+    renderAdminDevToolsPage(true);
+    const user = userEvent.setup();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/select scenario/i)).toBeInTheDocument();
+    });
+
+    // Select WebhookFailures scenario
+    const select = screen.getByLabelText(/select scenario/i);
+    await user.selectOptions(select, 'WebhookFailures');
+
+    const seedButton = screen.getByRole('button', { name: /seed webhook failures/i });
+    await user.click(seedButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Success!/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/3 webhook endpoint\(s\) created/i)).toBeInTheDocument();
+    expect(screen.getByText(/12 outbound event\(s\) created/i)).toBeInTheDocument();
   });
 });
