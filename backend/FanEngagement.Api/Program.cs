@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using FanEngagement.Api.Authorization;
@@ -122,10 +123,22 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// Configure forwarded headers for nginx-proxy-manager reverse proxy
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
+
+// Clear default values to restrict trusted sources
+forwardedHeadersOptions.KnownProxies.Clear();
+forwardedHeadersOptions.KnownNetworks.Clear();
+
+// Trust Docker subnet (172.24.0.0/16) where nginx-proxy-manager runs
+forwardedHeadersOptions.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(IPAddress.Parse("172.24.0.0"), 16));
+
+// Trust Docker gateway (nginx-proxy-manager host)
+forwardedHeadersOptions.KnownProxies.Add(IPAddress.Parse("172.24.0.1"));
+
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Apply pending migrations on startup (best-effort; keep controllers thin)
