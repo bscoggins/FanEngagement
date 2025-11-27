@@ -36,7 +36,7 @@ describe('AuthContext', () => {
       userId: 'admin-123',
       email: 'admin@example.com',
       displayName: 'Admin User',
-      role: 'Admin',
+      role: 'Admin' as const,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -61,7 +61,7 @@ describe('AuthContext', () => {
       userId: 'user-123',
       email: 'user@example.com',
       displayName: 'Regular User',
-      role: 'User',
+      role: 'User' as const,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -86,7 +86,7 @@ describe('AuthContext', () => {
       userId: 'admin-123',
       email: 'admin@example.com',
       displayName: 'Admin User',
-      role: 'Admin',
+      role: 'Admin' as const,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -115,7 +115,7 @@ describe('AuthContext', () => {
       userId: 'admin-123',
       email: 'admin@example.com',
       displayName: 'Admin User',
-      role: 'Admin',
+      role: 'Admin' as const,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);

@@ -397,6 +397,7 @@ if (proposal.Status != ProposalStatus.Draft) {
 - **User Self-Service Area**: User routes at `/me` for authenticated users (non-admin). Uses `ProtectedRoute`.
   - User routes:
     - `/me` (account page - view/edit profile)
+    - `/me/home` (member dashboard - landing page for non-admin users)
     - `/me/organizations` (list user's organization memberships)
     - `/me/organizations/:orgId` (view org details, share balances, active proposals)
     - `/me/proposals/:proposalId` (view proposal, cast vote, see results)
@@ -414,6 +415,51 @@ if (proposal.Status != ProposalStatus.Draft) {
     - `/admin/organizations/:orgId/webhook-events` (monitor webhook delivery events, retry failed events)
     - `/admin/dev-tools`
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
+
+### Member Dashboard
+
+The member dashboard (`/me/home`) is the default landing page for non-platform-admin users. It provides a member-focused overview of user engagement across their organizations.
+
+#### Features
+
+- **Welcome Section**: Personalized greeting with the user's display name
+- **My Organizations Card**: Shows count of organizations and quick links to each
+- **Active Proposals Card**: Lists open proposals the user can vote on across all their organizations
+- **My Account Card**: Quick access to profile information and account settings
+
+#### Role-Aware Routing
+
+After login, users are redirected based on their role:
+- **Platform Admins (GlobalAdmin)**: Redirect to `/admin` (admin dashboard)
+- **Organization Admins (OrgAdmin)**: Redirect to `/admin` (can manage their orgs from there)
+- **Regular Members**: Redirect to `/me/home` (member dashboard)
+
+The routing logic is implemented in `frontend/src/utils/routeUtils.ts`:
+
+```typescript
+import { getDefaultRouteForUser } from '../utils/routeUtils';
+
+// Get default route after login
+const route = getDefaultRouteForUser(user, memberships);
+navigate(route);
+```
+
+#### Empty States
+
+The dashboard gracefully handles cases where users have:
+- No organization memberships (shows "Getting Started" guidance)
+- No active proposals (shows friendly "check back later" message)
+
+#### Extending the Dashboard
+
+When adding new member-facing features:
+1. Consider whether they should be surfaced on the dashboard
+2. Add new cards/tiles for high-visibility features
+3. Maintain consistency with existing card styling:
+   - White background, rounded corners, subtle shadow
+   - Icon + title header
+   - Summary text with counts/metrics
+   - Call-to-action link at the bottom
 
 ### Roles & Permissions
 
@@ -1741,3 +1787,59 @@ dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj --verbosity n
 - **API endpoints**: All endpoints must have tests for authorized access, forbidden access, and not found
 - **Multi-tenancy**: Cross-organization access must be tested for all org-scoped endpoints
 - **Outbound events**: Lifecycle transitions that emit events must have tests verifying event creation
+
+### Adding Member-Facing Features
+
+When adding new features that members will use:
+
+1. **Consider dashboard visibility**: Should this feature be highlighted on the member dashboard (`/me/home`)? 
+   - High-traffic features (proposals, notifications) should have dashboard cards
+   - Add summary counts and quick action links
+
+2. **Follow the member dashboard pattern**:
+   ```typescript
+   // Dashboard card structure
+   <div style={{
+     backgroundColor: 'white',
+     borderRadius: '8px',
+     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+     padding: '1.5rem',
+   }}>
+     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+       <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>📊</span>
+       <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Feature Title</h2>
+     </div>
+     <p style={{ color: '#666', marginBottom: '1rem' }}>
+       {/* Summary content with counts */}
+     </p>
+     <Link to="/me/feature" style={{
+       display: 'inline-block',
+       padding: '0.5rem 1rem',
+       backgroundColor: '#007bff',
+       color: 'white',
+       textDecoration: 'none',
+       borderRadius: '4px',
+       fontSize: '0.875rem',
+     }}>
+       View All →
+     </Link>
+   </div>
+   ```
+
+3. **Handle empty states gracefully**: Use `data-testid` attributes for testability
+
+4. **Update tests**: Add tests for the new feature's dashboard card
+
+5. **Update documentation**: Document the new route in the Frontend Patterns section
+
+
+## Coding Agent Guidance: Member-Facing Features and Dashboard Integration
+
+When implementing new features that will be used by members (non-admin users), always consider whether the feature should be surfaced or linked from the member dashboard (`/me/home`). For high-traffic or important features (such as proposals, notifications, or organization actions), add summary cards, quick action links, or counts to the dashboard for better visibility and usability.
+
+- Review the "Adding Member-Facing Features" section above for dashboard card patterns and UX conventions.
+- Ensure empty states are handled gracefully and use `data-testid` attributes for testability.
+- Update or add tests for any new dashboard cards or links.
+- Document new member-facing routes and dashboard integrations in the Frontend Patterns section.
+
+This ensures that members have easy access to new features and that the dashboard remains the central hub for member activity.

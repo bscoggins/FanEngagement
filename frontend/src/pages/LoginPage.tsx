@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useRoleBasedNavigation } from '../hooks/useRoleBasedNavigation';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const { showSuccess, showError } = useNotifications();
-  const navigate = useNavigate();
+  const { navigateToDefaultRoute } = useRoleBasedNavigation();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/users');
+    if (isAuthenticated && user) {
+      navigateToDefaultRoute(user);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigateToDefaultRoute]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +28,14 @@ export const LoginPage: React.FC = () => {
     try {
       await login({ email, password });
       showSuccess('Login successful!');
-      // After successful login, navigate to /users
-      navigate('/users');
+      
+      // After successful login, navigate based on user role
+      // Get the user from localStorage since login stores it there
+      const storedUser = localStorage.getItem('authUser');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        await navigateToDefaultRoute(parsedUser);
+      }
     } catch (err) {
       // Handle login errors
       console.error('Login error:', err);

@@ -11,6 +11,8 @@ async function loginThroughUi(page: Page, email: string, password: string) {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Log In' }).click();
+  // Wait for redirect to complete (admins go to /admin, members go to /me/home)
+  await page.waitForURL(/\/(admin|me\/home)/);
 }
 
 async function clickWithConfirm(page: Page, buttonName: string | RegExp) {
@@ -56,11 +58,9 @@ test.describe.serial('Admin and member governance flows', () => {
 
     // Admin login
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
 
-    // Navigate to admin organizations and create a new org
-    await page.getByRole('link', { name: 'Admin' }).click();
-    await page.getByRole('link', { name: /^Organizations$/ }).click();
+    // Navigate directly to admin organizations page
+    await page.goto('/admin/organizations');
     await page.getByRole('button', { name: '+ Create Organization' }).click();
     await page.getByLabel('Name *').fill(organizationName);
     await page.getByLabel('Description').fill('E2E-created organization for governance flows');
@@ -80,9 +80,7 @@ test.describe.serial('Admin and member governance flows', () => {
 
   test('admin can see users list', async ({ page }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
-    // Navigate to Admin Users page explicitly
-    await page.getByRole('link', { name: 'Admin' }).click();
+    // Navigate directly to Admin Users page
     await page.goto('/admin/users');
     await expect(page.getByTestId('users-heading')).toBeVisible();
     const usersTable = page.getByRole('table');
@@ -93,7 +91,6 @@ test.describe.serial('Admin and member governance flows', () => {
 
   test('admin creates a share type', async ({ page }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
     await page.goto(`/admin/organizations/${orgId}/edit`);
     await page.goto(`/admin/organizations/${orgId}/share-types`);
     await page.getByRole('button', { name: 'Create Share Type' }).click();
@@ -117,7 +114,6 @@ test.describe.serial('Admin and member governance flows', () => {
 
   test('admin adds a member via UI', async ({ page, request }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
     const alice = await getUserByEmail(request, adminToken, MEMBER_EMAIL);
     if (!alice) throw new Error('Seeded member alice@example.com not found');
     await page.goto(`/admin/organizations/${orgId}/memberships`);
@@ -135,7 +131,6 @@ test.describe.serial('Admin and member governance flows', () => {
 
   test('admin issues shares via API', async ({ page, request }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
     let id: string | null = null;
     for (let attempt = 0; attempt < 10 && !id; attempt++) {
       const resp = await request.get(`${API_BASE_URL}/organizations/${orgId}/share-types`, {
@@ -215,7 +210,6 @@ test.describe.serial('Admin and member governance flows', () => {
 
   test('member can view and vote on open proposal', async ({ page }) => {
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
-    await expect(page.getByText(`Logged in as ${MEMBER_EMAIL}`)).toBeVisible({ timeout: 10000 });
     await page.goto(`/me/proposals/${proposalId}`);
     await expect(page.getByText('Open', { exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.locator('input[type=radio][name="option"]')).toHaveCount(2, { timeout: 10000 });
@@ -226,7 +220,6 @@ test.describe.serial('Admin and member governance flows', () => {
 
   test('admin can close and finalize proposal; webhook events listed', async ({ page }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText(`Logged in as ${ADMIN_EMAIL}`)).toBeVisible();
     await page.goto(`/admin/organizations/${orgId}/proposals/${proposalId}`);
     await ensureButton(page, 'Close Proposal');
     await Promise.all([

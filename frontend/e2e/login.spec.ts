@@ -29,18 +29,11 @@ test.describe('Login Flow', () => {
     // Submit the form
     await page.getByRole('button', { name: 'Log In' }).click();
 
-    // Wait for navigation to complete
-    await page.waitForURL('/users');
-
-    // Verify we're logged in by checking for user info in header
-    await expect(page.getByText('Logged in as admin@example.com')).toBeVisible();
+    // Wait for navigation to complete (admins now go to /admin dashboard)
+    await page.waitForURL('/admin');
     
-    // Verify we're on the users page
-    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
-    
-    // Verify the admin user is listed in the table
-    await expect(page.getByRole('cell', { name: 'Admin User' })).toBeVisible();
-    await expect(page.getByRole('cell', { name: 'admin@example.com' })).toBeVisible();
+    // Verify we're on the admin dashboard
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
     
     // Verify logout button is present
     await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
@@ -76,19 +69,19 @@ test.describe('Login Flow', () => {
     await expect(page.getByText(/logging in/i)).toBeVisible();
   });
 
-  test('should redirect to users page if already authenticated', async ({ page }) => {
+  test('should redirect to admin dashboard if already authenticated', async ({ page }) => {
     // First, login
     await page.getByLabel('Email').fill('admin@example.com');
     await page.getByLabel('Password').fill('Admin123!');
     await page.getByRole('button', { name: 'Log In' }).click();
-    await page.waitForURL('/users');
+    await page.waitForURL('/admin');
 
     // Now try to visit login page again
     await page.goto('/login');
 
-    // Should be redirected back to users page
-    await page.waitForURL('/users');
-    await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
+    // Should be redirected back to admin dashboard
+    await page.waitForURL('/admin');
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
   });
 
   test('should be able to logout after login', async ({ page }) => {
@@ -96,7 +89,7 @@ test.describe('Login Flow', () => {
     await page.getByLabel('Email').fill('admin@example.com');
     await page.getByLabel('Password').fill('Admin123!');
     await page.getByRole('button', { name: 'Log In' }).click();
-    await page.waitForURL('/users');
+    await page.waitForURL('/admin');
 
     // Click logout button
     await page.getByRole('button', { name: 'Logout' }).click();
