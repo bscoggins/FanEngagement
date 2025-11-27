@@ -136,15 +136,15 @@ describe('PlatformAdminDashboardPage', () => {
     });
   });
 
-  it('displays empty states appropriately', async () => {
+  it('displays coming soon indicators for placeholder metrics', async () => {
     vi.mocked(usersApi.getAll).mockResolvedValue([]);
     vi.mocked(organizationsApi.getAll).mockResolvedValue([]);
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('No active proposals')).toBeInTheDocument();
+      expect(screen.getAllByText('Coming Soon')).toHaveLength(2);
     });
-    expect(screen.getByText('No recent failures')).toBeInTheDocument();
+    expect(screen.getAllByText('Platform-wide aggregation pending')).toHaveLength(2);
   });
 });

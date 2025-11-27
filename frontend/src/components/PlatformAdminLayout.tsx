@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import './AdminLayout.css';
+import './PlatformAdminLayout.css';
 
 export const PlatformAdminLayout: React.FC = () => {
   const { user, logout } = useAuth();

@@ -124,18 +124,31 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             padding: '1.5rem',
             textAlign: 'center',
+            position: 'relative',
           }}
           data-testid="proposals-stat-card"
         >
+          <span style={{
+            position: 'absolute',
+            top: '0.5rem',
+            right: '0.5rem',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            padding: '0.125rem 0.5rem',
+            borderRadius: '4px',
+            fontSize: '0.625rem',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+          }}>
+            Coming Soon
+          </span>
           <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#6c757d' }}>
-            {stats?.activeProposals ?? 0}
+            —
           </div>
           <div style={{ color: '#666', marginTop: '0.5rem' }}>Active Proposals</div>
-          {stats?.activeProposals === 0 && (
-            <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
-              No active proposals
-            </div>
-          )}
+          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+            Platform-wide aggregation pending
+          </div>
         </div>
 
         {/* Webhook Failures */}
@@ -146,22 +159,35 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             padding: '1.5rem',
             textAlign: 'center',
+            position: 'relative',
           }}
           data-testid="webhook-failures-stat-card"
         >
+          <span style={{
+            position: 'absolute',
+            top: '0.5rem',
+            right: '0.5rem',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            padding: '0.125rem 0.5rem',
+            borderRadius: '4px',
+            fontSize: '0.625rem',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+          }}>
+            Coming Soon
+          </span>
           <div style={{ 
             fontSize: '2.5rem', 
             fontWeight: 'bold', 
-            color: stats?.recentWebhookFailures ? '#dc3545' : '#6c757d' 
+            color: '#6c757d'
           }}>
-            {stats?.recentWebhookFailures ?? 0}
+            —
           </div>
           <div style={{ color: '#666', marginTop: '0.5rem' }}>Recent Webhook Failures</div>
-          {stats?.recentWebhookFailures === 0 && (
-            <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
-              No recent failures
-            </div>
-          )}
+          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+            Platform-wide aggregation pending
+          </div>
         </div>
       </div>
 
