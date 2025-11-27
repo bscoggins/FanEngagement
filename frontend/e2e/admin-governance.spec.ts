@@ -4,7 +4,7 @@ import { API_BASE_URL, getUserByEmail, issueShares, loginViaApi, seedDevData } f
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
 const MEMBER_EMAIL = 'alice@example.com';
-const MEMBER_PASSWORD = 'Password123!';
+const MEMBER_PASSWORD = 'UserDemo1!';
 
 async function loginThroughUi(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -85,6 +85,8 @@ test.describe.serial('Admin and member governance flows', () => {
     await expect(page.getByTestId('users-heading')).toBeVisible();
     const usersTable = page.getByRole('table');
     await expect(usersTable.getByRole('cell', { name: 'admin@example.com' })).toBeVisible();
+    await expect(usersTable.getByRole('cell', { name: 'root_admin@platform.local' })).toBeVisible();
+    await expect(usersTable.getByRole('cell', { name: 'platform_admin@fanengagement.dev' })).toBeVisible();
     await expect(usersTable.getByRole('cell', { name: 'alice@example.com' })).toBeVisible();
 
   });

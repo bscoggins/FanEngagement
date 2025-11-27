@@ -32,13 +32,24 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyn
         
         // Delete organizations (cascades to memberships, shareTypes, shareIssuances, shareBalances, proposals, proposalOptions, votes, webhookEndpoints, outboundEvents)
         var orgs = await dbContext.Organizations
-            .Where(o => o.Name == "Tech Innovators" || o.Name == "Creative Studios" || o.Name == "Performance Test Org")
+            .Where(o => o.Name == "Tech Innovators" || o.Name == "Green Energy United" || o.Name == "City FC Supporters Trust" || o.Name == "Performance Test Org")
             .ToListAsync();
         dbContext.Organizations.RemoveRange(orgs);
         
-        // Delete users
+        // Delete seeded users
+        var seededEmails = new[]
+        {
+            "root_admin@platform.local",
+            "platform_admin@fanengagement.dev",
+            "alice@example.com",
+            "bob@abefroman.net",
+            "carlos@demo.co",
+            "dana@sample.io",
+            "erika@cityfc.support",
+            "frank@cityfc.support"
+        };
         var users = await dbContext.Users
-            .Where(u => u.Email == "alice@example.com" || u.Email == "bob@example.com" || u.Email == "charlie@example.com")
+            .Where(u => seededEmails.Contains(u.Email))
             .ToListAsync();
         dbContext.Users.RemoveRange(users);
         
@@ -230,29 +241,49 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyn
         using var verifyScope = _factory.Services.CreateScope();
         var verifyDbContext = verifyScope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
 
-        // Check organizations
+        // Check organizations (3 organizations)
         var techOrg = await verifyDbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Tech Innovators");
-        var creativeOrg = await verifyDbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Creative Studios");
+        var greenOrg = await verifyDbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Green Energy United");
+        var cityFcOrg = await verifyDbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "City FC Supporters Trust");
         Assert.NotNull(techOrg);
-        Assert.NotNull(creativeOrg);
+        Assert.NotNull(greenOrg);
+        Assert.NotNull(cityFcOrg);
 
-        // Check users
+        // Check platform admin users
+        var rootAdmin = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "root_admin@platform.local");
+        var platformAdmin = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "platform_admin@fanengagement.dev");
+        Assert.NotNull(rootAdmin);
+        Assert.NotNull(platformAdmin);
+        Assert.Equal(UserRole.Admin, rootAdmin!.Role);
+        Assert.Equal(UserRole.Admin, platformAdmin!.Role);
+
+        // Check regular users
         var alice = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "alice@example.com");
-        var bob = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "bob@example.com");
-        var charlie = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "charlie@example.com");
+        var bob = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "bob@abefroman.net");
+        var carlos = await verifyDbContext.Users.FirstOrDefaultAsync(u => u.Email == "carlos@demo.co");
         Assert.NotNull(alice);
         Assert.NotNull(bob);
-        Assert.NotNull(charlie);
+        Assert.NotNull(carlos);
 
-        // Check share types
-        var votingShare = await verifyDbContext.ShareTypes.FirstOrDefaultAsync(st => st.Symbol == "VOTE");
-        var founderShare = await verifyDbContext.ShareTypes.FirstOrDefaultAsync(st => st.Symbol == "FNDR");
-        Assert.NotNull(votingShare);
-        Assert.NotNull(founderShare);
+        // Check share types (Standard and Premium for each org)
+        var techStdShare = await verifyDbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg!.Id && st.Symbol == "STDV");
+        var techPrmShare = await verifyDbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg!.Id && st.Symbol == "PRMV");
+        Assert.NotNull(techStdShare);
+        Assert.NotNull(techPrmShare);
+        Assert.Equal(1.0m, techStdShare!.VotingWeight);
+        Assert.Equal(5.0m, techPrmShare!.VotingWeight);
 
-        // Check proposals
+        // Check proposals (should have at least 9 - 3 per org)
         var proposals = await verifyDbContext.Proposals.ToListAsync();
-        Assert.True(proposals.Count >= 2);
+        Assert.True(proposals.Count >= 9, $"Expected at least 9 proposals, got {proposals.Count}");
+
+        // Check that proposals have different statuses
+        var openProposals = proposals.Where(p => p.Status == ProposalStatus.Open).ToList();
+        var closedProposals = proposals.Where(p => p.Status == ProposalStatus.Closed).ToList();
+        var draftProposals = proposals.Where(p => p.Status == ProposalStatus.Draft).ToList();
+        Assert.True(openProposals.Count >= 3, $"Expected at least 3 open proposals, got {openProposals.Count}");
+        Assert.True(closedProposals.Count >= 3, $"Expected at least 3 closed proposals, got {closedProposals.Count}");
+        Assert.True(draftProposals.Count >= 3, $"Expected at least 3 draft/scheduled proposals, got {draftProposals.Count}");
     }
 
     [Fact]

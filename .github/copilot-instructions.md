@@ -7,6 +7,11 @@ This file provides context and guidelines for GitHub Copilot Chat when assisting
 - Never delete code unless explicitly instructed.
 - Never introduce new external dependencies without justification.
 
+## Future Improvements Log
+- Capture every “nice to have” or future idea in `docs/future-improvements.md`; do not scatter these notes across other docs or PR descriptions.
+- When adding an idea, follow the steps in that file: create a `###` heading, describe the idea in a few sentences, and add any helpful context bullets (links, metrics, feedback).
+- If an idea is completed or dropped, update or remove its entry and reference the related PR/issue for traceability.
+
 ## Project Overview
 
 FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a React + TypeScript frontend, designed for fan engagement and organization management with share-based voting capabilities.
@@ -184,7 +189,7 @@ The repository includes convenience scripts for common workflows:
 ./scripts/test-frontend
 ```
 
-See [Developer Quick Start](docs/development.md) for complete documentation.
+See [Developer Quick Start](../docs/development.md) for complete documentation.
 
 ### Running the Application
 
@@ -240,7 +245,7 @@ docker compose down -v
   # ensure VITE_API_BASE_URL points to your API (defaults to /api with Vite proxy to http://localhost:5049)
   npm run e2e
   ```
-- The suite seeds dev data through `POST /admin/seed-dev-data` using the default admin (`admin@example.com` / `Admin123!`) and member accounts (e.g., `alice@example.com` / `Password123!`) before creating test-specific orgs/proposals. When extending E2E coverage, prefer unique test data (timestamps) to avoid cross-test collisions.
+- The suite seeds dev data through `POST /admin/seed-dev-data` using the default admin (`admin@example.com` / `Admin123!`) and member accounts (e.g., `alice@example.com` / `UserDemo1!`) before creating test-specific orgs/proposals. When extending E2E coverage, prefer unique test data (timestamps) to avoid cross-test collisions.
 
 **Bare dotnet:**
 ```bash
@@ -259,7 +264,7 @@ npm test           # or: npm run test:watch
 The seeding endpoint supports multiple scenarios via query parameter:
 
 ```bash
-# Basic demo (default) - 2 orgs, sample data
+# Basic demo (default) - 3 orgs, 8 users, comprehensive sample data
 curl -X POST http://localhost:5049/admin/seed-dev-data -H "Authorization: Bearer <token>"
 
 # Heavy proposals - 50+ proposals for pagination testing
@@ -270,6 +275,16 @@ curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=WebhookFailures
 ```
 
 Scenarios can also be selected in the Admin Dev Tools UI (`/admin/dev-tools`).
+
+**Seeded Test Accounts:**
+
+See [docs/demo-seed-data.md](../docs/demo-seed-data.md) for the complete list of seeded users, organizations, and test data. Key accounts include:
+
+| Account | Email | Password | Role |
+|---------|-------|----------|------|
+| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` | Admin |
+| OrgAdmin | `alice@example.com` | `UserDemo1!` | User (OrgAdmin for Tech Innovators) |
+| Member | `bob@abefroman.net` | `UserDemo1!` | User (Member of Tech Innovators) |
 
 ### Building
 
@@ -1767,7 +1782,11 @@ popd
 ```
 
 ### Test Data & Seeding
-- The E2E suite seeds dev data via `POST /admin/seed-dev-data` using `admin@example.com` and member accounts like `alice@example.com`.
+- The E2E suite seeds dev data via `POST /admin/seed-dev-data` using `admin@example.com` and member accounts.
+- Seeded member accounts for testing:
+  - `alice@example.com` / `UserDemo1!` (OrgAdmin for Tech Innovators)
+  - `bob@abefroman.net` / `UserDemo1!` (Member of Tech Innovators)
+  - See [docs/demo-seed-data.md](../docs/demo-seed-data.md) for the complete list.
 - Use unique strings (timestamps) for names to avoid collisions across tests.
 
 

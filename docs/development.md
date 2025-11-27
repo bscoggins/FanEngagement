@@ -77,6 +77,22 @@ curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=HeavyProposals"
 - `HeavyProposals` - 50+ proposals for pagination testing
 - `WebhookFailures` - Webhook events with various statuses
 
+**Seeded Accounts (quick reference):**
+
+| Type | Email | Password | Notes |
+|------|-------|----------|-------|
+| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` | Platform superuser |
+| Platform Admin | `platform_admin@fanengagement.dev` | `PlatAdm1n!` | Secondary admin |
+| Default Admin | `admin@example.com` | `Admin123!` | Ensured automatically at startup |
+| Org Admin | `alice@example.com` | `UserDemo1!` | Tech Innovators OrgAdmin |
+| Member | `bob@abefroman.net` | `UserDemo1!` | Tech Innovators member |
+| Org Admin | `carlos@demo.co` | `UserDemo2!` | Green Energy United OrgAdmin |
+| Member | `dana@sample.io` | `UserDemo2!` | Member of Green Energy United + City FC |
+| Org Admin | `erika@cityfc.support` | `UserDemo3!` | OrgAdmin for Green Energy United & City FC |
+| Member | `frank@cityfc.support` | `UserDemo3!` | City FC Supporters Trust member |
+
+See [docs/demo-seed-data.md](./demo-seed-data.md) for organization memberships, share allocations, and proposal details.
+
 ## Running Tests
 
 ### Backend Tests
@@ -181,18 +197,21 @@ Or use the "Reset to Seed Data" button in the Admin Dev Tools UI.
 ## Dev Data Scenarios
 
 ### BasicDemo (Default)
+
 - 2 organizations (Tech Innovators, Creative Studios)
 - 3 users (alice, bob, charlie)
 - Sample share types, proposals, and votes
 - Good for general development and testing
 
 ### HeavyProposals
+
 - Includes BasicDemo data
 - Additional organization with 50 proposals
 - Various proposal statuses (Draft, Open, Closed, Finalized)
 - Good for pagination and performance testing
 
 ### WebhookFailures
+
 - Includes BasicDemo data
 - 3 webhook endpoints configured
 - Outbound events with various statuses (Pending, Delivered, Failed)
@@ -221,6 +240,7 @@ Or use the "Reset to Seed Data" button in the Admin Dev Tools UI.
 ### Port Conflicts
 
 If ports are already in use:
+
 - Backend (5049): Change in `launchSettings.json`
 - Frontend (5173): Vite will auto-increment
 - Docker API (8080): Change in `docker-compose.yml`

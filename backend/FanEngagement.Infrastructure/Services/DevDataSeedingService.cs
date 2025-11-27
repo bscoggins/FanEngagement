@@ -16,7 +16,7 @@ public class DevDataSeedingService : IDevDataSeedingService
 
     private static readonly IReadOnlyList<SeedScenarioInfo> AvailableScenarios = new List<SeedScenarioInfo>
     {
-        new() { Scenario = SeedScenario.BasicDemo, Name = "Basic Demo", Description = "Basic demo data with 2 organizations, 3 users, share types, and sample proposals. Good for general development and testing." },
+        new() { Scenario = SeedScenario.BasicDemo, Name = "Basic Demo", Description = "Comprehensive demo data with 3 organizations, 8 users (including platform admins), share types, proposals in various states, and sample votes. Good for general development and testing." },
         new() { Scenario = SeedScenario.HeavyProposals, Name = "Heavy Proposals", Description = "Extended data with 50+ proposals across multiple organizations. Useful for pagination testing and performance validation." },
         new() { Scenario = SeedScenario.WebhookFailures, Name = "Webhook Failures", Description = "Creates webhook endpoints and outbound events with various statuses including failures. Useful for testing observability and retry mechanisms." }
     };
@@ -56,410 +56,607 @@ public class DevDataSeedingService : IDevDataSeedingService
     {
         var result = new DevDataSeedingResult();
 
-        _logger.LogInformation("Starting dev data seeding...");
+        _logger.LogInformation("Starting comprehensive dev data seeding...");
 
-        // Seed Organizations
-        var org1 = await EnsureOrganizationAsync("Tech Innovators", "A community for tech enthusiasts", cancellationToken);
-        var org2 = await EnsureOrganizationAsync("Creative Studios", "Art and design collective", cancellationToken);
-        
-        if (org1 != null) result.OrganizationsCreated++;
-        if (org2 != null) result.OrganizationsCreated++;
-
-        // Seed Users (non-admin)
-        var user1 = await EnsureUserAsync("alice@example.com", "Alice Johnson", "Password123!", UserRole.User, cancellationToken);
-        var user2 = await EnsureUserAsync("bob@example.com", "Bob Smith", "Password123!", UserRole.User, cancellationToken);
-        var user3 = await EnsureUserAsync("charlie@example.com", "Charlie Brown", "Password123!", UserRole.User, cancellationToken);
-        
-        if (user1 != null) result.UsersCreated++;
-        if (user2 != null) result.UsersCreated++;
-        if (user3 != null) result.UsersCreated++;
-
-        // Fetch organizations from DB to get their IDs (in case they already existed)
-        var techOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Tech Innovators", cancellationToken);
-        var creativeOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Creative Studios", cancellationToken);
-        
-        var alice = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "alice@example.com", cancellationToken);
-        var bob = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "bob@example.com", cancellationToken);
-        var charlie = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "charlie@example.com", cancellationToken);
-
-        if (techOrg != null && alice != null && bob != null && creativeOrg != null && charlie != null)
+        // ========== SEED PLATFORM ADMIN USERS ==========
+        var platformAdminSpecs = new[]
         {
-            // Seed Memberships (batch)
-            var membershipSpecs = new[]
-            {
-                (OrgId: techOrg.Id, UserId: alice.Id, Role: OrganizationRole.OrgAdmin),
-                (OrgId: techOrg.Id, UserId: bob.Id, Role: OrganizationRole.Member),
-                (OrgId: creativeOrg.Id, UserId: charlie.Id, Role: OrganizationRole.OrgAdmin),
-                (OrgId: creativeOrg.Id, UserId: alice.Id, Role: OrganizationRole.Member)
-            };
+            ("root_admin@platform.local", "Root Administrator", "RootAdm1n!"),
+            ("platform_admin@fanengagement.dev", "Platform Admin", "PlatAdm1n!")
+        };
 
-            // Load all existing memberships for these users and orgs
-            var orgIds = new[] { techOrg.Id, creativeOrg.Id };
-            var userIds = new[] { alice.Id, bob.Id, charlie.Id };
-            var existingMemberships = await _dbContext.OrganizationMemberships
-                .Where(m => orgIds.Contains(m.OrganizationId) && userIds.Contains(m.UserId))
-                .ToListAsync(cancellationToken);
+        foreach (var (email, displayName, password) in platformAdminSpecs)
+        {
+            var user = await EnsureUserAsync(email, displayName, password, UserRole.Admin, cancellationToken);
+            if (user != null) result.UsersCreated++;
+        }
 
-            var membershipsToAdd = new List<OrganizationMembership>();
-            foreach (var spec in membershipSpecs)
+        // ========== SEED REGULAR USERS ==========
+        var userSpecs = new[]
+        {
+            ("alice@example.com", "Alice Johnson", "UserDemo1!"),
+            ("bob@abefroman.net", "Bob Smith", "UserDemo1!"),
+            ("carlos@demo.co", "Carlos Garcia", "UserDemo2!"),
+            ("dana@sample.io", "Dana Miller", "UserDemo2!"),
+            ("erika@cityfc.support", "Erika Chen", "UserDemo3!"),
+            ("frank@cityfc.support", "Frank Wilson", "UserDemo3!")
+        };
+
+        foreach (var (email, displayName, password) in userSpecs)
+        {
+            var user = await EnsureUserAsync(email, displayName, password, UserRole.User, cancellationToken);
+            if (user != null) result.UsersCreated++;
+        }
+
+        // ========== SEED ORGANIZATIONS ==========
+        var orgSpecs = new[]
+        {
+            ("Tech Innovators", "A community for tech enthusiasts focused on innovation and digital transformation"),
+            ("Green Energy United", "A sustainability-focused organization advocating for renewable energy solutions"),
+            ("City FC Supporters Trust", "The official supporters' trust for City Football Club fans")
+        };
+
+        foreach (var (name, description) in orgSpecs)
+        {
+            var org = await EnsureOrganizationAsync(name, description, cancellationToken);
+            if (org != null) result.OrganizationsCreated++;
+        }
+
+        // ========== FETCH ENTITIES FROM DB ==========
+        var techOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Tech Innovators", cancellationToken);
+        var greenOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Green Energy United", cancellationToken);
+        var cityFcOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "City FC Supporters Trust", cancellationToken);
+
+        var alice = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "alice@example.com", cancellationToken);
+        var bob = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "bob@abefroman.net", cancellationToken);
+        var carlos = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "carlos@demo.co", cancellationToken);
+        var dana = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "dana@sample.io", cancellationToken);
+        var erika = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "erika@cityfc.support", cancellationToken);
+        var frank = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "frank@cityfc.support", cancellationToken);
+
+        if (techOrg == null || greenOrg == null || cityFcOrg == null ||
+            alice == null || bob == null || carlos == null || dana == null || erika == null || frank == null)
+        {
+            _logger.LogWarning("Some entities were not found after seeding. Aborting membership/share seeding.");
+            return result;
+        }
+
+        // ========== SEED MEMBERSHIPS ==========
+        // Tech Innovators: alice (OrgAdmin), bob (Member)
+        // Green Energy United: carlos (OrgAdmin), erika (OrgAdmin), alice (Member), dana (Member)
+        // City FC Supporters Trust: erika (OrgAdmin), dana (Member), frank (Member)
+        var membershipSpecs = new[]
+        {
+            (OrgId: techOrg.Id, UserId: alice.Id, Role: OrganizationRole.OrgAdmin),
+            (OrgId: techOrg.Id, UserId: bob.Id, Role: OrganizationRole.Member),
+            (OrgId: greenOrg.Id, UserId: carlos.Id, Role: OrganizationRole.OrgAdmin),
+            (OrgId: greenOrg.Id, UserId: erika.Id, Role: OrganizationRole.OrgAdmin),
+            (OrgId: greenOrg.Id, UserId: alice.Id, Role: OrganizationRole.Member),
+            (OrgId: greenOrg.Id, UserId: dana.Id, Role: OrganizationRole.Member),
+            (OrgId: cityFcOrg.Id, UserId: erika.Id, Role: OrganizationRole.OrgAdmin),
+            (OrgId: cityFcOrg.Id, UserId: dana.Id, Role: OrganizationRole.Member),
+            (OrgId: cityFcOrg.Id, UserId: frank.Id, Role: OrganizationRole.Member)
+        };
+
+        var allOrgIds = new[] { techOrg.Id, greenOrg.Id, cityFcOrg.Id };
+        var allUserIds = new[] { alice.Id, bob.Id, carlos.Id, dana.Id, erika.Id, frank.Id };
+        var existingMemberships = await _dbContext.OrganizationMemberships
+            .Where(m => allOrgIds.Contains(m.OrganizationId) && allUserIds.Contains(m.UserId))
+            .ToListAsync(cancellationToken);
+
+        var membershipsToAdd = new List<OrganizationMembership>();
+        foreach (var spec in membershipSpecs)
+        {
+            var alreadyExists = existingMemberships.Any(m => m.OrganizationId == spec.OrgId && m.UserId == spec.UserId);
+            if (!alreadyExists)
             {
-                var alreadyExists = existingMemberships.Any(m => m.OrganizationId == spec.OrgId && m.UserId == spec.UserId);
-                if (!alreadyExists)
+                membershipsToAdd.Add(new OrganizationMembership
                 {
-                    membershipsToAdd.Add(new OrganizationMembership
+                    Id = Guid.NewGuid(),
+                    OrganizationId = spec.OrgId,
+                    UserId = spec.UserId,
+                    Role = spec.Role,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                result.MembershipsCreated++;
+                _logger.LogDebug("Prepared membership for user {UserId} in org {OrganizationId}", spec.UserId, spec.OrgId);
+            }
+        }
+
+        if (membershipsToAdd.Count > 0)
+        {
+            _dbContext.OrganizationMemberships.AddRange(membershipsToAdd);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // ========== SEED SHARE TYPES ==========
+        // Each org gets: Standard Voting Share (weight 1) and Premium Voting Share (weight 5)
+        var shareTypeSpecs = new[]
+        {
+            new { OrganizationId = techOrg.Id, Name = "Standard Voting Share", Symbol = "STDV", Description = "Standard voting rights - 1 vote per share", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true },
+            new { OrganizationId = techOrg.Id, Name = "Premium Voting Share", Symbol = "PRMV", Description = "Premium voting rights - 5 votes per share", VotingWeight = 5.0m, MaxSupply = (decimal?)1000, IsTransferable = false },
+            new { OrganizationId = greenOrg.Id, Name = "Standard Voting Share", Symbol = "STDV", Description = "Standard voting rights - 1 vote per share", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true },
+            new { OrganizationId = greenOrg.Id, Name = "Premium Voting Share", Symbol = "PRMV", Description = "Premium voting rights - 5 votes per share", VotingWeight = 5.0m, MaxSupply = (decimal?)1000, IsTransferable = false },
+            new { OrganizationId = cityFcOrg.Id, Name = "Standard Voting Share", Symbol = "STDV", Description = "Standard voting rights - 1 vote per share", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true },
+            new { OrganizationId = cityFcOrg.Id, Name = "Premium Voting Share", Symbol = "PRMV", Description = "Premium voting rights - 5 votes per share", VotingWeight = 5.0m, MaxSupply = (decimal?)1000, IsTransferable = false }
+        };
+
+        var existingShareTypes = await _dbContext.ShareTypes
+            .Where(st => allOrgIds.Contains(st.OrganizationId))
+            .ToListAsync(cancellationToken);
+
+        var shareTypesToAdd = new List<ShareType>();
+        foreach (var spec in shareTypeSpecs)
+        {
+            var alreadyExists = existingShareTypes.Any(st => st.OrganizationId == spec.OrganizationId && st.Symbol == spec.Symbol);
+            if (!alreadyExists)
+            {
+                shareTypesToAdd.Add(new ShareType
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = spec.OrganizationId,
+                    Name = spec.Name,
+                    Symbol = spec.Symbol,
+                    Description = spec.Description,
+                    VotingWeight = spec.VotingWeight,
+                    MaxSupply = spec.MaxSupply,
+                    IsTransferable = spec.IsTransferable,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                result.ShareTypesCreated++;
+                _logger.LogDebug("Prepared share type '{Symbol}' in org {OrganizationId}", spec.Symbol, spec.OrganizationId);
+            }
+        }
+
+        if (shareTypesToAdd.Count > 0)
+        {
+            _dbContext.ShareTypes.AddRange(shareTypesToAdd);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // ========== FETCH SHARE TYPES FROM DB ==========
+        var techStdShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "STDV", cancellationToken);
+        var techPrmShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "PRMV", cancellationToken);
+        var greenStdShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == greenOrg.Id && st.Symbol == "STDV", cancellationToken);
+        var greenPrmShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == greenOrg.Id && st.Symbol == "PRMV", cancellationToken);
+        var cityFcStdShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == cityFcOrg.Id && st.Symbol == "STDV", cancellationToken);
+        var cityFcPrmShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == cityFcOrg.Id && st.Symbol == "PRMV", cancellationToken);
+
+        if (techStdShare == null || techPrmShare == null || greenStdShare == null || greenPrmShare == null || cityFcStdShare == null || cityFcPrmShare == null)
+        {
+            _logger.LogWarning("Some share types were not found after seeding. Aborting issuance seeding.");
+            return result;
+        }
+
+        // ========== SEED SHARE ISSUANCES ==========
+        var issuanceSpecs = new[]
+        {
+            // Tech Innovators
+            (ShareTypeId: techStdShare.Id, UserId: alice.Id, Quantity: 100m),
+            (ShareTypeId: techStdShare.Id, UserId: bob.Id, Quantity: 50m),
+            (ShareTypeId: techPrmShare.Id, UserId: alice.Id, Quantity: 20m),
+            // Green Energy United
+            (ShareTypeId: greenStdShare.Id, UserId: carlos.Id, Quantity: 150m),
+            (ShareTypeId: greenStdShare.Id, UserId: erika.Id, Quantity: 100m),
+            (ShareTypeId: greenStdShare.Id, UserId: alice.Id, Quantity: 50m),
+            (ShareTypeId: greenStdShare.Id, UserId: dana.Id, Quantity: 75m),
+            (ShareTypeId: greenPrmShare.Id, UserId: carlos.Id, Quantity: 30m),
+            // City FC Supporters Trust
+            (ShareTypeId: cityFcStdShare.Id, UserId: erika.Id, Quantity: 200m),
+            (ShareTypeId: cityFcStdShare.Id, UserId: dana.Id, Quantity: 100m),
+            (ShareTypeId: cityFcStdShare.Id, UserId: frank.Id, Quantity: 80m),
+            (ShareTypeId: cityFcPrmShare.Id, UserId: erika.Id, Quantity: 25m)
+        };
+
+        var shareTypeIds = issuanceSpecs.Select(s => s.ShareTypeId).Distinct().ToList();
+        var issuanceUserIds = issuanceSpecs.Select(s => s.UserId).Distinct().ToList();
+        var existingIssuances = await _dbContext.ShareIssuances
+            .Where(si => shareTypeIds.Contains(si.ShareTypeId) && issuanceUserIds.Contains(si.UserId))
+            .ToListAsync(cancellationToken);
+
+        var issuancesToAdd = new List<ShareIssuance>();
+        var balanceUpdates = new Dictionary<(Guid ShareTypeId, Guid UserId), decimal>();
+
+        foreach (var spec in issuanceSpecs)
+        {
+            var exists = existingIssuances.Any(si => 
+                si.ShareTypeId == spec.ShareTypeId && 
+                si.UserId == spec.UserId && 
+                si.Quantity == spec.Quantity);
+            
+            if (!exists)
+            {
+                issuancesToAdd.Add(new ShareIssuance
+                {
+                    Id = Guid.NewGuid(),
+                    ShareTypeId = spec.ShareTypeId,
+                    UserId = spec.UserId,
+                    Quantity = spec.Quantity,
+                    IssuedAt = DateTimeOffset.UtcNow
+                });
+                
+                var key = (spec.ShareTypeId, spec.UserId);
+                balanceUpdates[key] = (balanceUpdates.TryGetValue(key, out var existingQuantity) ? existingQuantity : 0) + spec.Quantity;
+                
+                result.ShareIssuancesCreated++;
+                _logger.LogDebug("Prepared share issuance for user {UserId}, quantity {Quantity}", spec.UserId, spec.Quantity);
+            }
+        }
+
+        if (issuancesToAdd.Count > 0)
+        {
+            _dbContext.ShareIssuances.AddRange(issuancesToAdd);
+            
+            var balanceShareTypeIds = balanceUpdates.Keys.Select(k => k.ShareTypeId).Distinct().ToList();
+            var balanceUserIds = balanceUpdates.Keys.Select(k => k.UserId).Distinct().ToList();
+            var existingBalances = await _dbContext.ShareBalances
+                .Where(sb => balanceShareTypeIds.Contains(sb.ShareTypeId) && balanceUserIds.Contains(sb.UserId))
+                .ToListAsync(cancellationToken);
+            
+            foreach (var kvp in balanceUpdates)
+            {
+                var (shareTypeId, userId) = kvp.Key;
+                var quantity = kvp.Value;
+                
+                var balance = existingBalances.FirstOrDefault(sb => sb.ShareTypeId == shareTypeId && sb.UserId == userId);
+                
+                if (balance == null)
+                {
+                    _dbContext.ShareBalances.Add(new ShareBalance
                     {
                         Id = Guid.NewGuid(),
-                        OrganizationId = spec.OrgId,
-                        UserId = spec.UserId,
-                        Role = spec.Role,
-                        CreatedAt = DateTimeOffset.UtcNow
+                        ShareTypeId = shareTypeId,
+                        UserId = userId,
+                        Balance = quantity,
+                        UpdatedAt = DateTimeOffset.UtcNow
                     });
-                    result.MembershipsCreated++;
-                    _logger.LogDebug("Prepared membership for user {UserId} in org {OrganizationId}", spec.UserId, spec.OrgId);
+                }
+                else
+                {
+                    balance.Balance += quantity;
+                    balance.UpdatedAt = DateTimeOffset.UtcNow;
                 }
             }
+            
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
 
-            if (membershipsToAdd.Count > 0)
+        // ========== SEED PROPOSALS ==========
+        // Each org gets: 1 Open, 1 Closed, 1 Scheduled (future StartAt)
+        var now = DateTimeOffset.UtcNow;
+        var proposalSpecs = new[]
+        {
+            // Tech Innovators - Open proposal
+            new
             {
-                _dbContext.OrganizationMemberships.AddRange(membershipsToAdd);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                OrganizationId = techOrg.Id,
+                CreatedByUserId = alice.Id,
+                Title = "Should we launch the new fan rewards program?",
+                Description = "Vote on whether to implement a new loyalty rewards program for our tech community members.",
+                Status = ProposalStatus.Open,
+                StartAt = (DateTimeOffset?)now.AddDays(-2),
+                EndAt = (DateTimeOffset?)now.AddDays(5),
+                QuorumRequirement = (decimal?)0.25m,
+                EligibleVotingPowerSnapshot = (decimal?)250m, // alice: 100*1 + 20*5 = 200, bob: 50*1 = 50 -> total 250
+                Options = new[] { ("Yes", "Launch the rewards program"), ("No", "Do not launch") }
+            },
+            // Tech Innovators - Closed proposal with results
+            new
+            {
+                OrganizationId = techOrg.Id,
+                CreatedByUserId = alice.Id,
+                Title = "Approve 2025 fan engagement budget",
+                Description = "Vote to approve the proposed budget for fan engagement initiatives in 2025.",
+                Status = ProposalStatus.Closed,
+                StartAt = (DateTimeOffset?)now.AddDays(-14),
+                EndAt = (DateTimeOffset?)now.AddDays(-7),
+                QuorumRequirement = (decimal?)0.20m,
+                EligibleVotingPowerSnapshot = (decimal?)250m, // total eligible voting power for Tech Innovators
+                Options = new[] { ("Approve", "Approve the budget as proposed"), ("Reject", "Reject the budget") }
+            },
+            // Tech Innovators - Scheduled proposal (future start)
+            new
+            {
+                OrganizationId = techOrg.Id,
+                CreatedByUserId = alice.Id,
+                Title = "Adopt new community guidelines",
+                Description = "Vote on adopting updated community guidelines for all members.",
+                Status = ProposalStatus.Draft,
+                StartAt = (DateTimeOffset?)now.AddDays(1),
+                EndAt = (DateTimeOffset?)now.AddDays(8),
+                QuorumRequirement = (decimal?)0.30m,
+                EligibleVotingPowerSnapshot = (decimal?)null,
+                Options = new[] { ("Accept", "Accept new guidelines"), ("Revise", "Request revisions") }
+            },
+            // Green Energy United - Open proposal
+            new
+            {
+                OrganizationId = greenOrg.Id,
+                CreatedByUserId = carlos.Id,
+                Title = "Solar panel installation for community center",
+                Description = "Should we fund solar panel installation on the community center roof?",
+                Status = ProposalStatus.Open,
+                StartAt = (DateTimeOffset?)now.AddDays(-3),
+                EndAt = (DateTimeOffset?)now.AddDays(4),
+                QuorumRequirement = (decimal?)0.25m,
+                EligibleVotingPowerSnapshot = (decimal?)525m,
+                Options = new[] { ("Fund", "Approve funding"), ("Postpone", "Postpone to next year") }
+            },
+            // Green Energy United - Closed proposal
+            new
+            {
+                OrganizationId = greenOrg.Id,
+                CreatedByUserId = erika.Id,
+                Title = "Annual sustainability report publication",
+                Description = "Vote to approve and publish the annual sustainability report.",
+                Status = ProposalStatus.Closed,
+                StartAt = (DateTimeOffset?)now.AddDays(-21),
+                EndAt = (DateTimeOffset?)now.AddDays(-14),
+                QuorumRequirement = (decimal?)0.20m,
+                EligibleVotingPowerSnapshot = (decimal?)525m,
+                Options = new[] { ("Publish", "Publish the report"), ("Defer", "Defer publication") }
+            },
+            // Green Energy United - Scheduled proposal
+            new
+            {
+                OrganizationId = greenOrg.Id,
+                CreatedByUserId = carlos.Id,
+                Title = "Electric vehicle charging stations proposal",
+                Description = "Proposal to install EV charging stations at member locations.",
+                Status = ProposalStatus.Draft,
+                StartAt = (DateTimeOffset?)now.AddDays(2),
+                EndAt = (DateTimeOffset?)now.AddDays(9),
+                QuorumRequirement = (decimal?)0.25m,
+                EligibleVotingPowerSnapshot = (decimal?)null,
+                Options = new[] { ("Approve", "Approve installation"), ("Reject", "Reject proposal") }
+            },
+            // City FC Supporters Trust - Open proposal
+            new
+            {
+                OrganizationId = cityFcOrg.Id,
+                CreatedByUserId = erika.Id,
+                Title = "New season ticket pricing structure",
+                Description = "Vote on the proposed new pricing structure for season tickets.",
+                Status = ProposalStatus.Open,
+                StartAt = (DateTimeOffset?)now.AddDays(-1),
+                EndAt = (DateTimeOffset?)now.AddDays(6),
+                QuorumRequirement = (decimal?)0.30m,
+                EligibleVotingPowerSnapshot = (decimal?)505m,
+                Options = new[] { ("Accept", "Accept new pricing"), ("Negotiate", "Request renegotiation") }
+            },
+            // City FC Supporters Trust - Closed proposal
+            new
+            {
+                OrganizationId = cityFcOrg.Id,
+                CreatedByUserId = erika.Id,
+                Title = "Away travel subsidy program",
+                Description = "Vote to establish a subsidy program for away game travel.",
+                Status = ProposalStatus.Closed,
+                StartAt = (DateTimeOffset?)now.AddDays(-10),
+                EndAt = (DateTimeOffset?)now.AddDays(-3),
+                QuorumRequirement = (decimal?)0.20m,
+                EligibleVotingPowerSnapshot = (decimal?)480m,
+                Options = new[] { ("Establish", "Establish the program"), ("Decline", "Decline the proposal") }
+            },
+            // City FC Supporters Trust - Scheduled proposal
+            new
+            {
+                OrganizationId = cityFcOrg.Id,
+                CreatedByUserId = erika.Id,
+                Title = "Stadium naming rights consultation",
+                Description = "Vote on whether the trust should participate in stadium naming rights discussions.",
+                Status = ProposalStatus.Draft,
+                StartAt = (DateTimeOffset?)now.AddDays(3),
+                EndAt = (DateTimeOffset?)now.AddDays(10),
+                QuorumRequirement = (decimal?)0.35m,
+                EligibleVotingPowerSnapshot = (decimal?)null,
+                Options = new[] { ("Participate", "Participate in discussions"), ("Abstain", "Abstain from discussions") }
             }
+        };
 
-            // Seed Share Types (batch)
-            var shareTypeSpecs = new[]
+        var proposalOrgIds = proposalSpecs.Select(s => s.OrganizationId).Distinct().ToList();
+        var proposalTitles = proposalSpecs.Select(s => s.Title).Distinct().ToList();
+        var existingProposals = await _dbContext.Proposals
+            .Where(p => proposalOrgIds.Contains(p.OrganizationId) && proposalTitles.Contains(p.Title))
+            .ToListAsync(cancellationToken);
+
+        var proposalsToAdd = new List<Proposal>();
+        var proposalOptionsMap = new Dictionary<string, (Proposal Proposal, (string Text, string Description)[] Options)>();
+
+        foreach (var spec in proposalSpecs)
+        {
+            var exists = existingProposals.Any(p =>
+                p.OrganizationId == spec.OrganizationId && p.Title == spec.Title);
+            
+            if (!exists)
             {
-                new { OrganizationId = techOrg.Id, Name = "Voting Share", Symbol = "VOTE", Description = "Standard voting rights", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true },
-                new { OrganizationId = techOrg.Id, Name = "Founder Share", Symbol = "FNDR", Description = "Extra voting power for founders", VotingWeight = 10.0m, MaxSupply = (decimal?)100, IsTransferable = false },
-                new { OrganizationId = creativeOrg.Id, Name = "Creative Token", Symbol = "CRTV", Description = "Voting token for creative decisions", VotingWeight = 1.0m, MaxSupply = (decimal?)null, IsTransferable = true }
-            };
-
-            var shareTypeOrgIds = shareTypeSpecs.Select(s => s.OrganizationId).Distinct().ToList();
-            var symbols = shareTypeSpecs.Select(s => s.Symbol).Distinct().ToList();
-            var existingShareTypes = await _dbContext.ShareTypes
-                .Where(st => shareTypeOrgIds.Contains(st.OrganizationId) && symbols.Contains(st.Symbol))
-                .ToListAsync(cancellationToken);
-
-            var shareTypesToAdd = new List<ShareType>();
-            foreach (var spec in shareTypeSpecs)
-            {
-                var alreadyExists = existingShareTypes.Any(st => st.OrganizationId == spec.OrganizationId && st.Symbol == spec.Symbol);
-                if (!alreadyExists)
+                var proposal = new Proposal
                 {
-                    shareTypesToAdd.Add(new ShareType
+                    Id = Guid.NewGuid(),
+                    OrganizationId = spec.OrganizationId,
+                    CreatedByUserId = spec.CreatedByUserId,
+                    Title = spec.Title,
+                    Description = spec.Description,
+                    Status = spec.Status,
+                    StartAt = spec.StartAt,
+                    EndAt = spec.EndAt,
+                    QuorumRequirement = spec.QuorumRequirement,
+                    EligibleVotingPowerSnapshot = spec.EligibleVotingPowerSnapshot,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    ClosedAt = spec.Status == ProposalStatus.Closed ? spec.EndAt : null
+                };
+                proposalsToAdd.Add(proposal);
+                proposalOptionsMap[spec.Title] = (proposal, spec.Options);
+                result.ProposalsCreated++;
+                _logger.LogDebug("Prepared proposal '{Title}' in org {OrganizationId}", spec.Title, spec.OrganizationId);
+            }
+        }
+
+        if (proposalsToAdd.Count > 0)
+        {
+            _dbContext.Proposals.AddRange(proposalsToAdd);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // ========== SEED PROPOSAL OPTIONS ==========
+        var allProposals = await _dbContext.Proposals
+            .Where(p => proposalOrgIds.Contains(p.OrganizationId) && proposalTitles.Contains(p.Title))
+            .Include(p => p.Options)
+            .ToListAsync(cancellationToken);
+
+        var optionsToAdd = new List<ProposalOption>();
+        foreach (var spec in proposalSpecs)
+        {
+            var proposal = allProposals.FirstOrDefault(p => p.Title == spec.Title && p.OrganizationId == spec.OrganizationId);
+            if (proposal == null) continue;
+
+            foreach (var (text, description) in spec.Options)
+            {
+                if (!proposal.Options.Any(o => o.Text == text))
+                {
+                    optionsToAdd.Add(new ProposalOption
                     {
                         Id = Guid.NewGuid(),
-                        OrganizationId = spec.OrganizationId,
-                        Name = spec.Name,
-                        Symbol = spec.Symbol,
-                        Description = spec.Description,
-                        VotingWeight = spec.VotingWeight,
-                        MaxSupply = spec.MaxSupply,
-                        IsTransferable = spec.IsTransferable,
-                        CreatedAt = DateTimeOffset.UtcNow
+                        ProposalId = proposal.Id,
+                        Text = text,
+                        Description = description
                     });
-                    result.ShareTypesCreated++;
-                    _logger.LogDebug("Prepared share type '{Symbol}' in org {OrganizationId}", spec.Symbol, spec.OrganizationId);
-                }
-            }
-
-            if (shareTypesToAdd.Count > 0)
-            {
-                _dbContext.ShareTypes.AddRange(shareTypesToAdd);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-            }
-
-            // Fetch share types from DB
-            var votingShareType = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "VOTE", cancellationToken);
-            var founderShareType = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "FNDR", cancellationToken);
-            var creativeShareType = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == creativeOrg.Id && st.Symbol == "CRTV", cancellationToken);
-
-            if (votingShareType != null && founderShareType != null && creativeShareType != null)
-            {
-                // Seed Share Issuances (batch) - collect all issuances to create
-                var issuanceSpecs = new[]
-                {
-                    (ShareTypeId: votingShareType.Id, UserId: alice.Id, Quantity: 100m),
-                    (ShareTypeId: votingShareType.Id, UserId: bob.Id, Quantity: 50m),
-                    (ShareTypeId: founderShareType.Id, UserId: alice.Id, Quantity: 10m),
-                    (ShareTypeId: creativeShareType.Id, UserId: charlie.Id, Quantity: 200m),
-                    (ShareTypeId: creativeShareType.Id, UserId: alice.Id, Quantity: 75m)
-                };
-
-                // Load all potentially existing issuances at once using Contains
-                var shareTypeIds = issuanceSpecs.Select(s => s.ShareTypeId).Distinct().ToList();
-                var issuanceUserIds = issuanceSpecs.Select(s => s.UserId).Distinct().ToList();
-                var existingIssuances = await _dbContext.ShareIssuances
-                    .Where(si => shareTypeIds.Contains(si.ShareTypeId) && issuanceUserIds.Contains(si.UserId))
-                    .ToListAsync(cancellationToken);
-
-                var issuancesToAdd = new List<ShareIssuance>();
-                var balanceUpdates = new Dictionary<(Guid ShareTypeId, Guid UserId), decimal>();
-
-                foreach (var spec in issuanceSpecs)
-                {
-                    var exists = existingIssuances.Any(si => 
-                        si.ShareTypeId == spec.ShareTypeId && 
-                        si.UserId == spec.UserId && 
-                        si.Quantity == spec.Quantity);
-                    
-                    if (!exists)
-                    {
-                        issuancesToAdd.Add(new ShareIssuance
-                        {
-                            Id = Guid.NewGuid(),
-                            ShareTypeId = spec.ShareTypeId,
-                            UserId = spec.UserId,
-                            Quantity = spec.Quantity,
-                            IssuedAt = DateTimeOffset.UtcNow
-                        });
-                        
-                        // Track balance updates using ternary operator
-                        var key = (spec.ShareTypeId, spec.UserId);
-                        balanceUpdates[key] = (balanceUpdates.TryGetValue(key, out var existingQuantity) ? existingQuantity : 0) + spec.Quantity;
-                        
-                        result.ShareIssuancesCreated++;
-                        _logger.LogDebug("Prepared share issuance for user {UserId}, quantity {Quantity}", spec.UserId, spec.Quantity);
-                    }
-                }
-
-                if (issuancesToAdd.Count > 0)
-                {
-                    _dbContext.ShareIssuances.AddRange(issuancesToAdd);
-                    
-                    // Load all relevant balances at once using Contains
-                    var balanceShareTypeIds = balanceUpdates.Keys.Select(k => k.ShareTypeId).Distinct().ToList();
-                    var balanceUserIds = balanceUpdates.Keys.Select(k => k.UserId).Distinct().ToList();
-                    var existingBalances = await _dbContext.ShareBalances
-                        .Where(sb => balanceShareTypeIds.Contains(sb.ShareTypeId) && balanceUserIds.Contains(sb.UserId))
-                        .ToListAsync(cancellationToken);
-                    
-                    // Update or create ShareBalances for the issuances
-                    foreach (var kvp in balanceUpdates)
-                    {
-                        var (shareTypeId, userId) = kvp.Key;
-                        var quantity = kvp.Value;
-                        
-                        var balance = existingBalances.FirstOrDefault(sb => sb.ShareTypeId == shareTypeId && sb.UserId == userId);
-                        
-                        if (balance == null)
-                        {
-                            _dbContext.ShareBalances.Add(new ShareBalance
-                            {
-                                Id = Guid.NewGuid(),
-                                ShareTypeId = shareTypeId,
-                                UserId = userId,
-                                Balance = quantity,
-                                UpdatedAt = DateTimeOffset.UtcNow
-                            });
-                            _logger.LogDebug("Created share balance for user {UserId}, balance {Balance}", userId, quantity);
-                        }
-                        else
-                        {
-                            balance.Balance += quantity;
-                            balance.UpdatedAt = DateTimeOffset.UtcNow;
-                            _logger.LogDebug("Updated share balance for user {UserId}, new balance {Balance}", userId, balance.Balance);
-                        }
-                    }
-                    
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                }
-
-                // Seed Proposals (batch) - collect all proposals to create
-                var proposalSpecs = new[]
-                {
-                    new
-                    {
-                        OrganizationId = techOrg.Id,
-                        CreatedByUserId = alice.Id,
-                        Title = "Upgrade Development Infrastructure",
-                        Description = "Should we invest in new cloud infrastructure?",
-                        Status = ProposalStatus.Open,
-                        StartAt = (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays(-2),
-                        EndAt = (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays(5)
-                    },
-                    new
-                    {
-                        OrganizationId = creativeOrg.Id,
-                        CreatedByUserId = charlie.Id,
-                        Title = "Annual Art Exhibition",
-                        Description = "Vote on the theme for this year's exhibition",
-                        Status = ProposalStatus.Draft,
-                        StartAt = (DateTimeOffset?)null,
-                        EndAt = (DateTimeOffset?)null
-                    }
-                };
-
-                // Batch existence check for proposals
-                var proposalOrgIds = proposalSpecs.Select(s => s.OrganizationId).Distinct().ToList();
-                var proposalTitles = proposalSpecs.Select(s => s.Title).Distinct().ToList();
-                var existingProposals = await _dbContext.Proposals
-                    .Where(p => proposalOrgIds.Contains(p.OrganizationId) && proposalTitles.Contains(p.Title))
-                    .ToListAsync(cancellationToken);
-
-                var proposalsToAdd = new List<Proposal>();
-                foreach (var spec in proposalSpecs)
-                {
-                    var exists = existingProposals.Any(p =>
-                        p.OrganizationId == spec.OrganizationId && p.Title == spec.Title);
-                    
-                    if (!exists)
-                    {
-                        proposalsToAdd.Add(new Proposal
-                        {
-                            Id = Guid.NewGuid(),
-                            OrganizationId = spec.OrganizationId,
-                            CreatedByUserId = spec.CreatedByUserId,
-                            Title = spec.Title,
-                            Description = spec.Description,
-                            Status = spec.Status,
-                            StartAt = spec.StartAt,
-                            EndAt = spec.EndAt,
-                            CreatedAt = DateTimeOffset.UtcNow
-                        });
-                        result.ProposalsCreated++;
-                        _logger.LogDebug("Prepared proposal '{Title}' in org {OrganizationId}", spec.Title, spec.OrganizationId);
-                    }
-                }
-
-                if (proposalsToAdd.Count > 0)
-                {
-                    _dbContext.Proposals.AddRange(proposalsToAdd);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                }
-
-                // Fetch proposals from DB (without eager loading options to avoid performance overhead)
-                var techProposal = await _dbContext.Proposals
-                    .FirstOrDefaultAsync(p => p.OrganizationId == techOrg.Id && p.Title == "Upgrade Development Infrastructure", cancellationToken);
-                var creativeProposal = await _dbContext.Proposals
-                    .FirstOrDefaultAsync(p => p.OrganizationId == creativeOrg.Id && p.Title == "Annual Art Exhibition", cancellationToken);
-
-                // Seed Proposal Options (batch)
-                var optionsToAdd = new List<ProposalOption>();
-                ProposalOption? yesOption = null;
-                ProposalOption? noOption = null;
-
-                if (techProposal != null)
-                {
-                    // Check existing options
-                    var existingOptions = await _dbContext.ProposalOptions
-                        .Where(o => o.ProposalId == techProposal.Id)
-                        .ToListAsync(cancellationToken);
-                    
-                    yesOption = existingOptions.FirstOrDefault(o => o.Text == "Yes, upgrade now");
-                    noOption = existingOptions.FirstOrDefault(o => o.Text == "No, wait until next quarter");
-                    
-                    if (yesOption == null)
-                    {
-                        yesOption = new ProposalOption
-                        {
-                            Id = Guid.NewGuid(),
-                            ProposalId = techProposal.Id,
-                            Text = "Yes, upgrade now",
-                            Description = "Proceed with the infrastructure upgrade immediately"
-                        };
-                        optionsToAdd.Add(yesOption);
-                    }
-                    
-                    if (noOption == null)
-                    {
-                        noOption = new ProposalOption
-                        {
-                            Id = Guid.NewGuid(),
-                            ProposalId = techProposal.Id,
-                            Text = "No, wait until next quarter",
-                            Description = "Defer the upgrade to next quarter"
-                        };
-                        optionsToAdd.Add(noOption);
-                    }
-                }
-
-                if (creativeProposal != null)
-                {
-                    var existingOptions = await _dbContext.ProposalOptions
-                        .Where(o => o.ProposalId == creativeProposal.Id)
-                        .ToListAsync(cancellationToken);
-                    
-                    if (!existingOptions.Any(o => o.Text == "Nature and Environment"))
-                    {
-                        optionsToAdd.Add(new ProposalOption
-                        {
-                            Id = Guid.NewGuid(),
-                            ProposalId = creativeProposal.Id,
-                            Text = "Nature and Environment",
-                            Description = "Focus on environmental themes"
-                        });
-                    }
-                    
-                    if (!existingOptions.Any(o => o.Text == "Urban Life"))
-                    {
-                        optionsToAdd.Add(new ProposalOption
-                        {
-                            Id = Guid.NewGuid(),
-                            ProposalId = creativeProposal.Id,
-                            Text = "Urban Life",
-                            Description = "Explore themes of city living"
-                        });
-                    }
-                }
-
-                if (optionsToAdd.Count > 0)
-                {
-                    _dbContext.ProposalOptions.AddRange(optionsToAdd);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                }
-
-                // Seed Votes (batch)
-                if (techProposal != null && yesOption != null && noOption != null)
-                {
-                    // Batch vote existence check
-                    var voteUserIds = new[] { alice.Id, bob.Id };
-                    var existingVotes = await _dbContext.Votes
-                        .Where(v => v.ProposalId == techProposal.Id && voteUserIds.Contains(v.UserId))
-                        .ToListAsync(cancellationToken);
-
-                    var votesToAdd = new List<Vote>();
-                    
-                    if (!existingVotes.Any(v => v.UserId == alice.Id))
-                    {
-                        votesToAdd.Add(new Vote
-                        {
-                            Id = Guid.NewGuid(),
-                            ProposalId = techProposal.Id,
-                            ProposalOptionId = yesOption.Id,
-                            UserId = alice.Id,
-                            VotingPower = 100m,
-                            CastAt = DateTimeOffset.UtcNow
-                        });
-                        result.VotesCreated++;
-                    }
-                    
-                    if (!existingVotes.Any(v => v.UserId == bob.Id))
-                    {
-                        votesToAdd.Add(new Vote
-                        {
-                            Id = Guid.NewGuid(),
-                            ProposalId = techProposal.Id,
-                            ProposalOptionId = noOption.Id,
-                            UserId = bob.Id,
-                            VotingPower = 50m,
-                            CastAt = DateTimeOffset.UtcNow
-                        });
-                        result.VotesCreated++;
-                    }
-                    
-                    if (votesToAdd.Count > 0)
-                    {
-                        _dbContext.Votes.AddRange(votesToAdd);
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                    }
                 }
             }
         }
+
+        if (optionsToAdd.Count > 0)
+        {
+            _dbContext.ProposalOptions.AddRange(optionsToAdd);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        // ========== SEED VOTES ==========
+        // Seed votes for closed proposals and some for open proposals
+        await SeedVotesAsync(techOrg.Id, "Approve 2025 fan engagement budget", new[]
+        {
+            (UserId: alice.Id, OptionText: "Approve", VotingPower: 200m), // alice voted approve
+            (UserId: bob.Id, OptionText: "Approve", VotingPower: 50m)    // bob voted approve
+        }, result, cancellationToken);
+
+        await SeedVotesAsync(greenOrg.Id, "Annual sustainability report publication", new[]
+        {
+            (UserId: carlos.Id, OptionText: "Publish", VotingPower: 300m),
+            (UserId: erika.Id, OptionText: "Publish", VotingPower: 100m),
+            (UserId: dana.Id, OptionText: "Defer", VotingPower: 75m)
+        }, result, cancellationToken);
+
+        await SeedVotesAsync(cityFcOrg.Id, "Away travel subsidy program", new[]
+        {
+            (UserId: erika.Id, OptionText: "Establish", VotingPower: 325m),
+            (UserId: dana.Id, OptionText: "Establish", VotingPower: 100m),
+            (UserId: frank.Id, OptionText: "Decline", VotingPower: 80m)
+        }, result, cancellationToken);
+
+        // Seed some votes for open proposals (partial voting)
+        await SeedVotesAsync(techOrg.Id, "Should we launch the new fan rewards program?", new[]
+        {
+            (UserId: alice.Id, OptionText: "Yes", VotingPower: 200m) // Only alice voted so far
+        }, result, cancellationToken);
+
+        await SeedVotesAsync(greenOrg.Id, "Solar panel installation for community center", new[]
+        {
+            (UserId: carlos.Id, OptionText: "Fund", VotingPower: 300m),
+            (UserId: alice.Id, OptionText: "Fund", VotingPower: 50m)
+            // dana and erika haven't voted yet
+        }, result, cancellationToken);
+
+        // Update closed proposals with winning options and results
+        await UpdateClosedProposalResultsAsync(cancellationToken);
 
         _logger.LogInformation("Basic demo seeding completed. Created: {OrganizationsCreated} orgs, {UsersCreated} users, {MembershipsCreated} memberships, {ShareTypesCreated} share types, {ShareIssuancesCreated} issuances, {ProposalsCreated} proposals, {VotesCreated} votes",
             result.OrganizationsCreated, result.UsersCreated, result.MembershipsCreated, result.ShareTypesCreated, result.ShareIssuancesCreated, result.ProposalsCreated, result.VotesCreated);
 
         return result;
+    }
+
+    private async Task SeedVotesAsync(Guid organizationId, string proposalTitle, (Guid UserId, string OptionText, decimal VotingPower)[] voteSpecs, DevDataSeedingResult result, CancellationToken cancellationToken)
+    {
+        var proposal = await _dbContext.Proposals
+            .Include(p => p.Options)
+            .FirstOrDefaultAsync(p => p.OrganizationId == organizationId && p.Title == proposalTitle, cancellationToken);
+
+        if (proposal == null) return;
+
+        var existingVotes = await _dbContext.Votes
+            .Where(v => v.ProposalId == proposal.Id)
+            .ToListAsync(cancellationToken);
+
+        var votesToAdd = new List<Vote>();
+        foreach (var (userId, optionText, votingPower) in voteSpecs)
+        {
+            if (existingVotes.Any(v => v.UserId == userId)) continue;
+
+            var option = proposal.Options.FirstOrDefault(o => o.Text == optionText);
+            if (option == null) continue;
+
+            votesToAdd.Add(new Vote
+            {
+                Id = Guid.NewGuid(),
+                ProposalId = proposal.Id,
+                ProposalOptionId = option.Id,
+                UserId = userId,
+                VotingPower = votingPower,
+                CastAt = DateTimeOffset.UtcNow.AddDays(-1)
+            });
+            result.VotesCreated++;
+        }
+
+        if (votesToAdd.Count > 0)
+        {
+            _dbContext.Votes.AddRange(votesToAdd);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task UpdateClosedProposalResultsAsync(CancellationToken cancellationToken)
+    {
+        var closedProposals = await _dbContext.Proposals
+            .Include(p => p.Options)
+            .Include(p => p.Votes)
+            .Where(p => p.Status == ProposalStatus.Closed && p.WinningOptionId == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var proposal in closedProposals)
+        {
+            if (!proposal.Options.Any() || !proposal.Votes.Any()) continue;
+
+            // Calculate total votes cast
+            var totalVotesCast = proposal.Votes.Sum(v => v.VotingPower);
+            proposal.TotalVotesCast = totalVotesCast;
+
+            // Calculate quorum
+            if (proposal.EligibleVotingPowerSnapshot.HasValue && proposal.QuorumRequirement.HasValue)
+            {
+                var requiredVotes = proposal.EligibleVotingPowerSnapshot.Value * proposal.QuorumRequirement.Value;
+                proposal.QuorumMet = totalVotesCast >= requiredVotes;
+            }
+            else
+            {
+                proposal.QuorumMet = true;
+            }
+
+            // Find winning option
+            var optionVotes = proposal.Options
+                .Select(o => new { Option = o, TotalPower = proposal.Votes.Where(v => v.ProposalOptionId == o.Id).Sum(v => v.VotingPower) })
+                .OrderByDescending(x => x.TotalPower)
+                .ToList();
+
+            if (optionVotes.Any())
+            {
+                proposal.WinningOptionId = optionVotes.First().Option.Id;
+            }
+        }
+
+        if (closedProposals.Any())
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     /// <summary>
