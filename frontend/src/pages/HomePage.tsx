@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useRoleBasedNavigation } from '../hooks/useRoleBasedNavigation';
@@ -7,11 +7,13 @@ export const HomePage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const { navigateToDefaultRoute } = useRoleBasedNavigation();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const hasRedirectedRef = useRef(false);
 
   // Auto-redirect authenticated users to their appropriate landing page
   useEffect(() => {
     const redirectAuthenticatedUser = async () => {
-      if (isAuthenticated && user && !isRedirecting) {
+      if (isAuthenticated && user && !hasRedirectedRef.current) {
+        hasRedirectedRef.current = true;
         setIsRedirecting(true);
         await navigateToDefaultRoute(user, { replace: true });
       }

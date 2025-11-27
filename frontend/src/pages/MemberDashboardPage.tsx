@@ -217,44 +217,25 @@ export const MemberDashboardPage: React.FC = () => {
           )}
           
           {data?.memberships && data.memberships.length > 0 && (() => {
-            // If there are active proposals, link to the organization with the most proposals
+            // Determine which organization to highlight
+            let targetOrg = data.memberships[0];
+            
+            // If there are active proposals, find the org with the most
             if (data.activeProposals && data.activeProposals.length > 0) {
-              const orgProposalCounts: Record<string, number> = {};
-              data.activeProposals.forEach(({ proposal }) => {
-                orgProposalCounts[proposal.organizationId] = (orgProposalCounts[proposal.organizationId] || 0) + 1;
-              });
-              let targetOrgId = data.activeProposals[0].proposal.organizationId;
-              let maxCount = orgProposalCounts[targetOrgId];
-              Object.entries(orgProposalCounts).forEach(([orgId, count]) => {
-                if (count > maxCount) {
-                  targetOrgId = orgId;
-                  maxCount = count;
-                }
-              });
-              const orgName = data.memberships.find(m => m.organizationId === targetOrgId)?.organizationName || 'Organization';
-              return (
-                <Link
-                  to={`/me/organizations/${targetOrgId}`}
-                  style={{
-                    display: 'inline-block',
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '4px',
-                    fontSize: '0.875rem',
-                  }}
-                  data-testid="explore-org-button"
-                >
-                  Explore {orgName} →
-                </Link>
-              );
+              const orgCounts = data.activeProposals.reduce((acc, { proposal }) => {
+                acc[proposal.organizationId] = (acc[proposal.organizationId] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>);
+              
+              const [topOrgId] = Object.entries(orgCounts)
+                .sort(([, a], [, b]) => b - a)[0];
+              
+              targetOrg = data.memberships.find(m => m.organizationId === topOrgId) || targetOrg;
             }
-            // Only one org or no active proposals, show first org
-            const org = data.memberships[0];
+            
             return (
               <Link
-                to={`/me/organizations/${org.organizationId}`}
+                to={`/me/organizations/${targetOrg.organizationId}`}
                 style={{
                   display: 'inline-block',
                   padding: '0.5rem 1rem',
@@ -266,7 +247,7 @@ export const MemberDashboardPage: React.FC = () => {
                 }}
                 data-testid="explore-org-button"
               >
-                Explore {org.organizationName} →
+                Explore {targetOrg.organizationName} →
               </Link>
             );
           })()}
