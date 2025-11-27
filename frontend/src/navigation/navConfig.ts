@@ -307,7 +307,7 @@ export const getResolvedNavItem = (
   item: NavItem,
   context: NavContext
 ): NavItem & { resolvedPath: string } => {
-  let resolvedPath = item.path;
+  let resolvedPath: string;
 
   // Special handling for home - resolve based on role
   if (item.id === 'home') {

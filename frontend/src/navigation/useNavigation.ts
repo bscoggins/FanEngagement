@@ -68,7 +68,7 @@ export const useNavigation = (options?: UseNavigationOptions) => {
     
     const visibleItems = getVisibleNavItems(navContext, options);
     return visibleItems.map(item => getResolvedNavItem(item, navContext));
-  }, [navContext, options, isAuthenticated]);
+  }, [navContext, isAuthenticated, options?.scope, options?.includeIds, options?.excludeIds]);
 
   // Get the appropriate home route for the current user
   const homeRoute = useMemo(() => {
