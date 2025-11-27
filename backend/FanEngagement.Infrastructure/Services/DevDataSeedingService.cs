@@ -393,7 +393,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                 StartAt = (DateTimeOffset?)now.AddDays(-21),
                 EndAt = (DateTimeOffset?)now.AddDays(-14),
                 QuorumRequirement = (decimal?)0.20m,
-                EligibleVotingPowerSnapshot = (decimal?)500m,
+                EligibleVotingPowerSnapshot = (decimal?)525m,
                 Options = new[] { ("Publish", "Publish the report"), ("Defer", "Defer publication") }
             },
             // Green Energy United - Scheduled proposal
