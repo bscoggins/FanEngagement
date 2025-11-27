@@ -36,6 +36,8 @@ These rules apply to every Copilot agent working in this repository, including d
 - Ensure frontend tests pass (npm test / Playwright if required).
 - Never modify production code to satisfy a flawed test.
 - Create tests for all new logic, states, and edge cases.
+- Treat all test failures as relevant to your changes unless explicitly marked as pre-existing in the request.
+- You are not done until there are 0 test failures. Fix all failures, even if they appear unrelated to your changes.
 
 ### 1.4 Documentation Requirements
 
@@ -432,6 +434,7 @@ Provide clear scope, requirements, constraints, and testing needs.
 The admin area uses a centralized organization navigation model with the following behavior:
 
 #### Organization Switcher
+
 - Located in the `AdminLayout` sidebar
 - Shows all organizations where the user has any membership (OrgAdmin or Member)
 - Displays role indicator next to each org name (e.g., "Org Name (Admin)" or "Org Name (Member)")
@@ -440,7 +443,9 @@ The admin area uses a centralized organization navigation model with the followi
   - If user is Member for new org → navigates to member view (`/me/organizations/:orgId`)
 
 #### Org Admin Sub-Navigation
+
 When user is OrgAdmin for the selected organization, the sidebar shows:
+
 - Overview (organization settings)
 - Memberships
 - Share Types
@@ -448,23 +453,26 @@ When user is OrgAdmin for the selected organization, the sidebar shows:
 - Webhook Events
 
 These items are defined with `scope: 'org'` in navConfig and only appear when:
+
 1. An active organization is selected
 2. User has OrgAdmin role (or PlatformAdmin) for that organization
 
 #### Role Badge
+
 - Shows "Org Admin" or "Member" badge below the org selector
 - Instantly reflects the user's role when switching organizations
 
 #### Mixed-Role Users
+
 Users who are OrgAdmin in one org and Member in another:
+
 - See ALL their organizations in the switcher
 - Get full org admin tools when admin org is selected
 - Get member-level message + link when member org is selected
 - Navigation instantly updates when switching
 
 #### Page Layout for Org Admin Pages
+
 - Remove ad-hoc "Back to Organizations" links from org admin pages
 - Use consistent sidebar navigation for moving between org admin sections
 - Page headings should be simple (e.g., "Memberships" not "Manage Memberships")
-
-
