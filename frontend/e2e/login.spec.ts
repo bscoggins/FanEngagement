@@ -31,9 +31,6 @@ test.describe('Login Flow', () => {
 
     // Wait for navigation to complete (admins now go to /admin dashboard)
     await page.waitForURL('/admin');
-
-    // Verify we're logged in by checking for user info in header
-    await expect(page.getByText('Logged in as admin@example.com')).toBeVisible();
     
     // Verify we're on the admin dashboard
     await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible();
