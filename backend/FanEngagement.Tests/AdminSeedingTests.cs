@@ -36,7 +36,7 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyn
             .ToListAsync();
         dbContext.Organizations.RemoveRange(orgs);
         
-        // Delete users (new expanded user list)
+        // Delete seeded users
         var seededEmails = new[]
         {
             "root_admin@platform.local",

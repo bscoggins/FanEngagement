@@ -337,7 +337,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                 StartAt = (DateTimeOffset?)now.AddDays(-2),
                 EndAt = (DateTimeOffset?)now.AddDays(5),
                 QuorumRequirement = (decimal?)0.25m,
-                EligibleVotingPowerSnapshot = (decimal?)200m, // alice: 100*1 + 20*5 = 200, bob: 50*1 = 50
+                EligibleVotingPowerSnapshot = (decimal?)250m, // alice: 100*1 + 20*5 = 200, bob: 50*1 = 50 -> total 250
                 Options = new[] { ("Yes", "Launch the rewards program"), ("No", "Do not launch") }
             },
             // Tech Innovators - Closed proposal with results
@@ -351,7 +351,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                 StartAt = (DateTimeOffset?)now.AddDays(-14),
                 EndAt = (DateTimeOffset?)now.AddDays(-7),
                 QuorumRequirement = (decimal?)0.20m,
-                EligibleVotingPowerSnapshot = (decimal?)250m,
+                EligibleVotingPowerSnapshot = (decimal?)250m, // total eligible voting power for Tech Innovators
                 Options = new[] { ("Approve", "Approve the budget as proposed"), ("Reject", "Reject the budget") }
             },
             // Tech Innovators - Scheduled proposal (future start)

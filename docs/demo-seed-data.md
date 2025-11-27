@@ -6,6 +6,28 @@ This document describes the seed data created when running the `POST /admin/seed
 
 The seeding process creates a comprehensive set of test accounts, organizations, share types, proposals, and votes to facilitate development and testing. All seeding is **idempotent** - running it multiple times will not create duplicate data.
 
+## Voting Power Calculation
+
+Voting power determines how much influence a user has when voting on proposals. It is calculated from share balances:
+
+**Formula:** `Voting Power = Σ (Share Balance × Share Type Voting Weight)`
+
+**Example (Alice in Tech Innovators):**
+- 100 Standard Voting Shares × 1 weight = 100
+- 20 Premium Voting Shares × 5 weight = 100
+- **Total Voting Power = 200**
+
+**Key Concepts:**
+- Each share type has a `VotingWeight` (e.g., Standard = 1, Premium = 5)
+- Users can hold multiple share types
+- Voting power is captured as a snapshot when a proposal opens
+- Quorum requirements are calculated against total eligible voting power
+
+**Eligible Voting Power Snapshot:**
+When a proposal opens, the system captures the total voting power of all eligible members at that moment. For example:
+- Tech Innovators has Alice (200) + Bob (50) = **250 total eligible voting power**
+- If the quorum requirement is 25%, at least 62.5 voting power must be cast for the proposal to meet quorum
+
 ## Test Accounts
 
 ### Platform Administrators
