@@ -99,6 +99,27 @@ Copilot must:
 - Use `data-testid` for new DOM elements  
 - Follow the routing and layout patterns already in place  
 
+### Organization Navigation Model
+
+The application uses a centralized organization navigation model:
+
+1. **Organization Switcher**: Located in the AdminLayout sidebar, allows users to switch between organizations they belong to.
+
+2. **Role-based Navigation**: Navigation items appear/disappear based on the user's role in the currently selected organization:
+   - **OrgAdmin role**: Shows full org admin sub-nav (Overview, Memberships, Share Types, Proposals, Webhook Events)
+   - **Member role**: Shows message with link to member view, hides org admin tools
+
+3. **Mixed-role Users**: Users who are OrgAdmin in one org and Member in another:
+   - See all their organizations in the switcher
+   - Get org admin tools when viewing their admin org
+   - Get member-level view when viewing their member org
+   - The sidebar dynamically updates based on selected org
+
+4. **Navigation Configuration**: Defined in `frontend/src/navigation/navConfig.ts`:
+   - Items have `scope` property: 'global', 'org', or 'user'
+   - Items have `roles` property to control visibility
+   - Org-scoped items only appear when user has OrgAdmin role for active org
+
 ---
 
 ## 7. What Copilot Should Avoid

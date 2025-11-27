@@ -427,3 +427,44 @@ Provide clear scope, requirements, constraints, and testing needs.
 - **Home Route**: Use `getDefaultHomeRoute()` for landing logic (PlatformAdmin → `/platform-admin/dashboard`, OrgAdmin → `/admin`, Member → `/me/home`).
 - **Redirects**: Ensure `routeUtils.ts` logic mirrors navigation config for post-login redirects.
 
+### 23.4 Organization-Level Navigation
+
+The admin area uses a centralized organization navigation model with the following behavior:
+
+#### Organization Switcher
+- Located in the `AdminLayout` sidebar
+- Shows all organizations where the user has any membership (OrgAdmin or Member)
+- Displays role indicator next to each org name (e.g., "Org Name (Admin)" or "Org Name (Member)")
+- When switching orgs:
+  - If user is OrgAdmin for new org → navigates to org admin overview (`/admin/organizations/:orgId/edit`)
+  - If user is Member for new org → navigates to member view (`/me/organizations/:orgId`)
+
+#### Org Admin Sub-Navigation
+When user is OrgAdmin for the selected organization, the sidebar shows:
+- Overview (organization settings)
+- Memberships
+- Share Types
+- Proposals
+- Webhook Events
+
+These items are defined with `scope: 'org'` in navConfig and only appear when:
+1. An active organization is selected
+2. User has OrgAdmin role (or PlatformAdmin) for that organization
+
+#### Role Badge
+- Shows "Org Admin" or "Member" badge below the org selector
+- Instantly reflects the user's role when switching organizations
+
+#### Mixed-Role Users
+Users who are OrgAdmin in one org and Member in another:
+- See ALL their organizations in the switcher
+- Get full org admin tools when admin org is selected
+- Get member-level message + link when member org is selected
+- Navigation instantly updates when switching
+
+#### Page Layout for Org Admin Pages
+- Remove ad-hoc "Back to Organizations" links from org admin pages
+- Use consistent sidebar navigation for moving between org admin sections
+- Page headings should be simple (e.g., "Memberships" not "Manage Memberships")
+
+

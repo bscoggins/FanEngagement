@@ -447,4 +447,126 @@ describe('usePermissions', () => {
       expect(result.current.canAccessAdminArea()).toBe(false);
     });
   });
+
+  describe('Mixed-role user org-specific permissions', () => {
+    const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
+      {
+        id: 'membership-1',
+        organizationId: 'org-admin-org',
+        organizationName: 'Admin Org',
+        userId: 'user-1',
+        role: 'OrgAdmin',
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'membership-2',
+        organizationId: 'org-member-org',
+        organizationName: 'Member Org',
+        userId: 'user-1',
+        role: 'Member',
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    ];
+
+    it('should return isOrgAdmin true for org where user is admin', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isOrgAdmin('org-admin-org')).toBe(true);
+    });
+
+    it('should return isOrgAdmin false for org where user is only member', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isOrgAdmin('org-member-org')).toBe(false);
+    });
+
+    it('should return isOrgMember true for both orgs', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isOrgMember('org-admin-org')).toBe(true);
+      expect(result.current.isOrgMember('org-member-org')).toBe(true);
+    });
+
+    it('should correctly identify hasAnyOrgAdminRole when user is admin in at least one org', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.hasAnyOrgAdminRole()).toBe(true);
+    });
+
+    it('should allow access to admin area for mixed-role user', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.canAccessAdminArea()).toBe(true);
+    });
+  });
 });
