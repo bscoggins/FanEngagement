@@ -1,8 +1,8 @@
 ---
 name: "Product Owner Agent Request"
-description: "Ask the product-owner-agent to propose or refine product ideas, epics, and stories."
+about: "Ask the product-owner-agent to propose or refine product ideas, epics, and stories."
 title: "[PO] "
-labels: ["product-owner", "copilot"]
+labels: ["Product Owner", "copilot"]
 assignees: []
 ---
 
@@ -33,7 +33,7 @@ Provide any context the agent should consider (optional but helpful):
 
 What format do you want?
 
-- [ ] New epics + stories added to `docs/product/backlog.md`
+- [ ] New epics + stories added in a new markdown file in `docs/product/` following the format used in `docs/product/backlog.md`
 - [ ] New entries added/updated in `docs/future-improvements.md`
 - [ ] A summary comment in this issue only (no file changes)
 
@@ -43,3 +43,9 @@ If you expect file changes, specify which:
 Allowed files for this request:
 - docs/product/backlog.md
 - docs/future-improvements.md
+```
+
+```text
+New files for this request belong here:
+- docs/product/
+```
