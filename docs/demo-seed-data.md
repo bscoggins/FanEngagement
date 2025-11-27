@@ -173,7 +173,7 @@ The following proposals have pre-seeded votes to demonstrate voting functionalit
 - Erika voted "Establish" (325 voting power)
 - Dana voted "Establish" (100 voting power)
 - Frank voted "Decline" (80 voting power)
-- **Winner:** Establish (425 total votes)
+- **Winner:** Establish (505 total votes)
 - **Quorum Met:** Yes
 
 ### Open Proposals (partial voting for testing)
