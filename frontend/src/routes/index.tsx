@@ -3,7 +3,9 @@ import { Layout } from '../components/Layout';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { AdminRoute } from '../components/AdminRoute';
 import { OrgAdminRoute } from '../components/OrgAdminRoute';
+import { PlatformAdminRoute } from '../components/PlatformAdminRoute';
 import { AdminLayout } from '../components/AdminLayout';
+import { PlatformAdminLayout } from '../components/PlatformAdminLayout';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { UsersPage } from '../pages/UsersPage';
@@ -14,6 +16,7 @@ import { MyOrganizationsPage } from '../pages/MyOrganizationsPage';
 import { MyOrganizationPage } from '../pages/MyOrganizationPage';
 import { MyProposalPage } from '../pages/MyProposalPage';
 import { MemberDashboardPage } from '../pages/MemberDashboardPage';
+import { PlatformAdminDashboardPage } from '../pages/PlatformAdminDashboardPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/AdminUsersPage';
 import { AdminUserDetailPage } from '../pages/AdminUserDetailPage';
@@ -102,6 +105,20 @@ export const router = createBrowserRouter([
             <MyProposalPage />
           </ProtectedRoute>
         ),
+      },
+    ],
+  },
+  {
+    path: '/platform-admin',
+    element: (
+      <PlatformAdminRoute>
+        <PlatformAdminLayout />
+      </PlatformAdminRoute>
+    ),
+    children: [
+      {
+        path: 'dashboard',
+        element: <PlatformAdminDashboardPage />,
       },
     ],
   },

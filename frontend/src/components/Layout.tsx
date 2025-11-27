@@ -13,6 +13,7 @@ export const Layout: React.FC = () => {
   // Show Admin link only when permissions are loaded to avoid flash of incorrect visibility
   // (the Admin link visibility depends on checking organization memberships which are fetched async)
   const showAdminLink = !permissionsLoading && canAccessAdminArea();
+  const showPlatformAdminLink = isGlobalAdmin();
 
   // Listen for auth:logout events from the API client
   useEffect(() => {
@@ -41,8 +42,8 @@ export const Layout: React.FC = () => {
             <>
               <Link to="/me">My Account</Link>
               <Link to="/me/organizations">My Organizations</Link>
-              {isGlobalAdmin() && <Link to="/users">Users</Link>}
-              {showAdminLink && <Link to="/admin">Admin</Link>}
+              {showPlatformAdminLink && <Link to="/platform-admin/dashboard">Platform Admin</Link>}
+              {showAdminLink && !showPlatformAdminLink && <Link to="/admin">Admin</Link>}
               <OrganizationSelector />
               <span className="user-info">
                 Logged in as {user?.email}
