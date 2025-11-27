@@ -1,6 +1,6 @@
 ---
 name: "Coding Task"
-description: "Create a development task for the Copilot Coding Agent"
+about: "Create a development task for the Copilot Coding Agent"
 title: "[Dev] "
 labels: ["development", "copilot"]
 assignees: []
