@@ -57,7 +57,7 @@ export const navItems: NavItem[] = [
   {
     id: 'home',
     label: 'Home',
-    path: '/me/home', // Will be dynamically resolved based on role
+    path: '/me/home', // NOTE: This item's path is dynamically resolved to getDefaultHomeRoute() by getResolvedNavItem()
     scope: 'user',
     order: 1,
   },
