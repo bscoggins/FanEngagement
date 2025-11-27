@@ -259,7 +259,7 @@ npm test           # or: npm run test:watch
 The seeding endpoint supports multiple scenarios via query parameter:
 
 ```bash
-# Basic demo (default) - 2 orgs, sample data
+# Basic demo (default) - 3 orgs, 8 users, comprehensive sample data
 curl -X POST http://localhost:5049/admin/seed-dev-data -H "Authorization: Bearer <token>"
 
 # Heavy proposals - 50+ proposals for pagination testing
@@ -270,6 +270,16 @@ curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=WebhookFailures
 ```
 
 Scenarios can also be selected in the Admin Dev Tools UI (`/admin/dev-tools`).
+
+**Seeded Test Accounts:**
+
+See [docs/demo-seed-data.md](../docs/demo-seed-data.md) for the complete list of seeded users, organizations, and test data. Key accounts include:
+
+| Account | Email | Password | Role |
+|---------|-------|----------|------|
+| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` | Admin |
+| OrgAdmin | `alice@example.com` | `UserDemo1!` | User (OrgAdmin for Tech Innovators) |
+| Member | `bob@abefroman.net` | `UserDemo1!` | User (Member of Tech Innovators) |
 
 ### Building
 
@@ -1767,7 +1777,11 @@ popd
 ```
 
 ### Test Data & Seeding
-- The E2E suite seeds dev data via `POST /admin/seed-dev-data` using `admin@example.com` and member accounts like `alice@example.com`.
+- The E2E suite seeds dev data via `POST /admin/seed-dev-data` using `admin@example.com` and member accounts.
+- Seeded member accounts for testing:
+  - `alice@example.com` / `UserDemo1!` (OrgAdmin for Tech Innovators)
+  - `bob@abefroman.net` / `UserDemo1!` (Member of Tech Innovators)
+  - See [docs/demo-seed-data.md](../docs/demo-seed-data.md) for the complete list.
 - Use unique strings (timestamps) for names to avoid collisions across tests.
 
 

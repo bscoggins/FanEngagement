@@ -1975,7 +1975,7 @@ When implementing new features, keep the development scripts and seeding scenari
 
 Scenarios are defined in `backend/FanEngagement.Infrastructure/Services/DevDataSeedingService.cs`:
 
-- **BasicDemo**: Default scenario with sample organizations, users, and proposals
+- **BasicDemo**: Default scenario with 3 organizations, 8 users, share types, proposals in various states, and votes
 - **HeavyProposals**: Extended data for pagination and performance testing
 - **WebhookFailures**: Webhook events with various statuses for observability testing
 
@@ -1985,16 +1985,40 @@ Scenarios are defined in `backend/FanEngagement.Infrastructure/Services/DevDataS
 - When existing scenarios no longer cover common development/testing needs
 
 **Scenario requirements:**
-1. Scenarios must be idempotent (running twice produces no duplicates)
+1. Scenarios must be **idempotent** (running twice produces no duplicates):
+   - Look up entities by stable keys (email, name, symbol) before creating
+   - Return `null` or skip creation if entity already exists
+   - Track only new entities in result counts
 2. Each scenario should build on BasicDemo to ensure base data is always present
 3. Update `SeedScenarioInfo` descriptions to clearly explain use cases
 4. Add backend tests in `AdminSeedingTests.cs` to verify scenario behavior
 5. Update `AdminDevToolsPage` frontend component if UI changes are needed
+6. **IMPORTANT:** Keep `docs/demo-seed-data.md` in sync with any changes to seed data:
+   - Update user accounts table when adding/changing users
+   - Update organization details when modifying org structure
+   - Update proposal listings when changing proposal data
+   - Update share type and voting power information
+
+**Seeded Test Accounts (BasicDemo):**
+
+| Type | Email | Password |
+|------|-------|----------|
+| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` |
+| Platform Admin | `platform_admin@fanengagement.dev` | `PlatAdm1n!` |
+| OrgAdmin | `alice@example.com` | `UserDemo1!` |
+| Member | `bob@abefroman.net` | `UserDemo1!` |
+| OrgAdmin | `carlos@demo.co` | `UserDemo2!` |
+| Member | `dana@sample.io` | `UserDemo2!` |
+| OrgAdmin | `erika@cityfc.support` | `UserDemo3!` |
+| Member | `frank@cityfc.support` | `UserDemo3!` |
+
+See [docs/demo-seed-data.md](../docs/demo-seed-data.md) for complete documentation.
 
 ### Developer Documentation
 
 - **Quick start guide**: `docs/development.md`
 - **Architecture overview**: `docs/architecture.md`
+- **Demo seed data**: `docs/demo-seed-data.md`
 - **Copilot instructions**: `.github/copilot-instructions.md`
 - **Agent instructions**: `.github/copilot-coding-agent-instructions.md`
 
@@ -2003,6 +2027,7 @@ Scenarios are defined in `backend/FanEngagement.Infrastructure/Services/DevDataS
 - Changing environment setup requirements
 - Adding new seeding scenarios
 - Modifying test procedures
+- **Changing seed data users, organizations, or proposals (update `docs/demo-seed-data.md`)**
 
 ## Navigation Visibility Requirements
 

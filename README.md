@@ -84,6 +84,28 @@ To authenticate:
 2. Use the returned JWT token in the `Authorization: Bearer <token>` header for subsequent requests
 3. The JWT includes a role claim that is used for role-based authorization
 
+### Demo / Dev Seed Data
+
+For development and testing, you can seed the database with sample data using the admin endpoint:
+
+```bash
+# Login as admin first
+TOKEN=$(curl -s -X POST http://localhost:5049/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"Admin123!"}' | jq -r '.token')
+
+# Seed demo data
+curl -X POST http://localhost:5049/admin/seed-dev-data \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+This creates:
+- 2 platform admin accounts
+- 6 regular user accounts with various organization memberships
+- 3 organizations with share types, proposals, and votes
+
+See [docs/demo-seed-data.md](docs/demo-seed-data.md) for complete details on all seeded accounts and test data.
+
 ## Run the Frontend
 
 1. Install dependencies:
