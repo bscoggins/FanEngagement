@@ -7,6 +7,11 @@ This file provides context and guidelines for GitHub Copilot Chat when assisting
 - Never delete code unless explicitly instructed.
 - Never introduce new external dependencies without justification.
 
+## Future Improvements Log
+- Capture every “nice to have” or future idea in `docs/future-improvements.md`; do not scatter these notes across other docs or PR descriptions.
+- When adding an idea, follow the steps in that file: create a `###` heading, describe the idea in a few sentences, and add any helpful context bullets (links, metrics, feedback).
+- If an idea is completed or dropped, update or remove its entry and reference the related PR/issue for traceability.
+
 ## Project Overview
 
 FanEngagement is a .NET 9 ASP.NET Core Web API with a PostgreSQL database and a React + TypeScript frontend, designed for fan engagement and organization management with share-based voting capabilities.
@@ -184,7 +189,7 @@ The repository includes convenience scripts for common workflows:
 ./scripts/test-frontend
 ```
 
-See [Developer Quick Start](docs/development.md) for complete documentation.
+See [Developer Quick Start](../docs/development.md) for complete documentation.
 
 ### Running the Application
 

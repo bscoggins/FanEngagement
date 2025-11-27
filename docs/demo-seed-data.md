@@ -128,27 +128,27 @@ Each organization has three proposals demonstrating different lifecycle states:
 
 ### Tech Innovators Proposals
 
-| Title | Status | Type | Quorum | Description |
-|-------|--------|------|--------|-------------|
-| Should we launch the new fan rewards program? | **Open** | General Governance | 25% | Vote on whether to implement a new loyalty rewards program |
-| Approve 2025 fan engagement budget | **Closed** | Budget / Finance | 20% | Vote to approve the proposed budget (completed with votes) |
-| Adopt new community guidelines | **Draft (Scheduled)** | General Governance | 30% | Future proposal - starts in 1 day |
+| Title | Status | Quorum | Description |
+|-------|--------|--------|-------------|
+| Should we launch the new fan rewards program? | **Open** | 25% | Vote on whether to implement a new loyalty rewards program |
+| Approve 2025 fan engagement budget | **Closed** | 20% | Vote to approve the proposed budget (completed with votes) |
+| Adopt new community guidelines | **Draft (Scheduled)** | 30% | Future proposal - starts in 1 day |
 
 ### Green Energy United Proposals
 
-| Title | Status | Type | Quorum | Description |
-|-------|--------|------|--------|-------------|
-| Solar panel installation for community center | **Open** | General Governance | 25% | Should we fund solar panel installation? |
-| Annual sustainability report publication | **Closed** | General Governance | 20% | Vote to approve and publish the annual report (completed with votes) |
-| Electric vehicle charging stations proposal | **Draft (Scheduled)** | General Governance | 25% | Future proposal - starts in 2 days |
+| Title | Status | Quorum | Description |
+|-------|--------|--------|-------------|
+| Solar panel installation for community center | **Open** | 25% | Should we fund solar panel installation? |
+| Annual sustainability report publication | **Closed** | 20% | Vote to approve and publish the annual report (completed with votes) |
+| Electric vehicle charging stations proposal | **Draft (Scheduled)** | 25% | Future proposal - starts in 2 days |
 
 ### City FC Supporters Trust Proposals
 
-| Title | Status | Type | Quorum | Description |
-|-------|--------|------|--------|-------------|
-| New season ticket pricing structure | **Open** | General Governance | 30% | Vote on the proposed new pricing structure |
-| Away travel subsidy program | **Closed** | General Governance | 20% | Vote to establish a subsidy program (completed with votes) |
-| Stadium naming rights consultation | **Draft (Scheduled)** | General Governance | 35% | Future proposal - starts in 3 days |
+| Title | Status | Quorum | Description |
+|-------|--------|--------|-------------|
+| New season ticket pricing structure | **Open** | 30% | Vote on the proposed new pricing structure |
+| Away travel subsidy program | **Closed** | 20% | Vote to establish a subsidy program (completed with votes) |
+| Stadium naming rights consultation | **Draft (Scheduled)** | 35% | Future proposal - starts in 3 days |
 
 ## Seeded Votes
 
@@ -166,14 +166,14 @@ The following proposals have pre-seeded votes to demonstrate voting functionalit
 - Carlos voted "Publish" (300 voting power)
 - Erika voted "Publish" (100 voting power)
 - Dana voted "Defer" (75 voting power)
-- **Winner:** Publish (400 total votes)
+- **Winner:** Publish (400 winning votes, 75 non-winning votes)
 - **Quorum Met:** Yes
 
 **City FC Supporters Trust - "Away travel subsidy program":**
 - Erika voted "Establish" (325 voting power)
 - Dana voted "Establish" (100 voting power)
 - Frank voted "Decline" (80 voting power)
-- **Winner:** Establish (505 total votes)
+- **Winner:** Establish (425 winning votes, 80 non-winning votes)
 - **Quorum Met:** Yes
 
 ### Open Proposals (partial voting for testing)

@@ -32,6 +32,12 @@ Body:
     - Update `copilot-instructions.md`
     - Update `copilot-coding-agent-instructions.md`
 
+## Future Improvements Log
+
+- Treat `docs/future-improvements.md` as the canonical backlog for "would be nice later" ideas that surface while working any task.
+- When capturing an idea, append a new `### <Idea Title>` subsection under **Ideas Backlog**, add a short description, and include bullet links or context.
+- If an idea gets implemented (by you or someone else), edit or remove its entry and note the PR/issue for traceability.
+
 ## Repository Overview
 
 - Solution: `backend/FanEngagement.sln`
