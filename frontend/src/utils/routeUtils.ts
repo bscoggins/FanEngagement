@@ -1,5 +1,5 @@
-import type { LoginResponse } from '../types/api';
-import type { MembershipWithOrganizationDto } from '../types/api';
+import type { LoginResponse, MembershipWithOrganizationDto } from '../types/api';
+import { getDefaultHomeRoute, type NavContext } from '../navigation';
 
 /**
  * Checks if the user has platform admin (GlobalAdmin) role.
@@ -14,6 +14,9 @@ export const isPlatformAdmin = (user: LoginResponse | null): boolean => {
 /**
  * Determines the default landing route for a user based on their role.
  * 
+ * This function uses the centralized navigation configuration to determine
+ * the appropriate home route for the user.
+ * 
  * - Platform admins (GlobalAdmin): Land on platform admin dashboard
  * - OrgAdmins (non-GlobalAdmin): Land on admin dashboard where they can manage their orgs
  * - Regular members: Land on member dashboard (/me/home)
@@ -26,21 +29,12 @@ export const getDefaultRouteForUser = (
   user: LoginResponse | null,
   memberships?: MembershipWithOrganizationDto[]
 ): string => {
-  if (!user) {
-    return '/login';
-  }
+  // Build nav context from user and memberships
+  const context: NavContext = {
+    isAuthenticated: !!user,
+    isPlatformAdmin: user?.role === 'Admin',
+    memberships: memberships || [],
+  };
 
-  // Platform admins (GlobalAdmin) go to platform admin dashboard
-  if (user.role === 'Admin') {
-    return '/platform-admin/dashboard';
-  }
-
-  // OrgAdmins (who are not GlobalAdmins) go to admin dashboard
-  // to manage their organizations
-  if (memberships && memberships.some(m => m.role === 'OrgAdmin')) {
-    return '/admin';
-  }
-
-  // Regular members go to member dashboard
-  return '/me/home';
+  return getDefaultHomeRoute(context);
 };

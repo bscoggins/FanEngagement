@@ -434,6 +434,122 @@ if (proposal.Status != ProposalStatus.Draft) {
     - `/admin/dev-tools` (GlobalAdmin only)
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
+### Centralized Navigation Configuration
+
+The frontend uses a centralized navigation configuration (`frontend/src/navigation/navConfig.ts`) to manage all navigation items across the application. This provides a single source of truth for navigation visibility and routing.
+
+#### Navigation Configuration Structure
+
+**Location:** `frontend/src/navigation/`
+
+**Key Files:**
+- `navConfig.ts` - Navigation item definitions and helper functions
+- `useNavigation.ts` - React hook for consuming navigation config
+- `index.ts` - Module exports
+
+#### NavItem Type Definition
+
+```typescript
+type NavItem = {
+  id: string;           // Unique identifier (e.g., 'home', 'manageMemberships')
+  label: string;        // Display text
+  path: string;         // Route path (supports :orgId placeholder)
+  roles?: NavRole[];    // Required roles: 'PlatformAdmin' | 'OrgAdmin' | 'Member'
+  scope?: NavScope;     // 'global' | 'org' | 'user'
+  order: number;        // Sort order (lower = higher priority)
+};
+```
+
+#### Scopes
+
+- **`user`**: Items available to all authenticated users (Home, My Account, My Organizations)
+- **`global`**: Platform-level admin items (Users, Organizations, Dev Tools)
+- **`org`**: Organization-scoped items shown only when an org is active (Manage Memberships, Share Types, Proposals)
+
+#### Role-Based Visibility
+
+| Scope | Regular Member | OrgAdmin | PlatformAdmin |
+|-------|---------------|----------|---------------|
+| `user` | ✅ | ✅ | ✅ |
+| `global` (admin items) | ❌ | Admin Dashboard only | ✅ All |
+| `org` (with active org) | ❌ | ✅ (if OrgAdmin for that org) | ✅ |
+
+#### Adding New Navigation Items
+
+1. **Define the item** in `navConfig.ts`:
+```typescript
+{
+  id: 'myNewFeature',
+  label: 'New Feature',
+  path: '/admin/organizations/:orgId/new-feature',
+  roles: ['PlatformAdmin', 'OrgAdmin'],  // Who can see it
+  scope: 'org',                          // org-scoped (requires active org)
+  order: 25,                             // Sort order
+}
+```
+
+2. **Use in layouts** - The `AdminLayout` and `PlatformAdminLayout` automatically pick up new items from the configuration.
+
+3. **For custom filtering**, use `getVisibleNavItems()`:
+```typescript
+import { getVisibleNavItems, getResolvedNavItem } from '../navigation';
+
+const items = getVisibleNavItems(navContext, { scope: 'org' });
+const resolvedItems = items.map(item => getResolvedNavItem(item, navContext));
+```
+
+#### Using the useNavigation Hook
+
+```typescript
+import { useNavigation } from '../navigation';
+
+const MyComponent = () => {
+  const { navItems, homeRoute, hasActiveOrg, isLoading } = useNavigation();
+
+  // navItems: Array of resolved NavItem with resolvedPath
+  // homeRoute: Appropriate home route based on user role
+  // hasActiveOrg: Boolean indicating if an org is selected
+  // isLoading: Boolean while permissions/memberships load
+
+  return (
+    <nav>
+      {navItems.map(item => (
+        <Link key={item.id} to={item.resolvedPath}>{item.label}</Link>
+      ))}
+    </nav>
+  );
+};
+```
+
+#### Home Route Logic
+
+The `getDefaultHomeRoute()` function determines where users land:
+
+- **Unauthenticated**: `/login`
+- **PlatformAdmin**: `/platform-admin/dashboard`
+- **OrgAdmin (non-PlatformAdmin)**: `/admin`
+- **Regular Member**: `/me/home`
+
+This same logic is used for:
+- Post-login redirection (`routeUtils.ts`)
+- The "← Home" link in admin layouts
+- The `home` nav item's resolved path
+
+#### Testing Navigation
+
+When adding new nav items, ensure you add tests in `navConfig.test.ts`:
+
+```typescript
+it('shows my new feature for OrgAdmins with active org', () => {
+  const context = createContext({
+    memberships: [createMembership({ role: 'OrgAdmin' })],
+    activeOrgId: 'org-1',
+  });
+  const items = getVisibleNavItems(context);
+  expect(items.find(i => i.id === 'myNewFeature')).toBeDefined();
+});
+```
+
 ### Member Dashboard
 
 The member dashboard (`/me/home`) is the default landing page for regular members. It provides a member-focused overview of user engagement across their organizations.
