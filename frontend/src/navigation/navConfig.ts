@@ -120,8 +120,8 @@ export const navItems: NavItem[] = [
 
   // Org Admin items - scoped to current organization
   {
-    id: 'manageOrgSettings',
-    label: 'Organization Settings',
+    id: 'orgOverview',
+    label: 'Overview',
     path: '/admin/organizations/:orgId/edit',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
@@ -129,7 +129,7 @@ export const navItems: NavItem[] = [
   },
   {
     id: 'manageMemberships',
-    label: 'Manage Memberships',
+    label: 'Memberships',
     path: '/admin/organizations/:orgId/memberships',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',

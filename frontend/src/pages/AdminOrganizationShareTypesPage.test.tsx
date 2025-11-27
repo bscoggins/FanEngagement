@@ -75,7 +75,7 @@ describe('AdminOrganizationShareTypesPage', () => {
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getByText('Manage Share Types')).toBeInTheDocument();
+      expect(screen.getByText('Share Types')).toBeInTheDocument();
     });
   });
 

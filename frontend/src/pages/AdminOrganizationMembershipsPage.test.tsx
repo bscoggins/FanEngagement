@@ -103,7 +103,7 @@ describe('AdminOrganizationMembershipsPage', () => {
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getByText('Manage Memberships')).toBeInTheDocument();
+      expect(screen.getByText('Memberships')).toBeInTheDocument();
     });
   });
 

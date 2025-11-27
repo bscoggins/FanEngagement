@@ -227,14 +227,21 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Manage Memberships')).toBeInTheDocument();
+        // Should see org-scoped navigation items (uses new labels)
+        expect(screen.getByText('Memberships')).toBeInTheDocument();
+        expect(screen.getByText('Share Types')).toBeInTheDocument();
+        expect(screen.getByText('Proposals')).toBeInTheDocument();
+        expect(screen.getByText('Webhook Events')).toBeInTheDocument();
+        expect(screen.getByText('Overview')).toBeInTheDocument();
       });
       
       // Should see org admin dashboard
       expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       
-      // Should see org section label
-      expect(screen.getByText('Test Org')).toBeInTheDocument();
+      // Should see org switcher with org name
+      expect(screen.getByTestId('admin-org-selector')).toBeInTheDocument();
+      // The org name appears in the dropdown option
+      expect(screen.getByRole('option', { name: /Test Org/ })).toBeInTheDocument();
     });
 
     it('home link navigates to admin for org admin', async () => {

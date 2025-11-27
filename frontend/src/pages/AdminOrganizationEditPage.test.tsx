@@ -50,7 +50,7 @@ describe('AdminOrganizationEditPage', () => {
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getByText('Edit Organization')).toBeInTheDocument();
+      expect(screen.getByText('Organization Overview')).toBeInTheDocument();
     });
   });
 
