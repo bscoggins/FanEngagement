@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { NotificationContainer } from '../components/NotificationContainer';
 import { AdminUserDetailPage } from './AdminUserDetailPage';
 import { usersApi } from '../api/usersApi';
 import { membershipsApi } from '../api/membershipsApi';
@@ -57,14 +59,17 @@ describe('AdminUserDetailPage', () => {
 
   const renderAdminUserDetailPage = (userId = 'user-1') => {
     return render(
-      <MemoryRouter initialEntries={[`/admin/users/${userId}`]}>
-        <AuthProvider>
-          <Routes>
-            <Route path="/admin/users/:userId" element={<AdminUserDetailPage />} />
-            <Route path="/admin/users" element={<div>Users List Page</div>} />
-          </Routes>
-        </AuthProvider>
-      </MemoryRouter>
+      <NotificationProvider>
+        <MemoryRouter initialEntries={[`/admin/users/${userId}`]}>
+          <NotificationContainer />
+          <AuthProvider>
+            <Routes>
+              <Route path="/admin/users/:userId" element={<AdminUserDetailPage />} />
+              <Route path="/admin/users" element={<div>Users List Page</div>} />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </NotificationProvider>
     );
   };
 
@@ -189,7 +194,7 @@ describe('AdminUserDetailPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    expect(screen.getByText('User not found')).toBeInTheDocument();
+    expect(screen.getByText('The requested resource was not found.')).toBeInTheDocument();
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
@@ -224,9 +229,9 @@ describe('AdminUserDetailPage', () => {
     // Submit the form
     await user.click(screen.getByRole('button', { name: /save changes/i }));
     
-    // Wait for error message
+    // Wait for error message (may appear in multiple places)
     await waitFor(() => {
-      expect(screen.getByText('Email already in use')).toBeInTheDocument();
+      expect(screen.getAllByText('Email already in use').length).toBeGreaterThan(0);
     });
   });
 

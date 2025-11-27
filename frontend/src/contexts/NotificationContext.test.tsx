@@ -59,46 +59,44 @@ describe('NotificationContext', () => {
 
   it('auto-removes notifications after timeout', async () => {
     vi.useFakeTimers();
-    try {
-      let notificationMethods: any;
+    let notificationMethods: any;
+    
+    function TestComponent() {
+      notificationMethods = useNotifications();
+      const { notifications } = useNotifications();
       
-      function TestComponent() {
-        notificationMethods = useNotifications();
-        const { notifications } = useNotifications();
-        
-        return (
-          <div>
-            {notifications.map(n => (
-              <div key={n.id}>{n.message}</div>
-            ))}
-          </div>
-        );
-      }
-
-      render(
-        <NotificationProvider>
-          <TestComponent />
-        </NotificationProvider>
+      return (
+        <div data-testid="notifications-container">
+          {notifications.map(n => (
+            <div key={n.id} data-testid={`notification-${n.id}`}>{n.message}</div>
+          ))}
+        </div>
       );
-
-      act(() => {
-        notificationMethods.showError('Error!');
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('Error!')).toBeInTheDocument();
-      });
-
-      await act(async () => {
-        vi.advanceTimersByTime(5000);
-        await new Promise(resolve => setTimeout(resolve, 0));
-      });
-
-      await waitFor(() => {
-        expect(screen.queryByText('Error!')).not.toBeInTheDocument();
-      });
-    } finally {
-      vi.useRealTimers();
     }
-  }, 10000); // Increase timeout for this test
+
+    render(
+      <NotificationProvider>
+        <TestComponent />
+      </NotificationProvider>
+    );
+
+    // Add a notification
+    act(() => {
+      notificationMethods.showError('Error!');
+    });
+
+    // Verify notification is present
+    const container = screen.getByTestId('notifications-container');
+    expect(container.textContent).toContain('Error!');
+
+    // Advance fake timers past the 5 second auto-removal
+    act(() => {
+      vi.advanceTimersByTime(5100);
+    });
+
+    // Verify notification was removed
+    expect(container.textContent).not.toContain('Error!');
+    
+    vi.useRealTimers();
+  });
 });

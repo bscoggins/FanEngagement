@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { NotificationContainer } from '../components/NotificationContainer';
 import { MyAccountPage } from './MyAccountPage';
 import { usersApi } from '../api/usersApi';
 
@@ -22,11 +24,14 @@ const renderWithAuth = (authUserData: any) => {
   localStorage.setItem('authUser', JSON.stringify(mockUser));
 
   return render(
-    <MemoryRouter>
-      <AuthProvider>
-        <MyAccountPage />
-      </AuthProvider>
-    </MemoryRouter>
+    <NotificationProvider>
+      <MemoryRouter>
+        <NotificationContainer />
+        <AuthProvider>
+          <MyAccountPage />
+        </AuthProvider>
+      </MemoryRouter>
+    </NotificationProvider>
   );
 };
 
@@ -142,7 +147,7 @@ describe('MyAccountPage', () => {
     await user.click(screen.getByRole('button', { name: /Save Changes/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Email already in use')).toBeInTheDocument();
+      expect(screen.getAllByText('Email already in use').length).toBeGreaterThan(0);
     });
   });
 
@@ -193,7 +198,7 @@ describe('MyAccountPage', () => {
 
     renderWithAuth(mockUser);
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText('Loading account...')).toBeInTheDocument();
   });
 
   it('displays error message when user fails to load', async () => {
@@ -210,7 +215,7 @@ describe('MyAccountPage', () => {
     renderWithAuth(mockUser);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load account information.')).toBeInTheDocument();
+      expect(screen.getByText('Failed to load')).toBeInTheDocument();
     });
   });
 });

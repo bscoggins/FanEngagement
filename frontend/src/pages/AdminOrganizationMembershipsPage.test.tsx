@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AdminOrganizationMembershipsPage } from './AdminOrganizationMembershipsPage';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { NotificationContainer } from '../components/NotificationContainer';
 import { membershipsApi } from '../api/membershipsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { usersApi } from '../api/usersApi';
@@ -87,11 +89,14 @@ describe('AdminOrganizationMembershipsPage', () => {
 
   const renderPage = (orgId = 'org-1') => {
     return render(
-      <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/memberships`]}>
-        <Routes>
-          <Route path="/admin/organizations/:orgId/memberships" element={<AdminOrganizationMembershipsPage />} />
-        </Routes>
-      </MemoryRouter>
+      <NotificationProvider>
+        <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/memberships`]}>
+          <NotificationContainer />
+          <Routes>
+            <Route path="/admin/organizations/:orgId/memberships" element={<AdminOrganizationMembershipsPage />} />
+          </Routes>
+        </MemoryRouter>
+      </NotificationProvider>
     );
   };
 
@@ -195,9 +200,9 @@ describe('AdminOrganizationMembershipsPage', () => {
   });
 
   it('displays error when adding duplicate membership', async () => {
-    vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValueOnce(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
+    vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
+    vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValue(mockMemberships);
+    vi.mocked(usersApi.getAll).mockResolvedValue(mockUsers);
     vi.mocked(membershipsApi.create).mockRejectedValueOnce({
       response: { status: 400, data: { message: 'User is already a member' } }
     });
@@ -221,8 +226,8 @@ describe('AdminOrganizationMembershipsPage', () => {
     fireEvent.click(submitButton);
     
     await waitFor(() => {
-      expect(screen.getByText(/user is already a member/i)).toBeInTheDocument();
-    });
+      expect(screen.getAllByText(/user is already a member/i).length).toBeGreaterThan(0);
+    }, { timeout: 3000 });
   });
 
   it('successfully removes a membership', async () => {
@@ -263,7 +268,7 @@ describe('AdminOrganizationMembershipsPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    expect(screen.getByText('No members found.')).toBeInTheDocument();
+    expect(screen.getByText(/No members found/i)).toBeInTheDocument();
   });
 
   it('filters available users to exclude current members', async () => {

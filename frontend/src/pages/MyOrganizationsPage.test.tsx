@@ -89,7 +89,7 @@ describe('MyOrganizationsPage', () => {
 
     renderWithAuth('user-1');
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText('Loading your organizations...')).toBeInTheDocument();
   });
 
   it('displays error message when memberships fail to load', async () => {
@@ -100,7 +100,7 @@ describe('MyOrganizationsPage', () => {
     renderWithAuth('user-1');
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load your organizations.')).toBeInTheDocument();
+      expect(screen.getByText('Network error. Please check your connection.')).toBeInTheDocument();
     });
   });
 
