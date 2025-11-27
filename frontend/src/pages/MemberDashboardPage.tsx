@@ -13,6 +13,34 @@ interface DashboardData {
   activeProposals: { proposal: Proposal; organizationName: string }[];
 }
 
+/**
+ * Determines which organization to highlight for the "Explore" button.
+ * If there are active proposals, returns the org with the most proposals.
+ * Otherwise, returns the first organization.
+ */
+const getTargetOrganization = (
+  memberships: MembershipWithOrganizationDto[],
+  activeProposals: { proposal: Proposal; organizationName: string }[]
+): MembershipWithOrganizationDto | null => {
+  if (memberships.length === 0) return null;
+  
+  let targetOrg = memberships[0];
+  
+  if (activeProposals.length > 0) {
+    const orgCounts = activeProposals.reduce((acc, { proposal }) => {
+      acc[proposal.organizationId] = (acc[proposal.organizationId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const [topOrgId] = Object.entries(orgCounts)
+      .sort(([, a], [, b]) => b - a)[0];
+    
+    targetOrg = memberships.find(m => m.organizationId === topOrgId) || targetOrg;
+  }
+  
+  return targetOrg;
+};
+
 export const MemberDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -216,22 +244,9 @@ export const MemberDashboardPage: React.FC = () => {
             </p>
           )}
           
-          {data?.memberships && data.memberships.length > 0 && (() => {
-            // Determine which organization to highlight
-            let targetOrg = data.memberships[0];
-            
-            // If there are active proposals, find the org with the most
-            if (data.activeProposals && data.activeProposals.length > 0) {
-              const orgCounts = data.activeProposals.reduce((acc, { proposal }) => {
-                acc[proposal.organizationId] = (acc[proposal.organizationId] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>);
-              
-              const [topOrgId] = Object.entries(orgCounts)
-                .sort(([, a], [, b]) => b - a)[0];
-              
-              targetOrg = data.memberships.find(m => m.organizationId === topOrgId) || targetOrg;
-            }
+          {(() => {
+            const targetOrg = getTargetOrganization(data?.memberships || [], data?.activeProposals || []);
+            if (!targetOrg) return null;
             
             return (
               <Link

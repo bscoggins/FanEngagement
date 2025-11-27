@@ -253,4 +253,113 @@ describe('MemberDashboardPage', () => {
       expect(screen.getByRole('link', { name: /manage account/i })).toBeInTheDocument();
     });
   });
+
+  it('renders "Explore Organization" button with org having most proposals', async () => {
+    setupAuthenticatedUser();
+    const mockMemberships = [
+      {
+        id: 'membership-1',
+        organizationId: 'org-1',
+        organizationName: 'Org One',
+        userId: 'user-123',
+        role: 'Member' as const,
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'membership-2',
+        organizationId: 'org-2',
+        organizationName: 'Org Two',
+        userId: 'user-123',
+        role: 'Member' as const,
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    ];
+    
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
+    
+    // Org-2 has more proposals, so it should be the target
+    vi.mocked(proposalsApi.getByOrganization).mockImplementation(async (orgId) => {
+      if (orgId === 'org-2') {
+        return [
+          {
+            id: 'proposal-1',
+            organizationId: 'org-2',
+            title: 'Proposal 1',
+            status: 'Open' as const,
+            createdByUserId: 'user-456',
+            createdAt: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'proposal-2',
+            organizationId: 'org-2',
+            title: 'Proposal 2',
+            status: 'Open' as const,
+            createdByUserId: 'user-456',
+            createdAt: '2024-01-01T00:00:00Z',
+          },
+        ];
+      }
+      return [];
+    });
+
+    renderDashboard();
+
+    await waitFor(() => {
+      const exploreButton = screen.getByTestId('explore-org-button');
+      expect(exploreButton).toHaveTextContent('Explore Org Two');
+      expect(exploreButton).toHaveAttribute('href', '/me/organizations/org-2');
+    });
+  });
+
+  it('handles partial failure when fetching proposals from one organization', async () => {
+    setupAuthenticatedUser();
+    const mockMemberships = [
+      {
+        id: 'membership-1',
+        organizationId: 'org-1',
+        organizationName: 'Org One',
+        userId: 'user-123',
+        role: 'Member' as const,
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'membership-2',
+        organizationId: 'org-2',
+        organizationName: 'Org Two',
+        userId: 'user-123',
+        role: 'Member' as const,
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    ];
+    
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
+    
+    // Org 1 fails, Org 2 succeeds
+    vi.mocked(proposalsApi.getByOrganization).mockImplementation(async (orgId) => {
+      if (orgId === 'org-1') {
+        throw new Error('Network error for org-1');
+      }
+      return [
+        {
+          id: 'proposal-1',
+          organizationId: 'org-2',
+          title: 'Proposal from Org Two',
+          status: 'Open' as const,
+          createdByUserId: 'user-456',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+    });
+
+    renderDashboard();
+
+    // Should still render successfully with proposals from org-2
+    await waitFor(() => {
+      expect(screen.getByText('Proposal from Org Two')).toBeInTheDocument();
+    });
+    
+    // Should show both organizations in the organizations card
+    const orgLinks = screen.getAllByRole('link', { name: /Org One|Org Two/ });
+    expect(orgLinks.length).toBeGreaterThanOrEqual(2);
+  });
 });

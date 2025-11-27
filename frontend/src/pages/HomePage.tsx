@@ -35,16 +35,10 @@ export const HomePage: React.FC = () => {
       <h2>Welcome to FanEngagement</h2>
       <p>A multi-tenant fan governance platform where organizations issue share types to users for voting on proposals.</p>
       
-      {!isAuthenticated ? (
+      {!isAuthenticated && (
         <div style={{ marginTop: '2rem' }}>
           <Link to="/login" style={{ color: '#0066cc', fontSize: '1.1rem' }}>
             Get started by logging in →
-          </Link>
-        </div>
-      ) : (
-        <div style={{ marginTop: '2rem' }}>
-          <Link to="/me/home" style={{ color: '#0066cc', fontSize: '1.1rem' }}>
-            Go to Dashboard →
           </Link>
         </div>
       )}
