@@ -4,7 +4,6 @@ import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
-import type { MembershipWithOrganizationDto } from '../types/api';
 import './AdminLayout.css';
 
 export const AdminLayout: React.FC = () => {
@@ -59,7 +58,8 @@ export const AdminLayout: React.FC = () => {
       });
 
       // Navigate based on role in the new org
-      if (isOrgAdminForOrg(membership.organizationId)) {
+      // Use direct membership role check since we already have the membership object
+      if (isAdmin || membership.role === 'OrgAdmin') {
         // Navigate to org admin overview
         navigate(`/admin/organizations/${membership.organizationId}/edit`);
       } else {
@@ -67,7 +67,7 @@ export const AdminLayout: React.FC = () => {
         navigate(`/me/organizations/${membership.organizationId}`);
       }
     }
-  }, [orgMemberships, setActiveOrg, isOrgAdminForOrg, navigate]);
+  }, [orgMemberships, setActiveOrg, isAdmin, navigate]);
 
   // Listen for auth:logout events from the API client
   useEffect(() => {
@@ -172,7 +172,7 @@ export const AdminLayout: React.FC = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    {orgMemberships.map((membership: MembershipWithOrganizationDto) => (
+                    {orgMemberships.map((membership) => (
                       <option key={membership.organizationId} value={membership.organizationId}>
                         {membership.organizationName} ({membership.role === 'OrgAdmin' ? 'Admin' : 'Member'})
                       </option>
