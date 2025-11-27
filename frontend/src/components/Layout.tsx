@@ -10,7 +10,8 @@ export const Layout: React.FC = () => {
   const { isGlobalAdmin, canAccessAdminArea, isLoading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
 
-  // Show Admin link only when permissions are loaded and user can access admin area
+  // Show Admin link only when permissions are loaded to avoid flash of incorrect visibility
+  // (the Admin link visibility depends on checking organization memberships which are fetched async)
   const showAdminLink = !permissionsLoading && canAccessAdminArea();
 
   // Listen for auth:logout events from the API client
