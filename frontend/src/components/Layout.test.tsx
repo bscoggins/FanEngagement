@@ -184,7 +184,7 @@ describe('Layout', () => {
   });
 
   describe('Navigation visibility for PlatformAdmin (GlobalAdmin) users', () => {
-    it('shows both Users and Admin links for PlatformAdmin', async () => {
+    it('shows Platform Admin link for PlatformAdmin', async () => {
       renderLayout({ isAuthenticated: true, role: 'Admin', email: 'admin@example.com' }, []);
 
       // Wait for permissions to load
@@ -192,16 +192,15 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
-      // Should see all nav items
+      // Should see Platform Admin link and other nav items
       await waitFor(() => {
         expect(screen.getByRole('link', { name: /my account/i })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /my organizations/i })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /^users$/i })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /^admin$/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /platform admin/i })).toBeInTheDocument();
       });
     });
 
-    it('shows Users link only for PlatformAdmin', async () => {
+    it('does NOT show regular Admin link when Platform Admin link is shown', async () => {
       renderLayout({ isAuthenticated: true, role: 'Admin' }, []);
 
       // Wait for permissions to load
@@ -209,9 +208,10 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
-      // Users link should be visible for Admin
+      // Platform Admin link should be visible, regular Admin link should not
       await waitFor(() => {
-        expect(screen.getByRole('link', { name: /^users$/i })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /platform admin/i })).toBeInTheDocument();
+        expect(screen.queryByRole('link', { name: /^admin$/i })).not.toBeInTheDocument();
       });
     });
   });
@@ -228,13 +228,11 @@ describe('Layout', () => {
       await waitFor(() => {
         const myAccountLink = screen.getByRole('link', { name: /my account/i });
         const myOrgsLink = screen.getByRole('link', { name: /my organizations/i });
-        const usersLink = screen.getByRole('link', { name: /^users$/i });
-        const adminLink = screen.getByRole('link', { name: /^admin$/i });
+        const platformAdminLink = screen.getByRole('link', { name: /platform admin/i });
 
         expect(myAccountLink).toHaveAttribute('href', '/me');
         expect(myOrgsLink).toHaveAttribute('href', '/me/organizations');
-        expect(usersLink).toHaveAttribute('href', '/users');
-        expect(adminLink).toHaveAttribute('href', '/admin');
+        expect(platformAdminLink).toHaveAttribute('href', '/platform-admin/dashboard');
       });
     });
   });

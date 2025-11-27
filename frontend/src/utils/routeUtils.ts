@@ -2,9 +2,19 @@ import type { LoginResponse } from '../types/api';
 import type { MembershipWithOrganizationDto } from '../types/api';
 
 /**
+ * Checks if the user has platform admin (GlobalAdmin) role.
+ * 
+ * @param user - The logged-in user from LoginResponse
+ * @returns true if the user is a platform admin
+ */
+export const isPlatformAdmin = (user: LoginResponse | null): boolean => {
+  return user?.role === 'Admin';
+};
+
+/**
  * Determines the default landing route for a user based on their role.
  * 
- * - Platform admins (GlobalAdmin): Land on admin dashboard
+ * - Platform admins (GlobalAdmin): Land on platform admin dashboard
  * - OrgAdmins (non-GlobalAdmin): Land on admin dashboard where they can manage their orgs
  * - Regular members: Land on member dashboard (/me/home)
  * 
@@ -20,9 +30,9 @@ export const getDefaultRouteForUser = (
     return '/login';
   }
 
-  // Platform admins (GlobalAdmin) go to admin dashboard
+  // Platform admins (GlobalAdmin) go to platform admin dashboard
   if (user.role === 'Admin') {
-    return '/admin';
+    return '/platform-admin/dashboard';
   }
 
   // OrgAdmins (who are not GlobalAdmins) go to admin dashboard

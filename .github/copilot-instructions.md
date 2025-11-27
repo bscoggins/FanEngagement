@@ -393,7 +393,7 @@ if (proposal.Status != ProposalStatus.Draft) {
 - **Routes**: Add to `frontend/src/routes/` and corresponding page components in `frontend/src/pages/`.
 - **API clients**: Add/update service modules in `frontend/src/api/` using the shared `apiClient`.
   - Available API clients: `usersApi`, `authApi`, `adminApi`, `membershipsApi`, `organizationsApi`, `shareTypesApi`, `proposalsApi`, `shareBalancesApi`
-- **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages.
+- **Auth**: Use `AuthContext` and `ProtectedRoute` for protected pages; use `AdminRoute` for admin-only pages; use `PlatformAdminRoute` for platform admin-only pages.
 - **User Self-Service Area**: User routes at `/me` for authenticated users (non-admin). Uses `ProtectedRoute`.
   - User routes:
     - `/me` (account page - view/edit profile)
@@ -401,24 +401,27 @@ if (proposal.Status != ProposalStatus.Draft) {
     - `/me/organizations` (list user's organization memberships)
     - `/me/organizations/:orgId` (view org details, share balances, active proposals)
     - `/me/proposals/:proposalId` (view proposal, cast vote, see results)
-- **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Only users with Admin role can access.
+- **Platform Admin Area**: Platform admin routes at `/platform-admin` use `PlatformAdminLayout` with sidebar navigation. Only users with Admin role (GlobalAdmin) can access.
+  - Platform Admin routes:
+    - `/platform-admin/dashboard` (platform overview - default landing for GlobalAdmins)
+- **Admin Area**: Admin routes at `/admin` use a separate `AdminLayout` with sidebar navigation. Users with Admin role OR OrgAdmin role can access the layout, but individual routes have specific requirements.
   - Admin routes: 
-    - `/admin` (dashboard)
-    - `/admin/users` (user list)
-    - `/admin/users/:userId` (user detail/edit)
-    - `/admin/organizations` (organizations list)
-    - `/admin/organizations/:orgId/edit` (edit organization)
-    - `/admin/organizations/:orgId/memberships` (manage organization memberships)
-    - `/admin/organizations/:orgId/share-types` (manage organization share types)
-    - `/admin/organizations/:orgId/proposals` (list proposals for organization)
-    - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results)
-    - `/admin/organizations/:orgId/webhook-events` (monitor webhook delivery events, retry failed events)
-    - `/admin/dev-tools`
+    - `/admin` (dashboard - shows org list for OrgAdmins, platform shortcuts for GlobalAdmins)
+    - `/admin/users` (user list - GlobalAdmin only)
+    - `/admin/users/:userId` (user detail/edit - GlobalAdmin only)
+    - `/admin/organizations` (organizations list - GlobalAdmin only)
+    - `/admin/organizations/:orgId/edit` (edit organization - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/memberships` (manage organization memberships - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/share-types` (manage organization share types - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/proposals` (list proposals for organization - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/webhook-events` (monitor webhook delivery events, retry failed events - OrgAdmin or GlobalAdmin)
+    - `/admin/dev-tools` (GlobalAdmin only)
 - **Env**: Ensure `VITE_API_BASE_URL` points to the correct API for your environment.
 
 ### Member Dashboard
 
-The member dashboard (`/me/home`) is the default landing page for non-platform-admin users. It provides a member-focused overview of user engagement across their organizations.
+The member dashboard (`/me/home`) is the default landing page for regular members. It provides a member-focused overview of user engagement across their organizations.
 
 #### Features
 
@@ -430,19 +433,58 @@ The member dashboard (`/me/home`) is the default landing page for non-platform-a
 #### Role-Aware Routing
 
 After login, users are redirected based on their role:
-- **Platform Admins (GlobalAdmin)**: Redirect to `/admin` (admin dashboard)
-- **Organization Admins (OrgAdmin)**: Redirect to `/admin` (can manage their orgs from there)
+- **Platform Admins (GlobalAdmin)**: Redirect to `/platform-admin/dashboard` (platform admin dashboard)
+- **Organization Admins (OrgAdmin)**: Redirect to `/admin` (org admin dashboard to manage their orgs)
 - **Regular Members**: Redirect to `/me/home` (member dashboard)
 
 The routing logic is implemented in `frontend/src/utils/routeUtils.ts`:
 
 ```typescript
-import { getDefaultRouteForUser } from '../utils/routeUtils';
+import { getDefaultRouteForUser, isPlatformAdmin } from '../utils/routeUtils';
+
+// Check if user is a platform admin
+if (isPlatformAdmin(user)) {
+  // Show platform-level admin features
+}
 
 // Get default route after login
 const route = getDefaultRouteForUser(user, memberships);
 navigate(route);
 ```
+
+### Platform Admin Dashboard
+
+The platform admin dashboard (`/platform-admin/dashboard`) is the default landing page for platform administrators (GlobalAdmin). It provides a platform-wide overview and quick access to management tools.
+
+#### Features
+
+- **Platform Overview Heading**: Clear indication that this is the platform admin area
+- **Statistics Cards**:
+  - Total Users count
+  - Total Organizations count
+  - Active Proposals count (platform-wide)
+  - Recent Webhook Failures count
+- **Quick Action Cards**:
+  - Manage Users (links to `/admin/users`)
+  - Manage Organizations (links to `/admin/organizations`)
+  - Dev Tools (links to `/admin/dev-tools`)
+- **Platform Admin Info Banner**: Reminder about platform admin privileges
+
+#### Access Control
+
+- Protected by `PlatformAdminRoute` guard (requires GlobalAdmin role)
+- Non-platform admins attempting to access `/platform-admin/*` are redirected to `/me/home`
+- Unauthenticated users are redirected to `/login`
+
+#### Navigation
+
+Platform admins see a "Platform Admin" link in the top navigation instead of the regular "Admin" link. The platform admin layout (`PlatformAdminLayout`) includes sidebar navigation to:
+- Dashboard
+- Users
+- Organizations
+- Dev Tools
+
+### Member Dashboard (continued)
 
 #### Empty States
 
@@ -545,8 +587,8 @@ The main navigation (`Layout.tsx`) hides unauthorized menu items based on user r
 | Login | ✅ | - | - | - |
 | My Account | - | ✅ | ✅ | ✅ |
 | My Organizations | - | ✅ | ✅ | ✅ |
-| Users | - | ❌ | ❌ | ✅ |
-| Admin | - | ❌ | ✅ | ✅ |
+| Platform Admin | - | ❌ | ❌ | ✅ |
+| Admin | - | ❌ | ✅ | ❌ (shows Platform Admin instead) |
 | Organization Selector | - | ✅ (if multiple orgs) | ✅ (if multiple orgs) | ✅ (if multiple orgs) |
 
 **Helper Functions:**
@@ -563,22 +605,22 @@ const {
 } = usePermissions();
 
 // In navigation:
-{isGlobalAdmin() && <Link to="/users">Users</Link>}
-{!isLoading && canAccessAdminArea() && <Link to="/admin">Admin</Link>}
+{isGlobalAdmin() && <Link to="/platform-admin/dashboard">Platform Admin</Link>}
+{canAccessAdminArea() && !isGlobalAdmin() && <Link to="/admin">Admin</Link>}
 ```
 
 **Key Rules:**
-1. **Users link**: Only visible to PlatformAdmins (GlobalAdmins)
-2. **Admin link**: Visible to PlatformAdmins AND users who are OrgAdmin in at least one organization
+1. **Platform Admin link**: Only visible to PlatformAdmins (GlobalAdmins) - links to `/platform-admin/dashboard`
+2. **Admin link**: Visible to OrgAdmins (but NOT PlatformAdmins, who see Platform Admin link instead)
 3. **My Account/My Organizations**: Visible to all authenticated users
 4. **Organization Selector**: Only shown when user belongs to multiple organizations
 
 #### UI Permission Indicators
 
-- **Platform Admin Badge**: Red "Platform Admin" badge shown in AdminLayout header for GlobalAdmins
+- **Platform Admin Badge**: Red "Platform Admin" badge shown in PlatformAdminLayout header for GlobalAdmins
 - **Org Admin Badge**: Blue "Org Admin" badge shown on organization pages for OrgAdmins
 - **Admin Action Links**: OrgAdmins see admin action quick links on MyOrganizationPage
-- **Conditional Navigation**: AdminLayout only shows Users/Organizations/Dev Tools nav for GlobalAdmins
+- **Conditional Navigation**: PlatformAdminLayout shows Users/Organizations/Dev Tools nav for GlobalAdmins
 
 #### Backend Authorization
 

@@ -873,21 +873,26 @@ When implementing a frontend feature:
 1. Routes & Pages
    - Add/update route in `frontend/src/routes/`.
    - Add/update page components in `frontend/src/pages/` and shared components in `frontend/src/components/`.
-   - For admin features, use the `/admin` route tree with `AdminLayout` and `AdminRoute` for access control.
+   - For platform admin features, use the `/platform-admin` route tree with `PlatformAdminLayout` and `PlatformAdminRoute` for access control.
+   - Current platform admin routes:
+    - `/platform-admin/dashboard` (platform overview - default landing for GlobalAdmins)
+   - For org admin features, use the `/admin` route tree with `AdminLayout` and `AdminRoute` or `OrgAdminRoute` for access control.
    - Current admin routes:
     - `/admin` (dashboard)
-    - `/admin/users` (user list)
-    - `/admin/users/:userId` (user detail/edit)
-    - `/admin/organizations` (organizations list)
-    - `/admin/organizations/:orgId/edit` (edit organization)
-    - `/admin/organizations/:orgId/memberships` (manage organization memberships)
-    - `/admin/organizations/:orgId/share-types` (manage organization share types)
-    - `/admin/organizations/:orgId/proposals` (list proposals for organization)
-    - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results)
-    - `/admin/dev-tools`
+    - `/admin/users` (user list - GlobalAdmin only)
+    - `/admin/users/:userId` (user detail/edit - GlobalAdmin only)
+    - `/admin/organizations` (organizations list - GlobalAdmin only)
+    - `/admin/organizations/:orgId/edit` (edit organization - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/memberships` (manage organization memberships - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/share-types` (manage organization share types - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/proposals` (list proposals for organization - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/proposals/:proposalId` (view/edit proposal, manage options, view results - OrgAdmin or GlobalAdmin)
+    - `/admin/organizations/:orgId/webhook-events` (monitor webhook delivery events - OrgAdmin or GlobalAdmin)
+    - `/admin/dev-tools` (GlobalAdmin only)
    - For user self-service features, use the `/me` route tree with `ProtectedRoute` (not AdminRoute).
    - Current user self-service routes:
     - `/me` (account page - view/edit profile)
+    - `/me/home` (member dashboard - landing page for non-admin users)
     - `/me/organizations` (list user's organization memberships)
     - `/me/organizations/:orgId` (view org details, share balances, active proposals)
     - `/me/proposals/:proposalId` (view proposal, cast vote, see results)
@@ -897,8 +902,11 @@ When implementing a frontend feature:
    - Ensure backend endpoints exist and are documented.
 3. Auth
    - Use `AuthContext` and `ProtectedRoute` for protected pages.
-   - Use `AdminRoute` for admin-only pages (checks both authentication and Admin role).
-   - Admin navigation link appears in main layout only for users with Admin role.
+   - Use `PlatformAdminRoute` for platform admin-only pages (checks both authentication and GlobalAdmin role).
+   - Use `AdminRoute` for admin-only pages (checks authentication and Admin or OrgAdmin role).
+   - Use `OrgAdminRoute` for org-scoped admin pages (checks authentication and OrgAdmin role for specific org).
+   - Platform Admin navigation link appears in main layout only for users with GlobalAdmin role.
+   - Admin navigation link appears for OrgAdmins (but not for GlobalAdmins who see Platform Admin instead).
    - User self-service links (My Account, My Organizations) appear for all authenticated users.
 4. Env
    - Ensure `VITE_API_BASE_URL` is set appropriately for dev/prod.
@@ -2002,11 +2010,11 @@ When adding new navigation items to the top navigation (`Layout.tsx`), you MUST 
 
 ### Navigation Item Types
 
-1. **Platform-level items** (visible only to GlobalAdmins):
-   - Users management (`/users`)
+1. **Platform Admin items** (visible only to GlobalAdmins):
+   - Platform Admin link (`/platform-admin/dashboard`)
    - Any new platform-wide admin features
 
-2. **Admin area items** (visible to GlobalAdmins AND OrgAdmins):
+2. **Admin area items** (visible to OrgAdmins only, NOT GlobalAdmins who see Platform Admin instead):
    - Admin dashboard link (`/admin`)
    - Any new org-scoped admin features
 
@@ -2027,17 +2035,17 @@ When adding a new nav item, follow these steps:
    ```typescript
    const { isGlobalAdmin, canAccessAdminArea } = usePermissions();
    
-   // For platform-level items
-   {isGlobalAdmin() && <Link to="/users">Users</Link>}
+   // For platform admin items (GlobalAdmin only)
+   {isGlobalAdmin() && <Link to="/platform-admin/dashboard">Platform Admin</Link>}
    
-   // For admin area items
-   {canAccessAdminArea() && <Link to="/admin">Admin</Link>}
+   // For org admin items (OrgAdmin but not GlobalAdmin)
+   {canAccessAdminArea() && !isGlobalAdmin() && <Link to="/admin">Admin</Link>}
    ```
 
 3. **Add tests** in `Layout.test.tsx` verifying:
    - Regular members do NOT see the item (if restricted)
    - OrgAdmins see/don't see based on rules
-   - GlobalAdmins see the item (if admin-only)
+   - GlobalAdmins see Platform Admin link instead of Admin link
 
 4. **Document in PR description** the visibility rules for the new item
 
@@ -2049,9 +2057,9 @@ The `usePermissions()` hook provides these navigation-specific helpers:
 
 | Function | Description |
 |----------|-------------|
-| `isGlobalAdmin()` | True if user has Admin role (for platform-level items) |
+| `isGlobalAdmin()` | True if user has Admin role (for platform admin items) |
 | `hasAnyOrgAdminRole()` | True if user is OrgAdmin in any organization |
-| `canAccessAdminArea()` | True if GlobalAdmin OR OrgAdmin (for Admin link) |
+| `canAccessAdminArea()` | True if GlobalAdmin OR OrgAdmin (for admin area access) |
 
 ### Backend Authorization Alignment
 
