@@ -40,6 +40,29 @@ if [[ "$api_ready" == false ]]; then
   exit 1
 fi
 
+# Reset dev data to ensure seed credentials/passwords match documentation
+echo "Resetting development data to baseline..."
+LOGIN_PAYLOAD='{"email":"admin@example.com","password":"Admin123!"}'
+LOGIN_RESPONSE=$(curl -s -X POST "http://localhost:8080/auth/login" -H 'Content-Type: application/json' -d "$LOGIN_PAYLOAD")
+
+TOKEN=""
+if command -v jq >/dev/null 2>&1; then
+  TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.token // empty')
+else
+  TOKEN=$(echo "$LOGIN_RESPONSE" | sed -n 's/.*"token"\s*:\s*"\([^"]*\)".*/\1/p')
+fi
+
+if [[ -z "$TOKEN" ]]; then
+  echo "Warning: Could not parse token for dev data reset. Continuing without reset." >&2
+else
+  RESET_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:8080/admin/reset-dev-data" -H "Authorization: Bearer $TOKEN")
+  if [[ "$RESET_STATUS" == "200" ]]; then
+    echo "Development data reset complete."
+  else
+    echo "Warning: reset-dev-data returned status $RESET_STATUS" >&2
+  fi
+fi
+
 echo "Waiting for frontend to become ready..."
 frontend_ready=false
 for attempt in {1..30}; do

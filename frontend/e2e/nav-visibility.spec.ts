@@ -1,9 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
+import { loginViaApi, seedDevData } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
 const MEMBER_EMAIL = 'alice@example.com';
-const MEMBER_PASSWORD = 'Password123!';
+const MEMBER_PASSWORD = 'UserDemo1!';
 
 async function loginThroughUi(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -15,6 +16,11 @@ async function loginThroughUi(page: Page, email: string, password: string) {
 }
 
 test.describe('Top navigation visibility by role', () => {
+  test.beforeAll(async ({ request }) => {
+    const { token } = await loginViaApi(request, ADMIN_EMAIL, ADMIN_PASSWORD);
+    await seedDevData(request, token);
+  });
+
   test.beforeEach(async ({ page }) => {
     // Ensure clean auth state
     await page.goto('/login');
@@ -55,7 +61,7 @@ test.describe('Top navigation visibility by role', () => {
   });
 
   test('OrgAdmin (non-platform) can access /admin but not Platform Admin Dashboard', async ({ page }) => {
-    // alice@example.com is seeded as OrgAdmin for Tech Corp
+    // alice@example.com is seeded as OrgAdmin for Tech Innovators
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     
     // OrgAdmins land on /admin and should see the admin dashboard

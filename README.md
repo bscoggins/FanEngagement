@@ -104,6 +104,20 @@ This creates:
 - 6 regular user accounts with various organization memberships
 - 3 organizations with share types, proposals, and votes
 
+Quick reference for the seeded credentials:
+
+| Type | Email | Password | Notes |
+|------|-------|----------|-------|
+| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` | Platform superuser |
+| Platform Admin | `platform_admin@fanengagement.dev` | `PlatAdm1n!` | Secondary admin |
+| Default Admin | `admin@example.com` | `Admin123!` | Ensured automatically in non-production |
+| Org Admin | `alice@example.com` | `UserDemo1!` | Tech Innovators org admin |
+| Org Admin | `carlos@demo.co` | `UserDemo2!` | Green Energy United org admin |
+| Org Admin | `erika@cityfc.support` | `UserDemo3!` | Green Energy United + City FC org admin |
+| Member | `bob@abefroman.net` | `UserDemo1!` | Tech Innovators member |
+| Member | `dana@sample.io` | `UserDemo2!` | Member of Green Energy United + City FC |
+| Member | `frank@cityfc.support` | `UserDemo3!` | City FC Supporters Trust member |
+
 See [docs/demo-seed-data.md](docs/demo-seed-data.md) for complete details on all seeded accounts and test data.
 
 ## Run the Frontend
@@ -115,7 +129,7 @@ cd frontend
 npm install
 ```
 
-2. Start the development server:
+1. Start the development server:
 
 ```bash
 npm run dev

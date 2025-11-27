@@ -240,7 +240,7 @@ docker compose down -v
   # ensure VITE_API_BASE_URL points to your API (defaults to /api with Vite proxy to http://localhost:5049)
   npm run e2e
   ```
-- The suite seeds dev data through `POST /admin/seed-dev-data` using the default admin (`admin@example.com` / `Admin123!`) and member accounts (e.g., `alice@example.com` / `Password123!`) before creating test-specific orgs/proposals. When extending E2E coverage, prefer unique test data (timestamps) to avoid cross-test collisions.
+- The suite seeds dev data through `POST /admin/seed-dev-data` using the default admin (`admin@example.com` / `Admin123!`) and member accounts (e.g., `alice@example.com` / `UserDemo1!`) before creating test-specific orgs/proposals. When extending E2E coverage, prefer unique test data (timestamps) to avoid cross-test collisions.
 
 **Bare dotnet:**
 ```bash
