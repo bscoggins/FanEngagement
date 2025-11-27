@@ -11,8 +11,8 @@ async function loginThroughUi(page: Page, email: string, password: string) {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Log In' }).click();
-  // Wait for redirect to complete (admins go to /admin, members go to /me/home)
-  await page.waitForURL(/\/(admin|me\/home)/);
+  // Wait for redirect to complete (platform admins go to /platform-admin, org admins go to /admin, members go to /me/home)
+  await page.waitForURL(/\/(platform-admin|admin|me\/home)/);
 }
 
 async function clickWithConfirm(page: Page, buttonName: string | RegExp) {
