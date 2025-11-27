@@ -407,4 +407,23 @@ Provide clear scope, requirements, constraints, and testing needs.
 
 ---
 
-This guide is the unified operational reference for the GitHub Copilot Coding Agent across all tasks in this repository.
+## 23. Centralized Navigation Configuration
+
+### 23.1 Core Rules
+
+- **Single Source of Truth**: Define all navigation items in `frontend/src/navigation/navConfig.ts`. Never hardcode sidebar links.
+- **Layout Integration**: Rely on `AdminLayout` and `PlatformAdminLayout` to automatically render items from config.
+- **Role-Based Visibility**: Control access via `roles` (PlatformAdmin, OrgAdmin, Member) and `scope` (global, org, user).
+
+### 23.2 Implementation Patterns
+
+- **Adding Items**: Add `NavItem` objects to `navConfig.ts` with unique `id`, `path`, and `order`.
+- **Consuming Config**: Use `useNavigation()` hook to access resolved items and home routes.
+- **Filtering**: Use `getVisibleNavItems(context, filter)` for custom lists.
+- **Testing**: Add visibility tests in `navConfig.test.ts` for every new item.
+
+### 23.3 Routing Logic
+
+- **Home Route**: Use `getDefaultHomeRoute()` for landing logic (PlatformAdmin → `/platform-admin/dashboard`, OrgAdmin → `/admin`, Member → `/me/home`).
+- **Redirects**: Ensure `routeUtils.ts` logic mirrors navigation config for post-login redirects.
+

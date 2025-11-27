@@ -1,4 +1,3 @@
-
 # GitHub Copilot Chat — Project Instructions (FanEngagement)
 
 These instructions tell GitHub Copilot **how to behave inside VS Code** when assisting with this repository.  
@@ -61,7 +60,7 @@ Copilot Chat must:
 
 **Example response:**
 
-```
+```text
 Here is the plan:
 1. Modify X file to add Y
 2. Update Z service method
@@ -142,6 +141,7 @@ Copilot must ask clarifying questions when:
 ## 10. Summary
 
 This file defines **how GitHub Copilot Chat behaves** inside VS Code:  
+
 - Follow global rules  
 - Use minimal diffs  
 - Confirm before editing  

@@ -35,6 +35,7 @@ describe('HomePage', () => {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<div>Login Page</div>} />
               <Route path="/admin" element={<div>Admin Page</div>} />
+              <Route path="/platform-admin/dashboard" element={<div>Platform Admin Dashboard</div>} />
               <Route path="/me/home" element={<div>Member Dashboard</div>} />
             </Routes>
           </AuthProvider>
@@ -57,7 +58,7 @@ describe('HomePage', () => {
     expect(loginLink).toHaveAttribute('href', '/login');
   });
 
-  it('redirects authenticated platform admin to /admin', async () => {
+  it('redirects authenticated platform admin to /platform-admin/dashboard', async () => {
     // Simulate existing auth session for admin user
     localStorage.setItem('authToken', 'admin-token');
     localStorage.setItem('authUser', JSON.stringify({
@@ -70,9 +71,9 @@ describe('HomePage', () => {
 
     renderHomePage();
 
-    // Should redirect to admin dashboard
+    // Should redirect to platform admin dashboard
     await waitFor(() => {
-      expect(screen.getByText('Admin Page')).toBeInTheDocument();
+      expect(screen.getByText('Platform Admin Dashboard')).toBeInTheDocument();
     });
   });
 
