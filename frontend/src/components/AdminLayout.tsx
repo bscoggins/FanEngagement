@@ -54,6 +54,11 @@ export const AdminLayout: React.FC = () => {
       <div className="admin-container">
         <aside className="admin-sidebar">
           <nav className="admin-nav">
+            {isGlobalAdmin() && (
+              <Link to="/platform-admin/dashboard" className="admin-nav-link">
+                Platform Overview
+              </Link>
+            )}
             <Link to="/admin" className="admin-nav-link">
               Dashboard
             </Link>

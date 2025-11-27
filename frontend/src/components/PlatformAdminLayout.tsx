@@ -51,7 +51,10 @@ export const PlatformAdminLayout: React.FC = () => {
         <aside className="admin-sidebar">
           <nav className="admin-nav">
             <Link to="/platform-admin/dashboard" className="admin-nav-link">
-              Dashboard
+              Platform Overview
+            </Link>
+            <Link to="/admin" className="admin-nav-link">
+              Admin Dashboard
             </Link>
             <Link to="/admin/users" className="admin-nav-link">
               Users
