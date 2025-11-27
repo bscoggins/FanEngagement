@@ -45,6 +45,7 @@ describe('LoginPage', () => {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin" element={<div>Admin Page</div>} />
+              <Route path="/platform-admin/dashboard" element={<div>Platform Admin Dashboard</div>} />
               <Route path="/me/home" element={<div>Member Dashboard</div>} />
             </Routes>
           </AuthProvider>
@@ -93,7 +94,7 @@ describe('LoginPage', () => {
     expect(localStorage.getItem('authUser')).toBeTruthy();
   });
 
-  it('redirects platform admin to admin dashboard after login', async () => {
+  it('redirects platform admin to platform admin dashboard after login', async () => {
     const mockResponse = {
       token: 'test-token',
       userId: 'admin-123',
@@ -114,9 +115,9 @@ describe('LoginPage', () => {
     // Submit the form
     await user.click(screen.getByRole('button', { name: /log in/i }));
 
-    // Wait for navigation to admin dashboard
+    // Wait for navigation to platform admin dashboard
     await waitFor(() => {
-      expect(screen.getByText('Admin Page')).toBeInTheDocument();
+      expect(screen.getByText('Platform Admin Dashboard')).toBeInTheDocument();
     });
   });
 
@@ -226,7 +227,7 @@ describe('LoginPage', () => {
     });
   });
 
-  it('redirects already authenticated admin user to admin dashboard', async () => {
+  it('redirects already authenticated admin user to platform admin dashboard', async () => {
     // Simulate existing auth session for admin user
     localStorage.setItem('authToken', 'existing-token');
     localStorage.setItem('authUser', JSON.stringify({
@@ -239,9 +240,9 @@ describe('LoginPage', () => {
 
     renderLoginPage();
 
-    // Should redirect to admin dashboard
+    // Should redirect to platform admin dashboard
     await waitFor(() => {
-      expect(screen.getByText('Admin Page')).toBeInTheDocument();
+      expect(screen.getByText('Platform Admin Dashboard')).toBeInTheDocument();
     });
   });
 

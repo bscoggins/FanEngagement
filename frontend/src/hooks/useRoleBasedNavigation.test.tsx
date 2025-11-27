@@ -35,7 +35,7 @@ describe('useRoleBasedNavigation', () => {
     <MemoryRouter>{children}</MemoryRouter>
   );
 
-  it('navigates admin users to /admin without fetching memberships', async () => {
+  it('navigates admin users to /platform-admin/dashboard without fetching memberships', async () => {
     const adminUser = {
       token: 'admin-token',
       userId: 'admin-123',
@@ -48,7 +48,7 @@ describe('useRoleBasedNavigation', () => {
 
     await result.current.navigateToDefaultRoute(adminUser);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/admin', undefined);
+    expect(mockNavigate).toHaveBeenCalledWith('/platform-admin/dashboard', undefined);
     expect(membershipsApi.getByUserId).not.toHaveBeenCalled();
   });
 
@@ -116,7 +116,7 @@ describe('useRoleBasedNavigation', () => {
 
     await result.current.navigateToDefaultRoute(adminUser, { replace: true });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/admin', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/platform-admin/dashboard', { replace: true });
   });
 
   it('falls back to /me/home on API error', async () => {
