@@ -50,7 +50,7 @@ describe('AdminOrganizationEditPage', () => {
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getByText('Edit Organization')).toBeInTheDocument();
+      expect(screen.getByText('Organization Overview')).toBeInTheDocument();
     });
   });
 
@@ -91,8 +91,8 @@ describe('AdminOrganizationEditPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const nameInput = screen.getByLabelText(/name/i);
-    const descriptionInput = screen.getByLabelText(/description/i);
+    const nameInput = screen.getByLabelText(/name \*/i);
+    const descriptionInput = screen.getByLabelText(/^description$/i);
     
     fireEvent.change(nameInput, { target: { value: 'Updated Organization' } });
     fireEvent.change(descriptionInput, { target: { value: 'Updated description' } });
@@ -104,6 +104,9 @@ describe('AdminOrganizationEditPage', () => {
       expect(organizationsApi.update).toHaveBeenCalledWith('org-1', {
         name: 'Updated Organization',
         description: 'Updated description',
+        logoUrl: '',
+        primaryColor: '',
+        secondaryColor: '',
       });
     });
     

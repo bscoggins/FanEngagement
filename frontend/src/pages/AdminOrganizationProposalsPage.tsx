@@ -191,15 +191,9 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: '2rem' }}>
-        <Link to="/admin/organizations" style={{ color: '#007bff', textDecoration: 'none' }}>
-          ← Back to Organizations
-        </Link>
-      </div>
-
-      <h1>Proposals for {organization?.name}</h1>
+      <h1>Proposals</h1>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
-        {organization?.description || 'No description'}
+        Organization: {organization?.name}
       </p>
 
       {successMessage && (

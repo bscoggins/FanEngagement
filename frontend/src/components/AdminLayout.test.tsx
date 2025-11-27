@@ -227,14 +227,21 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Manage Memberships')).toBeInTheDocument();
+        // Should see org-scoped navigation items (uses new labels)
+        expect(screen.getByText('Memberships')).toBeInTheDocument();
+        expect(screen.getByText('Share Types')).toBeInTheDocument();
+        expect(screen.getByText('Proposals')).toBeInTheDocument();
+        expect(screen.getByText('Webhook Events')).toBeInTheDocument();
+        expect(screen.getByText('Overview')).toBeInTheDocument();
       });
       
       // Should see org admin dashboard
       expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       
-      // Should see org section label
-      expect(screen.getByText('Test Org')).toBeInTheDocument();
+      // Should see org switcher with org name
+      expect(screen.getByTestId('admin-org-selector')).toBeInTheDocument();
+      // The org name appears in the dropdown option
+      expect(screen.getByRole('option', { name: /Test Org/ })).toBeInTheDocument();
     });
 
     it('home link navigates to admin for org admin', async () => {
@@ -259,6 +266,140 @@ describe('AdminLayout', () => {
         expect(homeLink).toBeInTheDocument();
         // OrgAdmin home route
         expect(homeLink.closest('a')).toHaveAttribute('href', '/admin');
+      });
+    });
+  });
+
+  describe('Mixed-role user navigation', () => {
+    it('displays all organizations in the switcher for mixed-role users', async () => {
+      const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-admin-org',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-member-org',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      // Set active org as admin org
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-admin-org',
+        name: 'Admin Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships: mixedRoleMemberships,
+      });
+
+      await waitFor(() => {
+        const orgSelector = screen.getByTestId('admin-org-selector');
+        expect(orgSelector).toBeInTheDocument();
+        
+        // Both orgs should be in the dropdown
+        expect(screen.getByRole('option', { name: /Admin Org.*Admin/ })).toBeInTheDocument();
+        expect(screen.getByRole('option', { name: /Member Org.*Member/ })).toBeInTheDocument();
+      });
+    });
+
+    it('shows org admin nav items when admin org is selected', async () => {
+      const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-admin-org',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-member-org',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      // Set active org as admin org
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-admin-org',
+        name: 'Admin Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships: mixedRoleMemberships,
+      });
+
+      await waitFor(() => {
+        // Should see org admin nav items for admin org
+        expect(screen.getByTestId('org-nav-orgOverview')).toBeInTheDocument();
+        expect(screen.getByTestId('org-nav-manageMemberships')).toBeInTheDocument();
+        expect(screen.getByTestId('org-nav-manageShareTypes')).toBeInTheDocument();
+        expect(screen.getByTestId('org-nav-manageProposals')).toBeInTheDocument();
+        expect(screen.getByTestId('org-nav-webhookEvents')).toBeInTheDocument();
+        
+        // Should show Org Admin badge
+        expect(screen.getByTestId('active-org-role-badge')).toHaveTextContent('Org Admin');
+      });
+    });
+
+    it('hides org admin nav items when member-only org is selected', async () => {
+      const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-admin-org',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-member-org',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      // Set active org as member-only org
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-member-org',
+        name: 'Member Org',
+        role: 'Member',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships: mixedRoleMemberships,
+      });
+
+      await waitFor(() => {
+        // Should NOT see org admin nav items
+        expect(screen.queryByTestId('org-nav-orgOverview')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('org-nav-manageMemberships')).not.toBeInTheDocument();
+        
+        // Should show Member badge
+        expect(screen.getByTestId('active-org-role-badge')).toHaveTextContent('Member');
+        
+        // Should show link to view organization as member
+        expect(screen.getByText('View organization →')).toBeInTheDocument();
       });
     });
   });

@@ -348,7 +348,7 @@ describe('MyProposalPage', () => {
 
     expect(screen.getByText('Results')).toBeInTheDocument();
     expect(screen.getByText(/Total Voting Power:/)).toBeInTheDocument();
-    expect(screen.getByText('800')).toBeInTheDocument();
+    expect(screen.getByText('800.00')).toBeInTheDocument();
     expect(screen.getByText(/62.5%/)).toBeInTheDocument(); // 500/800
     expect(screen.getByText(/37.5%/)).toBeInTheDocument(); // 300/800
   });

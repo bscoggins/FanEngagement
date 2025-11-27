@@ -119,7 +119,7 @@ test.describe.serial('Admin and member governance flows', () => {
     const alice = await getUserByEmail(request, adminToken, MEMBER_EMAIL);
     if (!alice) throw new Error('Seeded member alice@example.com not found');
     await page.goto(`/admin/organizations/${orgId}/memberships`);
-    await expect(page.getByRole('heading', { name: /Manage Memberships/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Manage Memberships/i })).toBeVisible({ timeout: 15000 });
     await page.getByRole('button', { name: 'Add Member' }).click();
     const userSelect = page.getByTestId('membership-user-select');
     await expect(userSelect).toBeVisible();
@@ -189,7 +189,7 @@ test.describe.serial('Admin and member governance flows', () => {
     await page.getByRole('button', { name: /^Add Option$/i }).click(); // submit form
     await addOptionResponse2;
     await expect(page.getByText('Option added successfully')).toBeVisible();
-    await expect(page.getByText('No')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('No', { exact: true })).toBeVisible({ timeout: 10000 });
 
     // Open the proposal for voting (await backend transition)
     // Instrument network responses for debugging

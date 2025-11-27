@@ -42,14 +42,14 @@ describe('useAsync', () => {
     const { result } = renderHook(() => useAsync(mockFn, false));
 
     expect(mockFn).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(false);
 
-    result.current.execute();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
+    await act(async () => {
+      await result.current.execute();
     });
 
     expect(result.current.data).toBe('test data');
+    expect(result.current.loading).toBe(false);
     expect(mockFn).toHaveBeenCalledTimes(1);
   });
 

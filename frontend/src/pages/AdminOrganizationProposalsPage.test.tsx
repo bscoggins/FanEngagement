@@ -106,7 +106,7 @@ describe('AdminOrganizationProposalsPage', () => {
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getByText('Proposals for Test Organization')).toBeInTheDocument();
+      expect(screen.getByText('Proposals')).toBeInTheDocument();
     });
   });
 

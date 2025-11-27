@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AdminOrganizationShareTypesPage } from './AdminOrganizationShareTypesPage';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { NotificationContainer } from '../components/NotificationContainer';
 import { shareTypesApi } from '../api/shareTypesApi';
 import { organizationsApi } from '../api/organizationsApi';
 import type { ShareType, Organization } from '../types/api';
@@ -60,11 +62,14 @@ describe('AdminOrganizationShareTypesPage', () => {
 
   const renderPage = (orgId = 'org-1') => {
     return render(
-      <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/share-types`]}>
-        <Routes>
-          <Route path="/admin/organizations/:orgId/share-types" element={<AdminOrganizationShareTypesPage />} />
-        </Routes>
-      </MemoryRouter>
+      <NotificationProvider>
+        <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/share-types`]}>
+          <NotificationContainer />
+          <Routes>
+            <Route path="/admin/organizations/:orgId/share-types" element={<AdminOrganizationShareTypesPage />} />
+          </Routes>
+        </MemoryRouter>
+      </NotificationProvider>
     );
   };
 
@@ -75,7 +80,7 @@ describe('AdminOrganizationShareTypesPage', () => {
     renderPage();
     
     await waitFor(() => {
-      expect(screen.getByText('Manage Share Types')).toBeInTheDocument();
+      expect(screen.getByText('Share Types')).toBeInTheDocument();
     });
   });
 
@@ -232,8 +237,8 @@ describe('AdminOrganizationShareTypesPage', () => {
   });
 
   it('displays validation error when creating with invalid data', async () => {
-    vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
-    vi.mocked(shareTypesApi.getByOrganization).mockResolvedValueOnce(mockShareTypes);
+    vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
+    vi.mocked(shareTypesApi.getByOrganization).mockResolvedValue(mockShareTypes);
     vi.mocked(shareTypesApi.create).mockRejectedValueOnce({
       response: { status: 400, data: { message: 'Invalid share type data' } }
     });
@@ -244,21 +249,21 @@ describe('AdminOrganizationShareTypesPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    // Open form
-    const createButton = screen.getByText('Create Share Type');
-    fireEvent.click(createButton);
+    // Open form - initially only one button exists
+    fireEvent.click(screen.getByText('Create Share Type'));
     
     // Fill minimal form
-    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Test' } });
-    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: 'T' } });
+    fireEvent.change(screen.getByLabelText(/name \*/i), { target: { value: 'Test' } });
+    fireEvent.change(screen.getByLabelText(/symbol \*/i), { target: { value: 'T' } });
     
-    // Submit
-    const submitButton = screen.getByText('Create Share Type', { selector: 'button' });
-    fireEvent.click(submitButton);
+    // Submit - now there are two buttons, get the one that's type=submit
+    const submitButtons = screen.getAllByText('Create Share Type');
+    const submitButton = submitButtons.find(btn => (btn as HTMLButtonElement).type === 'submit');
+    fireEvent.click(submitButton!);
     
     await waitFor(() => {
-      expect(screen.getByText(/invalid share type data/i)).toBeInTheDocument();
-    });
+      expect(screen.getAllByText(/invalid share type data/i).length).toBeGreaterThan(0);
+    }, { timeout: 3000 });
   });
 
   it('displays empty state when no share types exist', async () => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { shareTypesApi } from '../api/shareTypesApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -189,22 +189,9 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <Link
-          to="/admin/organizations"
-          style={{
-            color: '#0066cc',
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-          }}
-        >
-          ← Back to Organizations
-        </Link>
-      </div>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
-          <h1>Manage Share Types</h1>
+          <h1>Share Types</h1>
           <div style={{ color: '#666', fontSize: '1rem' }}>
             Organization: {organization.name}
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { outboundEventsApi } from '../api/outboundEventsApi';
 import type { OutboundEventsFilter } from '../api/outboundEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
@@ -172,19 +172,6 @@ export const AdminWebhookEventsPage: React.FC = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <Link
-          to={`/admin/organizations/${orgId}/edit`}
-          style={{
-            color: '#0066cc',
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-          }}
-        >
-          ← Back to Organization
-        </Link>
-      </div>
-
       <div style={{ marginBottom: '1.5rem' }}>
         <h1>Webhook Events</h1>
         <div style={{ color: '#666', fontSize: '1rem' }}>
