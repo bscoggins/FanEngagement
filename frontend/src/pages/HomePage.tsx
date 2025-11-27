@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { getDefaultRouteForUser } from '../utils/routeUtils';
-import { membershipsApi } from '../api/membershipsApi';
+import { useRoleBasedNavigation } from '../hooks/useRoleBasedNavigation';
 
 export const HomePage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+  const { navigateToDefaultRoute } = useRoleBasedNavigation();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Auto-redirect authenticated users to their appropriate landing page
@@ -14,23 +13,11 @@ export const HomePage: React.FC = () => {
     const redirectAuthenticatedUser = async () => {
       if (isAuthenticated && user && !isRedirecting) {
         setIsRedirecting(true);
-        try {
-          // For admins, redirect immediately
-          if (user.role === 'Admin') {
-            navigate(getDefaultRouteForUser(user), { replace: true });
-            return;
-          }
-          // For non-admins, fetch memberships to determine if they're OrgAdmin
-          const memberships = await membershipsApi.getByUserId(user.userId);
-          navigate(getDefaultRouteForUser(user, memberships), { replace: true });
-        } catch {
-          // On error, use default route without memberships
-          navigate(getDefaultRouteForUser(user), { replace: true });
-        }
+        await navigateToDefaultRoute(user, { replace: true });
       }
     };
     redirectAuthenticatedUser();
-  }, [isAuthenticated, user, navigate, isRedirecting]);
+  }, [isAuthenticated, user, navigateToDefaultRoute]);
 
   // Show loading while redirecting authenticated users
   if (isAuthenticated && isRedirecting) {

@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { getDefaultRouteForUser } from '../utils/routeUtils';
-import { membershipsApi } from '../api/membershipsApi';
+import { useRoleBasedNavigation } from '../hooks/useRoleBasedNavigation';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,29 +10,14 @@ export const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated, user } = useAuth();
   const { showSuccess, showError } = useNotifications();
-  const navigate = useNavigate();
+  const { navigateToDefaultRoute } = useRoleBasedNavigation();
 
   // Redirect if already logged in
   useEffect(() => {
-    const redirectAuthenticatedUser = async () => {
-      if (isAuthenticated && user) {
-        // For admins, redirect immediately
-        if (user.role === 'Admin') {
-          navigate(getDefaultRouteForUser(user));
-          return;
-        }
-        // For non-admins, fetch memberships to determine if they're OrgAdmin
-        try {
-          const memberships = await membershipsApi.getByUserId(user.userId);
-          navigate(getDefaultRouteForUser(user, memberships));
-        } catch {
-          // On error, use default route without memberships
-          navigate(getDefaultRouteForUser(user));
-        }
-      }
-    };
-    redirectAuthenticatedUser();
-  }, [isAuthenticated, user, navigate]);
+    if (isAuthenticated && user) {
+      navigateToDefaultRoute(user);
+    }
+  }, [isAuthenticated, user, navigateToDefaultRoute]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,17 +34,7 @@ export const LoginPage: React.FC = () => {
       const storedUser = localStorage.getItem('authUser');
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
-        if (parsedUser.role === 'Admin') {
-          navigate(getDefaultRouteForUser(parsedUser));
-        } else {
-          // For non-admins, fetch memberships to determine route
-          try {
-            const memberships = await membershipsApi.getByUserId(parsedUser.userId);
-            navigate(getDefaultRouteForUser(parsedUser, memberships));
-          } catch {
-            navigate(getDefaultRouteForUser(parsedUser));
-          }
-        }
+        await navigateToDefaultRoute(parsedUser);
       }
     } catch (err) {
       // Handle login errors

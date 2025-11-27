@@ -1831,3 +1831,15 @@ When adding new features that members will use:
 4. **Update tests**: Add tests for the new feature's dashboard card
 
 5. **Update documentation**: Document the new route in the Frontend Patterns section
+
+
+## Coding Agent Guidance: Member-Facing Features and Dashboard Integration
+
+When implementing new features that will be used by members (non-admin users), always consider whether the feature should be surfaced or linked from the member dashboard (`/me/home`). For high-traffic or important features (such as proposals, notifications, or organization actions), add summary cards, quick action links, or counts to the dashboard for better visibility and usability.
+
+- Review the "Adding Member-Facing Features" section above for dashboard card patterns and UX conventions.
+- Ensure empty states are handled gracefully and use `data-testid` attributes for testability.
+- Update or add tests for any new dashboard cards or links.
+- Document new member-facing routes and dashboard integrations in the Frontend Patterns section.
+
+This ensures that members have easy access to new features and that the dashboard remains the central hub for member activity.

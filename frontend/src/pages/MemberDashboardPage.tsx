@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { membershipsApi } from '../api/membershipsApi';
@@ -19,7 +19,7 @@ export const MemberDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!user?.userId) return;
 
     try {
@@ -29,25 +29,23 @@ export const MemberDashboardPage: React.FC = () => {
       // Fetch user's memberships
       const memberships = await membershipsApi.getByUserId(user.userId);
 
-      // Fetch active proposals for each organization the user is a member of
-      const activeProposals: { proposal: Proposal; organizationName: string }[] = [];
-      
-      for (const membership of memberships) {
+      // Parallelize proposal fetches for each organization
+      const proposalPromises = memberships.map(async (membership) => {
         try {
           const proposals = await proposalsApi.getByOrganization(membership.organizationId);
-          // Filter to only Open proposals that the user can vote on
           const openProposals = proposals.filter(p => p.status === 'Open');
-          openProposals.forEach(p => {
-            activeProposals.push({
-              proposal: p,
-              organizationName: membership.organizationName,
-            });
-          });
+          return openProposals.map(p => ({
+            proposal: p,
+            organizationName: membership.organizationName,
+          }));
         } catch (err) {
           // Continue even if one org fails to load
           console.warn(`Failed to fetch proposals for org ${membership.organizationId}:`, err);
+          return [];
         }
-      }
+      });
+      const results = await Promise.all(proposalPromises);
+      const activeProposals: { proposal: Proposal; organizationName: string }[] = results.flat();
 
       setData({ memberships, activeProposals });
     } catch (err) {
@@ -57,12 +55,11 @@ export const MemberDashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.userId]);
 
   useEffect(() => {
     fetchDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.userId]);
+  }, [fetchDashboardData]);
 
   if (loading) {
     return <LoadingSpinner message="Loading your dashboard..." />;
@@ -219,22 +216,60 @@ export const MemberDashboardPage: React.FC = () => {
             </p>
           )}
           
-          {data?.memberships && data.memberships.length > 0 && (
-            <Link
-              to={`/me/organizations/${data.memberships[0].organizationId}`}
-              style={{
-                display: 'inline-block',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#28a745',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-              }}
-            >
-              Explore Organizations →
-            </Link>
-          )}
+          {data?.memberships && data.memberships.length > 0 && (() => {
+            // If there are active proposals, link to the organization with the most proposals
+            if (data.activeProposals && data.activeProposals.length > 0) {
+              const orgProposalCounts: Record<string, number> = {};
+              data.activeProposals.forEach(({ proposal }) => {
+                orgProposalCounts[proposal.organizationId] = (orgProposalCounts[proposal.organizationId] || 0) + 1;
+              });
+              let targetOrgId = data.activeProposals[0].proposal.organizationId;
+              let maxCount = orgProposalCounts[targetOrgId];
+              Object.entries(orgProposalCounts).forEach(([orgId, count]) => {
+                if (count > maxCount) {
+                  targetOrgId = orgId;
+                  maxCount = count;
+                }
+              });
+              const orgName = data.memberships.find(m => m.organizationId === targetOrgId)?.organizationName || 'Organization';
+              return (
+                <Link
+                  to={`/me/organizations/${targetOrgId}`}
+                  style={{
+                    display: 'inline-block',
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.875rem',
+                  }}
+                  data-testid="explore-org-button"
+                >
+                  Explore {orgName} →
+                </Link>
+              );
+            }
+            // Only one org or no active proposals, show first org
+            const org = data.memberships[0];
+            return (
+              <Link
+                to={`/me/organizations/${org.organizationId}`}
+                style={{
+                  display: 'inline-block',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                }}
+                data-testid="explore-org-button"
+              >
+                Explore {org.organizationName} →
+              </Link>
+            );
+          })()}
         </div>
 
         {/* My Account Card */}
