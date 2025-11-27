@@ -103,14 +103,14 @@ Specify the permitted files or folders.
 
 Examples:
 Allowed:
- • backend/FanEngagement.Api/**
- • backend/FanEngagement.Application/**
- • backend/FanEngagement.Domain/**
- • backend/FanEngagement.Infrastructure/**
+- backend/FanEngagement.Api/**
+- backend/FanEngagement.Application/**
+- backend/FanEngagement.Domain/**
+- backend/FanEngagement.Infrastructure/**
 
 Optional:
- • frontend/**
- • docs/**
+- frontend/**
+- docs/**
 
 If uncertain, you may leave this blank and the agent will infer based on requirements.
 
