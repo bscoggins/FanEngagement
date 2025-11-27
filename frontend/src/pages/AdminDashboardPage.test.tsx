@@ -38,6 +38,8 @@ describe('AdminDashboardPage', () => {
       isOrgMember: () => true,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -60,6 +62,8 @@ describe('AdminDashboardPage', () => {
       isOrgMember: () => true,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -82,6 +86,8 @@ describe('AdminDashboardPage', () => {
       isOrgMember: () => true,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -111,6 +117,8 @@ describe('AdminDashboardPage', () => {
       isOrgMember: () => true,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -147,6 +155,8 @@ describe('AdminDashboardPage', () => {
         createdAt: '2024-01-01T00:00:00Z',
       }],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -173,6 +183,8 @@ describe('AdminDashboardPage', () => {
       isOrgMember: () => false,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 

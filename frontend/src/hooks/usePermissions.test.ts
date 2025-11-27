@@ -302,4 +302,149 @@ describe('usePermissions', () => {
 
     expect(membershipsApi.getByUserId).toHaveBeenCalledTimes(2);
   });
+
+  describe('hasAnyOrgAdminRole', () => {
+    it('should return true when user has OrgAdmin role in any organization', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships); // Contains OrgAdmin role
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.hasAnyOrgAdminRole()).toBe(true);
+    });
+
+    it('should return false when user has no OrgAdmin roles', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      const memberOnlyMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Organization 1',
+          userId: 'user-1',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(memberOnlyMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.hasAnyOrgAdminRole()).toBe(false);
+    });
+
+    it('should return false for GlobalAdmin who has no explicit OrgAdmin memberships', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // hasAnyOrgAdminRole() only checks explicit memberships, not implicit admin permissions
+      expect(result.current.hasAnyOrgAdminRole()).toBe(false);
+    });
+  });
+
+  describe('canAccessAdminArea', () => {
+    it('should return true for GlobalAdmin', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.canAccessAdminArea()).toBe(true);
+    });
+
+    it('should return true for OrgAdmin', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships); // Contains OrgAdmin role
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.canAccessAdminArea()).toBe(true);
+    });
+
+    it('should return false for regular member with no admin roles', async () => {
+      vi.mocked(useAuth).mockReturnValue({
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+        token: 'token',
+        isAuthenticated: true,
+        isAdmin: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+      });
+      const memberOnlyMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Organization 1',
+          userId: 'user-1',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(memberOnlyMemberships);
+
+      const { result } = renderHook(() => usePermissions());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.canAccessAdminArea()).toBe(false);
+    });
+  });
 });

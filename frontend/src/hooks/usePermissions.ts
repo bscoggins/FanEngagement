@@ -7,6 +7,8 @@ interface PermissionsContextType {
   isGlobalAdmin: () => boolean;
   isOrgAdmin: (orgId: string) => boolean;
   isOrgMember: (orgId: string) => boolean;
+  hasAnyOrgAdminRole: () => boolean;
+  canAccessAdminArea: () => boolean;
   memberships: MembershipWithOrganizationDto[];
   isLoading: boolean;
   refreshMemberships: () => Promise<void>;
@@ -21,7 +23,7 @@ interface PermissionsContextType {
  * @returns {PermissionsContextType} Permission helpers and membership data
  * 
  * @example
- * const { isGlobalAdmin, isOrgAdmin, isOrgMember } = usePermissions();
+ * const { isGlobalAdmin, isOrgAdmin, isOrgMember, hasAnyOrgAdminRole, canAccessAdminArea } = usePermissions();
  * 
  * if (isGlobalAdmin()) {
  *   // Show platform admin features
@@ -33,6 +35,14 @@ interface PermissionsContextType {
  * 
  * if (isOrgMember(orgId)) {
  *   // Show member features
+ * }
+ * 
+ * if (canAccessAdminArea()) {
+ *   // Show Admin link in navigation
+ * }
+ * 
+ * if (hasAnyOrgAdminRole()) {
+ *   // User is OrgAdmin in at least one organization
  * }
  */
 export const usePermissions = (): PermissionsContextType => {
@@ -99,10 +109,31 @@ export const usePermissions = (): PermissionsContextType => {
     return memberships.some(m => m.organizationId === orgId);
   };
 
+  /**
+   * Checks if the user has OrgAdmin role in at least one organization.
+   * Useful for navigation visibility decisions.
+   * Note: This returns false for GlobalAdmins who aren't explicit OrgAdmins.
+   * Use canAccessAdminArea() for checking admin area access.
+   */
+  const hasAnyOrgAdminRole = (): boolean => {
+    return memberships.some(m => m.role === 'OrgAdmin');
+  };
+
+  /**
+   * Checks if the user can access the admin area (/admin).
+   * Returns true if user is GlobalAdmin OR OrgAdmin in at least one org.
+   * Useful for showing/hiding the Admin nav link.
+   */
+  const canAccessAdminArea = (): boolean => {
+    return isAdmin || hasAnyOrgAdminRole();
+  };
+
   return {
     isGlobalAdmin,
     isOrgAdmin,
     isOrgMember,
+    hasAnyOrgAdminRole,
+    canAccessAdminArea,
     memberships,
     isLoading,
     refreshMemberships: () => fetchMemberships(undefined),

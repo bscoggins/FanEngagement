@@ -15,6 +15,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: () => false,
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -34,6 +36,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: () => false,
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -55,6 +59,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: () => false,
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -74,6 +80,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: () => false,
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -93,6 +101,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: () => true,
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -114,6 +124,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: (orgId: string) => orgId === 'org-1',
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -133,6 +145,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: (orgId: string) => orgId === 'org-1',
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 
@@ -152,6 +166,8 @@ describe('PermissionWrappers', () => {
         isOrgMember: () => true, // GlobalAdmins return true for all orgs
         memberships: [],
         isLoading: false,
+        hasAnyOrgAdminRole: () => false,
+        canAccessAdminArea: () => false,
         refreshMemberships: vi.fn(),
       });
 

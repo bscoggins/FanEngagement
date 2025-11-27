@@ -1,12 +1,17 @@
 import React, { useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
 import { OrganizationSelector } from './OrganizationSelector';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
-  const { isAuthenticated, user, logout, isAdmin } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
+  const { isGlobalAdmin, canAccessAdminArea, isLoading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
+
+  // Show Admin link only when permissions are loaded and user can access admin area
+  const showAdminLink = !permissionsLoading && canAccessAdminArea();
 
   // Listen for auth:logout events from the API client
   useEffect(() => {
@@ -35,8 +40,8 @@ export const Layout: React.FC = () => {
             <>
               <Link to="/me">My Account</Link>
               <Link to="/me/organizations">My Organizations</Link>
-              <Link to="/users">Users</Link>
-              {isAdmin && <Link to="/admin">Admin</Link>}
+              {isGlobalAdmin() && <Link to="/users">Users</Link>}
+              {showAdminLink && <Link to="/admin">Admin</Link>}
               <OrganizationSelector />
               <span className="user-info">
                 Logged in as {user?.email}
