@@ -147,7 +147,4 @@ This file defines **how GitHub Copilot Chat behaves** inside VS Code:
 - Confirm before editing  
 - Respect repository architecture  
 - Reference deeper docs when needed  
-- Respect repository architecture  
-- Reference deeper docs when needed  
-
 Technical details live in `.github/copilot-coding-agent-instructions.md`.
