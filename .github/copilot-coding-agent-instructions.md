@@ -1995,3 +1995,75 @@ Scenarios are defined in `backend/FanEngagement.Infrastructure/Services/DevDataS
 - Changing environment setup requirements
 - Adding new seeding scenarios
 - Modifying test procedures
+
+## Navigation Visibility Requirements
+
+When adding new navigation items to the top navigation (`Layout.tsx`), you MUST define and implement explicit visibility rules.
+
+### Navigation Item Types
+
+1. **Platform-level items** (visible only to GlobalAdmins):
+   - Users management (`/users`)
+   - Any new platform-wide admin features
+
+2. **Admin area items** (visible to GlobalAdmins AND OrgAdmins):
+   - Admin dashboard link (`/admin`)
+   - Any new org-scoped admin features
+
+3. **Member items** (visible to all authenticated users):
+   - My Account (`/me`)
+   - My Organizations (`/me/organizations`)
+   - Any new self-service features
+
+4. **Conditional items** (visible based on specific conditions):
+   - Organization Selector (only when user belongs to multiple orgs)
+
+### Adding a New Navigation Item
+
+When adding a new nav item, follow these steps:
+
+1. **Determine visibility rules** based on the table above
+2. **Use `usePermissions()` hook** for permission checks:
+   ```typescript
+   const { isGlobalAdmin, canAccessAdminArea } = usePermissions();
+   
+   // For platform-level items
+   {isGlobalAdmin() && <Link to="/users">Users</Link>}
+   
+   // For admin area items
+   {canAccessAdminArea() && <Link to="/admin">Admin</Link>}
+   ```
+
+3. **Add tests** in `Layout.test.tsx` verifying:
+   - Regular members do NOT see the item (if restricted)
+   - OrgAdmins see/don't see based on rules
+   - GlobalAdmins see the item (if admin-only)
+
+4. **Document in PR description** the visibility rules for the new item
+
+5. **Update `copilot-instructions.md`** navigation visibility matrix
+
+### Helper Functions for Navigation
+
+The `usePermissions()` hook provides these navigation-specific helpers:
+
+| Function | Description |
+|----------|-------------|
+| `isGlobalAdmin()` | True if user has Admin role (for platform-level items) |
+| `hasAnyOrgAdminRole()` | True if user is OrgAdmin in any organization |
+| `canAccessAdminArea()` | True if GlobalAdmin OR OrgAdmin (for Admin link) |
+
+### Backend Authorization Alignment
+
+Navigation visibility MUST align with backend authorization:
+- If backend requires GlobalAdmin policy → nav item should use `isGlobalAdmin()`
+- If backend requires OrgAdmin policy → nav item should use `canAccessAdminArea()`
+- If backend requires authentication only → nav item visible to all authenticated users
+
+### Pre-Merge Checklist for Navigation Changes
+
+- [ ] Visibility rules documented in PR description
+- [ ] Tests added in `Layout.test.tsx` for new nav items
+- [ ] Navigation matrix updated in `copilot-instructions.md`
+- [ ] Backend authorization policy alignment verified
+- [ ] Manual testing completed with different user roles

@@ -534,6 +534,45 @@ import { IfGlobalAdmin, IfOrgAdmin, IfOrgMember } from '../components/Permission
 }
 ```
 
+#### Navigation Visibility Rules
+
+The main navigation (`Layout.tsx`) hides unauthorized menu items based on user roles and the active organization context.
+
+**Navigation Visibility Matrix:**
+
+| Menu Item | Unauthenticated | Regular Member | OrgAdmin | PlatformAdmin |
+|-----------|-----------------|----------------|----------|---------------|
+| Login | ✅ | - | - | - |
+| My Account | - | ✅ | ✅ | ✅ |
+| My Organizations | - | ✅ | ✅ | ✅ |
+| Users | - | ❌ | ❌ | ✅ |
+| Admin | - | ❌ | ✅ | ✅ |
+| Organization Selector | - | ✅ (if multiple orgs) | ✅ (if multiple orgs) | ✅ (if multiple orgs) |
+
+**Helper Functions:**
+
+The `usePermissions()` hook provides these helpers for navigation visibility:
+
+```typescript
+const { 
+  isGlobalAdmin,       // () => boolean - True if user has Admin role
+  hasAnyOrgAdminRole,  // () => boolean - True if user is OrgAdmin in any org
+  canAccessAdminArea,  // () => boolean - True if GlobalAdmin OR OrgAdmin
+  memberships,         // Array of user's org memberships
+  isLoading            // Boolean - True while loading memberships
+} = usePermissions();
+
+// In navigation:
+{isGlobalAdmin() && <Link to="/users">Users</Link>}
+{!isLoading && canAccessAdminArea() && <Link to="/admin">Admin</Link>}
+```
+
+**Key Rules:**
+1. **Users link**: Only visible to PlatformAdmins (GlobalAdmins)
+2. **Admin link**: Visible to PlatformAdmins AND users who are OrgAdmin in at least one organization
+3. **My Account/My Organizations**: Visible to all authenticated users
+4. **Organization Selector**: Only shown when user belongs to multiple organizations
+
 #### UI Permission Indicators
 
 - **Platform Admin Badge**: Red "Platform Admin" badge shown in AdminLayout header for GlobalAdmins

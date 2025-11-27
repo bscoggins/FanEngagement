@@ -29,6 +29,8 @@ describe('OrgAdminRoute', () => {
       isOrgMember: () => false,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -64,6 +66,8 @@ describe('OrgAdminRoute', () => {
       isOrgMember: () => false,
       memberships: [],
       isLoading: true,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -98,6 +102,8 @@ describe('OrgAdminRoute', () => {
       isOrgMember: () => true,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -131,6 +137,8 @@ describe('OrgAdminRoute', () => {
       isOrgMember: () => false,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -164,6 +172,8 @@ describe('OrgAdminRoute', () => {
       isOrgMember: () => false,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
@@ -199,6 +209,8 @@ describe('OrgAdminRoute', () => {
       isOrgMember: () => false,
       memberships: [],
       isLoading: false,
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
 
