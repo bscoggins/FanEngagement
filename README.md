@@ -55,6 +55,30 @@ dotnet run --project FanEngagement.Api
 
 The API runs on `http://localhost:5049` by default.
 
+### API Documentation (Swagger UI)
+
+Swagger UI provides interactive API documentation with the ability to test endpoints directly in the browser.
+
+**Local Development:**
+- Start the API: `dotnet run --project FanEngagement.Api`
+- Open Swagger UI: `http://localhost:5049/swagger`
+
+**Docker Compose:**
+- Start the stack: `docker compose up --build`
+- Open Swagger UI: `http://localhost:8080/swagger`
+
+The Swagger UI includes:
+- All API endpoints with request/response schemas
+- JWT Bearer authentication support (click "Authorize" button to enter your token)
+- Ability to try out endpoints directly from the UI
+
+To authenticate in Swagger UI:
+1. First call `POST /auth/login` with valid credentials (e.g., `admin@example.com` / `Admin123!`)
+2. Copy the `token` from the response
+3. Click the "Authorize" button at the top of the page
+4. Enter just the token value (without "Bearer" prefix)
+5. Click "Authorize" to apply the token to all subsequent requests
+
 Key endpoints (current):
 
 - `GET /health`
@@ -172,6 +196,7 @@ docker compose up --build
 
 API is available at `http://localhost:8080` and uses the `db` service connection string automatically.
 The API applies EF Core migrations on startup.
+Swagger UI is available at `http://localhost:8080/swagger` for API documentation and testing.
 
 ### Compose Profiles
 

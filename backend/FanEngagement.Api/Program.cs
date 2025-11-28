@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,49 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddOpenApi();
+
+// Configure Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "FanEngagement API",
+        Description = "A multi-tenant fan governance platform API for organizations to issue share types to users for voting on proposals.",
+        Contact = new OpenApiContact
+        {
+            Name = "FanEngagement Team"
+        }
+    });
+
+    // Add JWT Authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter your token in the text input below.\r\n\r\nExample: \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure CORS to allow frontend access
@@ -214,6 +258,17 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     // Don't use UseDeveloperExceptionPage - we use our global exception handler
+}
+
+// Enable Swagger UI in non-production environments (Development, Docker with Development env)
+if (!app.Environment.IsProduction())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "FanEngagement API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 // Add correlation ID middleware (before exception handler to ensure correlation IDs in error logs)
