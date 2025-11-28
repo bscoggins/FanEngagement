@@ -63,10 +63,14 @@ export const Layout: React.FC = () => {
         role: membership.role,
       });
 
-      // Navigate to the member organization page
-      navigate(`/me/organizations/${membership.organizationId}`);
+      // Navigate based on role: OrgAdmin/platform admin → admin overview, else member view
+      if (isAdmin || membership.role === 'OrgAdmin') {
+        navigate(`/admin/organizations/${membership.organizationId}/edit`);
+      } else {
+        navigate(`/me/organizations/${membership.organizationId}`);
+      }
     }
-  }, [orgMemberships, setActiveOrg, navigate]);
+  }, [orgMemberships, setActiveOrg, isAdmin, navigate]);
 
   // Listen for auth:logout events from the API client
   useEffect(() => {
@@ -199,7 +203,7 @@ export const Layout: React.FC = () => {
                 )}
 
                 {/* Quick link to member org view when not admin */}
-                {activeOrg && !activeOrgIsAdmin && (
+                {activeOrg && !activeOrgIsAdmin && location.pathname !== `/me/organizations/${activeOrg.id}` && (
                   <div className="unified-member-info">
                     <p>You are a member of this organization.</p>
                     <Link

@@ -295,17 +295,14 @@
   }
 
   .unified-org-selector {
-    width: 100%;
-    padding: 0.5rem;
+    display: none;
   }
 
   .unified-nav-section-label {
-    width: 100%;
-    padding: 0.5rem;
+    display: none;
   }
 
   .unified-member-info {
-    width: 100%;
-    padding: 0.5rem;
+    display: none;
   }
 }

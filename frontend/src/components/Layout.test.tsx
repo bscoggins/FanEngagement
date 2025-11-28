@@ -298,4 +298,178 @@ describe('Layout', () => {
       expect(screen.queryByTestId('unified-org-selector')).not.toBeInTheDocument();
     });
   });
+
+  describe('Organization switching navigation', () => {
+    it('navigates to admin overview when OrgAdmin switches to their admin org', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-2',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      // Set up auth state BEFORE rendering
+      localStorage.setItem('authToken', 'test-token');
+      localStorage.setItem('authUser', JSON.stringify({
+        token: 'test-token',
+        userId: 'user-123',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User',
+      }));
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
+      vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mockMemberships);
+
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <NotificationProvider>
+            <AuthProvider>
+              <OrgProvider isAuthenticated={true}>
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<div>Home Content</div>} />
+                  </Route>
+                  <Route path="/admin/organizations/:orgId/edit" element={<div data-testid="admin-org-edit">Admin Org Edit Page</div>} />
+                  <Route path="/me/organizations/:orgId" element={<div data-testid="member-org-view">Member Org View</div>} />
+                </Routes>
+              </OrgProvider>
+            </AuthProvider>
+          </NotificationProvider>
+        </MemoryRouter>
+      );
+
+      // Wait for the org selector to appear
+      await waitFor(() => {
+        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+      });
+
+      const user = userEvent.setup();
+      const orgSelector = screen.getByTestId('unified-org-selector');
+
+      // Switch to the Admin Org (which is OrgAdmin role)
+      await user.selectOptions(orgSelector, 'org-1');
+
+      // Should navigate to admin overview for OrgAdmin
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-org-edit')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to member view when switching to org where user is only Member', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-2',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      // Set up auth state BEFORE rendering
+      localStorage.setItem('authToken', 'test-token');
+      localStorage.setItem('authUser', JSON.stringify({
+        token: 'test-token',
+        userId: 'user-123',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User',
+      }));
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
+      vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mockMemberships);
+
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <NotificationProvider>
+            <AuthProvider>
+              <OrgProvider isAuthenticated={true}>
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<div>Home Content</div>} />
+                  </Route>
+                  <Route path="/admin/organizations/:orgId/edit" element={<div data-testid="admin-org-edit">Admin Org Edit Page</div>} />
+                  <Route path="/me/organizations/:orgId" element={<div data-testid="member-org-view">Member Org View</div>} />
+                </Routes>
+              </OrgProvider>
+            </AuthProvider>
+          </NotificationProvider>
+        </MemoryRouter>
+      );
+
+      // Wait for the org selector to appear
+      await waitFor(() => {
+        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+      });
+
+      const user = userEvent.setup();
+      const orgSelector = screen.getByTestId('unified-org-selector');
+
+      // Switch to the Member Org (which is Member role)
+      await user.selectOptions(orgSelector, 'org-2');
+
+      // Should navigate to member view for regular member
+      await waitFor(() => {
+        expect(screen.getByTestId('member-org-view')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Mixed-role user scenarios', () => {
+    it('shows correct role badge based on selected organization role', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-2',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      renderLayout({ isAuthenticated: true, role: 'User' }, mockMemberships);
+
+      // Wait for permissions and org data to load
+      await waitFor(() => {
+        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // First org should be selected by default and should show role badge
+      await waitFor(() => {
+        expect(screen.getByTestId('active-org-role-badge')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Should see Administration section (because user is OrgAdmin in at least one org)
+      expect(screen.getByText('Administration')).toBeInTheDocument();
+    });
+  });
 });
