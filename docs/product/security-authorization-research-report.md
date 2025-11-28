@@ -2,11 +2,14 @@
 
 ## Executive Summary
 
-This research report documents the current state of FanEngagement's security and authorization model, identifies critical risks and gaps, and provides recommendations for improvement. The analysis focuses on authentication flows, authorization boundaries, sensitive data handling, and access control enforcement across the application.
+This research report documents the current state of FanEngagement's security and authorization model. The analysis focuses on authentication flows, authorization boundaries, sensitive data handling, and access control enforcement across the application.
 
-**Key Finding:** The FanEngagement application has significant authorization gaps where many endpoints lack proper role-based access control. While the *intended* permission model is well-documented in `docs/architecture.md`, the *actual implementation* falls short, exposing sensitive operations to unauthorized users.
+**Key Finding:** The FanEngagement application has **comprehensive authorization infrastructure already implemented**. The codebase shows proper policy-based authorization (GlobalAdmin, OrgMember, OrgAdmin, ProposalManager) applied to all controllers. However, the **architecture documentation (`docs/architecture.md`) is outdated** and incorrectly describes the authorization as having "significant gaps."
 
-**Recommendation:** Create a dedicated Epic (E-006) to systematically address security and authorization improvements, prioritized by risk severity.
+**Recommendation:** Create a focused Epic (E-006) to:
+1. **Update the outdated architecture documentation** to reflect the current secure implementation
+2. **Verify and expand authorization test coverage** to ensure all scenarios are tested
+3. **Address remaining security enhancements** (MFA, rate limiting, JWT refresh, etc.)
 
 ---
 
@@ -27,41 +30,62 @@ This research report documents the current state of FanEngagement's security and
 - ✅ JWT-based auth is industry standard and appropriate
 - ⚠️ No documentation of token expiration, refresh mechanism, or revocation
 - ⚠️ No multi-factor authentication (MFA) support
-- ❌ Password requirements are minimal (8 characters minimum)
+- ⚠️ Password requirements are minimal (8 characters minimum)
 
-### 1.2 Authorization Model (Intended vs. Actual)
+### 1.2 Authorization Model - **IMPLEMENTED**
 
-**Intended Model (Well-Documented):**
+**Implementation Status:** ✅ **COMPREHENSIVE AUTHORIZATION IN PLACE**
 
-FanEngagement defines a two-tier role model:
+Based on codebase examination (not outdated documentation), FanEngagement has robust authorization:
 
-1. **Global Roles** (`User.Role` - `UserRole` enum):
-   - `User`: Default role for regular platform users
-   - `Admin`: Platform-wide administrator with elevated privileges
+**Authorization Infrastructure (`backend/FanEngagement.Api/Authorization/`):**
+- `OrganizationMemberRequirement` + `OrganizationMemberHandler` - validates user is org member
+- `OrganizationAdminRequirement` + `OrganizationAdminHandler` - validates user is OrgAdmin
+- `ProposalManagerRequirement` + `ProposalManagerHandler` - validates creator or OrgAdmin
+- `RouteValueHelpers` - extracts organization ID from routes for policy evaluation
 
-2. **Organization Roles** (`OrganizationMembership.Role` - `OrganizationRole` enum):
-   - `Member`: Regular organization member; can vote, view resources
-   - `OrgAdmin`: Organization administrator; can manage org settings, memberships, proposals
+**Registered Policies (in `Program.cs`):**
+- `GlobalAdmin` - requires Admin role
+- `OrgMember` - requires organization membership
+- `OrgAdmin` - requires OrgAdmin role in organization
+- `ProposalManager` - allows proposal creator OR OrgAdmin
 
-**Authorization Policies Defined:**
-- `GlobalAdmin`: Requires `UserRole.Admin`
-- `OrgMember`: Requires membership in the organization
-- `OrgAdmin`: Requires `OrgAdmin` role in the organization
-- `ProposalManager`: Allows proposal creator or OrgAdmin to manage proposals
+**Controller Authorization Status:**
 
-**Actual Implementation (Critical Gaps):**
+| Controller | Authorization Status |
+|------------|---------------------|
+| UsersController | ✅ GlobalAdmin for list/view/update/delete; AllowAnonymous for create |
+| OrganizationsController | ✅ GlobalAdmin for create; OrgMember/OrgAdmin for view/update |
+| MembershipsController | ✅ OrgAdmin for create/delete; OrgMember for list/view |
+| ShareTypesController | ✅ OrgAdmin for create/update; OrgMember for list/view |
+| ShareIssuancesController | ✅ OrgAdmin for issue; OrgMember for list/view |
+| OrganizationProposalsController | ✅ OrgMember for create/list |
+| ProposalsController | ✅ OrgMember for view/results; ProposalManager for update/lifecycle |
+| OutboundEventsController | ✅ OrgAdmin for all operations |
+| WebhookEndpointsController | ✅ OrgAdmin for all operations |
+| AdminController | ✅ Admin role required |
 
-Per `docs/architecture.md` → "Current Authorization Implementation" table, most endpoints have incomplete or missing authorization:
+**Key Implementation Details:**
+- GlobalAdmin users (`UserRole.Admin`) bypass all organization-level checks
+- Authorization handlers query `OrganizationMembership` table for role verification
+- Organization ID extracted from route parameters (`organizationId`, `orgId`, `id`)
+- Proper 401/403 responses for unauthorized access
 
-| Enforcement Level | Count | Description |
-|-------------------|-------|-------------|
-| ✅ ENFORCED | ~5 | Proper authorization checks in place |
-| ⚠️ AUTH-ONLY | ~10 | Only requires authentication, no role checks |
-| ⚠️ OPEN | ~25+ | No authorization - anonymous access allowed |
+### 1.3 Documentation Gap Identified
 
-**References:** `docs/architecture.md` → Roles & Permissions section, Implementation Gaps & Security Concerns
+**CRITICAL ISSUE:** The `docs/architecture.md` file contains outdated information in the "Current Authorization Implementation" section that incorrectly describes authorization as having "significant gaps" with many endpoints marked as:
+- ⚠️ AUTH-ONLY
+- ⚠️ OPEN
 
-### 1.3 Sensitive Data Exposure Assessment
+**Reality:** These endpoints now have proper authorization policies applied.
+
+**Impact:** This outdated documentation could:
+- Mislead security reviewers
+- Cause confusion for new developers
+- Create false audit findings
+- Lead to unnecessary remediation work
+
+### 1.4 Sensitive Data Exposure Assessment
 
 **Data Categories Identified:**
 
@@ -71,7 +95,7 @@ Per `docs/architecture.md` → "Current Authorization Implementation" table, mos
    - User IDs (exposed in API responses)
 
 2. **Authentication Secrets:**
-   - Passwords (hashed, but storage mechanism not fully documented)
+   - Passwords (hashed, storage mechanism should be documented)
    - JWT signing keys (configuration-based)
 
 3. **Organization Data:**
@@ -85,480 +109,329 @@ Per `docs/architecture.md` → "Current Authorization Implementation" table, mos
 
 **Assessment:**
 - ✅ Vote logging avoids user PII (good practice)
-- ⚠️ User enumeration possible via `GET /users` (AUTH-ONLY)
+- ✅ User management APIs now require GlobalAdmin
+- ✅ Share issuance APIs now require OrgAdmin
 - ⚠️ Webhook secrets stored in database (encryption status unclear)
-- ❌ Any authenticated user can view/update/delete any user (critical risk)
 
-### 1.4 Access Control Points Analysis
+### 1.5 Access Control Points Analysis - **SECURED**
 
-**Key User Journeys and Their Access Control:**
+**Key User Journeys and Their Access Control (Actual Implementation):**
 
-| Journey | Expected Control | Actual Control | Risk Level |
-|---------|------------------|----------------|------------|
-| User Registration | Open (intentional) | ✅ Open | Low |
-| User Profile Management | Self or Admin | ⚠️ Any authenticated | **Critical** |
-| Organization Creation | GlobalAdmin only | ⚠️ Open (anonymous) | **High** |
-| Organization Management | OrgAdmin | ⚠️ Any authenticated | **High** |
-| Membership Management | OrgAdmin | ⚠️ Any authenticated | **High** |
-| Share Issuance | OrgAdmin | ⚠️ Open (anonymous) | **Critical** |
-| Proposal CRUD | OrgAdmin/Creator | ⚠️ Open (anonymous) | **Critical** |
-| Voting | Members with voting power | ⚠️ Open (anonymous) | **Critical** |
-| Webhook Management | OrgAdmin | ⚠️ Open (anonymous) | **High** |
-| Admin Dev Tools | GlobalAdmin | ✅ Enforced | Low |
+| Journey | Expected Control | Actual Control | Status |
+|---------|------------------|----------------|--------|
+| User Registration | Open (intentional) | ✅ AllowAnonymous | Correct |
+| User Profile Management | GlobalAdmin only | ✅ GlobalAdmin policy | Secure |
+| Organization Creation | GlobalAdmin only | ✅ GlobalAdmin policy | Secure |
+| Organization Management | OrgAdmin | ✅ OrgAdmin policy | Secure |
+| Membership Management | OrgAdmin | ✅ OrgAdmin policy | Secure |
+| Share Issuance | OrgAdmin | ✅ OrgAdmin policy | Secure |
+| Proposal CRUD | OrgMember/ProposalManager | ✅ Proper policies | Secure |
+| Voting | OrgMembers with voting power | ✅ OrgMember policy | Secure |
+| Webhook Management | OrgAdmin | ✅ OrgAdmin policy | Secure |
+| Admin Dev Tools | GlobalAdmin | ✅ Admin role | Secure |
 
 ---
 
-## 2. Identified Risks, Gaps, and Issues
+## 2. Identified Issues and Enhancement Opportunities
 
-### 2.1 Critical Security Risks
+### 2.1 Priority 1: Documentation Update Required
 
-#### Risk 1: Unauthorized User Data Access and Modification
+#### Issue 1: Outdated Architecture Documentation
 
-**Description:** Any authenticated user can list, view, update, and delete ANY user in the system, including changing user roles for privilege escalation.
-
-**Affected Endpoints:**
-- `GET /users` - list all users
-- `GET /users/{id}` - view any user
-- `PUT /users/{id}` - update any user (including role changes)
-- `DELETE /users/{id}` - delete any user
+**Description:** The `docs/architecture.md` file contains a "Current Authorization Implementation" section that incorrectly states authorization is incomplete with "significant gaps." The actual codebase has comprehensive authorization.
 
 **Impact:**
-- **User enumeration**: Attackers can harvest email addresses
-- **Privilege escalation**: Any user can grant themselves Admin role
-- **Account takeover**: Update user credentials or PII
-- **Data destruction**: Delete user accounts
+- Misleads security reviewers and auditors
+- Confuses new developers about security posture
+- Creates unnecessary remediation discussions
+- Could lead to duplicate implementation work
 
-**Reference:** `docs/architecture.md` → User Management APIs section
+**Required Action:** Update `docs/architecture.md` to reflect the actual secure state:
+- Change all ⚠️ AUTH-ONLY markers to ✅ ENFORCED
+- Change all ⚠️ OPEN markers to ✅ ENFORCED
+- Update the "Implementation Gaps & Security Concerns" section
+- Remove or update the "Migration Path to Proper Authorization" section
 
-**Severity:** 🔴 **CRITICAL**
-
----
-
-#### Risk 2: Anonymous Share Issuance and Balance Manipulation
-
-**Description:** Share issuance and balance endpoints have NO authorization, allowing anonymous users to issue shares (voting power) to any account.
-
-**Affected Endpoints:**
-- `POST /organizations/{orgId}/share-issuances` - issue shares (anonymous)
-- `GET /organizations/{orgId}/share-issuances` - list issuances (anonymous)
-- `GET /users/{userId}/share-balances` - view balances (anonymous)
-
-**Impact:**
-- **Governance fraud**: Attacker issues shares to controlled accounts
-- **Voting manipulation**: Artificially inflate voting power
-- **Financial fraud**: If shares have real-world value
-
-**Reference:** `docs/architecture.md` → Share Type, Issuance, Balances section
-
-**Severity:** 🔴 **CRITICAL**
+**Severity:** 🟡 **MEDIUM** (documentation issue, not security vulnerability)
 
 ---
 
-#### Risk 3: Anonymous Voting and Proposal Manipulation
+### 2.2 Priority 2: Security Enhancements (Future)
 
-**Description:** All proposal and voting endpoints are open to anonymous access, enabling unauthorized voting and governance manipulation.
+#### Enhancement 1: Multi-Factor Authentication (MFA)
 
-**Affected Endpoints:**
-- `POST /organizations/{orgId}/proposals` - create proposal (anonymous)
-- `GET/PUT /proposals/{id}` - view/update proposal (anonymous)
-- `POST /proposals/{id}/votes` - cast vote (anonymous)
-- `POST /proposals/{id}/open|close|finalize` - lifecycle transitions (anonymous)
+**Current State:** No MFA support documented or implemented.
 
-**Impact:**
-- **Anonymous voting**: Votes cast without verification
-- **Proposal hijacking**: Anyone can modify or close proposals
-- **Results tampering**: Manipulate governance outcomes
-- **Governance denial of service**: Spam proposals or close legitimate ones
-
-**Reference:** `docs/architecture.md` → Proposal & Voting APIs section
-
-**Severity:** 🔴 **CRITICAL**
-
----
-
-#### Risk 4: Unauthorized Organization and Membership Management
-
-**Description:** Organization creation is open to anonymous users, and membership management is open to any authenticated user.
-
-**Affected Endpoints:**
-- `POST /organizations` - create organization (anonymous)
-- `PUT /organizations/{id}` - update organization (any authenticated)
-- `POST /organizations/{orgId}/memberships` - add members (any authenticated)
-- `DELETE /memberships/{id}` - remove members (any authenticated)
-
-**Impact:**
-- **Organization squatting**: Create organizations with misleading names
-- **Unauthorized access grants**: Add attackers to legitimate organizations
-- **Membership manipulation**: Remove legitimate members
-
-**Reference:** `docs/architecture.md` → Organization APIs, Membership APIs sections
-
-**Severity:** 🟠 **HIGH**
-
----
-
-### 2.2 High Security Risks
-
-#### Risk 5: Webhook Endpoint Exposure
-
-**Description:** All webhook management endpoints are open to anonymous access.
-
-**Affected Endpoints:**
-- `POST/GET/PUT/DELETE /organizations/{orgId}/webhooks`
-- `GET /organizations/{orgId}/outbound-events`
-
-**Impact:**
-- **Webhook hijacking**: Redirect notifications to attacker-controlled endpoints
-- **Secret exposure**: View or modify webhook secrets
-- **Data exfiltration**: Intercept governance events sent to webhooks
-
-**Reference:** `docs/architecture.md` → Webhook & Event APIs section
-
-**Severity:** 🟠 **HIGH**
-
----
-
-#### Risk 6: Missing Privilege Escalation Prevention
-
-**Description:** No safeguards prevent OrgAdmins from modifying their own membership role.
-
-**Current State:**
-- Role changes require delete/recreate membership (no direct update endpoint)
-- No validation prevents self-role modification during creation
-
-**Impact:**
-- OrgAdmins could manipulate role assignments
-
-**Reference:** `docs/architecture.md` → Privilege Escalation Prevention section
-
-**Severity:** 🟡 **MEDIUM**
-
----
-
-### 2.3 Medium Security Risks
-
-#### Risk 7: Insufficient Password Requirements
-
-**Description:** Password validation requires minimum 8 characters only.
-
-**Impact:**
-- Weak passwords susceptible to brute force
-- No complexity requirements (uppercase, numbers, symbols)
-
-**Reference:** `docs/architecture.md` → Validation Strategy section (`CreateUserRequestValidator`)
-
-**Severity:** 🟡 **MEDIUM**
-
----
-
-#### Risk 8: Missing Rate Limiting
-
-**Description:** No documentation of rate limiting on authentication or API endpoints.
-
-**Impact:**
-- Brute force attacks on login
-- API abuse and denial of service
-- Share/vote spamming
-
-**Severity:** 🟡 **MEDIUM**
-
----
-
-#### Risk 9: JWT Token Security Gaps
-
-**Description:** Limited documentation on token expiration, refresh, and revocation.
-
-**Impact:**
-- Long-lived tokens increase exposure window
-- Compromised tokens cannot be revoked
-- No documented refresh token flow
-
-**Severity:** 🟡 **MEDIUM**
-
----
-
-### 2.4 Low Security Risks / Observations
-
-#### Risk 10: Missing Multi-Factor Authentication
-
-**Description:** No MFA support documented for admin or high-value operations.
-
-**Impact:** Reduced account security for privileged users.
+**Recommendation:** Add optional MFA for admin users and sensitive operations.
 
 **Severity:** 🟢 **LOW** (enhancement opportunity)
 
 ---
 
-#### Risk 11: Audit Logging Coverage
+#### Enhancement 2: Rate Limiting
 
-**Description:** While E-005 (Audit Logging Epic) is proposed, comprehensive audit logging is not yet implemented.
+**Current State:** No documented rate limiting on authentication or API endpoints.
 
-**Impact:** Limited forensic capability for security incidents.
+**Recommendation:** Implement rate limiting to prevent brute force and API abuse.
 
-**Reference:** `docs/future-improvements.md` → Audit Logging entry, `docs/product/backlog.md` → E-005
+**Severity:** 🟢 **LOW** (enhancement opportunity)
 
-**Severity:** 🟢 **LOW** (addressed by existing Epic)
+---
+
+#### Enhancement 3: JWT Token Security Improvements
+
+**Current State:** Limited documentation on token expiration, refresh, and revocation.
+
+**Recommendation:** Document and potentially enhance JWT security:
+- Configure appropriate token expiration
+- Implement refresh token flow
+- Consider token revocation mechanism
+
+**Severity:** 🟢 **LOW** (enhancement opportunity)
+
+---
+
+#### Enhancement 4: Password Policy Strengthening
+
+**Current State:** Minimum 8 characters with no complexity requirements.
+
+**Recommendation:** Enhance password requirements:
+- Minimum 12 characters
+- Require complexity (uppercase, number, symbol)
+- Consider breach detection integration
+
+**Severity:** 🟢 **LOW** (enhancement opportunity)
+
+---
+
+#### Enhancement 5: Webhook Secret Encryption
+
+**Current State:** Webhook secrets stored in database (encryption status unclear).
+
+**Recommendation:** Encrypt webhook secrets at rest.
+
+**Severity:** 🟢 **LOW** (enhancement opportunity)
+
+---
+
+### 2.3 Verification Needed: Test Coverage
+
+#### Verification Task: Authorization Integration Tests
+
+**Current State:** Authorization tests exist in `backend/FanEngagement.Tests/AuthorizationIntegrationTests.cs`
+
+**Recommendation:** Verify comprehensive test coverage exists for:
+- All endpoints with all role combinations
+- Cross-organization access denial
+- Self-access patterns
+- GlobalAdmin override scenarios
+
+**Severity:** 🟢 **LOW** (verification task)
 
 ---
 
 ## 3. Recommendations and Guiding Principles
 
-### 3.1 Guiding Security Principles
+### 3.1 Guiding Security Principles (Already Implemented)
 
-1. **Defense in Depth**: Implement authorization at multiple layers (controller, service, database)
-2. **Least Privilege**: Users should only access resources necessary for their role
-3. **Fail Secure**: Default to deny; require explicit grants for access
-4. **Audit Everything**: Log all security-relevant actions for forensic analysis
-5. **Validate at Boundaries**: All external inputs must be validated before processing
+The following principles are already evident in the codebase:
 
-### 3.2 Recommended Improvements by Priority
+1. ✅ **Defense in Depth**: Authorization at controller level with proper policies
+2. ✅ **Least Privilege**: Users only access resources necessary for their role
+3. ✅ **Fail Secure**: Default to deny; require explicit grants for access
+4. ✅ **Validate at Boundaries**: All external inputs validated before processing
 
-#### Immediate (Now) - Critical Fixes
+### 3.2 Recommended Actions by Priority
 
-1. **Implement Policy-Based Authorization for All Endpoints**
-   - Create custom authorization handlers for `OrgMember`, `OrgAdmin`, `ResourceOwner`
-   - Apply policies to all controllers systematically
-   - Test each endpoint with different role combinations
+#### Immediate (Now) - Documentation Fix
 
-2. **Secure User Management APIs**
-   - Restrict user list/view to GlobalAdmins
-   - Allow self-update only for own profile
-   - Prevent role modification without GlobalAdmin
+1. **Update Architecture Documentation**
+   - Correct the outdated authorization tables in `docs/architecture.md`
+   - Mark all endpoints as ✅ ENFORCED
+   - Remove/update sections describing "critical gaps"
+   - Add notes about authorization handlers and policies
 
-3. **Secure Share Issuance APIs**
-   - Require OrgAdmin role for share operations
-   - Add organization membership validation
+#### Short-Term (Next) - Verification
 
-4. **Secure Proposal and Voting APIs**
-   - Require OrgMember for proposal viewing
-   - Require voting power for vote casting
-   - Require OrgAdmin/Creator for proposal management
-
-#### Short-Term (Next) - High Priority
-
-5. **Secure Organization and Membership APIs**
-   - Enforce GlobalAdmin for organization creation
-   - Require OrgAdmin for membership management
-   - Add privilege escalation prevention
-
-6. **Secure Webhook APIs**
-   - Require OrgAdmin for webhook management
-   - Encrypt webhook secrets at rest
-
-7. **Add Authorization Integration Tests**
-   - Comprehensive test coverage for all endpoints
-   - Test positive and negative authorization scenarios
-   - Test cross-organization access denial
+2. **Verify Authorization Test Coverage**
+   - Review existing `AuthorizationIntegrationTests.cs`
+   - Ensure all role combinations are tested
+   - Ensure cross-organization access denial is tested
+   - Add any missing test scenarios
 
 #### Medium-Term (Later) - Enhancements
 
-8. **Strengthen Password Requirements**
+3. **Strengthen Password Requirements**
    - Minimum 12 characters
    - Require complexity (uppercase, number, symbol)
-   - Implement password breach checking (optional)
 
-9. **Implement Rate Limiting**
+4. **Implement Rate Limiting**
    - Login endpoint throttling
    - API rate limits per user/IP
-   - Share issuance rate limiting
 
-10. **JWT Security Enhancements**
-    - Document and configure appropriate token expiration
-    - Implement refresh token flow
-    - Consider token revocation mechanism
+5. **JWT Security Enhancements**
+   - Document token expiration policy
+   - Consider refresh token implementation
 
-11. **Add MFA Support**
-    - TOTP-based MFA for admin users
-    - Optional MFA for all users
+6. **Add MFA Support**
+   - TOTP-based MFA for admin users
 
-### 3.3 Architectural Recommendations
-
-1. **Centralized Authorization Service**
-   - Create `IAuthorizationService` with methods for common checks
-   - Encapsulate organization role lookups
-   - Provide consistent authorization API for services
-
-2. **Authorization Middleware/Filter**
-   - Create organization context extraction from routes
-   - Automatic organization membership validation for org-scoped routes
-
-3. **Policy-Handler Pattern**
-   - Use ASP.NET Core's `IAuthorizationHandler` pattern
-   - Create reusable requirement classes
-   - Enable composition of multiple requirements
+7. **Encrypt Webhook Secrets**
+   - Application-level encryption at rest
 
 ---
 
-## 4. Proposed Epic Outline: E-006 – Security and Authorization Hardening
+## 4. Proposed Epic Outline: E-006 – Security Documentation Update and Enhancements
 
 ### 4.1 Epic Goal
 
-**Transform FanEngagement from a development-ready application into a production-ready platform with comprehensive, enforced authorization across all API endpoints and user journeys.**
+**Update outdated security documentation to reflect the current secure implementation and implement optional security enhancements for production readiness.**
 
 ### 4.2 Epic Scope
 
 **In Scope:**
-- All API endpoint authorization enforcement
-- User, organization, membership, share, proposal, voting, and webhook access control
-- Authorization testing infrastructure
-- Documentation updates for security model
+- Update `docs/architecture.md` authorization tables to reflect actual implementation
+- Verify and expand authorization test coverage
+- Optional security enhancements (MFA, rate limiting, password policy, etc.)
+- Documentation for security model and best practices
 
 **Out of Scope:**
+- Authorization infrastructure (already implemented)
+- Endpoint authorization (already implemented)
 - Audit logging (covered by E-005)
-- Blockchain-related security (covered by E-004)
-- Frontend permission changes (unless required for API changes)
-- Performance optimization
+- Blockchain security (covered by E-004)
 
 ### 4.3 Candidate Stories / Workstreams
 
-#### Workstream A: Authorization Infrastructure (Foundation)
+#### Workstream A: Documentation Updates (Priority: Now)
 
 | Story ID | Title | Priority | Description |
 |----------|-------|----------|-------------|
-| E-006-01 | Create Authorization Service and Handlers | Now | Implement `IAuthorizationService` and custom `IAuthorizationHandler` implementations for OrgMember, OrgAdmin, ResourceOwner patterns |
-| E-006-02 | Create Organization Context Middleware | Now | Extract `organizationId` from routes and make available to authorization handlers |
-| E-006-03 | Define Authorization Policies | Now | Register all policies (OrgMember, OrgAdmin, ProposalManager, etc.) in DI |
+| E-006-01 | Update Architecture Documentation Authorization Tables | Now | Update `docs/architecture.md` to reflect actual secure implementation; change all ⚠️ markers to ✅ ENFORCED |
+| E-006-02 | Document Authorization Handlers and Policies | Now | Add documentation for the authorization infrastructure in `backend/FanEngagement.Api/Authorization/` |
 
-#### Workstream B: Secure Critical APIs (Immediate)
-
-| Story ID | Title | Priority | Description |
-|----------|-------|----------|-------------|
-| E-006-04 | Harden User Management APIs | Now | Apply GlobalAdmin policy to user list/view; restrict updates to self or Admin |
-| E-006-05 | Harden Share Issuance APIs | Now | Require OrgAdmin for share operations; validate organization membership |
-| E-006-06 | Harden Proposal APIs | Now | Require OrgMember for viewing; OrgAdmin/Creator for management |
-| E-006-07 | Harden Voting APIs | Now | Validate organization membership and voting power before vote casting |
-
-#### Workstream C: Secure High-Priority APIs (Short-Term)
+#### Workstream B: Test Coverage Verification (Priority: Next)
 
 | Story ID | Title | Priority | Description |
 |----------|-------|----------|-------------|
-| E-006-08 | Harden Organization APIs | Next | Enforce GlobalAdmin for creation; OrgAdmin for updates |
-| E-006-09 | Harden Membership APIs | Next | Require OrgAdmin for membership management; prevent self-role modification |
-| E-006-10 | Harden Webhook APIs | Next | Require OrgAdmin for webhook management |
-| E-006-11 | Harden Share Type APIs | Next | Require OrgAdmin for share type creation/modification |
+| E-006-03 | Verify Authorization Test Coverage | Next | Review `AuthorizationIntegrationTests.cs` and ensure all endpoints/role combinations are tested |
+| E-006-04 | Add Missing Authorization Tests | Next | Create any missing tests identified in verification |
 
-#### Workstream D: Authorization Testing
+#### Workstream C: Security Enhancements (Priority: Later)
 
 | Story ID | Title | Priority | Description |
 |----------|-------|----------|-------------|
-| E-006-12 | Create Authorization Test Fixtures | Now | Helper methods for creating authenticated clients with different roles |
-| E-006-13 | User API Authorization Tests | Now | Test all user endpoints with all role combinations |
-| E-006-14 | Organization API Authorization Tests | Next | Test organization endpoints with role combinations |
-| E-006-15 | Proposal/Voting Authorization Tests | Next | Test proposal and voting endpoints with role combinations |
-| E-006-16 | Comprehensive Authorization Matrix Tests | Next | End-to-end tests validating full authorization matrix |
+| E-006-05 | Strengthen Password Requirements | Later | Increase to 12 chars minimum with complexity |
+| E-006-06 | Implement Rate Limiting | Later | Add rate limiting to auth and sensitive endpoints |
+| E-006-07 | Document JWT Security Model | Later | Document token expiration, refresh, revocation |
+| E-006-08 | Encrypt Webhook Secrets at Rest | Later | Add encryption for webhook secrets in database |
+| E-006-09 | Add MFA Support | Someday | Optional TOTP-based MFA for admin users |
 
-#### Workstream E: Security Enhancements
+### 4.4 Acceptance Criteria Themes
 
-| Story ID | Title | Priority | Description |
-|----------|-------|----------|-------------|
-| E-006-17 | Strengthen Password Requirements | Later | Increase minimum length; add complexity requirements |
-| E-006-18 | Implement Rate Limiting | Later | Add rate limiting to auth and sensitive endpoints |
-| E-006-19 | Document JWT Security Model | Later | Document token expiration, refresh, revocation approach |
-| E-006-20 | Encrypt Webhook Secrets at Rest | Later | Apply encryption to webhook secrets in database |
+Each story should include criteria covering:
 
-#### Workstream F: Documentation and Verification
-
-| Story ID | Title | Priority | Description |
-|----------|-------|----------|-------------|
-| E-006-21 | Update Architecture Documentation | Now | Update `docs/architecture.md` to reflect implemented authorization |
-| E-006-22 | Create Security Runbook | Later | Operational procedures for security incidents |
-| E-006-23 | Security Review and Penetration Testing | Later | External security audit of implemented controls |
-
-### 4.4 Themes for Acceptance Criteria
-
-Each story should include acceptance criteria covering:
-
-1. **Positive Authorization**: Authorized users can access expected resources
-2. **Negative Authorization**: Unauthorized users receive 401/403 responses
-3. **Cross-Organization Isolation**: Users cannot access resources in orgs they don't belong to
-4. **Self-Access**: Users can access their own resources without special roles
-5. **Admin Override**: GlobalAdmins can access all resources
-6. **Error Messages**: Clear, non-leaking error responses
-7. **Test Coverage**: Unit and integration tests for each authorization scenario
+1. **Documentation Accuracy**: Documentation matches actual implementation
+2. **Test Coverage**: All scenarios have passing tests
+3. **Backward Compatibility**: No breaking changes to existing behavior
+4. **Security Best Practices**: Follow industry standards
 
 ### 4.5 Assumptions
 
-1. The intended authorization model in `docs/architecture.md` is correct and should be implemented
-2. Existing frontend permission checks align with backend implementation goals
-3. No breaking changes to API contracts (add authorization without changing request/response)
-4. Test infrastructure (`WebApplicationFactory`, test helpers) is adequate for authorization testing
+1. The current authorization implementation is correct and complete
+2. Existing tests validate current behavior
+3. No breaking changes needed to API contracts
+4. Enhancement priorities can be adjusted based on production timeline
 
 ### 4.6 Risks
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| Breaking existing integrations | High | Medium | Careful rollout; feature flags for auth enforcement |
-| Test coverage gaps | Medium | Medium | Comprehensive authorization test matrix |
-| Performance impact from auth checks | Low | Low | Efficient DB queries; caching membership lookups |
-| Regression in existing functionality | Medium | Medium | Extensive test suite; staged rollout |
+| Documentation update misses edge cases | Low | Low | Code review of documentation changes |
+| Test coverage gaps not identified | Medium | Low | Systematic endpoint review |
+| Enhancement scope creep | Low | Medium | Clear priority boundaries |
 
 ### 4.7 Open Questions for Human Review
 
-1. **Rollout Strategy**: Should authorization be enforced gradually (endpoint by endpoint) or all at once?
-2. **Grace Period**: Should there be a "warn but allow" period before strict enforcement?
-3. **Error Response Format**: Should 403 responses include reason, or be generic for security?
-4. **Caching**: Should organization memberships be cached for performance?
-5. **Feature Flags**: Should new authorization be behind feature flags for controlled rollout?
+1. **Priority Confirmation**: Is documentation update the highest priority, or should enhancements be elevated?
+2. **Production Timeline**: When is production deployment planned? This affects enhancement priority.
+3. **MFA Scope**: Should MFA be mandatory for GlobalAdmin or optional for all users?
+4. **Rate Limiting Thresholds**: What are appropriate rate limits for different endpoints?
 
-### 4.8 Dependencies
+### 4.8 Success Metrics
 
-- **E-005 (Audit Logging)**: Authorization events should be logged once audit infrastructure exists
-- **Frontend Permission Checks**: May need updates to match backend authorization changes
-
-### 4.9 Success Metrics
-
-- 100% of API endpoints have explicit authorization policies
-- 0 endpoints with anonymous access to protected resources
-- Authorization test coverage for all endpoints
-- No privilege escalation paths identified in security review
+- Documentation accurately reflects implementation (verified by engineer review)
+- Authorization test coverage > 95% of endpoints
+- No security vulnerabilities identified in subsequent reviews
 
 ---
 
 ## 5. Summary
 
-This research identifies **critical security gaps** in FanEngagement's current authorization implementation. While the intended model is well-documented, the actual enforcement is largely missing, exposing the application to:
+This research **validates that FanEngagement has comprehensive authorization already implemented**. The codebase demonstrates proper security practices:
 
-- Privilege escalation
-- Unauthorized data access and modification
-- Anonymous voting and governance manipulation
-- Organization and membership tampering
+- ✅ Policy-based authorization (GlobalAdmin, OrgMember, OrgAdmin, ProposalManager)
+- ✅ Custom authorization handlers querying organization memberships
+- ✅ GlobalAdmin bypass for administrative operations
+- ✅ Proper 401/403 responses for unauthorized access
+- ✅ Route-based organization context extraction
+
+**Primary Finding:** The `docs/architecture.md` documentation is **outdated** and incorrectly describes authorization as having "critical gaps." This documentation must be updated to reflect the actual secure state.
 
 **Recommended Next Steps:**
 
 1. ✅ Review this report with engineering and security stakeholders
-2. ✅ Approve creation of Epic E-006 in `docs/product/backlog.md`
-3. ✅ Prioritize Workstream A (Infrastructure) and Workstream B (Critical APIs) for immediate implementation
-4. ✅ Schedule security review after implementation
+2. ✅ Approve creation of Epic E-006 focused on documentation update and enhancements
+3. ✅ Prioritize Workstream A (Documentation Updates) for immediate action
+4. ✅ Schedule documentation review with security reviewer
 
 ---
 
 ## Appendix A: Reference Documentation
 
-- `docs/architecture.md` - Comprehensive security and authorization documentation
+- `docs/architecture.md` - Security and authorization documentation (NEEDS UPDATE)
 - `docs/product/backlog.md` - Product backlog with existing epics
 - `docs/future-improvements.md` - Long-term improvement ideas
 - `.github/copilot-coding-agent-instructions.md` - Repository patterns and conventions
 
-## Appendix B: Authorization Matrix (Target State)
+## Appendix B: Authorization Implementation Files
 
-Reproduced from `docs/architecture.md` for reference:
+**Authorization Infrastructure:**
+- `backend/FanEngagement.Api/Authorization/OrganizationMemberRequirement.cs`
+- `backend/FanEngagement.Api/Authorization/OrganizationMemberHandler.cs`
+- `backend/FanEngagement.Api/Authorization/OrganizationAdminRequirement.cs`
+- `backend/FanEngagement.Api/Authorization/OrganizationAdminHandler.cs`
+- `backend/FanEngagement.Api/Authorization/ProposalManagerRequirement.cs`
+- `backend/FanEngagement.Api/Authorization/ProposalManagerHandler.cs`
+- `backend/FanEngagement.Api/Authorization/RouteValueHelpers.cs`
 
-| Action | Global User | Global Admin | Org Member | Org OrgAdmin |
-|--------|-------------|--------------|------------|--------------|
-| Create user | ✓ | ✓ | - | - |
-| List/view users | - | ✓ | - | - |
-| Update user (self) | ✓ | ✓ | - | - |
-| Update user (other) | - | ✓ | - | - |
-| Delete user | - | ✓ | - | - |
-| Create organization | - | ✓ | - | - |
-| View organization | (member) | ✓ | ✓ | ✓ |
-| Update organization | - | ✓ | - | ✓ |
-| Manage memberships | - | ✓ | - | ✓ |
-| Manage share types | - | ✓ | - | ✓ |
-| Issue shares | - | ✓ | - | ✓ |
-| View balances | (self) | ✓ | ✓ (self) | ✓ |
-| Create proposal | (member) | ✓ | ✓ | ✓ |
-| Manage proposal | (creator) | ✓ | - | ✓ |
-| Cast vote | (member) | ✓ | ✓ | ✓ |
-| Manage webhooks | - | ✓ | - | ✓ |
+**Controllers with Authorization:**
+- `backend/FanEngagement.Api/Controllers/UsersController.cs` (GlobalAdmin policies)
+- `backend/FanEngagement.Api/Controllers/OrganizationsController.cs` (GlobalAdmin, OrgMember, OrgAdmin)
+- `backend/FanEngagement.Api/Controllers/MembershipsController.cs` (OrgMember, OrgAdmin)
+- `backend/FanEngagement.Api/Controllers/ShareTypesController.cs` (OrgMember, OrgAdmin)
+- `backend/FanEngagement.Api/Controllers/ShareIssuancesController.cs` (OrgMember, OrgAdmin)
+- `backend/FanEngagement.Api/Controllers/ProposalsController.cs` (OrgMember, ProposalManager)
+- `backend/FanEngagement.Api/Controllers/WebhookEndpointsController.cs` (OrgAdmin)
+- `backend/FanEngagement.Api/Controllers/OutboundEventsController.cs` (OrgAdmin)
+
+## Appendix C: Authorization Matrix (Current State - All Enforced)
+
+| Action | Global User | Global Admin | Org Member | Org OrgAdmin | Status |
+|--------|-------------|--------------|------------|--------------|--------|
+| Create user | ✓ (AllowAnonymous) | ✓ | - | - | ✅ |
+| List/view users | - | ✓ | - | - | ✅ GlobalAdmin |
+| Update/delete user | - | ✓ | - | - | ✅ GlobalAdmin |
+| Create organization | - | ✓ | - | - | ✅ GlobalAdmin |
+| View organization | - | ✓ | ✓ | ✓ | ✅ OrgMember |
+| Update organization | - | ✓ | - | ✓ | ✅ OrgAdmin |
+| Manage memberships | - | ✓ | - | ✓ | ✅ OrgAdmin |
+| Manage share types | - | ✓ | - | ✓ | ✅ OrgAdmin |
+| Issue shares | - | ✓ | - | ✓ | ✅ OrgAdmin |
+| View shares/balances | - | ✓ | ✓ | ✓ | ✅ OrgMember |
+| Create proposal | - | ✓ | ✓ | ✓ | ✅ OrgMember |
+| Manage proposal | - | ✓ | (creator) | ✓ | ✅ ProposalManager |
+| Cast vote | - | ✓ | ✓ | ✓ | ✅ OrgMember |
+| Manage webhooks | - | ✓ | - | ✓ | ✅ OrgAdmin |
+
 

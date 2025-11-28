@@ -34,24 +34,22 @@ Clarify whether proposals should expose/display a Type column throughout documen
 - Triggered by reviewer feedback on removing the Type column from proposal tables.
 - Confirm whether the Proposal entity will gain a Type field or if documentation needs a permanent explanation.
 
-### Security and Authorization Hardening (Epic E-006)
+### Security Documentation Update and Enhancements (Epic E-006)
 
-Systematically implement authorization enforcement across all API endpoints to close critical security gaps identified in the security research report. The current implementation has significant authorization gaps where many endpoints lack proper role-based access control.
+Update outdated security documentation to accurately reflect the current secure implementation, verify authorization test coverage, and implement optional security enhancements for production readiness.
+
+**Key Finding:** Authorization is already comprehensively implemented in the codebase. The `docs/architecture.md` documentation is outdated and incorrectly describes authorization as having "significant gaps."
 
 - **Epic:** E-006 in `docs/product/backlog.md`
 - **Research Report:** `docs/product/security-authorization-research-report.md`
 - **Theme:** T3 – Governance Transparency & Trust (Security)
 - **Key Deliverables:**
-  - Authorization service and custom handlers infrastructure
-  - Policy-based authorization for all API endpoints
-  - Comprehensive authorization integration tests
-  - Updated architecture documentation
-- **Priority:** Now (Critical)
+  - Updated architecture documentation reflecting secure implementation
+  - Verification of authorization test coverage
+  - Optional security enhancements (password policy, rate limiting, etc.)
+- **Priority:** Now (Documentation); Later (Enhancements)
 - **Status:** Proposed (pending human review)
-- **Critical Risks Identified:**
-  - Unauthorized user data access and privilege escalation
-  - Anonymous share issuance and voting
-  - Organization and membership manipulation
+- **Note:** Authorization infrastructure and endpoint policies are already implemented
 
 ### Multi-Factor Authentication (MFA) Support
 
