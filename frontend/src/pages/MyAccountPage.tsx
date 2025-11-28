@@ -139,7 +139,7 @@ export const MyAccountPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <strong>Role:</strong> {user.role}
             </div>
-            {user.createdAt && (
+            {user.createdAt && user.createdAt.trim() && (
               <div style={{ marginBottom: '1rem' }}>
                 <strong>Member Since:</strong>{' '}
                 {new Date(user.createdAt).toLocaleDateString()}
