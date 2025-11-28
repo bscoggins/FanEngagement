@@ -411,8 +411,11 @@ public class AuditEventBuilder
     private static string? TruncateReason(string? reason)
     {
         const int MaxLength = 1000;
+        const string TruncationSuffix = "...[truncated]";
         if (string.IsNullOrEmpty(reason)) return reason;
-        return reason.Length <= MaxLength ? reason : reason[..MaxLength];
+        if (reason.Length <= MaxLength) return reason;
+        // Truncate and append indicator to show message was cut off
+        return reason[..(MaxLength - TruncationSuffix.Length)] + TruncationSuffix;
     }
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
@@ -624,11 +627,15 @@ public class AuditAuthorizationMiddleware
         // Capture 403 Forbidden responses
         if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
         {
+            // Generate a deterministic ResourceId for system events based on endpoint
+            // This ensures consistent tracking while avoiding Guid.Empty issues
+            var resourceId = GenerateDeterministicGuid($"authz-denied:{context.Request.Path}:{context.Request.Method}");
+            
             await auditService.LogAsync(
                 new AuditEventBuilder()
                     .WithActor(context)
                     .WithAction(ActionType.AuthorizationDenied)
-                    .WithResource(ResourceType.SystemConfiguration, Guid.Empty, context.Request.Path)
+                    .WithResource(ResourceType.SystemConfiguration, resourceId, context.Request.Path)
                     .WithDetails(new {
                         Endpoint = context.Request.Path.Value,
                         Method = context.Request.Method,
@@ -637,6 +644,16 @@ public class AuditAuthorizationMiddleware
                     .WithCorrelationId(GetCorrelationId(context))
                     .AsDenied("Authorization denied"));
         }
+    }
+    
+    /// <summary>
+    /// Generates a deterministic GUID from a string for consistent system event tracking.
+    /// </summary>
+    private static Guid GenerateDeterministicGuid(string input)
+    {
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
+        return new Guid(hash);
     }
 }
 ```
@@ -891,7 +908,16 @@ When database persistence fails, write events to a local file for later recovery
 ```csharp
 public class AuditPersistenceBackgroundService : BackgroundService
 {
-    private const string FallbackDirectory = "/var/log/fanengagement/audit-fallback";
+    private readonly AuditOptions _options;
+    
+    // Fallback directory is configurable via AuditOptions; defaults to platform-appropriate location
+    private string FallbackDirectory => _options.FallbackDirectory 
+        ?? Path.Combine(Path.GetTempPath(), "fanengagement", "audit-fallback");
+    
+    public AuditPersistenceBackgroundService(IOptions<AuditOptions> options)
+    {
+        _options = options.Value;
+    }
     
     private async Task PersistBatchAsync(List<AuditEvent> batch, CancellationToken ct)
     {
@@ -1070,9 +1096,15 @@ public static class AuditDependencyInjection
     public static IServiceCollection AddAuditServices(this IServiceCollection services)
     {
         // Channel with bounded capacity to prevent memory issues
+        // Using DropWrite mode ensures newer events are dropped rather than older ones,
+        // preserving the audit trail's chronological integrity. This is acceptable because:
+        // 1. High-volume situations are temporary (channel catches up when load decreases)
+        // 2. Dropped events are logged with warnings for monitoring
+        // 3. Critical governance events use sync mode and bypass the channel
+        // Alternative: Use Wait mode to block callers, but this risks degrading application performance
         services.AddSingleton(Channel.CreateBounded<AuditEvent>(new BoundedChannelOptions(10000)
         {
-            FullMode = BoundedChannelFullMode.DropOldest,
+            FullMode = BoundedChannelFullMode.DropWrite,  // Drop new events when full, preserving older events
             SingleReader = true,
             SingleWriter = false
         }));
@@ -1228,12 +1260,17 @@ sequenceDiagram
     "ChannelCapacity": 10000,
     "BatchSize": 100,
     "BatchIntervalMs": 1000,
-    "FallbackDirectory": "/var/log/fanengagement/audit-fallback",
+    "FallbackDirectory": null,
     "RetentionDays": 2555,
     "SensitiveFieldsToRedact": ["password", "secret", "token", "apiKey"]
   }
 }
 ```
+
+**Configuration Notes:**
+
+- `FallbackDirectory`: When null, defaults to platform-appropriate location (`{TempPath}/fanengagement/audit-fallback`)
+- `RetentionDays`: Default of 2555 days (~7 years) aligns with SOX compliance requirements for financial records and provides a conservative default for governance audit trails. Organizations may adjust based on their specific regulatory requirements (see [data-model.md](data-model.md#7-retention-and-archival-strategy) for detailed compliance guidance).
 
 ### 8.2 Configuration Class
 
@@ -1269,11 +1306,18 @@ public class AuditOptions
     
     /// <summary>
     /// Directory for fallback files when database is unavailable.
+    /// When null, defaults to platform-appropriate location.
     /// </summary>
-    public string FallbackDirectory { get; set; } = "/var/log/fanengagement/audit-fallback";
+    public string? FallbackDirectory { get; set; } = null;
     
     /// <summary>
     /// Number of days to retain audit events. Default: 2555 (7 years).
+    /// This default aligns with SOX compliance requirements for financial records.
+    /// Organizations should adjust based on their specific regulatory requirements:
+    /// - SOX: 7 years for financial records
+    /// - HIPAA: 6 years for healthcare records
+    /// - GDPR: No minimum, but audit logs may be retained for compliance verification
+    /// - PCI-DSS: 1 year readily available
     /// </summary>
     public int RetentionDays { get; set; } = 2555;
     
