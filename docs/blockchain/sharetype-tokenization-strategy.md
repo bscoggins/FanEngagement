@@ -594,7 +594,7 @@ async function batchMintTokens(
         );
       }
       
-      const sig = await sendAndConfirmTransaction(connection, tx, [authority]);
+      const sig = await sendAndConfirmTransaction(connection, tx, [platformAuthority]);
       signatures.push(sig);
     }
   }
