@@ -44,6 +44,14 @@ public class MembershipsController(IMembershipService membershipService) : Contr
         return Ok(membership);
     }
 
+    [HttpGet("available-users")]
+    [Authorize(Policy = "OrgAdmin")]
+    public async Task<ActionResult> GetAvailableUsers(Guid organizationId, CancellationToken cancellationToken)
+    {
+        var availableUsers = await membershipService.GetAvailableUsersAsync(organizationId, cancellationToken);
+        return Ok(availableUsers);
+    }
+
     [HttpDelete("{userId:guid}")]
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Delete(Guid organizationId, Guid userId, CancellationToken cancellationToken)

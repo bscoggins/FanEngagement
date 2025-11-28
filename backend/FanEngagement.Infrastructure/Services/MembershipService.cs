@@ -1,4 +1,5 @@
 using FanEngagement.Application.Memberships;
+using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -129,6 +130,41 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    public async Task<IReadOnlyList<UserDto>> GetAvailableUsersAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    {
+        // Validate organization exists
+        var organizationExists = await dbContext.Organizations
+            .AsNoTracking()
+            .AnyAsync(o => o.Id == organizationId, cancellationToken);
+
+        if (!organizationExists)
+        {
+            throw new InvalidOperationException($"Organization {organizationId} not found");
+        }
+
+        // Get all users that are NOT already members of this organization
+        // Uses a subquery to efficiently filter in the database
+        var memberUserIds = dbContext.OrganizationMemberships
+            .Where(m => m.OrganizationId == organizationId)
+            .Select(m => m.UserId);
+
+        var availableUsers = await dbContext.Users
+            .AsNoTracking()
+            .Where(u => !memberUserIds.Contains(u.Id))
+            .OrderBy(u => u.DisplayName)
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                DisplayName = u.DisplayName,
+                Role = u.Role,
+                CreatedAt = u.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        return availableUsers;
     }
 
     private static MembershipDto MapToDto(OrganizationMembership membership)

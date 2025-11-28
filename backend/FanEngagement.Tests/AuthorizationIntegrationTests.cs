@@ -310,6 +310,94 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetAvailableUsers_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/memberships/available-users");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAvailableUsers_ReturnsOk_ForGlobalAdmin()
+    {
+        // Arrange
+        var (_, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(globalAdminToken);
+
+        // Create an organization
+        var orgRequest = new CreateOrganizationRequest { Name = "Test Organization" };
+        var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
+        var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{org!.Id}/memberships/available-users");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAvailableUsers_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/memberships/available-users");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAvailableUsers_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/memberships/available-users");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAvailableUsers_ReturnsUsersNotAlreadyMembers()
+    {
+        // Arrange
+        var (orgId, adminUserId, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        
+        // Create an additional user who is NOT a member of the org
+        var (nonMemberUser, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/memberships/available-users");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var availableUsers = await response.Content.ReadFromJsonAsync<List<UserDto>>();
+        Assert.NotNull(availableUsers);
+        
+        // The non-member user should be in the available users list
+        Assert.Contains(availableUsers, u => u.Id == nonMemberUser.Id);
+        
+        // The admin user (who is a member) should NOT be in the available users list
+        Assert.DoesNotContain(availableUsers, u => u.Id == adminUserId);
+    }
+
     #endregion
 
     #region ShareType Authorization Tests
