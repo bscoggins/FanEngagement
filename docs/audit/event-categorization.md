@@ -699,7 +699,7 @@ If read auditing is enabled for specific scenarios:
 | Standard | Relevance |
 |----------|-----------|
 | [NIST SP 800-92](https://csrc.nist.gov/publications/detail/sp/800-92/final) | Guide to Computer Security Log Management |
-| [ISO 27001:2022 A.12.4](https://www.iso.org/standard/27001) | Logging and monitoring controls |
+| [ISO 27001:2022 A.8.15](https://www.iso.org/standard/27001) | Logging and monitoring controls |
 | [SOC 2 CC7.2](https://us.aicpa.org/interestareas/frc/assuranceadvisoryservices/aaboristemcontrols) | Security event logging criteria |
 
 ### 8.3 Appendix: Quick Reference Card
