@@ -731,7 +731,7 @@ metrics.SetProposalsByStatusProvider(() =>
 
 ## Roles & Permissions
 
-FanEngagement defines a two-tier role model: **Global Roles** (platform-wide) and **Organization Roles** (per-organization). The role model is implemented in the domain entities, but **authorization enforcement is currently incomplete** and varies by endpoint.
+FanEngagement defines a two-tier role model: **Global Roles** (platform-wide) and **Organization Roles** (per-organization). The role model is implemented in the domain entities with **comprehensive authorization enforcement** via policy-based authorization.
 
 ### Role Definitions
 
@@ -772,155 +772,132 @@ These roles are assigned per-organization via the `OrganizationMembership.Role` 
 
 ### Current Authorization Implementation
 
-> **⚠️ IMPORTANT:** The permissions documented below represent the **intended model**, not the current implementation. Many endpoints lack proper authorization checks. See the table below for actual enforcement.
+> **✅ COMPREHENSIVE AUTHORIZATION:** All endpoints have proper authorization enforcement via policy-based authorization. The table below documents the current implementation.
 
-The table below specifies the **intended** permissions model that should be enforced.
+The table below specifies the current authorization model enforced across all API endpoints.
 
-| Action | Current Enforcement | Intended: Global User | Intended: Global Admin | Intended: Org Member | Intended: Org OrgAdmin | Implementation Notes |
-|--------|---------------------|-------------|---------------|-------------|---------------|----------------------|
+| Action | Current Enforcement | Global User | Global Admin | Org Member | Org OrgAdmin | Implementation Notes |
+|--------|---------------------|-------------|--------------|------------|--------------|----------------------|
 | **User Management** |
-| Create user | ✅ OPEN | ✓ | ✓ | - | - | `[AllowAnonymous]` - anyone can create |
-| List all users | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can list |
-| View any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can view |
-| Update any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - CRITICAL RISK: any authenticated user can update any user (including role changes for privilege escalation) |
-| Delete any user | ⚠️ AUTH-ONLY | - | ✓ | - | - | `[Authorize]` only - any authenticated user can delete |
-| View own memberships | ✅ ENFORCED | ✓ | ✓ | - | - | Properly checks self or Admin role |
+| Create user | ✅ OPEN | ✓ | ✓ | - | - | `[AllowAnonymous]` - anyone can register |
+| List all users | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Policy = "GlobalAdmin")]` |
+| View any user | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Policy = "GlobalAdmin")]` |
+| Update any user | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Policy = "GlobalAdmin")]` |
+| Delete any user | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Policy = "GlobalAdmin")]` |
+| View own memberships | ✅ ENFORCED | ✓ (self) | ✓ | - | - | Checks self or Admin role |
 | View user statistics | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Roles = "Admin")]` |
 | **Organization Management** |
-| Create organization | ⚠️ OPEN | - | ✓ | - | - | No `[Authorize]` - anonymous users can create |
-| List all organizations | ⚠️ OPEN | ✓ | ✓ | - | - | No `[Authorize]` - anonymous access |
-| View organization | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
-| Update organization | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can update |
+| Create organization | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Policy = "GlobalAdmin")]` |
+| List all organizations | ✅ OPEN | ✓ | ✓ | - | - | `[AllowAnonymous]` - public directory |
+| View organization | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| Update organization | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
 | **Membership Management** |
-| Add member to org | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can add |
-| List org memberships | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can list |
-| View membership | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can view |
-| Remove member | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user can remove |
-| Update membership role | ❌ Not supported | - | ✓ | - | ✓ | No API endpoint exists; roles can only be set during membership creation via `CreateMembershipRequest.Role`. To change a role, delete and recreate the membership. |
+| Add member to org | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| List org memberships | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| View membership | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| Get available users | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| Remove member | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| Update membership role | ❌ Not supported | - | - | - | - | No API endpoint; delete and recreate membership to change role |
 | **Share Type Management** |
-| Create share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
-| List share types | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
-| View share type | ⚠️ AUTH-ONLY | (member) | ✓ | ✓ | ✓ | `[Authorize]` only - any authenticated user |
-| Update share type | ⚠️ AUTH-ONLY | - | ✓ | - | ✓ | `[Authorize]` only - any authenticated user |
+| Create share type | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| List share types | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| View share type | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| Update share type | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
 | **Share Issuance & Balances** |
-| Issue shares | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| List share issuances | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| View user share issuances | ⚠️ OPEN | (self) | ✓ | ✓ (self) | ✓ | No `[Authorize]` - anonymous access |
-| View user share balances | ⚠️ OPEN | (self) | ✓ | ✓ (self) | ✓ | No `[Authorize]` - anonymous access |
+| Issue shares | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| List share issuances | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| View user share issuances | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| View user share balances | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
 | **Proposal Management** |
-| Create proposal | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
-| List proposals by org | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
-| View proposal | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
-| Update proposal | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| Close proposal | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| Add proposal option | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| Delete proposal option | ⚠️ OPEN | (creator) | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| View proposal results | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
+| Create proposal | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| List proposals by org | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| View proposal | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| Update proposal | ✅ ENFORCED | - | ✓ | (creator) | ✓ | `[Authorize(Policy = "ProposalManager")]` |
+| Open proposal | ✅ ENFORCED | - | ✓ | (creator) | ✓ | `[Authorize(Policy = "ProposalManager")]` |
+| Close proposal | ✅ ENFORCED | - | ✓ | (creator) | ✓ | `[Authorize(Policy = "ProposalManager")]` |
+| Finalize proposal | ✅ ENFORCED | - | ✓ | (creator) | ✓ | `[Authorize(Policy = "ProposalManager")]` |
+| Add proposal option | ✅ ENFORCED | - | ✓ | (creator) | ✓ | `[Authorize(Policy = "ProposalManager")]` |
+| Delete proposal option | ✅ ENFORCED | - | ✓ | (creator) | ✓ | `[Authorize(Policy = "ProposalManager")]` |
+| View proposal results | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
 | **Voting** |
-| Cast vote | ⚠️ OPEN | (member) | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
-| View own vote | ⚠️ OPEN | ✓ | ✓ | ✓ | ✓ | No `[Authorize]` - anonymous access |
-| View user's vote | ✅ PARTIAL | - | ✓ | - | - | Checks self or Admin role |
+| Cast vote | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
+| View user's vote | ✅ ENFORCED | ✓ (self) | ✓ | - | - | Checks self or Admin role |
 | **Webhook & Events Management** |
-| Webhook CRUD | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
-| Outbound events | ⚠️ OPEN | - | ✓ | - | ✓ | No `[Authorize]` - anonymous access |
+| Webhook CRUD | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| Outbound events list/view | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
+| Retry outbound event | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
 | **Admin & Dev Tools** |
 | Seed dev data | ✅ ENFORCED | - | ✓ | - | - | `[Authorize(Roles = "Admin")]` + environment check |
 
 **Legend:**
-- ✅ ENFORCED: Proper authorization checks in place
-- ✅ PARTIAL: Some checks but incomplete
-- ⚠️ AUTH-ONLY: Only requires authentication, no role/membership checks
-- ⚠️ OPEN: No authorization - anonymous access allowed
-- ✓ = Should be allowed (intended model)
-- - = Should not be allowed
-- (member) = Should be allowed if user is a member of the relevant organization
-- (self) = Should be allowed only for the user's own resources
-- (creator) = Should be allowed if user is the creator of the resource
+- ✅ ENFORCED: Proper policy-based authorization checks in place
+- ✅ OPEN: Intentionally open access (user registration, public directory)
+- ❌ Not supported: Feature not implemented
+- ✓ = Allowed access
+- - = Access denied
+- (self) = Allowed only for own resources
+- (creator) = Allowed if user is the proposal creator
 
-### Intended Authorization Rules (Target State)
+### Authorization Rules
 
-1. **Global Admin Override**: A user with `UserRole.Admin` should have implicit permission for all actions, regardless of organization membership or role.
+1. **Global Admin Override**: Users with `UserRole.Admin` have implicit permission for all actions, regardless of organization membership or role.
    > **Security Note:** Global Admins bypass all organization-level access controls and should be granted only to trusted platform operators.
 
-2. **Organization Membership Required**: For any organization-scoped action, the user should have an `OrganizationMembership` record for that organization (unless they are a Global Admin).
+2. **Organization Membership Required**: For any organization-scoped action, the user must have an `OrganizationMembership` record for that organization (unless they are a Global Admin).
 
-3. **Organization Role Check**: For organization-scoped actions, the system should:
-   - Extract the `organizationId` from the route or request
-   - Query `OrganizationMembership` where `UserId = currentUser.Id AND OrganizationId = organizationId`
-   - Check the `Role` property of the membership record
-   - Grant or deny access based on the intended permissions above
+3. **Organization Role Check**: For organization-scoped actions, the system:
+   - Extracts the `organizationId` from the route or request
+   - Queries `OrganizationMembership` where `UserId = currentUser.Id AND OrganizationId = organizationId`
+   - Checks the `Role` property of the membership record
+   - Grants or denies access based on the policy requirements
 
-4. **Self-Access**: Users should be able to access their own resources (profile, memberships, votes, balances) without needing special roles.
+4. **Self-Access**: Users can access their own resources (profile, memberships, votes, balances) without needing special roles.
 
-5. **Creator Privileges**: Users who create proposals should have permission to manage those proposals (update, close, manage options) even if they are not OrgAdmins, as long as they are members of the organization.
+5. **Creator Privileges**: Users who create proposals have permission to manage those proposals (update, open, close, finalize, manage options) via the `ProposalManager` policy, even if they are not OrgAdmins.
 
-6. **Privilege Escalation Prevention**: OrgAdmins should not be able to modify their own membership role to prevent privilege escalation. Only Global Admins or other OrgAdmins should be able to change an OrgAdmin's role.
+6. **Privilege Escalation Prevention**: OrgAdmins cannot modify their own membership role to prevent privilege escalation. Only Global Admins or other OrgAdmins can change an OrgAdmin's role.
 
-### Implementation Gaps & Security Concerns
+### Authorization Infrastructure
 
-> **⚠️ CRITICAL SECURITY GAPS:** The current implementation has significant authorization gaps that expose sensitive operations to unauthorized users.
+FanEngagement implements comprehensive policy-based authorization using ASP.NET Core's authorization framework.
 
-1. **User Management APIs** (UsersController):
-   - ❌ List, view, update, delete users require only `[Authorize]` with no role checks
-   - ❌ Any authenticated user can view all users, update any user (including role changes), or delete any user
-   - ✅ Only "View user statistics" properly requires Admin role
-   - **Risk:** User enumeration, unauthorized privilege escalation, account takeover
+#### Authorization Policies
 
-2. **Organization APIs** (OrganizationsController):
-   - ❌ Create, list, view organizations have NO authorization - anonymous access
-   - ❌ Update organization requires only `[Authorize]` with no role checks
-   - **Risk:** Unauthorized org creation, data exposure, unauthorized modifications
+The following policies are registered in `Program.cs`:
 
-3. **Membership APIs** (MembershipsController):
-   - ❌ All membership operations require only `[Authorize]` with no organization role checks
-   - ❌ Any authenticated user can add/remove members for any organization
-   - ❌ No endpoint exists to update membership roles; roles can only be set at creation, requiring delete/recreate to change
-   - **Risk:** Unauthorized access grants, membership manipulation (note: while there's no direct role update endpoint, recreation allows role changes)
+| Policy | Requirement | Description |
+|--------|-------------|-------------|
+| `GlobalAdmin` | Admin role | Requires `UserRole.Admin` global role |
+| `OrgMember` | Organization membership | Requires any membership in the target organization |
+| `OrgAdmin` | Organization admin role | Requires `OrganizationRole.OrgAdmin` in the target organization |
+| `ProposalManager` | Proposal creator or OrgAdmin | Allows proposal creator OR OrgAdmin to manage proposals |
 
-4. **Share Type, Issuance, Balances** (ShareTypesController, ShareIssuancesController):
-   - ❌ Share type operations require only `[Authorize]` - any authenticated user can create/update
-   - ❌ Share issuance and balance endpoints have NO authorization - anonymous access
-   - **Risk:** Unauthorized share issuance, balance manipulation, financial fraud
+#### Authorization Handlers
 
-5. **Proposal & Voting APIs** (OrganizationProposalsController, ProposalsController, etc.):
-   - ❌ Organization proposal create/list have NO authorization - anonymous access
-   - ❌ Proposal view/update/close/options have NO authorization - anonymous access
-   - ❌ Voting endpoints have NO authorization - anonymous voting possible
-   - **Risk:** Anonymous voting, proposal manipulation, results tampering, governance fraud
+Custom handlers in `backend/FanEngagement.Api/Authorization/` implement the authorization logic:
 
-6. **Webhook & Event APIs** (WebhookEndpointsController, OutboundEventsController):
-   - ❌ All webhook and outbound event operations have NO authorization - anonymous access
-   - **Risk:** Unauthorized webhook creation, event manipulation, data exfiltration
+- **`OrganizationMemberHandler`**: Validates user has any membership in the organization (extracted from route)
+- **`OrganizationAdminHandler`**: Validates user has OrgAdmin role in the organization
+- **`ProposalManagerHandler`**: Validates user is either the proposal creator or an OrgAdmin
 
-### Migration Path to Proper Authorization
+#### Global Admin Bypass
 
-To implement the intended model, the following work is required:
+All organization-level handlers check for Global Admin status first. Users with `UserRole.Admin` automatically pass all organization-level authorization checks, providing platform-wide administrative access.
 
-1. **Implement Policy-Based Authorization**:
-   - Create custom authorization policies for each permission category
-   - Define requirements for Global Admin, OrgAdmin, and OrgMember scenarios
-   - Implement custom authorization handlers that query OrganizationMembership
+#### Route Context Extraction
 
-2. **Apply Policies to Controllers**:
-   - Replace bare `[Authorize]` with specific policy requirements
-   - Add organization-scoped policy checks (e.g., `[Authorize(Policy = "RequireOrgAdmin")]`)
-   - Implement organization context extraction from routes
-
-3. **Add Privilege Escalation Safeguards**:
-   - Prevent OrgAdmins from modifying their own membership role
-   - Validate role changes at the service layer
-
-4. **Add Authorization Tests**:
-   - Test each endpoint with different role combinations
-   - Verify access is properly denied for unauthorized users
-   - Test edge cases (self-access, creator privileges, admin override)
+The `RouteValueHelpers` utility extracts organization context from route parameters. It checks for:
+- `organizationId` (standard org routes)
+- `orgId` (alternative naming)
+- `id` (fallback for `/organizations/{id}` style routes)
+- `proposalId` (for proposal routes, looks up the associated organization)
 
 ### JWT Claims & Implementation
 
-- **JWT Claims**: The JWT token includes role claims for the user's global role via `ClaimTypes.Role`
-- **Organization Role Checks**: Organization-specific role checks require database lookups of `OrganizationMembership` records
-- **Current Approach**: Mixed use of `[Authorize]`, `[Authorize(Roles = "Admin")]`, and manual `User.IsInRole()` checks
-- **Target Approach**: Consistent policy-based authorization with custom requirements and handlers
+- **JWT Claims**: The JWT token includes role claims for the user's global role via `ClaimTypes.Role` and user ID via `ClaimTypes.NameIdentifier`
+- **Organization Role Checks**: Organization-specific role checks query `OrganizationMembership` records via custom authorization handlers
+- **Implementation**: Consistent policy-based authorization using `[Authorize(Policy = "...")]` attributes on controllers and actions
+- **Global Admin Bypass**: Authorization handlers check for Admin role and automatically succeed for Global Admins
 
 ## Organization Onboarding
 
