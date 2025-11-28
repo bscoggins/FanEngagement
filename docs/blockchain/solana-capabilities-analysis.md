@@ -1,8 +1,8 @@
 # Solana Capabilities Analysis for Governance Use Cases
 
-> **Document Type:** Research Analysis  
-> **Epic:** E-004 - Blockchain Integration Initiative (Solana)  
-> **Status:** Complete  
+> **Document Type:** Research Analysis
+> **Epic:** E-004 - Blockchain Integration Initiative (Solana)
+> **Status:** Complete
 > **Last Updated:** November 2024
 
 ## Executive Summary
@@ -46,6 +46,7 @@ Solana's transaction fee model consists of two components:
 | **Compute Units** | Measurement per instruction | ~200,000 - 1,400,000 | Depends on CU price |
 
 **Key Points:**
+
 - Base fee is split: 50% burned, 50% to validator
 - Priority fees are 100% to validator
 - Most standard transactions use a single signature
@@ -114,10 +115,13 @@ Token-2022 provides extensions particularly valuable for FanEngagement:
 
 ```
 Share Type: "Founding Member Share"
-- IsTransferable: false (off-chain)
-- Token-2022: Non-Transferable extension enabled
+- FanEngagement DB: IsTransferable: false
+- On-chain: Token-2022 mint with Non-Transferable extension enabled
 - Result: Shares locked to original holder, voting power cannot be transferred
 ```
+
+> **Note:** The `IsTransferable` flag exists in both the off-chain database (for UI enforcement) and
+> on-chain via Token-2022's Non-Transferable extension (for protocol-level enforcement).
 
 ### 2.3 Share Tokenization Strategy
 
@@ -131,7 +135,7 @@ Share Type: "Founding Member Share"
 **Token Structure Example:**
 ```
 Organization: "Manchester United FC"
-├── Share Type: "Season Ticket Holder" 
+├── Share Type: "Season Ticket Holder"
 │   └── Token Mint: SPL Token (tradeable)
 ├── Share Type: "Founding Member"
 │   └── Token Mint: Token-2022 (non-transferable)
@@ -304,7 +308,12 @@ pub mod fan_governance {
         proposal.organization = ctx.accounts.organization.key();
         proposal.creator = ctx.accounts.creator.key();
         proposal.status = ProposalStatus::Draft;
-        proposal.title = title.as_bytes().try_into().unwrap();
+        proposal.title = title
+            .as_bytes()
+            .get(..100)
+            .ok_or(GovernanceError::TitleTooLong)?
+            .try_into()
+            .map_err(|_| GovernanceError::TitleTooLong)?;
         proposal.start_at = start_at;
         proposal.end_at = end_at;
         proposal.quorum_requirement = quorum_requirement;
@@ -320,10 +329,10 @@ pub mod fan_governance {
             ctx.accounts.proposal.status == ProposalStatus::Open,
             GovernanceError::ProposalNotOpen
         );
-        
+
         // Calculate voting power from token balances
         let voting_power = calculate_voting_power(&ctx.accounts.voter_tokens)?;
-        
+
         // Record vote
         let vote = &mut ctx.accounts.vote_record;
         vote.bump = ctx.bumps.vote_record;
@@ -332,10 +341,10 @@ pub mod fan_governance {
         vote.option_index = option_index;
         vote.voting_power = voting_power;
         vote.voted_at = Clock::get()?.unix_timestamp;
-        
+
         // Update proposal totals
         ctx.accounts.proposal.total_votes_cast += voting_power;
-        
+
         Ok(())
     }
 }
@@ -345,13 +354,13 @@ pub mod fan_governance {
 pub struct CreateProposal<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
-    
+
     #[account(
         seeds = [b"organization", organization.uuid.as_ref()],
         bump = organization.bump,
     )]
     pub organization: Account<'info, OrganizationAccount>,
-    
+
     #[account(
         init,
         payer = creator,
@@ -360,7 +369,7 @@ pub struct CreateProposal<'info> {
         bump,
     )]
     pub proposal: Account<'info, ProposalAccount>,
-    
+
     pub system_program: Program<'info, System>,
 }
 ```
@@ -467,6 +476,11 @@ pub struct CreateProposal<'info> {
 
 #### Year 1 Scale (100 Organizations)
 
+> **Calculation Basis:**
+> - Token Account Creation: 100 orgs × 10,000 members × 1 primary share type = 1,000,000 accounts
+>   (Each member needs a token account per share type they hold)
+> - Cast Votes: 100 orgs × 20 proposals × 5,000 votes = 10,000,000 votes
+
 | Operation | Count | Cost/Op (SOL) | Total (SOL) | USD (@$100) |
 |-----------|-------|---------------|-------------|-------------|
 | Create Organizations | 100 | 0.00437 | 0.437 | $44 |
@@ -491,6 +505,9 @@ pub struct CreateProposal<'info> {
 
 ### 7.3 Storage Cost Projection
 
+> **Note:** Storage rent is separate from transaction fees and is a one-time deposit
+> (not ongoing). The rent amount is recoverable if the account is closed.
+
 | Account Type | Count (Year 1) | Size | Rent (SOL) | Total (SOL) |
 |--------------|---------------|------|------------|-------------|
 | Organization PDAs | 100 | 500 B | 0.00437 | 0.437 |
@@ -499,7 +516,12 @@ pub struct CreateProposal<'info> {
 | Token Mints | 300 | 82 B | 0.00146 | 0.438 |
 | **Total Rent** | - | - | - | **~22,800** |
 
+> **Cost Breakdown:** Vote records represent 99%+ of storage costs.
+> At $100/SOL, 22,800 SOL = $2.28M for full on-chain voting.
+> This is why the hybrid model is strongly recommended.
+
 **Hybrid Model Savings:**
+
 - Off-chain votes with result commitment: ~$2,300 rent vs $2.28M
 - 99% cost reduction for vote storage
 
@@ -519,7 +541,7 @@ pub struct CreateProposal<'info> {
 
 **Hybrid On-Chain/Off-Chain Model:**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    FanEngagement Platform                    │
 ├─────────────────────────────────────────────────────────────┤
@@ -594,23 +616,27 @@ pub struct CreateProposal<'info> {
 ## 9. References
 
 ### Solana Documentation
+
 - [Transaction Fees](https://solana.com/docs/core/fees)
 - [Program Derived Addresses](https://solana.com/docs/core/pda)
 - [Token-2022 Extensions](https://solana.com/solutions/token-extensions)
 - [Programs Overview](https://solana.com/docs/core/programs)
 
 ### Governance Platforms
+
 - [Realms Documentation](https://docs.realms.today/)
 - [SPL Governance](https://www.splgovernance.com/docs.html)
 - [Solana Governance Analysis (Helius)](https://www.helius.dev/blog/solana-governance--a-comprehensive-analysis)
 
 ### Development Resources
+
 - [Anchor Framework](https://www.anchor-lang.com/)
 - [Solana Developer Resources](https://solana.com/developers)
 - [Token-2022 Specification (RareSkills)](https://rareskills.io/post/token-2022)
 - [PDA Best Practices (Helius)](https://www.helius.dev/blog/solana-pda)
 
 ### Tools
+
 - [Solana Rent Calculator](https://solanarentcalculator.vercel.app/)
 - [Priority Fee API (Helius)](https://www.helius.dev/docs/priority-fee-api)
 - [Solana Priority Fee Tracker (QuickNode)](https://www.quicknode.com/gas-tracker/solana)
@@ -631,6 +657,8 @@ pub struct CreateProposal<'info> {
 
 ## Appendix B: Related Documents
 
-- [E-004-02: Governance Models Evaluation](../product/E-004-02-governance-models-evaluation.md)
-- [E-004-03: Tokenization Strategy](../product/E-004-03-tokenization-strategy.md)
-- [E-004-07: On-chain Event Model](../product/E-004-07-on-chain-event-model.md)
+> **Note:** The following documents are planned as part of Epic E-004. Links will be updated as documents are created.
+
+- E-004-02: Governance Models Evaluation (Planned)
+- E-004-03: Tokenization Strategy (Planned)
+- E-004-07: On-chain Event Model (Planned)
