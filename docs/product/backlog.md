@@ -1364,7 +1364,7 @@ The `docs/architecture.md` file contains **outdated information** that incorrect
 1. ✅ **Authorization Infrastructure Exists**: Custom handlers in `backend/FanEngagement.Api/Authorization/`
 2. ✅ **Policies Registered**: GlobalAdmin, OrgMember, OrgAdmin, ProposalManager policies in `Program.cs`
 3. ✅ **Controllers Secured**: All controllers have appropriate `[Authorize(Policy = "...")]` attributes
-4. ❌ **Documentation Outdated**: `docs/architecture.md` incorrectly shows ⚠️ AUTH-ONLY and ⚠️ OPEN markers
+4. ⚠️ **Documentation Outdated**: `docs/architecture.md` incorrectly shows ⚠️ AUTH-ONLY and ⚠️ OPEN markers
 
 #### Motivation
 

@@ -162,7 +162,7 @@ Based on codebase examination (not outdated documentation), FanEngagement has ro
 
 **Current State:** No MFA support documented or implemented.
 
-**Recommendation:** Add optional MFA for admin users and sensitive operations.
+**Recommendation:** Add optional MFA for admin users and sensitive operations. Consider TOTP-based authentication (Google Authenticator, Authy) as the initial implementation, with potential future support for hardware security keys (WebAuthn/FIDO2).
 
 **Severity:** 🟢 **LOW** (enhancement opportunity)
 
@@ -325,7 +325,7 @@ The following principles are already evident in the codebase:
 | E-006-06 | Implement Rate Limiting | Later | Add rate limiting to auth and sensitive endpoints |
 | E-006-07 | Document JWT Security Model | Later | Document token expiration, refresh, revocation |
 | E-006-08 | Encrypt Webhook Secrets at Rest | Later | Add encryption for webhook secrets in database |
-| E-006-09 | Add MFA Support | Someday | Optional TOTP-based MFA for admin users |
+| E-006-09 | Add MFA Support | Later | Optional TOTP-based MFA for admin users (future enhancement) |
 
 ### 4.4 Acceptance Criteria Themes
 
