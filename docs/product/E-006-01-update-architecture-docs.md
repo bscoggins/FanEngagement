@@ -1,5 +1,5 @@
 ---
-name: "Coding Task"
+name: "Documentation Task"
 about: "Update architecture documentation authorization tables"
 title: "[Dev] E-006-01: Update Architecture Documentation Authorization Tables"
 labels: ["documentation", "copilot", "security", "T3"]
