@@ -276,7 +276,7 @@ async function loadSolanaKeypair(): Promise<Keypair> {
 | Audit/Compliance | 20% | 2 | 10 | 9 | 9 | 9 |
 | Performance | 10% | 10 | 7 | 8 | 8 | 8 |
 | Flexibility | 10% | 5 | 6 | 7 | 7 | 9 |
-| **Weighted Score** | 100% | **5.0** | **7.2** | **8.0** | **8.0** | **7.6** |
+| **Weighted Score** | 100% | **5.5** | **7.2** | **8.0** | **8.0** | **7.6** |
 
 **Recommendation by Environment:**
 
@@ -509,7 +509,8 @@ const upgradeAuthority = deriveKeypair(seed, 2);
 ```typescript
 import { 
   Connection, 
-  PublicKey, 
+  PublicKey,
+  Keypair,
   Transaction,
   sendAndConfirmTransaction 
 } from "@solana/web3.js";
@@ -664,6 +665,7 @@ Duration: 2-4 hours
 
 ```typescript
 import * as secrets from "secrets.js-grempe";
+import { Keypair } from "@solana/web3.js";
 
 // Split emergency recovery key into 5 shares, requiring 3 to reconstruct
 function splitKey(privateKeyHex: string): string[] {
@@ -843,7 +845,7 @@ Duration: 4-8 hours
 **Squads Setup Example:**
 
 ```typescript
-import { PublicKey, Connection, Keypair } from "@solana/web3.js";
+import { PublicKey, Connection, Keypair, TransactionInstruction } from "@solana/web3.js";
 import Squads, { Permissions } from "@sqds/sdk";
 
 async function setupPlatformMultisig(
@@ -898,6 +900,11 @@ async function proposeTokenMint(
 | **Cost** | Rent for multisig account (~0.0028 SOL) |
 
 ```typescript
+import {
+  Connection,
+  Keypair,
+  PublicKey
+} from "@solana/web3.js";
 import { 
   createMultisig,
   TOKEN_PROGRAM_ID 
