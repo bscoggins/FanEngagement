@@ -158,7 +158,7 @@ public enum ResourceType : short
 | 22 | `Vote` | Governance | Vote cast on a proposal | Created |
 | 30 | `WebhookEndpoint` | Integrations | Registered webhook URL | Created, Updated, Deleted |
 | 31 | `OutboundEvent` | Integrations | Queued event for delivery | Created, Updated (retry), StatusChanged |
-| 100 | `SystemConfiguration` | System | Platform-level settings | Updated, Accessed, Exported |
+| 100 | `SystemConfiguration` | System | Platform-level settings | Created, Updated, Accessed, Exported |
 
 ### 2.3 Resource Domain Groupings
 
@@ -296,7 +296,7 @@ This matrix maps common actions to their categorization, providing a reference f
 |--------|------------|--------------|---------|-------|
 | Audit log viewed | Accessed | SystemConfiguration | Success | Query filters used |
 | Audit log exported | Exported | SystemConfiguration | Success | Format, date range |
-| System config changed | Updated | SystemConfiguration | Success/Failure | (Future) |
+| System config changed | Updated | SystemConfiguration | Success/Failure | [Planned Feature] |
 
 ---
 
