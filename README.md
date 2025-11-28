@@ -76,7 +76,7 @@ To authenticate in Swagger UI:
 1. First call `POST /auth/login` with valid credentials (e.g., `admin@example.com` / `Admin123!`)
 2. Copy the `token` from the response
 3. Click the "Authorize" button at the top of the page
-4. Enter `Bearer <your-token>` (include the word "Bearer" followed by a space)
+4. Enter just the token value (without "Bearer" prefix)
 5. Click "Authorize" to apply the token to all subsequent requests
 
 Key endpoints (current):
