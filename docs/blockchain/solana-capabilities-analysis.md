@@ -180,7 +180,7 @@ pub struct OrganizationAccount {
 
 ```rust
 // Seeds: ["proposal", organization_pda, proposal_uuid]
-// Size: ~1,000 bytes
+// Size: ~807 bytes (799 bytes fields + 8 bytes Anchor discriminator)
 pub struct ProposalAccount {
     pub bump: u8,                    // 1 byte
     pub uuid: [u8; 16],              // 16 bytes
@@ -310,7 +310,7 @@ pub mod fan_governance {
         proposal.status = ProposalStatus::Draft;
         proposal.title = title
             .as_bytes()
-            .get(..100)
+            .get(..200)
             .ok_or(GovernanceError::TitleTooLong)?
             .try_into()
             .map_err(|_| GovernanceError::TitleTooLong)?;
@@ -511,7 +511,7 @@ pub struct CreateProposal<'info> {
 | Account Type | Count (Year 1) | Size | Rent (SOL) | Total (SOL) |
 |--------------|---------------|------|------------|-------------|
 | Organization PDAs | 100 | 500 B | 0.00437 | 0.437 |
-| Proposal PDAs | 2,000 | 1,000 B | 0.00785 | 15.70 |
+| Proposal PDAs | 2,000 | 807 B | 0.00650 | 13.00 |
 | Vote Records (on-chain) | 10,000,000 | 200 B | 0.00228 | 22,800 |
 | Token Mints | 300 | 82 B | 0.00146 | 0.438 |
 | **Total Rent** | - | - | - | **~22,800** |
