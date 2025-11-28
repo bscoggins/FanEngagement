@@ -635,7 +635,7 @@ The General Data Protection Regulation (GDPR) creates significant constraints fo
 | **Right to Erasure** | Data subject can request deletion | Blockchain data is immutable |
 | **Data Minimization** | Collect only necessary data | All votes stored permanently |
 | **Purpose Limitation** | Use data only for stated purpose | Public data can be analyzed for any purpose |
-| **Storage Limitation** | Delete data when no longer needed | Blockchain retains data forever |
+| **Storage Limitation** | Delete data when no longer needed | Blockchain retains data indefinitely |
 
 **Regulatory Guidance (EDPB 2024-2025):**
 
