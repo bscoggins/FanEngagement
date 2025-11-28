@@ -579,10 +579,10 @@ async function batchMintTokens(
     const mint = await getMintForShareType(shareTypeId);
     
     // Batch into chunks
-    for (const chunk of chunk(typeIssuances, maxPerTransaction)) {
+    for (const batchChunk of chunk(typeIssuances, maxPerTransaction)) {
       const tx = new Transaction();
       
-      for (const issuance of chunk) {
+      for (const issuance of batchChunk) {
         const userAta = await getOrCreateAta(mint, issuance.userId);
         tx.add(
           createMintToInstruction(
@@ -640,15 +640,17 @@ MaxSupply can be enforced at multiple levels:
 
 ```csharp
 // In ShareIssuanceService.cs
-public async Task<ShareIssuance> IssueSharesAsync(CreateShareIssuanceRequest request)
+public async Task<ShareIssuance> IssueSharesAsync(
+    CreateShareIssuanceRequest request,
+    CancellationToken cancellationToken = default)
 {
-    var shareType = await _dbContext.ShareTypes.FindAsync(request.ShareTypeId);
+    var shareType = await dbContext.ShareTypes.FindAsync(request.ShareTypeId, cancellationToken);
     
     if (shareType.MaxSupply.HasValue)
     {
-        var currentSupply = await _dbContext.ShareBalances
+        var currentSupply = await dbContext.ShareBalances
             .Where(b => b.ShareTypeId == request.ShareTypeId)
-            .SumAsync(b => b.Balance);
+            .SumAsync(b => b.Balance, cancellationToken);
             
         if (currentSupply + request.Quantity > shareType.MaxSupply.Value)
         {
