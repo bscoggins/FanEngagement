@@ -468,11 +468,11 @@ Savings vs. full on-chain: **80%**
 
 | Pattern | Cost | Privacy | Transparency | UX | Complexity |
 |---------|------|---------|--------------|-----|------------|
-| Full On-Chain | $$$$$ | Low | High (real-time) | Medium | Low |
-| Off-Chain + Commit | $ | High | Medium (post-vote) | High | Low |
-| Selective On-Chain | $$$ | Mixed | High (for key votes) | Medium | Medium |
-| On-Chain Tallies | $$ | High | High (aggregate) | High | Medium |
-| Commit-Reveal | $$$$$ | Medium | High (post-reveal) | Low | High |
+| Full On-Chain | \$\$\$\$\$ | Low | High (real-time) | Medium | Low |
+| Off-Chain + Commit | \$ | High | Medium (post-vote) | High | Low |
+| Selective On-Chain | \$\$\$ | Mixed | High (for key votes) | Medium | Medium |
+| On-Chain Tallies | \$\$ | High | High (aggregate) | High | Medium |
+| Commit-Reveal | \$\$\$\$\$ | Medium | High (post-reveal) | Low | High |
 
 ---
 
