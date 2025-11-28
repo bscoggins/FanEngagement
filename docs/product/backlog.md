@@ -51,6 +51,7 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-003   | T3    | Enhance Governance Results Transparency | Backlog  | Later    | TBD   |                           |
 | E-004   | T5    | Blockchain Integration Initiative (Solana): Discovery → MVP Definition → Implementation Planning | Proposed | Next | TBD | Major market differentiator; PO agent comprehensive epic |
 | E-005   | T3    | Implement Thorough Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
+| E-006   | T3    | Security Documentation Update and Enhancements | Proposed | Now      | TBD   | Update outdated auth docs; verify test coverage; optional security enhancements |
 
 **Status values (for the PO agent to use):**
 
@@ -1350,6 +1351,226 @@ E-004-12 (UX Design)
 
 ---
 
+### E-006 – Security Documentation Update and Enhancements (Theme: T3, Status: Proposed)
+
+> **Research Report:** `docs/product/security-authorization-research-report.md`
+
+#### Problem Statement
+
+The `docs/architecture.md` file contains **outdated information** that incorrectly describes the authorization implementation as having "significant gaps." Upon code review, the application actually has **comprehensive authorization already implemented** with proper policies (GlobalAdmin, OrgMember, OrgAdmin, ProposalManager) applied to all controllers.
+
+**Key Findings:**
+
+1. ✅ **Authorization Infrastructure Exists**: Custom handlers in `backend/FanEngagement.Api/Authorization/`
+2. ✅ **Policies Registered**: GlobalAdmin, OrgMember, OrgAdmin, ProposalManager policies in `Program.cs`
+3. ✅ **Controllers Secured**: All controllers have appropriate `[Authorize(Policy = "...")]` attributes
+4. ⚠️ **Documentation Outdated**: `docs/architecture.md` incorrectly shows ⚠️ AUTH-ONLY and ⚠️ OPEN markers
+
+#### Motivation
+
+- Correct misleading security documentation before it causes confusion
+- Verify and expand authorization test coverage
+- Implement optional security enhancements for production readiness
+- Maintain accurate security posture documentation
+
+#### Target Users / Roles
+
+- Primary: Developers and security reviewers (documentation accuracy)
+- Secondary: All users (benefit from security enhancements)
+
+#### Success Signals
+
+- Documentation accurately reflects implementation (verified by review)
+- Authorization test coverage verified for all endpoints
+- No false security findings from auditors using outdated docs
+
+#### Epic Scope
+
+**In Scope:**
+- Update `docs/architecture.md` authorization tables to reflect actual secure implementation
+- Verify and expand authorization test coverage
+- Optional security enhancements (MFA, rate limiting, password policy)
+- Security model documentation
+
+**Out of Scope:**
+- Authorization infrastructure (already implemented)
+- Endpoint authorization (already implemented)
+- Audit logging (covered by E-005)
+- Blockchain security (covered by E-004)
+
+#### Stories
+
+##### Workstream A: Documentation Updates (Priority: Now)
+
+###### Story E-006-01
+
+> As a **documentation maintainer**, I want to **update the architecture documentation authorization tables**, so that **documentation accurately reflects the secure implementation**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Update `docs/architecture.md` "Current Authorization Implementation" table
+- [ ] Change all ⚠️ AUTH-ONLY markers to ✅ ENFORCED
+- [ ] Change all ⚠️ OPEN markers to ✅ ENFORCED  
+- [ ] Update "Implementation Gaps & Security Concerns" section to reflect resolved status
+- [ ] Reference authorization handlers documentation in `backend/FanEngagement.Api/Authorization/`
+- [ ] Review confirms documentation matches codebase
+
+---
+
+###### Story E-006-02
+
+> As a **documentation maintainer**, I want to **document the authorization infrastructure**, so that **developers understand how authorization works**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Document `OrganizationMemberHandler`, `OrganizationAdminHandler`, `ProposalManagerHandler`
+- [ ] Document `RouteValueHelpers` organization ID extraction
+- [ ] Document policy registration in `Program.cs`
+- [ ] Add examples of policy usage on controllers
+
+---
+
+##### Workstream B: Test Coverage Verification (Priority: Next)
+
+###### Story E-006-03
+
+> As a **developer**, I want to **verify authorization test coverage**, so that **all authorization scenarios are tested**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Review existing `AuthorizationIntegrationTests.cs`
+- [ ] Create inventory of all endpoints and their expected authorization
+- [ ] Identify any missing test scenarios
+- [ ] Document test coverage status
+
+---
+
+###### Story E-006-04
+
+> As a **developer**, I want to **add any missing authorization tests**, so that **test coverage is comprehensive**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Add tests for any scenarios identified in E-006-03
+- [ ] Ensure cross-organization access denial is tested
+- [ ] Ensure GlobalAdmin override is tested for all relevant endpoints
+- [ ] All tests pass
+
+---
+
+##### Workstream C: Security Enhancements (Priority: Later)
+
+###### Story E-006-05
+
+> As a **developer**, I want to **strengthen password requirements**, so that **user accounts are more secure**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Increase minimum password length to 12 characters
+- [ ] Require at least one uppercase letter, number, and special character
+- [ ] Update validation messages to describe requirements
+- [ ] Update frontend registration to show requirements
+
+---
+
+###### Story E-006-06
+
+> As a **developer**, I want to **implement rate limiting**, so that **brute force attacks are mitigated**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Add rate limiting middleware or library
+- [ ] Configure rate limits for login endpoint
+- [ ] Configure rate limits for user creation
+- [ ] Return 429 Too Many Requests when limits exceeded
+
+---
+
+###### Story E-006-07
+
+> As a **developer**, I want to **document JWT security model**, so that **token handling is clearly defined**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Document token expiration policy
+- [ ] Document refresh token approach (if implemented)
+- [ ] Document token revocation strategy for security incidents
+- [ ] Add to architecture documentation
+
+---
+
+###### Story E-006-08
+
+> As a **developer**, I want to **encrypt webhook secrets at rest**, so that **secrets are protected in the database**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Add encryption service for sensitive fields
+- [ ] Encrypt `WebhookEndpoint.Secret` before storage
+- [ ] Decrypt secrets only when needed for delivery
+- [ ] Migrate existing secrets to encrypted format
+
+---
+
+###### Story E-006-09
+
+> As an **admin user**, I want to **enable multi-factor authentication (MFA) on my account**, so that **my account is protected with an additional security layer**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] MFA can be enabled by admin users in account settings
+- [ ] QR code generated for TOTP setup (compatible with authenticator apps)
+- [ ] TOTP validation during login for MFA-enabled accounts
+- [ ] Backup codes generated for account recovery
+- [ ] MFA can be disabled by user (requires current TOTP or backup code)
+
+---
+
+#### Dependencies
+
+- **E-005 (Audit Logging)**: Security events should be logged once audit infrastructure exists
+
+#### Risks
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Documentation update misses details | Low | Low | Code review of documentation |
+| Test coverage gaps not identified | Medium | Low | Systematic endpoint review |
+
+#### Open Questions
+
+1. **Production Timeline**: When is production deployment planned? This affects enhancement priority.
+2. **Rate Limiting Thresholds**: What are appropriate rate limits for different endpoints?
+3. **MFA Scope**: Should MFA be mandatory for GlobalAdmin or optional for all admin users?
+
+---
 ## 5. Ready-for-Issue Stories
 
 This section lists **only stories that a human has approved as “Ready”** and that should be turned into GitHub issues.
