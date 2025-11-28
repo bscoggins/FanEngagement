@@ -637,7 +637,7 @@ The General Data Protection Regulation (GDPR) creates significant constraints fo
 | **Purpose Limitation** | Use data only for stated purpose | Public data can be analyzed for any purpose |
 | **Storage Limitation** | Delete data when no longer needed | Blockchain retains data indefinitely |
 
-**Regulatory Guidance (EDPB 2024-2025):**
+**Regulatory Guidance (EDPB 2024):**
 
 The European Data Protection Board has issued guidance on blockchain and GDPR compliance:
 
@@ -937,7 +937,7 @@ interface OnChainVotingPolicy {
 
 ### Regulatory and Privacy
 
-- [EDPB Guidelines on Blockchain (2025)](https://www.edpb.europa.eu/) - GDPR compliance guidance
+- [EDPB Guidelines on Blockchain](https://www.edpb.europa.eu/) - GDPR compliance guidance
 - [GDPR and Blockchain Analysis](https://gdprlocal.com/the-complex-relationship-between-gdpr-and-blockchain/) - Compliance challenges
 
 ### Technical Resources
