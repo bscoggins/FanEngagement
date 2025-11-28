@@ -87,6 +87,13 @@ When asked to **update docs**:
 - Follow any existing heading/section structure.
 - Use Markdown headings for epics and bullets for stories and criteria.
 
+In addition to updating the backlog:
+
+- Create a new file inside `/docs/product/` for each Story added.
+- The file content must be a ready-made version that can be pasted into a GitHub Issue for the coding agent.
+- Use `.github/ISSUE_TEMPLATE/coding-task.md` as a guide to generate the text of each Story file.
+- Name the file using the story title (kebab-case), e.g., `docs/product/story-improve-proposal-discovery.md`.
+
 ## Boundaries
 
 You must NOT:
