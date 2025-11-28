@@ -59,10 +59,7 @@ def process_path(path):
         convert_file(path)
     elif os.path.isdir(path):
         print(f"Scanning directory: {path}")
-        # Find all .md files in the directory (non-recursive by default, or maybe recursive?)
-        # User asked "markdown files in the /docs/blockchain folder", usually implies that folder.
-        # Let's do non-recursive for simplicity, or maybe recursive is better?
-        # glob.glob(os.path.join(path, "*.md")) is non-recursive.
+        # Find all .md files in the directory (non-recursive).
         md_files = glob.glob(os.path.join(path, "*.md"))
         if not md_files:
             print(f"No .md files found in {path}")
