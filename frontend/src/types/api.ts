@@ -30,6 +30,16 @@ export interface User {
   createdAt: string;
 }
 
+// UserProfile is used for displaying user account info where createdAt may not be available
+// (e.g., when data comes from auth context instead of API)
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  role: 'User' | 'Admin';
+  createdAt?: string;
+}
+
 export interface CreateUserRequest {
   email: string;
   password: string;
