@@ -48,16 +48,44 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
         builder.Property(e => e.CorrelationId)
             .HasMaxLength(100);
 
-        // Indexes for query performance
+        // Indexes for query performance (matching data model specification)
+        
+        // Primary access pattern: Date range queries (most common)
         builder.HasIndex(e => e.Timestamp)
-            .IsDescending(true);
+            .IsDescending(true)
+            .HasDatabaseName("IX_AuditEvents_Timestamp");
 
-        builder.HasIndex(e => e.OrganizationId);
+        // Composite index: OrganizationId + Timestamp (DESC), partial (OrganizationId IS NOT NULL)
+        builder.HasIndex(e => new { e.OrganizationId, e.Timestamp })
+            .IsDescending(false, true)
+            .HasDatabaseName("IX_AuditEvents_OrganizationId_Timestamp")
+            .HasFilter("\"OrganizationId\" IS NOT NULL");
 
-        builder.HasIndex(e => e.ActorUserId);
+        // Composite index: ActorUserId + Timestamp (DESC), partial (ActorUserId IS NOT NULL)
+        builder.HasIndex(e => new { e.ActorUserId, e.Timestamp })
+            .IsDescending(false, true)
+            .HasDatabaseName("IX_AuditEvents_ActorUserId_Timestamp")
+            .HasFilter("\"ActorUserId\" IS NOT NULL");
 
-        builder.HasIndex(e => new { e.ResourceType, e.ResourceId });
+        // Composite index: ResourceType + ResourceId + Timestamp (DESC)
+        builder.HasIndex(e => new { e.ResourceType, e.ResourceId, e.Timestamp })
+            .IsDescending(false, false, true)
+            .HasDatabaseName("IX_AuditEvents_ResourceType_ResourceId_Timestamp");
 
-        builder.HasIndex(e => e.ActionType);
+        // Composite index: ActionType + Timestamp (DESC)
+        builder.HasIndex(e => new { e.ActionType, e.Timestamp })
+            .IsDescending(false, true)
+            .HasDatabaseName("IX_AuditEvents_ActionType_Timestamp");
+
+        // Composite index: Outcome + Timestamp (DESC), partial (Failure or Denied only)
+        builder.HasIndex(e => new { e.Outcome, e.Timestamp })
+            .IsDescending(false, true)
+            .HasDatabaseName("IX_AuditEvents_Outcome_Timestamp")
+            .HasFilter("\"Outcome\" IN (2, 3)");
+
+        // Partial index: CorrelationId (when not null)
+        builder.HasIndex(e => e.CorrelationId)
+            .HasDatabaseName("IX_AuditEvents_CorrelationId")
+            .HasFilter("\"CorrelationId\" IS NOT NULL");
     }
 }

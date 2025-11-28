@@ -37,24 +37,43 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AuditEvents_ActionType",
+                name: "IX_AuditEvents_ActionType_Timestamp",
                 table: "AuditEvents",
-                column: "ActionType");
+                columns: new[] { "ActionType", "Timestamp" },
+                descending: new[] { false, true });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AuditEvents_ActorUserId",
+                name: "IX_AuditEvents_ActorUserId_Timestamp",
                 table: "AuditEvents",
-                column: "ActorUserId");
+                columns: new[] { "ActorUserId", "Timestamp" },
+                descending: new[] { false, true },
+                filter: "\"ActorUserId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AuditEvents_OrganizationId",
+                name: "IX_AuditEvents_CorrelationId",
                 table: "AuditEvents",
-                column: "OrganizationId");
+                column: "CorrelationId",
+                filter: "\"CorrelationId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AuditEvents_ResourceType_ResourceId",
+                name: "IX_AuditEvents_OrganizationId_Timestamp",
                 table: "AuditEvents",
-                columns: new[] { "ResourceType", "ResourceId" });
+                columns: new[] { "OrganizationId", "Timestamp" },
+                descending: new[] { false, true },
+                filter: "\"OrganizationId\" IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditEvents_Outcome_Timestamp",
+                table: "AuditEvents",
+                columns: new[] { "Outcome", "Timestamp" },
+                descending: new[] { false, true },
+                filter: "\"Outcome\" IN (2, 3)");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditEvents_ResourceType_ResourceId_Timestamp",
+                table: "AuditEvents",
+                columns: new[] { "ResourceType", "ResourceId", "Timestamp" },
+                descending: new[] { false, false, true });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditEvents_Timestamp",

@@ -78,16 +78,36 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActionType");
-
-                    b.HasIndex("ActorUserId");
-
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex("CorrelationId")
+                        .HasDatabaseName("IX_AuditEvents_CorrelationId")
+                        .HasFilter("\"CorrelationId\" IS NOT NULL");
 
                     b.HasIndex("Timestamp")
-                        .IsDescending();
+                        .IsDescending()
+                        .HasDatabaseName("IX_AuditEvents_Timestamp");
 
-                    b.HasIndex("ResourceType", "ResourceId");
+                    b.HasIndex("ActionType", "Timestamp")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_AuditEvents_ActionType_Timestamp");
+
+                    b.HasIndex("ActorUserId", "Timestamp")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_AuditEvents_ActorUserId_Timestamp")
+                        .HasFilter("\"ActorUserId\" IS NOT NULL");
+
+                    b.HasIndex("OrganizationId", "Timestamp")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_AuditEvents_OrganizationId_Timestamp")
+                        .HasFilter("\"OrganizationId\" IS NOT NULL");
+
+                    b.HasIndex("Outcome", "Timestamp")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_AuditEvents_Outcome_Timestamp")
+                        .HasFilter("\"Outcome\" IN (2, 3)");
+
+                    b.HasIndex("ResourceType", "ResourceId", "Timestamp")
+                        .IsDescending(false, false, true)
+                        .HasDatabaseName("IX_AuditEvents_ResourceType_ResourceId_Timestamp");
 
                     b.ToTable("AuditEvents", (string)null);
                 });
