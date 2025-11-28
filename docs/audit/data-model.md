@@ -4,7 +4,7 @@
 > **Epic:** E-005 - Implement Thorough Audit Logging Across the Application  
 > **Issue:** E-005-01  
 > **Status:** Complete  
-> **Last Updated:** November 2024
+> **Last Updated:** November 28, 2024
 
 ## Executive Summary
 
@@ -540,7 +540,7 @@ ORDER BY "Timestamp" DESC;
 ```sql
 SELECT * FROM "AuditEvents"
 WHERE "ResourceType" = 22  -- Vote
-  AND "Details" ->> 'proposalId' = @proposalId::text
+  AND "ResourceId" = @proposalId
 ORDER BY "Timestamp" DESC;
 ```
 
@@ -664,9 +664,10 @@ WHERE "Timestamp" < @cutoffDate
 ### 8.1 Write Performance
 
 **Expected Load:**
-- ~10-50 audit events per API request (varies by action complexity)
-- Peak: 1000 requests/minute → 10,000-50,000 events/minute
-- Daily: 1-5 million events
+- ~1-3 audit events per API request (typical: authorization, action, result)
+  - In rare cases (e.g., bulk operations, cascading actions), up to 10-20 events per request may be generated.
+- Peak: 1000 requests/minute → 1,000-3,000 events/minute (up to 20,000 in rare cases)
+- Daily: 100,000-300,000 events (up to 1 million in rare cases)
 
 **Optimization Strategies:**
 
