@@ -33,3 +33,71 @@ Clarify whether proposals should expose/display a Type column throughout documen
 
 - Triggered by reviewer feedback on removing the Type column from proposal tables.
 - Confirm whether the Proposal entity will gain a Type field or if documentation needs a permanent explanation.
+
+### Security and Authorization Hardening (Epic E-006)
+
+Systematically implement authorization enforcement across all API endpoints to close critical security gaps identified in the security research report. The current implementation has significant authorization gaps where many endpoints lack proper role-based access control.
+
+- **Epic:** E-006 in `docs/product/backlog.md`
+- **Research Report:** `docs/product/security-authorization-research-report.md`
+- **Theme:** T3 – Governance Transparency & Trust (Security)
+- **Key Deliverables:**
+  - Authorization service and custom handlers infrastructure
+  - Policy-based authorization for all API endpoints
+  - Comprehensive authorization integration tests
+  - Updated architecture documentation
+- **Priority:** Now (Critical)
+- **Status:** Proposed (pending human review)
+- **Critical Risks Identified:**
+  - Unauthorized user data access and privilege escalation
+  - Anonymous share issuance and voting
+  - Organization and membership manipulation
+
+### Multi-Factor Authentication (MFA) Support
+
+Add optional MFA support for platform administrators and organization admins to strengthen account security for privileged users. Consider TOTP-based authentication (Google Authenticator, Authy) as the initial implementation.
+
+- Related to security hardening efforts (E-006)
+- Consider making MFA mandatory for GlobalAdmin role
+- **Priority:** Later
+- **Status:** Idea (long-tail enhancement)
+
+### Rate Limiting Implementation
+
+Implement rate limiting on authentication endpoints and sensitive API operations to prevent brute force attacks, API abuse, and denial of service scenarios.
+
+- Target endpoints: login, user creation, share issuance, voting
+- Consider per-user and per-IP rate limits
+- Related to security hardening efforts (E-006)
+- **Priority:** Later
+- **Status:** Idea (long-tail enhancement)
+
+### JWT Security Enhancements
+
+Document and implement comprehensive JWT security practices including token expiration policies, refresh token flow, and token revocation mechanism for compromised sessions.
+
+- Current state: Token expiration and refresh not fully documented
+- Consider short-lived access tokens with refresh tokens
+- Add token revocation for security incidents
+- Related to security hardening efforts (E-006)
+- **Priority:** Later
+- **Status:** Idea (long-tail enhancement)
+
+### Webhook Secret Encryption at Rest
+
+Encrypt webhook secrets stored in the database to protect against database-level breaches. Currently, webhook secrets are stored in plaintext.
+
+- Use application-level encryption with secure key management
+- Related to security hardening efforts (E-006)
+- **Priority:** Later
+- **Status:** Idea (long-tail enhancement)
+
+### Password Policy Strengthening
+
+Enhance password requirements beyond the current 8-character minimum to include complexity requirements (uppercase, numbers, symbols) and optionally integrate with breach detection services (Have I Been Pwned).
+
+- Current minimum: 8 characters with no complexity
+- Recommended: 12+ characters with complexity requirements
+- Related to security hardening efforts (E-006)
+- **Priority:** Later
+- **Status:** Idea (long-tail enhancement)

@@ -51,6 +51,7 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-003   | T3    | Enhance Governance Results Transparency | Backlog  | Later    | TBD   |                           |
 | E-004   | T5    | Blockchain Integration Initiative (Solana): Discovery → MVP Definition → Implementation Planning | Proposed | Next | TBD | Major market differentiator; PO agent comprehensive epic |
 | E-005   | T3    | Implement Thorough Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
+| E-006   | T3    | Security and Authorization Hardening    | Proposed | Now      | TBD   | Critical security gaps; close anonymous access to protected endpoints; PO agent security research |
 
 **Status values (for the PO agent to use):**
 
@@ -1347,6 +1348,503 @@ E-004-12 (UX Design)
 - **Adoption:** 50% of new proposals use blockchain verification within 6 months
 - **User Perception:** Positive feedback on transparency features
 - **Auditability:** External auditor successfully verifies governance using on-chain data
+
+---
+
+### E-006 – Security and Authorization Hardening (Theme: T3, Status: Proposed)
+
+> **Research Report:** `docs/product/security-authorization-research-report.md`
+
+#### Problem Statement
+
+The FanEngagement application has significant authorization gaps where many endpoints lack proper role-based access control. While the *intended* permission model is well-documented in `docs/architecture.md`, the *actual implementation* falls short, exposing sensitive operations to unauthorized users.
+
+**Critical Risks Identified:**
+
+1. **Unauthorized User Data Access**: Any authenticated user can list, view, update, and delete ANY user, including changing roles for privilege escalation
+2. **Anonymous Share Issuance**: Share issuance endpoints have NO authorization, allowing anonymous voting power manipulation
+3. **Anonymous Voting**: All proposal and voting endpoints are open to anonymous access
+4. **Unauthorized Organization Management**: Organization creation is open to anonymous users; membership management is open to any authenticated user
+
+#### Motivation
+
+- Close critical security vulnerabilities before production deployment
+- Implement the intended authorization model documented in `docs/architecture.md`
+- Protect governance integrity from unauthorized manipulation
+- Enable secure multi-tenant operation
+
+#### Target Users / Roles
+
+- Primary: All users (security affects everyone)
+- Secondary: OrgAdmins (rely on authorization for org isolation)
+- Tertiary: PlatformAdmins (responsible for security posture)
+
+#### Success Signals
+
+- 100% of API endpoints have explicit authorization policies
+- 0 endpoints with anonymous access to protected resources
+- Authorization test coverage for all endpoints
+- No privilege escalation paths identified in security review
+
+#### Epic Scope
+
+**In Scope:**
+- All API endpoint authorization enforcement
+- User, organization, membership, share, proposal, voting, and webhook access control
+- Authorization testing infrastructure
+- Documentation updates for security model
+
+**Out of Scope:**
+- Audit logging (covered by E-005)
+- Blockchain-related security (covered by E-004)
+- Frontend permission changes (unless required for API changes)
+- Performance optimization
+
+#### Stories
+
+##### Workstream A: Authorization Infrastructure (Foundation)
+
+###### Story E-006-01
+
+> As a **developer**, I want to **create authorization service and handlers**, so that **we have reusable authorization infrastructure**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Create `IAuthorizationService` interface in Application layer
+- [ ] Implement custom `IAuthorizationHandler` for `OrgMemberRequirement`
+- [ ] Implement custom `IAuthorizationHandler` for `OrgAdminRequirement`
+- [ ] Implement custom `IAuthorizationHandler` for `ResourceOwnerRequirement`
+- [ ] Handlers query `OrganizationMembership` for role checks
+- [ ] GlobalAdmin role bypasses organization-level checks
+- [ ] Add unit tests for each handler
+
+**Notes for implementation:**
+
+- Follow ASP.NET Core authorization patterns
+- Reference `docs/architecture.md` → Authorization Model section
+
+---
+
+###### Story E-006-02
+
+> As a **developer**, I want to **create organization context middleware**, so that **authorization handlers can access organization ID from routes**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Create middleware that extracts `organizationId` from route parameters
+- [ ] Store organization context in `HttpContext.Items` for handlers
+- [ ] Handle routes with and without organization context
+- [ ] Add integration tests for middleware behavior
+
+---
+
+###### Story E-006-03
+
+> As a **developer**, I want to **define and register authorization policies**, so that **endpoints can declare required permissions**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Register `OrgMember` policy requiring organization membership
+- [ ] Register `OrgAdmin` policy requiring OrgAdmin role
+- [ ] Register `ProposalManager` policy for proposal creator or OrgAdmin
+- [ ] Register `ResourceOwner` policy for self-access checks
+- [ ] Update `Program.cs` with policy registrations
+- [ ] Document policies in architecture docs
+
+---
+
+##### Workstream B: Secure Critical APIs (Immediate)
+
+###### Story E-006-04
+
+> As a **developer**, I want to **harden User Management APIs**, so that **users cannot access or modify other users' data**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] `GET /users` requires GlobalAdmin role
+- [ ] `GET /users/{id}` requires GlobalAdmin or self-access
+- [ ] `PUT /users/{id}` requires GlobalAdmin or self-access (role changes require GlobalAdmin)
+- [ ] `DELETE /users/{id}` requires GlobalAdmin
+- [ ] `GET /users/me/organizations` requires authentication (no change)
+- [ ] Add integration tests for all role combinations
+- [ ] Return 403 Forbidden for unauthorized access
+
+---
+
+###### Story E-006-05
+
+> As a **developer**, I want to **harden Share Issuance APIs**, so that **only OrgAdmins can issue shares**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] `POST /organizations/{orgId}/share-issuances` requires OrgAdmin role
+- [ ] `GET /organizations/{orgId}/share-issuances` requires OrgMember role
+- [ ] `GET /users/{userId}/share-balances` requires GlobalAdmin, self-access, or OrgAdmin of user's orgs
+- [ ] Validate target user is member of organization before issuance
+- [ ] Add integration tests for all role combinations
+
+---
+
+###### Story E-006-06
+
+> As a **developer**, I want to **harden Proposal APIs**, so that **only authorized users can manage proposals**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] `POST /organizations/{orgId}/proposals` requires OrgMember role
+- [ ] `GET /organizations/{orgId}/proposals` requires OrgMember role
+- [ ] `GET /proposals/{id}` requires OrgMember of proposal's organization
+- [ ] `PUT /proposals/{id}` requires OrgAdmin or proposal creator
+- [ ] `POST /proposals/{id}/open|close|finalize` requires OrgAdmin or creator
+- [ ] `POST /proposals/{id}/options` requires OrgAdmin or creator
+- [ ] `DELETE /proposals/{id}/options/{optionId}` requires OrgAdmin or creator
+- [ ] Add integration tests for all role combinations
+
+---
+
+###### Story E-006-07
+
+> As a **developer**, I want to **harden Voting APIs**, so that **only eligible members can vote**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] `POST /proposals/{id}/votes` requires OrgMember role
+- [ ] Validate user has voting power > 0 before accepting vote
+- [ ] `GET /proposals/{id}/votes/me` requires authentication
+- [ ] `GET /proposals/{id}/results` requires OrgMember role
+- [ ] Add integration tests for voting authorization
+
+---
+
+##### Workstream C: Secure High-Priority APIs (Short-Term)
+
+###### Story E-006-08
+
+> As a **developer**, I want to **harden Organization APIs**, so that **only GlobalAdmins can create organizations**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] `POST /organizations` requires GlobalAdmin role
+- [ ] `GET /organizations` requires authentication (list visible orgs)
+- [ ] `GET /organizations/{id}` requires OrgMember or GlobalAdmin
+- [ ] `PUT /organizations/{id}` requires OrgAdmin or GlobalAdmin
+- [ ] Add integration tests for all role combinations
+
+---
+
+###### Story E-006-09
+
+> As a **developer**, I want to **harden Membership APIs**, so that **only OrgAdmins can manage memberships**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] `POST /organizations/{orgId}/memberships` requires OrgAdmin role
+- [ ] `GET /organizations/{orgId}/memberships` requires OrgMember role
+- [ ] `GET /memberships/{id}` requires OrgMember of membership's organization
+- [ ] `DELETE /memberships/{id}` requires OrgAdmin role
+- [ ] Prevent OrgAdmins from modifying their own role (privilege escalation)
+- [ ] Add integration tests for all role combinations
+
+---
+
+###### Story E-006-10
+
+> As a **developer**, I want to **harden Webhook APIs**, so that **only OrgAdmins can manage webhooks**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] All `/organizations/{orgId}/webhooks/*` endpoints require OrgAdmin role
+- [ ] All `/organizations/{orgId}/outbound-events/*` endpoints require OrgAdmin role
+- [ ] `POST /outbound-events/{id}/retry` requires OrgAdmin role
+- [ ] Add integration tests for all role combinations
+
+---
+
+###### Story E-006-11
+
+> As a **developer**, I want to **harden Share Type APIs**, so that **only OrgAdmins can manage share types**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] `POST /organizations/{orgId}/share-types` requires OrgAdmin role
+- [ ] `GET /organizations/{orgId}/share-types` requires OrgMember role
+- [ ] `GET /share-types/{id}` requires OrgMember of share type's organization
+- [ ] `PUT /share-types/{id}` requires OrgAdmin role
+- [ ] Add integration tests for all role combinations
+
+---
+
+##### Workstream D: Authorization Testing
+
+###### Story E-006-12
+
+> As a **developer**, I want to **create authorization test fixtures**, so that **tests can easily create authenticated clients with different roles**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Create helper method to create GlobalAdmin authenticated client
+- [ ] Create helper method to create OrgAdmin authenticated client for specific org
+- [ ] Create helper method to create OrgMember authenticated client for specific org
+- [ ] Create helper method to create non-member authenticated client
+- [ ] Document test fixture usage in test project README
+
+---
+
+###### Story E-006-13
+
+> As a **developer**, I want to **add User API authorization tests**, so that **user endpoint security is verified**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Test GlobalAdmin can list all users
+- [ ] Test non-admin cannot list users (403)
+- [ ] Test user can view own profile
+- [ ] Test user cannot view other profiles (403)
+- [ ] Test user can update own profile
+- [ ] Test user cannot update other profiles (403)
+- [ ] Test only GlobalAdmin can delete users
+
+---
+
+###### Story E-006-14
+
+> As a **developer**, I want to **add Organization API authorization tests**, so that **organization endpoint security is verified**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Test GlobalAdmin can create organizations
+- [ ] Test non-admin cannot create organizations (403)
+- [ ] Test OrgMember can view their organization
+- [ ] Test non-member cannot view organization (403)
+- [ ] Test OrgAdmin can update organization
+- [ ] Test OrgMember cannot update organization (403)
+
+---
+
+###### Story E-006-15
+
+> As a **developer**, I want to **add Proposal/Voting authorization tests**, so that **governance endpoint security is verified**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Test OrgMember can create proposals
+- [ ] Test non-member cannot create proposals (403)
+- [ ] Test OrgMember can view proposals in their org
+- [ ] Test non-member cannot view proposals (403)
+- [ ] Test OrgMember with voting power can vote
+- [ ] Test OrgMember without voting power cannot vote
+- [ ] Test non-member cannot vote (403)
+
+---
+
+###### Story E-006-16
+
+> As a **developer**, I want to **add comprehensive authorization matrix tests**, so that **the full permission model is verified**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Create parameterized tests covering full authorization matrix
+- [ ] Test cross-organization access denial
+- [ ] Test GlobalAdmin override for all operations
+- [ ] Test self-access patterns (own resources)
+- [ ] Generate authorization coverage report
+
+---
+
+##### Workstream E: Security Enhancements
+
+###### Story E-006-17
+
+> As a **developer**, I want to **strengthen password requirements**, so that **user accounts are more secure**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Increase minimum password length to 12 characters
+- [ ] Require at least one uppercase letter
+- [ ] Require at least one number
+- [ ] Require at least one special character
+- [ ] Update `CreateUserRequestValidator` with new rules
+- [ ] Update registration UI with requirements display
+- [ ] Add validation error messages for each requirement
+
+---
+
+###### Story E-006-18
+
+> As a **developer**, I want to **implement rate limiting**, so that **brute force and abuse attacks are mitigated**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Add rate limiting middleware or library
+- [ ] Configure rate limits for login endpoint (e.g., 5 attempts/minute)
+- [ ] Configure rate limits for user creation (e.g., 10/hour per IP)
+- [ ] Configure rate limits for voting (e.g., 60/minute per user)
+- [ ] Return 429 Too Many Requests when limits exceeded
+- [ ] Log rate limit violations for monitoring
+
+---
+
+###### Story E-006-19
+
+> As a **developer**, I want to **document JWT security model**, so that **token handling is clearly defined**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Document token expiration policy (recommended: 15-60 minutes)
+- [ ] Document refresh token approach if implemented
+- [ ] Document token revocation strategy for security incidents
+- [ ] Add security notes to architecture documentation
+- [ ] Create operational runbook for token-related incidents
+
+---
+
+###### Story E-006-20
+
+> As a **developer**, I want to **encrypt webhook secrets at rest**, so that **secrets are protected against database breaches**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Add encryption service for sensitive fields
+- [ ] Encrypt `WebhookEndpoint.Secret` before database storage
+- [ ] Decrypt secrets only when needed for webhook delivery
+- [ ] Migrate existing secrets to encrypted format
+- [ ] Document key management for encryption keys
+
+---
+
+##### Workstream F: Documentation and Verification
+
+###### Story E-006-21
+
+> As a **developer**, I want to **update architecture documentation**, so that **implemented authorization matches documentation**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Update `docs/architecture.md` authorization table to reflect implementation
+- [ ] Change enforcement status from ⚠️ to ✅ for secured endpoints
+- [ ] Document any deviations from intended model
+- [ ] Add implementation notes for authorization handlers
+
+---
+
+###### Story E-006-22
+
+> As an **operator**, I want a **security runbook**, so that **I can respond to security incidents**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Document incident response procedures
+- [ ] Document how to revoke compromised tokens
+- [ ] Document how to disable compromised accounts
+- [ ] Document audit log queries for investigation
+- [ ] Create checklist for security incident handling
+
+---
+
+###### Story E-006-23
+
+> As a **security engineer**, I want **security review and penetration testing**, so that **implementation is validated**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Schedule internal security review
+- [ ] Document findings and remediation plan
+- [ ] Consider external penetration testing
+- [ ] Create security assessment report
+- [ ] Address critical and high findings before production
+
+---
+
+#### Dependencies
+
+- **E-005 (Audit Logging)**: Authorization events should be logged once audit infrastructure exists
+- **Frontend Permission Checks**: May need updates to match backend authorization changes
+
+#### Risks
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Breaking existing integrations | High | Medium | Careful rollout; feature flags for auth enforcement |
+| Test coverage gaps | Medium | Medium | Comprehensive authorization test matrix |
+| Performance impact from auth checks | Low | Low | Efficient DB queries; caching membership lookups |
+| Regression in existing functionality | Medium | Medium | Extensive test suite; staged rollout |
+
+#### Open Questions
+
+1. **Rollout Strategy**: Should authorization be enforced gradually (endpoint by endpoint) or all at once?
+2. **Grace Period**: Should there be a "warn but allow" period before strict enforcement?
+3. **Error Response Format**: Should 403 responses include reason, or be generic for security?
+4. **Caching**: Should organization memberships be cached for performance?
+5. **Feature Flags**: Should new authorization be behind feature flags for controlled rollout?
 
 ---
 
