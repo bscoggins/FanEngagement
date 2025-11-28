@@ -938,9 +938,9 @@ public partial class AddAuditEventsTable : Migration
 
 ### Related FanEngagement Documents
 
-- [E-005 Audit Logging Epic](../product/archive/E-005-audit-logging.md) - Full epic definition
-- [Architecture Overview](../architecture.md) - System architecture
-- [Observability & Health](../architecture.md#observability--health) - Logging and metrics patterns
+- [E-005 Audit Logging Epic](../product/archive/E-005-audit-logging.md) - Full epic definition and story breakdown
+- [Architecture Overview](../architecture.md) - Current system architecture and domain model
+- [Observability & Health](../architecture.md#observability--health) - Existing logging and metrics patterns to align with
 
 ### External Resources
 
