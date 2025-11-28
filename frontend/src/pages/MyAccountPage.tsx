@@ -73,7 +73,7 @@ export const MyAccountPage: React.FC = () => {
   useEffect(() => {
     fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser?.userId, isAdmin]);
+  }, [authUser?.userId, isAdmin, authUserData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +139,7 @@ export const MyAccountPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <strong>Role:</strong> {user.role}
             </div>
-            {user.createdAt && user.createdAt.trim() && (
+            {user.createdAt && user.createdAt.trim() !== '' && (
               <div style={{ marginBottom: '1rem' }}>
                 <strong>Member Since:</strong>{' '}
                 {new Date(user.createdAt).toLocaleDateString()}

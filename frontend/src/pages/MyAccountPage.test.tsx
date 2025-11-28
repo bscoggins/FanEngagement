@@ -69,6 +69,29 @@ describe('MyAccountPage', () => {
       expect(usersApi.getById).not.toHaveBeenCalled();
     });
 
+    it('initializes form data correctly from auth context', async () => {
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User' as const,
+      };
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByText('My Account')).toBeInTheDocument();
+      });
+
+      // Verify that the displayed values match what was passed from auth context
+      // This confirms form data is properly initialized from authUserData
+      expect(screen.getByText('Test User')).toBeInTheDocument();
+      expect(screen.getByText('user@example.com')).toBeInTheDocument();
+      
+      // API should not be called for non-admin users
+      expect(usersApi.getById).not.toHaveBeenCalled();
+    });
+
     it('does not show Edit Profile button for regular users', async () => {
       const mockUser = {
         id: 'user-1',

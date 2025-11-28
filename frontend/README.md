@@ -100,7 +100,7 @@ The My Account page (`/me`) displays the current user's profile information.
 
 ### Technical Notes
 
-The backend `/users/{id}` endpoint requires GlobalAdmin privileges. To prevent permission errors for regular users accessing their own account page, the frontend:
+The backend `/users/{id}` endpoint requires the GlobalAdmin policy. To prevent permission errors for regular users accessing their own account page, the frontend:
 - Uses data from the authentication context for non-admin users
 - Only makes API calls to fetch user data for admin users
 - Shows a message explaining that regular users should contact an administrator to update their profile
