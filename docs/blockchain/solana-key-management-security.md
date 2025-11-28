@@ -278,6 +278,8 @@ async function loadSolanaKeypair(): Promise<Keypair> {
 | Flexibility | 10% | 5 | 6 | 7 | 7 | 9 |
 | **Weighted Score** | 100% | **5.5** | **7.2** | **8.0** | **8.0** | **7.6** |
 
+> **Methodology:** Weighted scores are calculated as the sum of (weight × score) for each factor. Scores range from 1-10, with 10 being the best. For example, File storage: (0.30×2) + (0.15×10) + (0.15×10) + (0.20×2) + (0.10×10) + (0.10×5) = 5.5.
+
 **Recommendation by Environment:**
 
 | Environment | Primary | Fallback | Rationale |
@@ -506,6 +508,8 @@ const upgradeAuthority = deriveKeypair(seed, 2);
 
 #### 3.2.2 Authority Transfer Code
 
+The following example demonstrates the on-chain authority transfer process during key rotation. This is a critical operation that transfers mint authority from the current (old) key to the new key.
+
 ```typescript
 import { 
   Connection, 
@@ -662,6 +666,8 @@ Duration: 2-4 hours
 ```
 
 #### 4.2.2 Shamir's Secret Sharing for Emergency Keys
+
+> **Note:** The following example uses [`secrets.js-grempe`](https://github.com/grempe/secrets.js), a well-established JavaScript implementation of Shamir's Secret Sharing. Alternative libraries include [`shamir`](https://www.npmjs.com/package/shamir), [`shamir-secret-sharing`](https://www.npmjs.com/package/shamir-secret-sharing), or implementations in other languages such as Python's [`secretsharing`](https://pypi.org/project/secretsharing/) and Rust's [`shamir`](https://crates.io/crates/shamir).
 
 ```typescript
 import * as secrets from "secrets.js-grempe";
