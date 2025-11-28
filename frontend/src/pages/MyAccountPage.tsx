@@ -5,12 +5,12 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
-import type { User } from '../types/api';
+import type { UserProfile } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
   const { user: authUser, isAdmin } = useAuth();
   const { showSuccess, showError } = useNotifications();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
@@ -21,16 +21,14 @@ export const MyAccountPage: React.FC = () => {
 
   // Create user data from auth context for non-admin users
   // Admin users will fetch from API to get full data including createdAt
-  const authUserData: User | null = useMemo(() => {
+  const authUserData: UserProfile | null = useMemo(() => {
     if (!authUser) return null;
     return {
       id: authUser.userId,
       email: authUser.email,
       displayName: authUser.displayName,
       role: authUser.role,
-      // For non-admin users, we don't have the createdAt date from the auth context
-      // We'll leave it empty and handle the display accordingly
-      createdAt: '',
+      // createdAt is intentionally omitted - not available from auth context
     };
   }, [authUser]);
 
@@ -139,7 +137,7 @@ export const MyAccountPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <strong>Role:</strong> {user.role}
             </div>
-            {user.createdAt && user.createdAt.trim() !== '' && (
+            {user.createdAt && (
               <div style={{ marginBottom: '1rem' }}>
                 <strong>Member Since:</strong>{' '}
                 {new Date(user.createdAt).toLocaleDateString()}
