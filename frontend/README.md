@@ -40,6 +40,7 @@ src/
   api/         # API client and service modules (authApi, usersApi)
   auth/        # Authentication context with login/logout and localStorage persistence
   components/  # Reusable UI components (Layout)
+  navigation/  # Navigation configuration and hooks for role-based navigation
   pages/       # Route-level pages (Home, Login, Users, UserEdit)
   routes/      # React Router configuration
   types/       # TypeScript interfaces for API models
@@ -53,12 +54,70 @@ src/
 - The `AuthContext` provides `useAuth()` hook for accessing authentication state and methods.
 - Protected routes can check `isAuthenticated` and redirect to login if needed.
 
+## Navigation System
+
+The frontend implements a centralized navigation system with role-based visibility. Navigation items are defined in `src/navigation/navConfig.ts`.
+
+### Navigation Scopes
+
+Items are categorized by scope:
+- **user**: Personal items visible to all authenticated users (Home, My Account, My Organizations)
+- **global**: Platform-wide admin items (Platform Overview, Users, Organizations)
+- **org**: Organization-scoped admin items (Overview, Memberships, Share Types, Proposals, Webhook Events)
+
+### Role-Based Visibility
+
+Navigation items show/hide based on user roles:
+- **Regular Members**: See only user-scoped items (Home, My Account, My Organizations)
+- **OrgAdmins**: See user items plus Admin Dashboard link; when viewing an org where they're admin, they see org-scoped admin items
+- **Platform Admins (GlobalAdmin)**: See all navigation items including platform-wide admin tools
+
+### Mixed-Role Users
+
+Users who are OrgAdmin in one organization and Member in another:
+- See all their organizations in the organization switcher
+- Navigation items remain consistent (user items always at top, organization selector in middle, admin section at bottom)
+- Org-scoped admin items appear only when viewing an organization where the user has OrgAdmin role
+- Switching between organizations updates which org-scoped items are visible, but user and global items stay in place
+
+### Navigation Consistency
+
+The navigation is designed to maintain consistent positioning:
+1. **User items** (Home, My Account, My Organizations) - always at top
+2. **Organization section** - organization selector and role-based org items
+3. **Administration section** - global admin links (only visible to users with admin access)
+
+This ensures navigation elements don't move unpredictably when users switch between organizations with different roles.
+
+## My Account Page
+
+The My Account page (`/me`) displays the current user's profile information.
+
+### Behavior by Role
+
+- **Regular Users (Members)**: Display account information from the authentication context (name, email, role). Profile editing requires administrator assistance.
+- **Admin Users**: Can view full account details including member-since date (fetched from API) and can edit their profile directly.
+
+### Technical Notes
+
+The backend `/users/{id}` endpoint requires the GlobalAdmin policy. To prevent permission errors for regular users accessing their own account page, the frontend:
+- Uses data from the authentication context for non-admin users
+- Only makes API calls to fetch user data for admin users
+- Shows a message explaining that regular users should contact an administrator to update their profile
+
 ## Available Routes
 
 - `/` — Home page with welcome message
 - `/login` — Login page (placeholder, implementation pending)
-- `/users` — Users list page (placeholder)
-- `/users/:id/edit` — User edit page (placeholder)
+- `/me` — My Account page (user's profile)
+- `/me/home` — Member dashboard
+- `/me/organizations` — List of user's organizations
+- `/me/organizations/:orgId` — Organization member view
+- `/admin` — Admin dashboard (requires admin access)
+- `/admin/users` — User management (Platform Admin only)
+- `/admin/organizations` — Organization management (Platform Admin only)
+- `/admin/organizations/:orgId/edit` — Organization settings (OrgAdmin or Platform Admin)
+- `/platform-admin/dashboard` — Platform admin overview (Platform Admin only)
 
 ## Development Workflow
 

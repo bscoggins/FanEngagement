@@ -471,5 +471,48 @@ describe('Layout', () => {
       // Should see Administration section (because user is OrgAdmin in at least one org)
       expect(screen.getByText('Administration')).toBeInTheDocument();
     });
+
+    it('maintains consistent navigation structure for users with mixed org admin/member roles', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-2',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      renderLayout({ isAuthenticated: true, role: 'User' }, mockMemberships);
+
+      // Wait for permissions and org data to load
+      await waitFor(() => {
+        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Key user navigation items should always be present and in consistent order
+      const homeLink = screen.getByTestId('nav-home');
+      const myAccountLink = screen.getByTestId('nav-myAccount');
+      const myOrgsLink = screen.getByTestId('nav-myOrganizations');
+
+      expect(homeLink).toBeInTheDocument();
+      expect(myAccountLink).toBeInTheDocument();
+      expect(myOrgsLink).toBeInTheDocument();
+
+      // Verify the Administration section is visible (user is OrgAdmin in at least one org)
+      expect(screen.getByText('Administration')).toBeInTheDocument();
+
+      // Admin Dashboard should be visible because user is OrgAdmin in one org
+      expect(screen.getByTestId('admin-nav-adminDashboard')).toBeInTheDocument();
+    });
   });
 });

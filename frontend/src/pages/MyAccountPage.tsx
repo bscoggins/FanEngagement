@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { usersApi } from '../api/usersApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
-import type { User } from '../types/api';
+import type { UserProfile } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
   const { user: authUser, isAdmin } = useAuth();
   const { showSuccess, showError } = useNotifications();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
@@ -19,9 +19,37 @@ export const MyAccountPage: React.FC = () => {
     email: '',
   });
 
+  // Create user data from auth context for non-admin users
+  // Admin users will fetch from API to get full data including createdAt
+  const authUserData: UserProfile | null = useMemo(() => {
+    if (!authUser) return null;
+    return {
+      id: authUser.userId,
+      email: authUser.email,
+      displayName: authUser.displayName,
+      role: authUser.role,
+      // createdAt is intentionally omitted - not available from auth context
+    };
+  }, [authUser]);
+
   const fetchUser = async () => {
     if (!authUser?.userId) return;
 
+    // For non-admin users, use auth context data instead of API call
+    // The /users/{id} endpoint requires GlobalAdmin policy
+    if (!isAdmin) {
+      setUser(authUserData);
+      if (authUserData) {
+        setFormData({
+          displayName: authUserData.displayName,
+          email: authUserData.email,
+        });
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Admin users can fetch from API to get full data
     try {
       setLoading(true);
       setError('');
@@ -43,7 +71,7 @@ export const MyAccountPage: React.FC = () => {
   useEffect(() => {
     fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser?.userId]);
+  }, [authUser?.userId, isAdmin, authUserData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,25 +137,33 @@ export const MyAccountPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <strong>Role:</strong> {user.role}
             </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Member Since:</strong>{' '}
-              {new Date(user.createdAt).toLocaleDateString()}
-            </div>
+            {user.createdAt && (
+              <div style={{ marginBottom: '1rem' }}>
+                <strong>Member Since:</strong>{' '}
+                {new Date(user.createdAt).toLocaleDateString()}
+              </div>
+            )}
           </div>
 
-          <button
-            onClick={() => setIsEditing(true)}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            Edit Profile
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <p style={{ color: '#6c757d', fontStyle: 'italic' }}>
+              Contact an administrator to update your profile information.
+            </p>
+          )}
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
