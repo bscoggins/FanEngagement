@@ -75,7 +75,7 @@ Solana accounts require rent-exempt deposits for permanent storage:
 | Account Type | Estimated Size | Rent (SOL) | USD (@$100/SOL) |
 |--------------|---------------|------------|-----------------|
 | Organization PDA | ~500 bytes | 0.00437 | $0.44 |
-| Proposal PDA | ~1,000 bytes | 0.00785 | $0.78 |
+| Proposal PDA | 807 bytes | 0.00651 | $0.65 |
 | Vote Record | ~200 bytes | 0.00228 | $0.23 |
 | Token Mint | ~82 bytes | 0.00146 | $0.15 |
 | Token Account | ~165 bytes | 0.00204 | $0.20 |
@@ -486,9 +486,9 @@ pub struct CreateProposal<'info> {
 | Create Organizations | 100 | 0.00437 | 0.437 | $44 |
 | Create Share Types | 300 | 0.00146 | 0.438 | $44 |
 | Token Account Creation | 1,000,000 | 0.00204 | 2,040 | $204,000 |
-| Create Proposals | 2,000 | 0.00785 | 15.70 | $1,570 |
+| Create Proposals | 2,000 | 0.00651 | 13.02 | $1,302 |
 | Cast Votes | 10,000,000 | 0.000005 | 50 | $5,000 |
-| **Total Transaction Fees** | - | - | **~2,100** | **~$210,000** |
+| **Total Transaction Fees** | - | - | **~2,104** | **~$210,400** |
 
 > **Note:** Token account creation is the largest cost. This can be optimized by:
 > - Using Associated Token Accounts (created on first transfer)
