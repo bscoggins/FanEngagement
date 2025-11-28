@@ -1536,6 +1536,23 @@ The `docs/architecture.md` file contains **outdated information** that incorrect
 
 ---
 
+###### Story E-006-09
+
+> As an **admin user**, I want to **enable multi-factor authentication (MFA) on my account**, so that **my account is protected with an additional security layer**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] MFA can be enabled by admin users in account settings
+- [ ] QR code generated for TOTP setup (compatible with authenticator apps)
+- [ ] TOTP validation during login for MFA-enabled accounts
+- [ ] Backup codes generated for account recovery
+- [ ] MFA can be disabled by user (requires current TOTP or backup code)
+
+---
+
 #### Dependencies
 
 - **E-005 (Audit Logging)**: Security events should be logged once audit infrastructure exists
@@ -1551,7 +1568,7 @@ The `docs/architecture.md` file contains **outdated information** that incorrect
 
 1. **Production Timeline**: When is production deployment planned? This affects enhancement priority.
 2. **Rate Limiting Thresholds**: What are appropriate rate limits for different endpoints?
-3. **MFA Scope**: Should MFA be added? If so, mandatory for GlobalAdmin or optional?
+3. **MFA Scope**: Should MFA be mandatory for GlobalAdmin or optional for all admin users?
 
 ---
 ## 5. Ready-for-Issue Stories
