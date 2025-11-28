@@ -821,7 +821,7 @@ The table below specifies the current authorization model enforced across all AP
 | View proposal results | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
 | **Voting** |
 | Cast vote | ✅ ENFORCED | - | ✓ | ✓ | ✓ | `[Authorize(Policy = "OrgMember")]` |
-| View user's vote | ✅ ENFORCED | ✓ (self) | ✓ | - | - | Checks self or Admin role |
+| View user's vote | ✅ ENFORCED | ✓ (self) | ✓ | - | - | `[Authorize]` + manual self/Admin check |
 | **Webhook & Events Management** |
 | Webhook CRUD | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
 | Outbound events list/view | ✅ ENFORCED | - | ✓ | - | ✓ | `[Authorize(Policy = "OrgAdmin")]` |
@@ -888,9 +888,9 @@ All organization-level handlers check for Global Admin status first. Users with 
 
 The `RouteValueHelpers` utility extracts organization context from route parameters. It checks for:
 - `organizationId` (standard org routes)
-- `orgId` (alternative naming)
 - `id` (fallback for `/organizations/{id}` style routes)
-- `proposalId` (for proposal routes, looks up the associated organization)
+
+For proposal routes, the `ProposalManagerHandler` extracts `proposalId` from the route and looks up the associated organization from the database.
 
 ### JWT Claims & Implementation
 
