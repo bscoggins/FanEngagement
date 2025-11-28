@@ -660,5 +660,5 @@ pub struct CreateProposal<'info> {
 > **Note:** The following documents are part of Epic E-004. Links will be updated as documents are created.
 
 - E-004-02: [Governance Models Evaluation](./governance-models-evaluation.md) - On-chain vs off-chain voting analysis
-- E-004-03: Tokenization Strategy (Planned)
+- E-004-03: [ShareType Tokenization Strategy](./sharetype-tokenization-strategy.md) - SPL token design for ShareTypes
 - E-004-07: On-chain Event Model (Planned)
