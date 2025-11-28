@@ -511,7 +511,7 @@ pub struct CreateProposal<'info> {
 | Account Type | Count (Year 1) | Size | Rent (SOL) | Total (SOL) |
 |--------------|---------------|------|------------|-------------|
 | Organization PDAs | 100 | 500 B | 0.00437 | 0.437 |
-| Proposal PDAs | 2,000 | 807 B | 0.00650 | 13.00 |
+| Proposal PDAs | 2,000 | 807 B | 0.00651 | 13.00 |
 | Vote Records (on-chain) | 10,000,000 | 200 B | 0.00228 | 22,800 |
 | Token Mints | 300 | 82 B | 0.00146 | 0.438 |
 | **Total Rent** | - | - | - | **~22,800** |
