@@ -50,7 +50,7 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
 
         // Indexes for query performance
         builder.HasIndex(e => e.Timestamp)
-            .IsDescending();
+            .IsDescending(true);
 
         builder.HasIndex(e => e.OrganizationId);
 

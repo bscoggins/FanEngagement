@@ -60,7 +60,7 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 name: "IX_AuditEvents_Timestamp",
                 table: "AuditEvents",
                 column: "Timestamp",
-                descending: new bool[0]);
+                descending: new[] { true });
         }
 
         /// <inheritdoc />

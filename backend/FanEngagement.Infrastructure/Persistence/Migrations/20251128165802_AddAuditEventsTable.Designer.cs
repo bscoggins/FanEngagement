@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FanEngagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FanEngagementDbContext))]
-    [Migration("20251128165344_AddAuditEventsTable")]
+    [Migration("20251128165802_AddAuditEventsTable")]
     partial class AddAuditEventsTable
     {
         /// <inheritdoc />
