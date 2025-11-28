@@ -73,7 +73,7 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                     b.Property<short>("ResourceType")
                         .HasColumnType("smallint");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");

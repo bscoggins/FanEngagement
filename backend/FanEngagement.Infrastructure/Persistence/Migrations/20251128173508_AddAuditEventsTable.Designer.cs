@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FanEngagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FanEngagementDbContext))]
-    [Migration("20251128165802_AddAuditEventsTable")]
+    [Migration("20251128173508_AddAuditEventsTable")]
     partial class AddAuditEventsTable
     {
         /// <inheritdoc />
@@ -76,7 +76,7 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                     b.Property<short>("ResourceType")
                         .HasColumnType("smallint");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");

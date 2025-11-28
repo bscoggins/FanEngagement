@@ -6,7 +6,7 @@ public class AuditEvent
 {
     public Guid Id { get; set; }
 
-    public DateTime Timestamp { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
 
     // Actor Information
     public Guid? ActorUserId { get; set; }

@@ -16,7 +16,7 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Timestamp = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ActorUserId = table.Column<Guid>(type: "uuid", nullable: true),
                     ActorDisplayName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     ActorIpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
