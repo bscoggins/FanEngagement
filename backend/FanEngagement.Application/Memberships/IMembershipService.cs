@@ -1,3 +1,5 @@
+using FanEngagement.Application.Users;
+
 namespace FanEngagement.Application.Memberships;
 
 public interface IMembershipService
@@ -8,4 +10,5 @@ public interface IMembershipService
     Task<MembershipDto?> GetByOrganizationAndUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MembershipWithOrganizationDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<UserDto>> GetAvailableUsersAsync(Guid organizationId, CancellationToken cancellationToken = default);
 }

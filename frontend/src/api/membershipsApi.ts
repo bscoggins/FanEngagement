@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Membership, MembershipWithOrganizationDto, MembershipWithUserDto, CreateMembershipRequest } from '../types/api';
+import type { Membership, MembershipWithOrganizationDto, MembershipWithUserDto, CreateMembershipRequest, User } from '../types/api';
 
 export const membershipsApi = {
   getByOrganization: async (organizationId: string): Promise<Membership[]> => {
@@ -19,6 +19,11 @@ export const membershipsApi = {
 
   getMyOrganizations: async (): Promise<MembershipWithOrganizationDto[]> => {
     const response = await apiClient.get<MembershipWithOrganizationDto[]>('/users/me/organizations');
+    return response.data;
+  },
+
+  getAvailableUsers: async (organizationId: string): Promise<User[]> => {
+    const response = await apiClient.get<User[]>(`/organizations/${organizationId}/memberships/available-users`);
     return response.data;
   },
 

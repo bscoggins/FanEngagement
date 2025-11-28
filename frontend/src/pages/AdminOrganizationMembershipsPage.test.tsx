@@ -6,13 +6,13 @@ import { NotificationProvider } from '../contexts/NotificationContext';
 import { NotificationContainer } from '../components/NotificationContainer';
 import { membershipsApi } from '../api/membershipsApi';
 import { organizationsApi } from '../api/organizationsApi';
-import { usersApi } from '../api/usersApi';
 import type { MembershipWithUserDto, Organization, User } from '../types/api';
 
 // Mock the APIs
 vi.mock('../api/membershipsApi', () => ({
   membershipsApi: {
     getByOrganizationWithUserDetails: vi.fn(),
+    getAvailableUsers: vi.fn(),
     create: vi.fn(),
     delete: vi.fn(),
   },
@@ -21,12 +21,6 @@ vi.mock('../api/membershipsApi', () => ({
 vi.mock('../api/organizationsApi', () => ({
   organizationsApi: {
     getById: vi.fn(),
-  },
-}));
-
-vi.mock('../api/usersApi', () => ({
-  usersApi: {
-    getAll: vi.fn(),
   },
 }));
 
@@ -63,21 +57,8 @@ describe('AdminOrganizationMembershipsPage', () => {
     },
   ];
 
-  const mockUsers: User[] = [
-    {
-      id: 'user-1',
-      email: 'user1@example.com',
-      displayName: 'User One',
-      role: 'User',
-      createdAt: '2024-01-01T00:00:00Z',
-    },
-    {
-      id: 'user-2',
-      email: 'admin@example.com',
-      displayName: 'Admin User',
-      role: 'Admin',
-      createdAt: '2024-01-02T00:00:00Z',
-    },
+  // Available users - users NOT already members (returned by getAvailableUsers endpoint)
+  const mockAvailableUsers: User[] = [
     {
       id: 'user-3',
       email: 'user3@example.com',
@@ -103,7 +84,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('renders manage memberships heading', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValueOnce(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValueOnce(mockAvailableUsers);
     
     renderPage();
     
@@ -115,7 +96,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('displays loading state initially', () => {
     vi.mocked(organizationsApi.getById).mockImplementation(() => new Promise(() => {}));
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockImplementation(() => new Promise(() => {}));
-    vi.mocked(usersApi.getAll).mockImplementation(() => new Promise(() => {}));
+    vi.mocked(membershipsApi.getAvailableUsers).mockImplementation(() => new Promise(() => {}));
     
     renderPage();
     
@@ -125,7 +106,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('loads and displays memberships', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValueOnce(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValueOnce(mockAvailableUsers);
     
     renderPage();
     
@@ -142,7 +123,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('shows add member form when button is clicked', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValueOnce(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValueOnce(mockAvailableUsers);
     
     renderPage();
     
@@ -160,7 +141,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('successfully adds a membership', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValue(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValue(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValue(mockAvailableUsers);
     vi.mocked(membershipsApi.create).mockResolvedValueOnce({
       id: 'mem-3',
       organizationId: 'org-1',
@@ -202,7 +183,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('displays error when adding duplicate membership', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValue(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValue(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValue(mockAvailableUsers);
     vi.mocked(membershipsApi.create).mockRejectedValueOnce({
       response: { status: 400, data: { message: 'User is already a member' } }
     });
@@ -233,7 +214,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('successfully removes a membership', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValue(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValue(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValue(mockAvailableUsers);
     vi.mocked(membershipsApi.delete).mockResolvedValueOnce(undefined);
     
     // Mock confirm dialog
@@ -260,7 +241,7 @@ describe('AdminOrganizationMembershipsPage', () => {
   it('displays empty state when no memberships exist', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValueOnce([]);
-    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValueOnce(mockAvailableUsers);
     
     renderPage();
     
@@ -271,10 +252,10 @@ describe('AdminOrganizationMembershipsPage', () => {
     expect(screen.getByText(/No members found/i)).toBeInTheDocument();
   });
 
-  it('filters available users to exclude current members', async () => {
+  it('displays available users from backend in dropdown (excludes current members)', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(membershipsApi.getByOrganizationWithUserDetails).mockResolvedValueOnce(mockMemberships);
-    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
+    vi.mocked(membershipsApi.getAvailableUsers).mockResolvedValueOnce(mockAvailableUsers);
     
     renderPage();
     
@@ -289,8 +270,9 @@ describe('AdminOrganizationMembershipsPage', () => {
     const userSelect = screen.getByLabelText(/select user/i);
     const options = Array.from(userSelect.querySelectorAll('option')).map(opt => opt.textContent);
     
-    // Should only have User Three as available (User One and Admin User are already members)
+    // Should only have User Three as available (returned by backend getAvailableUsers endpoint)
     expect(options).toContain('User Three (user3@example.com)');
+    // These users are already members, so backend doesn't return them
     expect(options).not.toContain('User One (user1@example.com)');
     expect(options).not.toContain('Admin User (admin@example.com)');
   });

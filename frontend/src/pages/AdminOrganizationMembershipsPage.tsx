@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { membershipsApi } from '../api/membershipsApi';
 import { organizationsApi } from '../api/organizationsApi';
-import { usersApi } from '../api/usersApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -16,7 +15,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [memberships, setMemberships] = useState<MembershipWithUserDto[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -47,12 +46,12 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       const [orgData, membershipsData, usersData] = await Promise.all([
         organizationsApi.getById(orgId),
         membershipsApi.getByOrganizationWithUserDetails(orgId),
-        usersApi.getAll(),
+        membershipsApi.getAvailableUsers(orgId),
       ]);
       
       setOrganization(orgData);
       setMemberships(membershipsData);
-      setUsers(usersData);
+      setAvailableUsers(usersData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
       const errorMessage = parseApiError(err);
@@ -119,11 +118,6 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       showError(errorMessage);
     }
   };
-
-  // Get users that are not already members
-  const availableUsers = users.filter(
-    (user) => !memberships.some((m) => m.userId === user.id)
-  );
 
   if (isLoading) {
     return (
