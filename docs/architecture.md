@@ -879,6 +879,7 @@ Custom handlers in `backend/FanEngagement.Api/Authorization/` implement the auth
 - **`OrganizationMemberHandler`**: Validates user has any membership in the organization (extracted from route)
 - **`OrganizationAdminHandler`**: Validates user has OrgAdmin role in the organization
 - **`ProposalManagerHandler`**: Validates user is either the proposal creator or an OrgAdmin
+- **`ProposalMemberHandler`**: Handles `OrgMember` policy for proposal routes by extracting `proposalId` from the route and looking up the associated organization
 
 #### Global Admin Bypass
 
@@ -890,7 +891,7 @@ The `RouteValueHelpers` utility extracts organization context from route paramet
 - `organizationId` (standard org routes)
 - `id` (fallback for `/organizations/{id}` style routes)
 
-For proposal routes, the `ProposalManagerHandler` extracts `proposalId` from the route and looks up the associated organization from the database.
+For proposal routes, the `ProposalMemberHandler` and `ProposalManagerHandler` extract `proposalId` from the route and look up the associated organization from the database.
 
 ### JWT Claims & Implementation
 
