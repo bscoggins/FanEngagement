@@ -50,6 +50,7 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-002   | T2    | Streamline OrgAdmin Proposal Management | Drafting | Now      | Brent |                           |
 | E-003   | T3    | Enhance Governance Results Transparency | Backlog  | Later    | TBD   |                           |
 | E-004   | T5    | Blockchain Integration Initiative (Solana): Discovery → MVP Definition → Implementation Planning | Proposed | Next | TBD | Major market differentiator; PO agent comprehensive epic |
+| E-005   | T3    | Implement Thorough Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
 
 **Status values (for the PO agent to use):**
 
