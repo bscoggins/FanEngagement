@@ -417,8 +417,8 @@ This research **validates that FanEngagement has comprehensive authorization alr
 
 ## Appendix C: Authorization Matrix (Current State - All Enforced)
 
-| Action | Global User | Global Admin | Org Member | Org OrgAdmin | Status |
-|--------|-------------|--------------|------------|--------------|--------|
+| Action | Global User | Global Admin | Org Member | OrgAdmin | Status |
+|--------|-------------|--------------|------------|----------|--------|
 | Create user | ✓ (AllowAnonymous) | ✓ | - | - | ✅ |
 | List/view users | - | ✓ | - | - | ✅ GlobalAdmin |
 | Update/delete user | - | ✓ | - | - | ✅ GlobalAdmin |

@@ -1415,7 +1415,7 @@ The `docs/architecture.md` file contains **outdated information** that incorrect
 - [ ] Change all ⚠️ AUTH-ONLY markers to ✅ ENFORCED
 - [ ] Change all ⚠️ OPEN markers to ✅ ENFORCED  
 - [ ] Update "Implementation Gaps & Security Concerns" section to reflect resolved status
-- [ ] Add documentation for authorization handlers in `backend/FanEngagement.Api/Authorization/`
+- [ ] Reference authorization handlers documentation in `backend/FanEngagement.Api/Authorization/`
 - [ ] Review confirms documentation matches codebase
 
 ---

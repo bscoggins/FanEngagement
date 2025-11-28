@@ -1,5 +1,5 @@
 ---
-name: "Coding Task"
+name: "Documentation Task"
 about: "Document the authorization infrastructure"
 title: "[Dev] E-006-02: Document Authorization Infrastructure"
 labels: ["documentation", "copilot", "security", "T3"]

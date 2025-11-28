@@ -1,5 +1,5 @@
 ---
-name: "Coding Task"
+name: "Documentation Task"
 about: "Document JWT security model"
 title: "[Dev] E-006-07: Document JWT Security Model"
 labels: ["documentation", "copilot", "security", "T3"]
