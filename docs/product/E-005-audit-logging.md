@@ -122,7 +122,7 @@ Transform FanEngagement into an auditable governance platform where every signif
 | Role | Primary Use Case |
 |------|------------------|
 | **OrgAdmin** | Review actions taken within their organization, investigate member disputes, demonstrate governance integrity |
-| **PlatformAdmin** | Cross-organization incident investigation, compliance audits, platform-wide security monitoring |
+| **GlobalAdmin** | Cross-organization incident investigation, compliance audits, platform-wide security monitoring |
 | **Member** | View their own action history (limited scope) |
 | **External Auditor** | Export and analyze audit data for compliance verification |
 
