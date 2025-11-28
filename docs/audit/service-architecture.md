@@ -648,12 +648,24 @@ public class AuditAuthorizationMiddleware
     
     /// <summary>
     /// Generates a deterministic GUID from a string for consistent system event tracking.
+    /// Uses SHA-256 for collision resistance (takes first 16 bytes of hash).
     /// </summary>
     private static Guid GenerateDeterministicGuid(string input)
     {
-        using var md5 = System.Security.Cryptography.MD5.Create();
-        var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
-        return new Guid(hash);
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
+        // Use the first 16 bytes of the SHA-256 hash to construct the GUID
+        var guidBytes = new byte[16];
+        Array.Copy(hash, guidBytes, 16);
+        return new Guid(guidBytes);
+    }
+    
+    /// <summary>
+    /// Extracts the correlation ID from the response headers.
+    /// </summary>
+    private static string? GetCorrelationId(HttpContext context)
+    {
+        return context.Response.Headers["X-Correlation-ID"].FirstOrDefault();
     }
 }
 ```
@@ -673,17 +685,20 @@ catch (Exception ex)
     // Add audit event for server errors
     if (statusCode >= 500)
     {
+        // Generate deterministic GUID for system events
+        var resourceId = GenerateDeterministicGuid($"error:{context.Request.Path}:{context.Request.Method}");
+        
         await auditService.LogAsync(
             new AuditEventBuilder()
                 .WithActor(context)
                 .WithAction(ActionType.Accessed)
-                .WithResource(ResourceType.SystemConfiguration, Guid.Empty, context.Request.Path)
+                .WithResource(ResourceType.SystemConfiguration, resourceId, context.Request.Path)
                 .WithDetails(new {
                     Endpoint = context.Request.Path.Value,
                     Method = context.Request.Method,
                     ExceptionType = ex.GetType().Name,
                     // Don't include full message for security
-                    ErrorCategory = GetErrorCategory(ex)
+                    ErrorCategory = "ServerError"
                 })
                 .WithCorrelationId(GetCorrelationId(context))
                 .AsFailure($"Server error: {ex.GetType().Name}"));
@@ -697,18 +712,24 @@ Capture authentication events in the authentication flow.
 
 ```csharp
 // In AuthController or AuthService
-public async Task<AuthResult> LoginAsync(LoginRequest request)
+public async Task<AuthResult> LoginAsync(LoginRequest request, HttpContext httpContext)
 {
     var user = await _userService.FindByEmailAsync(request.Email);
     
+    // Extract client IP from HttpContext
+    var clientIpAddress = httpContext.Connection.RemoteIpAddress?.ToString();
+    
     if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
     {
+        // Generate deterministic GUID for failed login (user doesn't exist or unknown)
+        var resourceId = GenerateDeterministicGuid($"login-failed:{request.Email}");
+        
         // Audit failed login
         await _auditService.LogAsync(
             new AuditEventBuilder()
-                .WithIpAddress(GetClientIpAddress())
+                .WithIpAddress(clientIpAddress)
                 .WithAction(ActionType.Authenticated)
-                .WithResource(ResourceType.User, Guid.Empty, request.Email)
+                .WithResource(ResourceType.User, resourceId, request.Email)
                 .WithDetails(new { Email = request.Email, Reason = "InvalidCredentials" })
                 .AsFailure("Invalid credentials"));
         
@@ -719,7 +740,7 @@ public async Task<AuthResult> LoginAsync(LoginRequest request)
     await _auditService.LogAsync(
         new AuditEventBuilder()
             .WithActor(user.Id, user.DisplayName)
-            .WithIpAddress(GetClientIpAddress())
+            .WithIpAddress(clientIpAddress)
             .WithAction(ActionType.Authenticated)
             .WithResource(ResourceType.User, user.Id, user.Email)
             .AsSuccess());
@@ -796,28 +817,29 @@ public async Task<Vote> CastVoteAsync(Guid proposalId, CastVoteRequest request, 
     };
     
     _dbContext.Votes.Add(vote);
-    
-    // Audit event for vote - use sync to ensure atomicity with vote
-    var auditEvent = new AuditEventBuilder()
-        .WithActor(_currentUserService.UserId, _currentUserService.DisplayName)
-        .WithAction(ActionType.Created)
-        .WithResource(ResourceType.Vote, vote.Id, $"Vote on {proposal.Title}")
-        .WithOrganization(proposal.OrganizationId, proposal.Organization.Name)
-        .WithDetails(new {
-            ProposalId = proposalId,
-            ProposalTitle = proposal.Title,
-            OptionId = request.ProposalOptionId,
-            OptionText = selectedOption.Text,
-            VotingPower = votingPower
-        })
-        .WithCorrelationId(_correlationService.CorrelationId)
-        .AsSuccess()
-        .Build();
-    
-    _dbContext.AuditEvents.Add(auditEvent);
-    
-    // Single save commits both vote and audit atomically
     await _dbContext.SaveChangesAsync(ct);
+    
+    // Audit event for vote - use LogSyncAsync for consistent error handling
+    // Note: For true atomicity, consider using a transaction scope or
+    // outbox pattern. LogSyncAsync ensures the audit event is persisted
+    // with proper error handling that doesn't propagate failures.
+    await _auditService.LogSyncAsync(
+        new AuditEventBuilder()
+            .WithActor(_currentUserService.UserId, _currentUserService.DisplayName)
+            .WithAction(ActionType.Created)
+            .WithResource(ResourceType.Vote, vote.Id, $"Vote on {proposal.Title}")
+            .WithOrganization(proposal.OrganizationId, proposal.Organization.Name)
+            .WithDetails(new {
+                ProposalId = proposalId,
+                ProposalTitle = proposal.Title,
+                OptionId = request.ProposalOptionId,
+                OptionText = selectedOption.Text,
+                VotingPower = votingPower
+            })
+            .WithCorrelationId(_correlationService.CorrelationId)
+            .AsSuccess()
+            .Build(),
+        ct);
     
     return vote;
 }
@@ -1096,15 +1118,14 @@ public static class AuditDependencyInjection
     public static IServiceCollection AddAuditServices(this IServiceCollection services)
     {
         // Channel with bounded capacity to prevent memory issues
-        // Using DropWrite mode ensures newer events are dropped rather than older ones,
-        // preserving the audit trail's chronological integrity. This is acceptable because:
-        // 1. High-volume situations are temporary (channel catches up when load decreases)
-        // 2. Dropped events are logged with warnings for monitoring
-        // 3. Critical governance events use sync mode and bypass the channel
-        // Alternative: Use Wait mode to block callers, but this risks degrading application performance
+        // Using DropOldest mode ensures the oldest events are dropped when the channel is full,
+        // prioritizing the logging of recent (and potentially critical) events. This reduces the risk
+        // of missing sensitive actions during high-volume periods. Dropped events should be logged with
+        // explicit metrics for monitoring. Critical governance events may still use sync mode to bypass the channel.
+        // Alternative: Use Wait mode to block callers, but this risks degrading application performance.
         services.AddSingleton(Channel.CreateBounded<AuditEvent>(new BoundedChannelOptions(10000)
         {
-            FullMode = BoundedChannelFullMode.DropWrite,  // Drop new events when full, preserving older events
+            FullMode = BoundedChannelFullMode.DropOldest,  // Drop oldest events when full, ensuring new events are logged
             SingleReader = true,
             SingleWriter = false
         }));
