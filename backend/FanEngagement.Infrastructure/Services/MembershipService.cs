@@ -134,6 +134,16 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
 
     public async Task<IReadOnlyList<UserDto>> GetAvailableUsersAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
+        // Validate organization exists
+        var organizationExists = await dbContext.Organizations
+            .AsNoTracking()
+            .AnyAsync(o => o.Id == organizationId, cancellationToken);
+
+        if (!organizationExists)
+        {
+            throw new InvalidOperationException($"Organization {organizationId} not found");
+        }
+
         // Get all users that are NOT already members of this organization
         // Uses a subquery to efficiently filter in the database
         var memberUserIds = dbContext.OrganizationMemberships

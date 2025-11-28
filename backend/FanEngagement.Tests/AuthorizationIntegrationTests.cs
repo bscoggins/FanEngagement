@@ -328,7 +328,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     public async Task GetAvailableUsers_ReturnsOk_ForGlobalAdmin()
     {
         // Arrange
-        var (globalAdminId, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(globalAdminToken);
 
         // Create an organization
