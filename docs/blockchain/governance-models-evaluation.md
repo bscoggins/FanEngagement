@@ -949,6 +949,7 @@ interface OnChainVotingPolicy {
 ### Related FanEngagement Documents
 
 - [Solana Capabilities Analysis](./solana-capabilities-analysis.md) - Cost projections and technical analysis
+- [ShareType Tokenization Strategy](./sharetype-tokenization-strategy.md) - SPL token design for ShareTypes
 - [Architecture Overview](../architecture.md) - Current system architecture
 - [Future Improvements](../future-improvements.md) - Roadmap items
 
