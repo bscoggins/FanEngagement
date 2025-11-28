@@ -134,14 +134,12 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
 
     public async Task<IReadOnlyList<UserDto>> GetAvailableUsersAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
-        // Get all user IDs that are already members of this organization
-        var memberUserIds = await dbContext.OrganizationMemberships
-            .AsNoTracking()
+        // Get all users that are NOT already members of this organization
+        // Uses a subquery to efficiently filter in the database
+        var memberUserIds = dbContext.OrganizationMemberships
             .Where(m => m.OrganizationId == organizationId)
-            .Select(m => m.UserId)
-            .ToListAsync(cancellationToken);
+            .Select(m => m.UserId);
 
-        // Get all users that are NOT already members
         var availableUsers = await dbContext.Users
             .AsNoTracking()
             .Where(u => !memberUserIds.Contains(u.Id))
