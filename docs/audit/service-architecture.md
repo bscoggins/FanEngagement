@@ -385,7 +385,21 @@ public class AuditEventBuilder
     /// </summary>
     public AuditEventBuilder WithDetailsJson(string detailsJson)
     {
-        _event.Details = detailsJson;
+        // Parse the JSON string to an object
+        var detailsObj = JsonSerializer.Deserialize<Dictionary<string, object>>(detailsJson, JsonSerializerOptions);
+        // Redact sensitive fields
+        if (SensitiveFieldsToRedact != null)
+        {
+            foreach (var field in SensitiveFieldsToRedact)
+            {
+                if (detailsObj.ContainsKey(field))
+                {
+                    detailsObj[field] = "***REDACTED***";
+                }
+            }
+        }
+        // Serialize back to JSON and store
+        _event.Details = JsonSerializer.Serialize(detailsObj, JsonSerializerOptions);
         return this;
     }
 
