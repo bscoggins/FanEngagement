@@ -10,6 +10,7 @@ namespace FanEngagement.Application.Audit;
 public class AuditEventBuilder
 {
     private readonly AuditEvent _event;
+    private bool _resourceSet;
 
     public AuditEventBuilder()
     {
@@ -57,6 +58,7 @@ public class AuditEventBuilder
         _event.ResourceType = resourceType;
         _event.ResourceId = resourceId;
         _event.ResourceName = resourceName;
+        _resourceSet = true;
         return this;
     }
 
@@ -148,8 +150,8 @@ public class AuditEventBuilder
 
     private void ValidateRequiredFields()
     {
-        if (_event.ResourceType == default)
-            throw new InvalidOperationException("ResourceType is required.");
+        if (!_resourceSet)
+            throw new InvalidOperationException("Resource must be set using WithResource().");
         if (_event.ResourceId == Guid.Empty)
             throw new InvalidOperationException("ResourceId is required.");
     }
