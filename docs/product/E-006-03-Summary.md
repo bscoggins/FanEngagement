@@ -10,18 +10,18 @@
 
 ### ✅ Review of `AuthorizationIntegrationTests.cs` completed
 - **Status:** Complete
-- **Findings:** 46 tests organized into 5 regions, comprehensive coverage of GlobalAdmin, OrgAdmin, OrgMember, and ProposalManager policies
-- **Test Results:** All 46 tests passing
+- **Findings:** 28 tests organized into 5 regions, comprehensive coverage of GlobalAdmin, OrgAdmin, OrgMember, and ProposalManager policies
+- **Test Results:** All 28 tests passing
 
 ### ✅ Inventory of all API endpoints created with expected authorization policies
 - **Status:** Complete
 - **Deliverable:** Section 1 of main report
-- **Coverage:** All 44 endpoints across 12 controllers documented with authorization policies
+- **Coverage:** All 50 endpoints (46 production + 4 dev-only) across 12 controllers documented with authorization policies
 
 ### ✅ Missing test scenarios identified and documented
 - **Status:** Complete
 - **Deliverable:** Section 4 (Gap Analysis) of main report
-- **Summary:** 9 missing test scenarios identified across 5 categories (High, Medium, Low priority)
+- **Summary:** 29 missing test scenarios identified across 5 categories (High, Medium, Low priority)
 
 ### ✅ Test coverage status documented
 - **Status:** Complete
@@ -171,9 +171,9 @@ This story successfully completed all acceptance criteria:
 ✅ Test coverage metrics and statistics  
 ✅ Detailed recommendations for E-006-04
 
-The FanEngagement application has **strong authorization infrastructure** (95% of endpoints have policies), but **test coverage needs improvement** in specific areas. The report provides a clear roadmap for addressing these gaps in E-006-04.
+The FanEngagement application has **strong authorization infrastructure** (96% of endpoints have policies), but **test coverage needs improvement** in specific areas. The report provides a clear roadmap for addressing these gaps in E-006-04.
 
-**Overall Assessment:** Authorization is implemented correctly, but test coverage should be increased from 79% to >90% for production readiness.
+**Overall Assessment:** Authorization is implemented correctly, but test coverage should be increased from 37% to >90% for production readiness.
 
 ---
 
