@@ -18,11 +18,12 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 ### Key Findings
 
-- **Total API Endpoints:** 44
+- **Total API Endpoints:** 44 (production endpoints; 6 dev-only admin endpoints excluded from count)
 - **Endpoints with Authorization Policies:** 42 (95%)
 - **Endpoints with Tests:** 35 (79%)
 - **Missing Tests:** 9 (21%)
-- **Test Files Reviewed:** 3 (AuthorizationIntegrationTests.cs, MultiTenancyTests.cs, AdminAuthorizationTests.cs)
+- **Test Files Reviewed:** 4 (AuthorizationIntegrationTests.cs, MultiTenancyTests.cs, AdminAuthorizationTests.cs, AuthorizationHandlerTests.cs)
+- **Total Test Methods:** 57 (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 
 ### Overall Assessment
 
@@ -241,7 +242,10 @@ This report provides a comprehensive analysis of authorization test coverage for
 | **OutboundEventsController** | 3 | 0 | 3 | **0%** | 🔴 High |
 | AdminController | 4 | 0 | 4 | 0% | 🟢 Low (dev-only) |
 
-**TOTAL:** 44 endpoints, 35 tested (79%), 9 not tested (21%)
+**TOTAL:** 50 endpoints (44 production + 6 dev-only), 35 tested (79% of production endpoints), 9 not tested (21%)
+
+> **Endpoint Counting Methodology:**  
+> The total controller endpoint count is 50 HTTP methods across all controllers. However, this report focuses on **44 production-relevant endpoints**, excluding 6 dev-only admin endpoints (AdminController seed/cleanup operations restricted to Development/Demo environments). The 79% coverage metric represents tested endpoints out of the 44 production endpoints.
 
 ---
 
@@ -251,12 +255,12 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 **Purpose:** Integration tests for authorization policies across controllers
 
-**Coverage:** 46 tests organized into 5 regions:
+**Coverage:** 28 tests organized into 5 regions:
 1. User Management Authorization Tests (4 tests)
 2. Organization Authorization Tests (5 tests)
 3. Membership Authorization Tests (7 tests)
 4. ShareType Authorization Tests (3 tests)
-5. Proposal Authorization Tests (7 tests)
+5. Proposal Authorization Tests (9 tests)
 
 **Strengths:**
 - Comprehensive testing of GlobalAdmin, OrgAdmin, OrgMember policies
@@ -275,7 +279,7 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 **Purpose:** Verify multi-tenancy isolation between organizations
 
-**Coverage:** 13 tests focused on cross-organization access control:
+**Coverage:** 11 tests focused on cross-organization access control:
 - Proposal access across organizations
 - Voting across organizations
 - ShareType access across organizations
@@ -315,16 +319,19 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 **Purpose:** Unit tests for custom authorization handlers
 
-**Coverage:** Tests custom authorization handlers:
-- OrganizationMemberHandler
-- OrganizationAdminHandler
-- ProposalManagerHandler
+**Coverage:** 13 tests for custom authorization handlers:
+- OrganizationMemberHandler (4 tests)
+- OrganizationAdminHandler (3 tests)
+- ProposalManagerHandler (4 tests)
+- ProposalMemberHandler (2 tests)
 
 **Strengths:**
 - Unit-level testing of authorization logic
 - Tests route parameter extraction
+- Tests GlobalAdmin bypass behavior
+- Tests specific handler success/failure scenarios
 
-**Note:** This is unit testing, not integration testing, so not counted in endpoint coverage.
+**Note:** These are unit tests, not integration tests. They validate handler logic but are not counted in endpoint integration test coverage. However, they are included when running tests with the "Authorization" filter (46 tests total: 28 integration + 5 admin + 13 handler unit tests).
 
 ---
 

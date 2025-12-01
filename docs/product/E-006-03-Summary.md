@@ -27,10 +27,11 @@
 - **Status:** Complete
 - **Deliverable:** Section 2 (Test Coverage Summary) of main report
 - **Metrics:**
-  - Overall: 35/44 endpoints tested (79%)
+  - Overall: 35/44 production endpoints tested (79%)
   - By controller: Detailed breakdown provided
   - By policy: Detailed coverage percentages
   - By operation type: GET (57%), POST (43%), PUT (75%), DELETE (0%)
+  - Test methods analyzed: 57 total (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 
 ### ✅ Report produced in `docs/product/`
 - **Status:** Complete
@@ -46,9 +47,9 @@
 
 **Contents:**
 1. Executive Summary with key findings
-2. Complete endpoint inventory (44 endpoints, 12 controllers)
+2. Complete endpoint inventory (50 endpoints total: 44 production + 6 dev-only, across 12 controllers)
 3. Test coverage summary by controller
-4. Existing test files analysis (3 test files reviewed)
+4. Existing test files analysis (4 test files reviewed: 57 test methods analyzed)
 5. Gap analysis with prioritized missing tests
 6. Test coverage metrics and statistics
 7. Expected authorization scenarios summary
@@ -56,9 +57,10 @@
 9. Appendices with file locations
 
 ### Key Metrics
-- **Total Endpoints:** 44
-- **Tested Endpoints:** 35 (79%)
-- **Missing Tests:** 9 (21%)
+- **Total Endpoints:** 50 (44 production + 6 dev-only)
+- **Production Endpoints Tested:** 35 of 44 (79%)
+- **Missing Tests:** 9 (21% of production endpoints)
+- **Total Test Methods Reviewed:** 57 (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 - **Critical Gaps:** 4 controller areas with 0% coverage
 
 ### Critical Gaps Identified
@@ -95,16 +97,21 @@ All existing authorization tests pass successfully:
 
 ```
 Test Run Successful.
-Total tests: 46
+Total tests: 46 (when filtering by "Authorization")
      Passed: 46
- Total time: 13.9821 Seconds
+ Total time: ~14 seconds
 ```
 
+**Test Count Breakdown:**
+- When filtering by "Authorization": 46 tests (28 integration + 5 admin + 13 handler unit tests)
+- MultiTenancyTests.cs: 11 tests (not included in "Authorization" filter but reviewed for this report)
+- **Total test methods analyzed:** 57 tests across 4 test files
+
 Test files reviewed:
-- `AuthorizationIntegrationTests.cs` - 46 tests
-- `MultiTenancyTests.cs` - 13 tests
+- `AuthorizationIntegrationTests.cs` - 28 tests
+- `MultiTenancyTests.cs` - 11 tests
 - `AdminAuthorizationTests.cs` - 5 tests
-- `AuthorizationHandlerTests.cs` - Unit tests for handlers
+- `AuthorizationHandlerTests.cs` - 13 tests (unit tests for handlers)
 
 ---
 
