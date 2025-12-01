@@ -1,3 +1,4 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,14 @@ public class AuthController(IAuthService authService) : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var response = await authService.LoginAsync(request, cancellationToken);
+        // Extract client context for audit logging
+        var auditContext = new AuthenticationAuditContext
+        {
+            IpAddress = ClientContextHelper.GetClientIpAddress(HttpContext),
+            UserAgent = ClientContextHelper.GetUserAgent(HttpContext)
+        };
+
+        var response = await authService.LoginAsync(request, auditContext, cancellationToken);
         
         if (response == null)
         {
