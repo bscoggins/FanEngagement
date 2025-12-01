@@ -16,6 +16,7 @@ public class FanEngagementDbContext(DbContextOptions<FanEngagementDbContext> opt
     public DbSet<Vote> Votes => Set<Vote>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
     public DbSet<OutboundEvent> OutboundEvents => Set<OutboundEvent>();
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
