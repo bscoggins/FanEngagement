@@ -27,6 +27,47 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         _output = output;
     }
 
+    /// <summary>
+    /// Helper method to wait for an authentication audit event to be processed asynchronously.
+    /// </summary>
+    private static async Task<AuditEventDto?> WaitForAuthenticationAuditEventAsync(
+        IAuditService auditService,
+        string? email = null,
+        Guid? actorUserId = null,
+        AuditOutcome? outcome = null,
+        int maxWaitSeconds = 5)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var maxWait = TimeSpan.FromSeconds(maxWaitSeconds);
+        var pollInterval = TimeSpan.FromMilliseconds(100);
+
+        while (stopwatch.Elapsed < maxWait)
+        {
+            var query = new AuditQuery
+            {
+                ActionType = AuditActionType.Authenticated,
+                ActorUserId = actorUserId,
+                Outcome = outcome,
+                Page = 1,
+                PageSize = 100
+            };
+
+            var result = await auditService.QueryAsync(query);
+            
+            // Filter by email if provided
+            var auditEvent = email != null
+                ? result.Items.FirstOrDefault(e => e.ResourceName == email)
+                : result.Items.FirstOrDefault();
+
+            if (auditEvent != null)
+                return auditEvent;
+
+            await Task.Delay(pollInterval);
+        }
+
+        return null;
+    }
+
     [Fact]
     public async Task Login_Success_CreatesAuditEvent()
     {
@@ -53,36 +94,14 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
-        // Wait for audit event to be processed
-        await Task.Delay(1000);
-
-        // Assert - Verify audit event was created
+        // Assert - Wait for audit event to be processed
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        var query = new AuditQuery
-        {
-            ActorUserId = createdUser.Id,
-            ActionType = AuditActionType.Authenticated,
-            Page = 1,
-            PageSize = 10
-        };
-
-        var auditResult = await auditService.QueryAsync(query);
-
-        _output.WriteLine($"Found {auditResult.TotalCount} audit events for user {createdUser.Id}");
-        foreach (var evt in auditResult.Items)
-        {
-            _output.WriteLine($"  Event: ID={evt.Id}, ActorUserId={evt.ActorUserId}, ActionType={evt.ActionType}, Outcome={evt.Outcome}");
-        }
-
-        Assert.NotNull(auditResult);
-        Assert.True(auditResult.TotalCount >= 1, "Expected at least one audit event for successful login");
-
-        var auditEvent = auditResult.Items.FirstOrDefault(e => 
-            e.ActorUserId == createdUser.Id &&
-            e.ActionType == AuditActionType.Authenticated &&
-            e.Outcome == AuditOutcome.Success);
+        var auditEvent = await WaitForAuthenticationAuditEventAsync(
+            auditService,
+            actorUserId: createdUser.Id,
+            outcome: AuditOutcome.Success);
 
         Assert.NotNull(auditEvent);
         Assert.Equal(createdUser.Id, auditEvent.ActorUserId);
@@ -92,8 +111,7 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(AuditResourceType.User, auditEvent.ResourceType);
         Assert.Equal(createdUser.Id, auditEvent.ResourceId);
 
-        // Verify IP address is captured (should be from test client)
-        // Note: IP address might be null in test environment
+        // Verify IP address is captured (may be null in test environment)
         // Assert.NotNull(auditEvent.ActorIpAddress);
 
         _output.WriteLine($"Audit event details: ID={auditEvent.Id}, IP={auditEvent.ActorIpAddress}, Outcome={auditEvent.Outcome}");
@@ -125,38 +143,15 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
         Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
 
-        // Wait for audit event to be processed using polling
+        // Assert - Wait for audit event to be processed
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        var maxWaitTime = TimeSpan.FromSeconds(5);
-        var pollInterval = TimeSpan.FromMilliseconds(200);
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        AuditEventDto? auditEvent = null;
+        var auditEvent = await WaitForAuthenticationAuditEventAsync(
+            auditService,
+            email: createRequest.Email,
+            outcome: AuditOutcome.Failure);
 
-        while (stopwatch.Elapsed < maxWaitTime && auditEvent == null)
-        {
-            var query = new AuditQuery
-            {
-                ActionType = AuditActionType.Authenticated,
-                Outcome = AuditOutcome.Failure,
-                Page = 1,
-                PageSize = 100
-            };
-
-            var auditResult = await auditService.QueryAsync(query);
-
-            // Find the audit event for this specific email
-            auditEvent = auditResult.Items.FirstOrDefault(e =>
-                e.ResourceName == createRequest.Email &&
-                e.ActionType == AuditActionType.Authenticated &&
-                e.Outcome == AuditOutcome.Failure);
-
-            if (auditEvent == null)
-                await Task.Delay(pollInterval);
-        }
-
-        // Assert - Verify failed login audit event was created
         _output.WriteLine($"Found audit event for {createRequest.Email}: {auditEvent != null}");
 
         Assert.NotNull(auditEvent);
@@ -187,38 +182,15 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
         Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
 
-        // Wait for audit event to be processed using polling
+        // Assert - Wait for audit event to be processed
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        var maxWaitTime = TimeSpan.FromSeconds(5);
-        var pollInterval = TimeSpan.FromMilliseconds(200);
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        AuditEventDto? auditEvent = null;
+        var auditEvent = await WaitForAuthenticationAuditEventAsync(
+            auditService,
+            email: nonExistentEmail,
+            outcome: AuditOutcome.Failure);
 
-        while (stopwatch.Elapsed < maxWaitTime && auditEvent == null)
-        {
-            var query = new AuditQuery
-            {
-                ActionType = AuditActionType.Authenticated,
-                Outcome = AuditOutcome.Failure,
-                Page = 1,
-                PageSize = 100
-            };
-
-            var auditResult = await auditService.QueryAsync(query);
-
-            // Find the audit event for this specific email
-            auditEvent = auditResult.Items.FirstOrDefault(e =>
-                e.ResourceName == nonExistentEmail &&
-                e.ActionType == AuditActionType.Authenticated &&
-                e.Outcome == AuditOutcome.Failure);
-
-            if (auditEvent == null)
-                await Task.Delay(pollInterval);
-        }
-
-        // Assert - Verify failed login audit event was created
         _output.WriteLine($"Found audit event for {nonExistentEmail}: {auditEvent != null}");
 
         Assert.NotNull(auditEvent);
@@ -316,10 +288,10 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         var createdUser = await createResponse.Content.ReadFromJsonAsync<UserDto>();
         Assert.NotNull(createdUser);
 
-        // Add a custom User-Agent header
+        // Create a new HttpClient instance with custom User-Agent header
         var customUserAgent = "TestClient/1.0 (Integration Test)";
-        _client.DefaultRequestHeaders.Clear();
-        _client.DefaultRequestHeaders.Add("User-Agent", customUserAgent);
+        var customClient = _factory.CreateClient();
+        customClient.DefaultRequestHeaders.Add("User-Agent", customUserAgent);
 
         var loginRequest = new LoginRequest
         {
@@ -327,28 +299,19 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
             Password = password
         };
 
-        // Act - Perform login
-        var loginResponse = await _client.PostAsJsonAsync("/auth/login", loginRequest);
+        // Act - Perform login with custom client
+        var loginResponse = await customClient.PostAsJsonAsync("/auth/login", loginRequest);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
-        // Wait for audit event to be processed
-        await Task.Delay(1000);
-
-        // Assert - Verify audit event captures User-Agent
+        // Assert - Wait for audit event to be processed
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        var query = new AuditQuery
-        {
-            ActorUserId = createdUser.Id,
-            ActionType = AuditActionType.Authenticated,
-            Outcome = AuditOutcome.Success,
-            Page = 1,
-            PageSize = 10
-        };
+        var auditEvent = await WaitForAuthenticationAuditEventAsync(
+            auditService,
+            actorUserId: createdUser.Id,
+            outcome: AuditOutcome.Success);
 
-        var auditResult = await auditService.QueryAsync(query);
-        var auditEvent = auditResult.Items.FirstOrDefault();
         Assert.NotNull(auditEvent);
 
         // Get the full audit event with details
