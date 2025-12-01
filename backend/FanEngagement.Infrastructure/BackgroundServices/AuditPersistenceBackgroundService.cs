@@ -72,7 +72,21 @@ public class AuditPersistenceBackgroundService(
                     else
                     {
                         // Wait for more events or timeout
-                        await Task.Delay(BatchInterval, stoppingToken);
+                        // Use try-catch to handle cancellation gracefully during delay
+                        try
+                        {
+                            await Task.Delay(BatchInterval, stoppingToken);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Cancellation during delay - persist the batch and exit
+                            if (batch.Count > 0)
+                            {
+                                await PersistBatchAsync(batch, CancellationToken.None);
+                                batch.Clear();
+                            }
+                            break;
+                        }
                         
                         // Read any additional events that arrived during the delay
                         while (batch.Count < BatchSize && channel.Reader.TryRead(out var auditEvent))
@@ -98,7 +112,7 @@ public class AuditPersistenceBackgroundService(
         // Persist any remaining events when stopping
         if (batch.Count > 0)
         {
-            await PersistBatchAsync(batch, stoppingToken);
+            await PersistBatchAsync(batch, CancellationToken.None);
         }
     }
 
@@ -147,11 +161,21 @@ public class AuditPersistenceBackgroundService(
                 "Failed to write audit fallback file. {Count} events may be lost.",
                 events.Count);
 
-            foreach (var evt in events)
+            // Log a sample of the lost events (up to 5) to avoid excessive logging
+            var samplesToLog = Math.Min(5, events.Count);
+            for (int i = 0; i < samplesToLog; i++)
             {
+                var evt = events[i];
                 logger.LogWarning(
                     "Lost audit event: {ActionType} on {ResourceType}/{ResourceId} by {ActorUserId}",
                     evt.ActionType, evt.ResourceType, evt.ResourceId, evt.ActorUserId);
+            }
+            
+            if (events.Count > samplesToLog)
+            {
+                logger.LogWarning(
+                    "...and {AdditionalCount} more audit events were lost",
+                    events.Count - samplesToLog);
             }
         }
     }
