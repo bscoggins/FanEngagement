@@ -143,7 +143,7 @@ public class AuditPersistenceBackgroundService(
         {
             var filename = Path.Combine(
                 _fallbackDirectory,
-                $"audit-fallback-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.json");
+                $"audit-fallback-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.json");
 
             Directory.CreateDirectory(_fallbackDirectory);
 
