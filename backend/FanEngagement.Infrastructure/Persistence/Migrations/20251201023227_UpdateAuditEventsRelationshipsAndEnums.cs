@@ -20,6 +20,8 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
             // AuditResourceType: Values in 1-9 range (core entities) need to shift by -1; values >= 10 stay the same
             migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ResourceType\" = \"ResourceType\" - 1 WHERE \"ResourceType\" < 10");
 
+            // IMPORTANT: The enum value shifts above must happen before dropping and recreating the index below.
+            // This ensures that the index filter matches the new enum values and maintains data consistency.
             migrationBuilder.DropIndex(
                 name: "IX_AuditEvents_Outcome_Timestamp",
                 table: "AuditEvents");
@@ -63,14 +65,10 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 name: "IX_AuditEvents_Outcome_Timestamp",
                 table: "AuditEvents");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_AuditEvents_Outcome_Timestamp",
-                table: "AuditEvents",
-                columns: new[] { "Outcome", "Timestamp" },
-                descending: new[] { false, true },
-                filter: "\"Outcome\" IN (2, 3)");
-
             // Reverse migration of enum values from new (starting at 0) back to old (starting at 1)
+            // IMPORTANT: The enum value shifts must happen before recreating the index below.
+            // This ensures that the index filter matches the old enum values and maintains data consistency.
+
             // AuditResourceType: Values in 0-9 range (core entities) need to shift by +1
             migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ResourceType\" = \"ResourceType\" + 1 WHERE \"ResourceType\" < 10");
 
@@ -79,6 +77,13 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
 
             // AuditOutcome: Success=0->1, Failure=1->2, Denied=2->3, Partial=3->4
             migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"Outcome\" = \"Outcome\" + 1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditEvents_Outcome_Timestamp",
+                table: "AuditEvents",
+                columns: new[] { "Outcome", "Timestamp" },
+                descending: new[] { false, true },
+                filter: "\"Outcome\" IN (2, 3)");
         }
     }
 }
