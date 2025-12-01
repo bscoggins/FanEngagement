@@ -14,16 +14,11 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateMembershipRequest request, CancellationToken cancellationToken)
     {
-        // Get the current user ID and display name from claims
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var actorUserId))
+        var (actorUserId, actorDisplayName) = GetActorInfo();
+        if (actorUserId == Guid.Empty)
         {
             return Unauthorized();
         }
-
-        var actorDisplayName = User.FindFirst(ClaimTypes.Name)?.Value 
-                              ?? User.FindFirst(ClaimTypes.Email)?.Value 
-                              ?? "Unknown";
 
         var membership = await membershipService.CreateAsync(organizationId, request, actorUserId, actorDisplayName, cancellationToken);
         return CreatedAtAction(nameof(GetByUser), new { organizationId, userId = membership.UserId }, membership);
@@ -68,16 +63,11 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Delete(Guid organizationId, Guid userId, CancellationToken cancellationToken)
     {
-        // Get the current user ID and display name from claims
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var actorUserId))
+        var (actorUserId, actorDisplayName) = GetActorInfo();
+        if (actorUserId == Guid.Empty)
         {
             return Unauthorized();
         }
-
-        var actorDisplayName = User.FindFirst(ClaimTypes.Name)?.Value 
-                              ?? User.FindFirst(ClaimTypes.Email)?.Value 
-                              ?? "Unknown";
 
         var deleted = await membershipService.DeleteAsync(organizationId, userId, actorUserId, actorDisplayName, cancellationToken);
         if (!deleted)
@@ -92,18 +82,39 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> UpdateRole(Guid organizationId, Guid userId, [FromBody] UpdateMembershipRequest request, CancellationToken cancellationToken)
     {
-        // Get the current user ID and display name from claims
+        var (actorUserId, actorDisplayName) = GetActorInfo();
+        if (actorUserId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var membership = await membershipService.UpdateRoleAsync(organizationId, userId, request.Role, actorUserId, actorDisplayName, cancellationToken);
+            return Ok(membership);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound();
+        }
+    }
+
+    /// <summary>
+    /// Extracts the actor user ID and display name from the current HTTP context claims.
+    /// </summary>
+    /// <returns>A tuple containing the actor user ID (or Guid.Empty if not found) and display name.</returns>
+    private (Guid ActorUserId, string ActorDisplayName) GetActorInfo()
+    {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var actorUserId))
         {
-            return Unauthorized();
+            return (Guid.Empty, "Unknown");
         }
 
         var actorDisplayName = User.FindFirst(ClaimTypes.Name)?.Value 
                               ?? User.FindFirst(ClaimTypes.Email)?.Value 
                               ?? "Unknown";
 
-        var membership = await membershipService.UpdateRoleAsync(organizationId, userId, request.Role, actorUserId, actorDisplayName, cancellationToken);
-        return Ok(membership);
+        return (actorUserId, actorDisplayName);
     }
 }
