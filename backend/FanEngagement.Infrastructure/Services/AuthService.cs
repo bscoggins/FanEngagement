@@ -13,28 +13,16 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    FanEngagementDbContext dbContext,
+    IConfiguration configuration,
+    ILogger<AuthService> logger,
+    IAuditService auditService) : IAuthService
 {
-    private readonly FanEngagementDbContext _dbContext;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<AuthService> _logger;
-    private readonly IAuditService _auditService;
-
-    public AuthService(
-        FanEngagementDbContext dbContext, 
-        IConfiguration configuration, 
-        ILogger<AuthService> logger,
-        IAuditService auditService)
-    {
-        _dbContext = dbContext;
-        _configuration = configuration;
-        _logger = logger;
-        _auditService = auditService;
-    }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, AuthenticationAuditContext? auditContext = null, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Users
+        var user = await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
@@ -121,16 +109,16 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Password verification failed due to exception. This may indicate a corrupted password hash or invalid data format.");
+            logger.LogWarning(ex, "Password verification failed due to exception. This may indicate a corrupted password hash or invalid data format.");
             return false;
         }
     }
 
     private string GenerateJwtToken(Guid userId, string email, string role)
     {
-        var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
-        var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
-        var signingKey = _configuration["Jwt:SigningKey"] ?? throw new InvalidOperationException("JWT SigningKey is not configured");
+        var issuer = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
+        var audience = configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
+        var signingKey = configuration["Jwt:SigningKey"] ?? throw new InvalidOperationException("JWT SigningKey is not configured");
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -180,12 +168,12 @@ public class AuthService : IAuthService
                 builder.WithDetails(new { UserAgent = auditContext.UserAgent });
             }
 
-            await _auditService.LogAsync(builder, cancellationToken);
+            await auditService.LogAsync(builder, cancellationToken);
         }
         catch (Exception ex)
         {
             // Log but don't propagate audit failures
-            _logger.LogError(ex, "Failed to log successful login audit event for user {UserId}", user.Id);
+            logger.LogError(ex, "Failed to log successful login audit event for user {UserId}", user.Id);
         }
     }
 
@@ -226,12 +214,12 @@ public class AuthService : IAuthService
                 builder.WithDetails(new { UserAgent = auditContext.UserAgent });
             }
 
-            await _auditService.LogAsync(builder, cancellationToken);
+            await auditService.LogAsync(builder, cancellationToken);
         }
         catch (Exception ex)
         {
             // Log but don't propagate audit failures
-            _logger.LogError(ex, "Failed to log failed login audit event for email {Email}", attemptedEmail);
+            logger.LogError(ex, "Failed to log failed login audit event for email {Email}", attemptedEmail);
         }
     }
 }

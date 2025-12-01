@@ -233,24 +233,15 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
         Assert.NotNull(loginResult);
 
-        // Wait for audit event to be processed
-        await Task.Delay(1000);
-
-        // Assert - Verify audit event does not contain sensitive data
+        // Assert - Wait for audit event to be processed
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        var query = new AuditQuery
-        {
-            ActorUserId = createdUser.Id,
-            ActionType = AuditActionType.Authenticated,
-            Outcome = AuditOutcome.Success,
-            Page = 1,
-            PageSize = 10
-        };
+        var auditEvent = await WaitForAuthenticationAuditEventAsync(
+            auditService,
+            actorUserId: createdUser.Id,
+            outcome: AuditOutcome.Success);
 
-        var auditResult = await auditService.QueryAsync(query);
-        var auditEvent = auditResult.Items.FirstOrDefault();
         Assert.NotNull(auditEvent);
 
         // Get the full audit event with details
@@ -355,25 +346,34 @@ public class AuthenticationAuditTests : IClassFixture<TestWebApplicationFactory>
             Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
         }
 
-        // Wait for audit events to be processed
-        await Task.Delay(2000);
-
-        // Assert - Verify all failures are audited
+        // Assert - Wait for audit events to be processed using polling
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        var query = new AuditQuery
+        // Poll until we have all expected events or timeout
+        var maxWaitTime = TimeSpan.FromSeconds(5);
+        var pollInterval = TimeSpan.FromMilliseconds(100);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        int eventsForUser = 0;
+
+        while (stopwatch.Elapsed < maxWaitTime && eventsForUser < failureCount)
         {
-            ActionType = AuditActionType.Authenticated,
-            Outcome = AuditOutcome.Failure,
-            Page = 1,
-            PageSize = 100
-        };
+            var query = new AuditQuery
+            {
+                ActionType = AuditActionType.Authenticated,
+                Outcome = AuditOutcome.Failure,
+                Page = 1,
+                PageSize = 100
+            };
 
-        var auditResult = await auditService.QueryAsync(query);
+            var auditResult = await auditService.QueryAsync(query);
 
-        // Count events for this specific email
-        var eventsForUser = auditResult.Items.Count(e => e.ResourceName == createRequest.Email);
+            // Count events for this specific email
+            eventsForUser = auditResult.Items.Count(e => e.ResourceName == createRequest.Email);
+
+            if (eventsForUser < failureCount)
+                await Task.Delay(pollInterval);
+        }
 
         _output.WriteLine($"Found {eventsForUser} failed login attempts for email {createRequest.Email}");
 
