@@ -246,7 +246,7 @@ This report provides a comprehensive analysis of authorization test coverage for
 **TOTAL:** 50 endpoints (46 production + 4 dev-only), 16 tested (35% of production endpoints), 30 not tested (65%)
 
 > **Endpoint Counting Methodology:**  
-> The total controller endpoint count is 50 HTTP methods across all controllers. However, this report focuses on **46 production-relevant endpoints**, excluding 4 dev-only admin endpoints (AdminController seed/cleanup operations restricted to Development/Demo environments). The 37% coverage metric represents tested endpoints out of the 46 production endpoints.
+> The total controller endpoint count is 50 HTTP methods across all controllers. However, this report focuses on **46 production-relevant endpoints**, excluding 4 dev-only admin endpoints (AdminController seed/cleanup operations restricted to Development/Demo environments). The 35% coverage metric represents tested endpoints out of the 46 production endpoints.
 
 ---
 
