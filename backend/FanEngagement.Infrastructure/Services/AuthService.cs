@@ -170,9 +170,11 @@ public class AuthService : IAuthService
                 .WithResource(AuditResourceType.User, user.Id, user.Email)
                 .AsSuccess();
 
+            // Add IP address if available
             if (auditContext?.IpAddress != null)
                 builder.WithIpAddress(auditContext.IpAddress);
 
+            // Add additional client context to details
             if (auditContext?.UserAgent != null)
             {
                 builder.WithDetails(new { UserAgent = auditContext.UserAgent });
@@ -190,6 +192,12 @@ public class AuthService : IAuthService
     /// <summary>
     /// Logs a failed login audit event.
     /// Uses generic failure reason to prevent credential enumeration.
+    /// 
+    /// Rate-limiting: Audit events are logged asynchronously via a bounded channel.
+    /// If the channel is full (due to excessive failed login attempts), events will be
+    /// dropped with a warning logged. This provides natural rate-limit protection.
+    /// For additional rate-limiting, consider implementing IP-based throttling at the
+    /// API gateway or reverse proxy level.
     /// </summary>
     private async Task LogFailedLoginAsync(
         string attemptedEmail, 
@@ -208,9 +216,11 @@ public class AuthService : IAuthService
                 .WithResource(AuditResourceType.User, syntheticResourceId, attemptedEmail)
                 .AsFailure(reason);
 
+            // Add IP address if available
             if (auditContext?.IpAddress != null)
                 builder.WithIpAddress(auditContext.IpAddress);
 
+            // Add additional client context to details
             if (auditContext?.UserAgent != null)
             {
                 builder.WithDetails(new { UserAgent = auditContext.UserAgent });
