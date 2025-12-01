@@ -3,9 +3,9 @@ namespace FanEngagement.Domain.Enums;
 public enum AuditActionType : short
 {
     // Resource Lifecycle
-    Created = 1,
-    Updated = 2,
-    Deleted = 3,
+    Created = 0,
+    Updated = 1,
+    Deleted = 2,
 
     // Access and Views
     Accessed = 10,

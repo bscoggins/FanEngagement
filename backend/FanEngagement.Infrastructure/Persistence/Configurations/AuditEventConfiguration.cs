@@ -48,6 +48,17 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
         builder.Property(e => e.CorrelationId)
             .HasMaxLength(100);
 
+        // Foreign key relationships
+        builder.HasOne(e => e.ActorUser)
+            .WithMany()
+            .HasForeignKey(e => e.ActorUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(e => e.Organization)
+            .WithMany(o => o.AuditEvents)
+            .HasForeignKey(e => e.OrganizationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes for query performance (matching data model specification)
         
         // Primary access pattern: Date range queries (most common)
@@ -78,10 +89,12 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
             .HasDatabaseName("IX_AuditEvents_ActionType_Timestamp");
 
         // Composite index: Outcome + Timestamp (DESC), partial (Failure or Denied only)
+        // Note: Filter values (1, 2) correspond to AuditOutcome.Failure and AuditOutcome.Denied.
+        // If the enum values change, this filter must be updated accordingly.
         builder.HasIndex(e => new { e.Outcome, e.Timestamp })
             .IsDescending(false, true)
             .HasDatabaseName("IX_AuditEvents_Outcome_Timestamp")
-            .HasFilter("\"Outcome\" IN (2, 3)");
+            .HasFilter("\"Outcome\" IN (1, 2)");
 
         // Partial index: CorrelationId (when not null)
         builder.HasIndex(e => e.CorrelationId)

@@ -30,4 +30,8 @@ public class AuditEvent
     // Additional Context
     public string? Details { get; set; }
     public string? CorrelationId { get; set; }
+
+    // Navigation properties
+    public User? ActorUser { get; set; }
+    public Organization? Organization { get; set; }
 }

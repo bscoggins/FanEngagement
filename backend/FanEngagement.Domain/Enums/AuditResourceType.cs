@@ -3,9 +3,9 @@ namespace FanEngagement.Domain.Enums;
 public enum AuditResourceType : short
 {
     // Core Entities
-    User = 1,
-    Organization = 2,
-    Membership = 3,
+    User = 0,
+    Organization = 1,
+    Membership = 2,
 
     // Share Management
     ShareType = 10,
