@@ -3,6 +3,7 @@ using System;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FanEngagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FanEngagementDbContext))]
-    partial class FanEngagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251128175328_AddAuditEventsTable")]
+    partial class AddAuditEventsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,7 +106,7 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("Outcome", "Timestamp")
                         .IsDescending(false, true)
                         .HasDatabaseName("IX_AuditEvents_Outcome_Timestamp")
-                        .HasFilter("\"Outcome\" IN (1, 2)");
+                        .HasFilter("\"Outcome\" IN (2, 3)");
 
                     b.HasIndex("ResourceType", "ResourceId", "Timestamp")
                         .IsDescending(false, false, true)
@@ -509,23 +512,6 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                     b.ToTable("WebhookEndpoints", (string)null);
                 });
 
-            modelBuilder.Entity("FanEngagement.Domain.Entities.AuditEvent", b =>
-                {
-                    b.HasOne("FanEngagement.Domain.Entities.User", "ActorUser")
-                        .WithMany()
-                        .HasForeignKey("ActorUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("FanEngagement.Domain.Entities.Organization", "Organization")
-                        .WithMany("AuditEvents")
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("ActorUser");
-
-                    b.Navigation("Organization");
-                });
-
             modelBuilder.Entity("FanEngagement.Domain.Entities.OrganizationMembership", b =>
                 {
                     b.HasOne("FanEngagement.Domain.Entities.Organization", "Organization")
@@ -682,8 +668,6 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("FanEngagement.Domain.Entities.Organization", b =>
                 {
-                    b.Navigation("AuditEvents");
-
                     b.Navigation("Memberships");
 
                     b.Navigation("OutboundEvents");
