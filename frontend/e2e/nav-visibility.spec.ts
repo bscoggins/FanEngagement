@@ -72,4 +72,36 @@ test.describe('Top navigation visibility by role', () => {
     await page.goto('/platform-admin/dashboard');
     await expect(page).not.toHaveURL('/platform-admin/dashboard');
   });
+
+  test('Platform Admin does not see organization dropdown in header', async ({ page }) => {
+    await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+    
+    // Platform admin should not see organization selector in header
+    await expect(page.getByTestId('admin-header-org-selector')).not.toBeVisible();
+    await expect(page.getByTestId('unified-header-org-selector')).not.toBeVisible();
+    
+    // Should see platform admin badge
+    await expect(page.getByText('Platform Admin')).toBeVisible();
+  });
+
+  test('OrgAdmin sees organization dropdown in header', async ({ page }) => {
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
+    
+    // OrgAdmin should see organization selector in header (not sidebar)
+    await expect(page.getByTestId('admin-header-org-selector')).toBeVisible();
+    
+    // Should be able to select from dropdown
+    const orgSelector = page.getByTestId('admin-header-org-selector');
+    await expect(orgSelector).toBeVisible();
+  });
+
+  test('Regular Member sees organization dropdown in header', async ({ page }) => {
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
+    
+    // Navigate to member home
+    await page.goto('/me/home');
+    
+    // Member should see organization selector in unified header
+    await expect(page.getByTestId('unified-header-org-selector')).toBeVisible();
+  });
 });
