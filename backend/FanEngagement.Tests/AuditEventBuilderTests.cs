@@ -26,11 +26,11 @@ public class AuditEventBuilderTests
     }
 
     [Fact]
-    public void Build_WithoutResourceType_ThrowsInvalidOperationException()
+    public void Build_WithoutCallingWithResource_ThrowsInvalidOperationException()
     {
         // Arrange
         var builder = new AuditEventBuilder()
-            .WithResource(default, Guid.NewGuid());
+            .WithAction(AuditActionType.Created);
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => builder.Build());
@@ -165,5 +165,26 @@ public class AuditEventBuilderTests
         Assert.Equal("correlation-123", result.CorrelationId);
         Assert.NotNull(result.Details);
         Assert.Equal(AuditOutcome.Success, result.Outcome);
+    }
+
+    [Fact]
+    public void Build_WithUserResourceType_WorksCorrectly()
+    {
+        // This test verifies the fix for the enum default value bug
+        // User = 0 is a valid ResourceType even though it equals default(AuditResourceType)
+        
+        // Arrange
+        var userId = Guid.NewGuid();
+        var builder = new AuditEventBuilder()
+            .WithAction(AuditActionType.Created)
+            .WithResource(AuditResourceType.User, userId, "Test User");
+
+        // Act
+        var result = builder.Build();
+
+        // Assert
+        Assert.Equal(AuditResourceType.User, result.ResourceType);
+        Assert.Equal(userId, result.ResourceId);
+        Assert.Equal("Test User", result.ResourceName);
     }
 }
