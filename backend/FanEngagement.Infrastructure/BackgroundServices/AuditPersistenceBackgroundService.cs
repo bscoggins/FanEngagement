@@ -50,26 +50,48 @@ public class AuditPersistenceBackgroundService(
     {
         var batch = new List<AuditEvent>(BatchSize);
 
-        await foreach (var auditEvent in channel.Reader.ReadAllAsync(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
-            batch.Add(auditEvent);
-
-            // Persist when batch is full or after timeout
-            if (batch.Count >= BatchSize)
+            try
             {
-                await PersistBatchAsync(batch, stoppingToken);
-                batch.Clear();
-            }
-            else
-            {
-                // Check if more events are immediately available
-                // If not, wait a short time and then persist partial batch
-                await Task.Delay(BatchInterval, stoppingToken);
-                if (batch.Count > 0)
+                // Try to read an event with timeout
+                if (await channel.Reader.WaitToReadAsync(stoppingToken))
                 {
-                    await PersistBatchAsync(batch, stoppingToken);
-                    batch.Clear();
+                    // Read available events up to batch size
+                    while (batch.Count < BatchSize && channel.Reader.TryRead(out var auditEvent))
+                    {
+                        batch.Add(auditEvent);
+                    }
+
+                    // If batch is full, persist immediately
+                    if (batch.Count >= BatchSize)
+                    {
+                        await PersistBatchAsync(batch, stoppingToken);
+                        batch.Clear();
+                    }
+                    else
+                    {
+                        // Wait for more events or timeout
+                        await Task.Delay(BatchInterval, stoppingToken);
+                        
+                        // Read any additional events that arrived during the delay
+                        while (batch.Count < BatchSize && channel.Reader.TryRead(out var auditEvent))
+                        {
+                            batch.Add(auditEvent);
+                        }
+
+                        // Persist the accumulated batch if we have any events
+                        if (batch.Count > 0)
+                        {
+                            await PersistBatchAsync(batch, stoppingToken);
+                            batch.Clear();
+                        }
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
             }
         }
 
