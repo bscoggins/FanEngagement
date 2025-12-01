@@ -124,8 +124,6 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
             actorUserId: user.Id,
             resourceName: "/users");
 
-        _output.WriteLine($"Found audit event: {auditEvent != null}");
-
         Assert.NotNull(auditEvent);
         Assert.Equal(user.Id, auditEvent.ActorUserId);
         // ActorDisplayName might be the display name or email depending on JWT claims
@@ -182,8 +180,6 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
             auditService,
             actorUserId: user.Id,
             resourceName: $"/organizations/{org.Id}");
-
-        _output.WriteLine($"Found audit event for OrgMember policy failure: {auditEvent != null}");
 
         Assert.NotNull(auditEvent);
         Assert.Equal(user.Id, auditEvent.ActorUserId);

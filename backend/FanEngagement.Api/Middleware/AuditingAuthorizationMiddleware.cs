@@ -49,9 +49,9 @@ public class AuditingAuthorizationMiddleware(
                 .ToList();
 
             // Build audit event
-            // For system-level authorization failures, we use a generated GUID based on the request path
-            // since there's no specific resource being accessed
-            var resourceId = Guid.NewGuid();
+            // For system-level authorization failures, we create a deterministic GUID from the request path
+            // so that multiple failures on the same endpoint can be correlated
+            var resourceId = GenerateResourceIdForPath(requestPath);
             
             var builder = new AuditEventBuilder()
                 .WithAction(AuditActionType.AuthorizationDenied)
@@ -61,7 +61,7 @@ public class AuditingAuthorizationMiddleware(
                 {
                     requestMethod,
                     requestPath,
-                    userRoles = userRoles.Any() ? userRoles : new List<string> { "Anonymous" },
+                    userRoles = (IEnumerable<string>)(userRoles.Any() ? userRoles : Array.Empty<string>()),
                     statusCode = 403
                 });
 
@@ -95,5 +95,16 @@ public class AuditingAuthorizationMiddleware(
             // Never propagate audit failures
             logger.LogError(ex, "Failed to audit authorization failure");
         }
+    }
+
+    /// <summary>
+    /// Generates a deterministic GUID from a request path for resource correlation.
+    /// This allows multiple authorization failures on the same endpoint to be grouped together.
+    /// </summary>
+    private static Guid GenerateResourceIdForPath(string path)
+    {
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(path));
+        return new Guid(hash);
     }
 }
