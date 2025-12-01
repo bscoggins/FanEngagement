@@ -7,7 +7,7 @@ import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavCo
 import './PlatformAdminLayout.css';
 
 export const PlatformAdminLayout: React.FC = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const { memberships } = usePermissions();
   const { activeOrg } = useActiveOrganization();
   const navigate = useNavigate();
@@ -75,9 +75,6 @@ export const PlatformAdminLayout: React.FC = () => {
             fontWeight: 'bold'
           }}>
             Platform Admin
-          </span>
-          <span className="admin-user-info">
-            {user?.email}
           </span>
           <button onClick={handleLogout} className="admin-logout-button">
             Logout

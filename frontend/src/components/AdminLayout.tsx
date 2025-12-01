@@ -7,7 +7,7 @@ import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavCo
 import './AdminLayout.css';
 
 export const AdminLayout: React.FC = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const { isGlobalAdmin, memberships } = usePermissions();
   const { activeOrg, setActiveOrg, memberships: orgMemberships } = useActiveOrganization();
   const navigate = useNavigate();
@@ -111,9 +111,42 @@ export const AdminLayout: React.FC = () => {
               Platform Admin
             </span>
           )}
-          <span className="admin-user-info">
-            {user?.email}
-          </span>
+          {/* Organization dropdown - only shown for non-platform admins */}
+          {!isGlobalAdmin() && orgMemberships.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem' }}>
+              <label
+                htmlFor="admin-header-org-selector"
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#ccc',
+                  fontWeight: '500',
+                }}
+              >
+                Organization:
+              </label>
+              <select
+                id="admin-header-org-selector"
+                data-testid="admin-header-org-selector"
+                value={activeOrg?.id || ''}
+                onChange={handleOrgChange}
+                style={{
+                  padding: '0.5rem',
+                  border: '1px solid #444',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  backgroundColor: '#333',
+                  color: 'white',
+                  cursor: 'pointer',
+                }}
+              >
+                {orgMemberships.map((membership) => (
+                  <option key={membership.organizationId} value={membership.organizationId}>
+                    {membership.organizationName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <button onClick={handleLogout} className="admin-logout-button">
             Logout
           </button>
@@ -133,69 +166,38 @@ export const AdminLayout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Organization section - always shown if user has org memberships */}
-            {orgMemberships.length > 0 && (
+            {/* Organization section - show when user has org memberships and active org is selected */}
+            {activeOrg && orgMemberships.length > 0 && (
               <>
                 <div className="admin-nav-divider" style={{
                   borderTop: '1px solid #444',
                   margin: '0.5rem 0',
                 }} />
                 
-                {/* Organization Switcher */}
+                {/* Organization name and role badge */}
                 <div style={{ padding: '0.5rem 1.5rem' }}>
-                  <label
-                    htmlFor="admin-org-selector"
+                  <div style={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: '600',
+                    color: '#fff',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {activeOrg.name}
+                  </div>
+                  <span
+                    data-testid="active-org-role-badge"
                     style={{
-                      display: 'block',
-                      fontSize: '0.75rem',
-                      textTransform: 'uppercase',
-                      color: '#888',
-                      letterSpacing: '0.05em',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    Organization
-                  </label>
-                  <select
-                    id="admin-org-selector"
-                    data-testid="admin-org-selector"
-                    value={activeOrg?.id || ''}
-                    onChange={handleOrgChange}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #444',
-                      borderRadius: '4px',
-                      fontSize: '0.875rem',
-                      backgroundColor: '#333',
+                      display: 'inline-block',
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: activeOrgIsAdmin ? '#007bff' : '#6c757d',
                       color: 'white',
-                      cursor: 'pointer',
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
+                      fontWeight: 'bold',
                     }}
                   >
-                    {orgMemberships.map((membership) => (
-                      <option key={membership.organizationId} value={membership.organizationId}>
-                        {membership.organizationName} ({membership.role === 'OrgAdmin' ? 'Admin' : 'Member'})
-                      </option>
-                    ))}
-                  </select>
-                  {/* Role badge for active org */}
-                  {activeOrg && (
-                    <span
-                      data-testid="active-org-role-badge"
-                      style={{
-                        display: 'inline-block',
-                        marginTop: '0.5rem',
-                        padding: '0.25rem 0.5rem',
-                        backgroundColor: activeOrgIsAdmin ? '#007bff' : '#6c757d',
-                        color: 'white',
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
-                    </span>
-                  )}
+                    {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
+                  </span>
                 </div>
 
                 {/* Org-scoped navigation items - only shown when user is OrgAdmin for the active org */}

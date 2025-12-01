@@ -7,7 +7,7 @@ import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavCo
 import './Layout.css';
 
 export const Layout: React.FC = () => {
-  const { isAuthenticated, user, logout, isAdmin } = useAuth();
+  const { isAuthenticated, logout, isAdmin } = useAuth();
   const { isGlobalAdmin, memberships, canAccessAdminArea } = usePermissions();
   const { activeOrg, setActiveOrg, memberships: orgMemberships } = useActiveOrganization();
   const navigate = useNavigate();
@@ -125,9 +125,30 @@ export const Layout: React.FC = () => {
               Platform Admin
             </span>
           )}
-          <span className="unified-user-info" data-testid="user-email">
-            {user?.email}
-          </span>
+          {/* Organization dropdown - only shown for non-platform admins */}
+          {!isGlobalAdmin() && orgMemberships.length > 0 && (
+            <div className="unified-header-org-selector">
+              <label
+                htmlFor="unified-header-org-selector"
+                className="unified-header-org-selector-label"
+              >
+                Organization:
+              </label>
+              <select
+                id="unified-header-org-selector"
+                data-testid="unified-header-org-selector"
+                value={activeOrg?.id || ''}
+                onChange={handleOrgChange}
+                className="unified-header-org-select"
+              >
+                {orgMemberships.map((membership) => (
+                  <option key={membership.organizationId} value={membership.organizationId}>
+                    {membership.organizationName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <button onClick={handleLogout} className="unified-logout-button" data-testid="logout-button">
             Logout
           </button>
@@ -148,41 +169,20 @@ export const Layout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Organization selector section - for members */}
-            {orgMemberships.length > 0 && (
+            {/* Organization-scoped navigation - only for active org when user has admin role */}
+            {activeOrg && orgMemberships.length > 0 && (
               <>
                 <div className="unified-nav-divider" />
                 
-                {/* Organization Switcher */}
-                <div className="unified-org-selector">
-                  <label
-                    htmlFor="unified-org-selector"
-                    className="unified-org-selector-label"
+                {/* Organization name and role badge */}
+                <div className="unified-org-info">
+                  <div className="unified-org-name">{activeOrg.name}</div>
+                  <span
+                    data-testid="active-org-role-badge"
+                    className={`unified-role-badge ${activeOrgIsAdmin ? 'admin' : 'member'}`}
                   >
-                    Organization
-                  </label>
-                  <select
-                    id="unified-org-selector"
-                    data-testid="unified-org-selector"
-                    value={activeOrg?.id || ''}
-                    onChange={handleOrgChange}
-                    className="unified-org-select"
-                  >
-                    {orgMemberships.map((membership) => (
-                      <option key={membership.organizationId} value={membership.organizationId}>
-                        {membership.organizationName} ({membership.role === 'OrgAdmin' ? 'Admin' : 'Member'})
-                      </option>
-                    ))}
-                  </select>
-                  {/* Role badge for active org */}
-                  {activeOrg && (
-                    <span
-                      data-testid="active-org-role-badge"
-                      className={`unified-role-badge ${activeOrgIsAdmin ? 'admin' : 'member'}`}
-                    >
-                      {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
-                    </span>
-                  )}
+                    {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
+                  </span>
                 </div>
 
                 {/* Org-scoped navigation items - only shown when user is OrgAdmin for the active org */}
