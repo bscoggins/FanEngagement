@@ -861,6 +861,8 @@ The table below specifies the current authorization model enforced across all AP
 
 FanEngagement implements comprehensive policy-based authorization using ASP.NET Core's authorization framework.
 
+> **📖 Detailed Documentation**: For comprehensive documentation of the authorization system, including handler implementation details, code examples, and guidance for adding authorization to new endpoints, see [Authorization Infrastructure](./authorization.md).
+
 #### Authorization Policies
 
 The following policies are registered in `Program.cs`:
