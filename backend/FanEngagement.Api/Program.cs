@@ -283,6 +283,10 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
+
+// Add authorization auditing middleware (must be between UseAuthentication and UseAuthorization)
+app.UseMiddleware<AuditingAuthorizationMiddleware>();
+
 app.UseAuthorization();
 
 app.MapControllers();
