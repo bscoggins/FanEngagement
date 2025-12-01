@@ -26,6 +26,16 @@
   align-items: center;
 }
 
+.admin-badge {
+  margin-right: 1rem;
+  padding: 0.25rem 0.75rem;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
 .admin-user-info {
   color: #ddd;
   font-size: 0.9rem;
@@ -85,6 +95,19 @@
   background-color: #333;
   color: white;
   border-left-color: #007bff;
+}
+
+.admin-nav-divider {
+  border-top: 1px solid #444;
+  margin: 0.5rem 0;
+}
+
+.admin-nav-section-label {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.05em;
 }
 
 .admin-sidebar-footer {
