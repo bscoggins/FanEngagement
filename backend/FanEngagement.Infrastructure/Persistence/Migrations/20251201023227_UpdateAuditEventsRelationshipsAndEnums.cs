@@ -66,9 +66,9 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 table: "AuditEvents");
 
             // Reverse migration of enum values from new (starting at 0) back to old (starting at 1)
+
             // IMPORTANT: The enum value shifts must happen before recreating the index below.
             // This ensures that the index filter matches the old enum values and maintains data consistency.
-
             // AuditResourceType: Values in 0-9 range (core entities) need to shift by +1
             migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ResourceType\" = \"ResourceType\" + 1 WHERE \"ResourceType\" < 10");
 
