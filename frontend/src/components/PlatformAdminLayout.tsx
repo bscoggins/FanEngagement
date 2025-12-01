@@ -65,15 +65,7 @@ export const PlatformAdminLayout: React.FC = () => {
       <header className="admin-header">
         <h1>FanEngagement Platform Admin</h1>
         <div className="admin-header-right">
-          <span className="admin-badge" style={{ 
-            marginRight: '1rem', 
-            padding: '0.25rem 0.75rem', 
-            backgroundColor: '#dc3545', 
-            color: 'white', 
-            borderRadius: '4px',
-            fontSize: '0.875rem',
-            fontWeight: 'bold'
-          }}>
+          <span className="admin-badge">
             Platform Admin
           </span>
           <button onClick={handleLogout} className="admin-logout-button">
@@ -98,17 +90,8 @@ export const PlatformAdminLayout: React.FC = () => {
             {/* Org-scoped navigation items */}
             {orgNavItems.length > 0 && (
               <>
-                <div className="admin-nav-divider" style={{
-                  borderTop: '1px solid #444',
-                  margin: '0.5rem 0',
-                }} />
-                <div className="admin-nav-section-label" style={{
-                  padding: '0.5rem 1.5rem',
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  color: '#888',
-                  letterSpacing: '0.05em',
-                }}>
+                <div className="admin-nav-divider" />
+                <div className="admin-nav-section-label">
                   {activeOrg?.name || 'Organization'}
                 </div>
                 {orgNavItems.map(item => (

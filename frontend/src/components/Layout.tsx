@@ -169,7 +169,7 @@ export const Layout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Organization-scoped navigation - only for active org when user has admin role */}
+            {/* Organization section - shows organization name and role-based navigation */}
             {activeOrg && orgMemberships.length > 0 && (
               <>
                 <div className="unified-nav-divider" />
