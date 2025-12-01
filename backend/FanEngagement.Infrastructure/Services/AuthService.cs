@@ -2,7 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,15 +18,21 @@ public class AuthService : IAuthService
     private readonly FanEngagementDbContext _dbContext;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly IAuditService _auditService;
 
-    public AuthService(FanEngagementDbContext dbContext, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(
+        FanEngagementDbContext dbContext, 
+        IConfiguration configuration, 
+        ILogger<AuthService> logger,
+        IAuditService auditService)
     {
         _dbContext = dbContext;
         _configuration = configuration;
         _logger = logger;
+        _auditService = auditService;
     }
 
-    public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<LoginResponse?> LoginAsync(LoginRequest request, AuthenticationAuditContext? auditContext = null, CancellationToken cancellationToken = default)
     {
         var user = await _dbContext.Users
             .AsNoTracking()
@@ -32,15 +40,22 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
+            // Audit failed login attempt - user not found
+            await LogFailedLoginAsync(request.Email, "Invalid credentials", auditContext, cancellationToken);
             return null;
         }
 
         if (!VerifyPassword(request.Password, user.PasswordHash))
         {
+            // Audit failed login attempt - invalid password
+            await LogFailedLoginAsync(request.Email, "Invalid credentials", auditContext, cancellationToken);
             return null;
         }
 
         var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString());
+
+        // Audit successful login
+        await LogSuccessfulLoginAsync(user, auditContext, cancellationToken);
 
         return new LoginResponse
         {
@@ -137,5 +152,76 @@ public class AuthService : IAuthService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    /// <summary>
+    /// Logs a successful login audit event.
+    /// </summary>
+    private async Task LogSuccessfulLoginAsync(
+        Domain.Entities.User user, 
+        AuthenticationAuditContext? auditContext, 
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var builder = new AuditEventBuilder()
+                .WithActor(user.Id, user.DisplayName)
+                .WithAction(AuditActionType.Authenticated)
+                .WithResource(AuditResourceType.User, user.Id, user.Email)
+                .AsSuccess();
+
+            if (auditContext?.IpAddress != null)
+                builder.WithIpAddress(auditContext.IpAddress);
+
+            if (auditContext?.UserAgent != null)
+            {
+                builder.WithDetails(new { UserAgent = auditContext.UserAgent });
+            }
+
+            await _auditService.LogAsync(builder, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't propagate audit failures
+            _logger.LogError(ex, "Failed to log successful login audit event for user {UserId}", user.Id);
+        }
+    }
+
+    /// <summary>
+    /// Logs a failed login audit event.
+    /// Uses generic failure reason to prevent credential enumeration.
+    /// </summary>
+    private async Task LogFailedLoginAsync(
+        string attemptedEmail, 
+        string reason, 
+        AuthenticationAuditContext? auditContext, 
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Use a synthetic resource ID for failed login attempts
+            // This prevents exposing whether a user account exists
+            var syntheticResourceId = Guid.NewGuid();
+
+            var builder = new AuditEventBuilder()
+                .WithAction(AuditActionType.Authenticated)
+                .WithResource(AuditResourceType.User, syntheticResourceId, attemptedEmail)
+                .AsFailure(reason);
+
+            if (auditContext?.IpAddress != null)
+                builder.WithIpAddress(auditContext.IpAddress);
+
+            if (auditContext?.UserAgent != null)
+            {
+                builder.WithDetails(new { UserAgent = auditContext.UserAgent });
+            }
+
+            await _auditService.LogAsync(builder, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't propagate audit failures
+            _logger.LogError(ex, "Failed to log failed login audit event for email {Email}", attemptedEmail);
+        }
     }
 }
