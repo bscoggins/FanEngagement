@@ -460,7 +460,7 @@ This report provides a comprehensive analysis of authorization test coverage for
 | Policy | Endpoints | Tested | Not Tested | Coverage % |
 |--------|-----------|--------|------------|------------|
 | AllowAnonymous | 2 | 1 | 1 | 50% |
-| GlobalAdmin | 5 | 4 | 1 | 80% |
+| GlobalAdmin | 5 | 3 | 2 | 60% |
 | OrgMember | 14 | 8 | 6 | 57% |
 | OrgAdmin | 16 | 5 | 11 | 31% |
 | ProposalManager | 7 | 2 | 5 | 29% |
