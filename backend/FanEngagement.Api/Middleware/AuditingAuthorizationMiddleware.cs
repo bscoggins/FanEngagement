@@ -7,7 +7,7 @@ namespace FanEngagement.Api.Middleware;
 
 /// <summary>
 /// Middleware that captures audit events for authorization failures (403 Forbidden responses).
-/// This middleware runs after authorization and logs when a user is denied access.
+/// This middleware is positioned between authentication and authorization, but checks the response after the pipeline executes to capture 403 Forbidden responses.
 /// </summary>
 public class AuditingAuthorizationMiddleware(
     RequestDelegate next,
@@ -61,7 +61,7 @@ public class AuditingAuthorizationMiddleware(
                 {
                     requestMethod,
                     requestPath,
-                    userRoles = (IEnumerable<string>)(userRoles.Any() ? userRoles : Array.Empty<string>()),
+                    userRoles,
                     statusCode = 403
                 });
 
@@ -103,8 +103,9 @@ public class AuditingAuthorizationMiddleware(
     /// </summary>
     private static Guid GenerateResourceIdForPath(string path)
     {
-        using var md5 = System.Security.Cryptography.MD5.Create();
-        var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(path));
-        return new Guid(hash);
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(path));
+        // Take first 16 bytes of the 32-byte SHA256 hash
+        return new Guid(hash.Take(16).ToArray());
     }
 }

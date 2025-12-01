@@ -73,7 +73,7 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
     /// <summary>
     /// Helper to create a test user and get their JWT token.
     /// </summary>
-    private async Task<(UserDto user, string token)> CreateUserAndLoginAsync(string role = "Member")
+    private async Task<(UserDto user, string token)> CreateUserAndLoginAsync()
     {
         var password = "TestPassword123!";
         var createRequest = new CreateUserRequest
@@ -107,7 +107,7 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
         var (user, token) = await CreateUserAndLoginAsync();
 
         // Act - Attempt to access a GlobalAdmin-only endpoint (GET /users requires GlobalAdmin)
-        var request = new HttpRequestMessage(HttpMethod.Get, "/users");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/users");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.SendAsync(request);
@@ -143,31 +143,32 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task Access_OrgAdminEndpoint_AsNonOrgAdmin_CreatesAuthorizationDeniedAuditEvent()
     {
         // Arrange - Create an admin and an organization
-        var adminPassword = "Admin123!";
-        var adminLogin = new LoginRequest { Email = "admin@example.com", Password = adminPassword };
-        var adminLoginResponse = await _client.PostAsJsonAsync("/auth/login", adminLogin);
-        var adminLoginResult = await adminLoginResponse.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(adminLoginResult);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
 
         // Create an organization as admin
-        var createOrgRequest = new HttpRequestMessage(HttpMethod.Post, "/organizations");
-        createOrgRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminLoginResult.Token);
-        createOrgRequest.Content = JsonContent.Create(new CreateOrganizationRequest
+        Organization? org;
+        using (var createOrgRequest = new HttpRequestMessage(HttpMethod.Post, "/organizations"))
         {
-            Name = $"Test Org {Guid.NewGuid()}"
-        });
-        var createOrgResponse = await _client.SendAsync(createOrgRequest);
-        var org = await createOrgResponse.Content.ReadFromJsonAsync<Organization>();
+            createOrgRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+            createOrgRequest.Content = JsonContent.Create(new CreateOrganizationRequest
+            {
+                Name = $"Test Org {Guid.NewGuid()}"
+            });
+            var createOrgResponse = await _client.SendAsync(createOrgRequest);
+            org = await createOrgResponse.Content.ReadFromJsonAsync<Organization>();
+        }
         Assert.NotNull(org);
 
         // Create a regular user (not an org member)
         var (user, token) = await CreateUserAndLoginAsync();
 
         // Act - Attempt to access an OrgMember-only endpoint (GetById requires OrgMember)
-        var request = new HttpRequestMessage(HttpMethod.Get, $"/organizations/{org.Id}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var response = await _client.SendAsync(request);
+        HttpResponseMessage response;
+        using (var request = new HttpRequestMessage(HttpMethod.Get, $"/organizations/{org.Id}"))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            response = await _client.SendAsync(request);
+        }
 
         // Assert - Should return 403 Forbidden (user is authenticated but not a member)
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -223,7 +224,7 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
         var (user, token) = await CreateUserAndLoginAsync();
 
         // Act - Access an endpoint the user is authorized for (e.g., GET /users/me/organizations)
-        var request = new HttpRequestMessage(HttpMethod.Get, "/users/me/organizations");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/users/me/organizations");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.SendAsync(request);
@@ -261,7 +262,7 @@ public class AuthorizationAuditTests : IClassFixture<TestWebApplicationFactory>
         var (user, token) = await CreateUserAndLoginAsync();
 
         // Act - Attempt to access a GlobalAdmin-only endpoint (GET /users requires GlobalAdmin)
-        var request = new HttpRequestMessage(HttpMethod.Get, "/users");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/users");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _client.SendAsync(request);
