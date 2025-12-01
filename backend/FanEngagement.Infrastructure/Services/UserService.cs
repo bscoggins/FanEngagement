@@ -1,13 +1,15 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class UserService(FanEngagementDbContext dbContext, IAuthService authService) : IUserService
+public class UserService(FanEngagementDbContext dbContext, IAuthService authService, IAuditService auditService) : IUserService
 {
     public async Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
@@ -31,6 +33,15 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
 
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit - exclude password from audit details
+        await auditService.LogAsync(
+            new AuditEventBuilder()
+                .WithAction(AuditActionType.Created)
+                .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
+                .WithDetails(new { user.Email, user.DisplayName, user.Role })
+                .AsSuccess(),
+            cancellationToken);
 
         return MapToDto(user);
     }
@@ -94,6 +105,11 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             return null;
         }
 
+        // Capture original values for audit
+        var originalEmail = user.Email;
+        var originalDisplayName = user.DisplayName;
+        var originalRole = user.Role;
+
         // Check if email is changing and if the new email is already taken
         if (user.Email != request.Email)
         {
@@ -124,6 +140,59 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             return null;
         }
 
+        // Audit after successful update
+        var hasRoleChange = originalRole != user.Role;
+        var changedFields = new List<string>();
+        var details = new Dictionary<string, object>();
+
+        if (originalEmail != user.Email)
+        {
+            changedFields.Add("Email");
+            details["oldEmail"] = originalEmail;
+            details["newEmail"] = user.Email;
+        }
+
+        if (originalDisplayName != user.DisplayName)
+        {
+            changedFields.Add("DisplayName");
+            details["oldDisplayName"] = originalDisplayName;
+            details["newDisplayName"] = user.DisplayName;
+        }
+
+        if (hasRoleChange)
+        {
+            changedFields.Add("Role");
+            details["oldRole"] = originalRole.ToString();
+            details["newRole"] = user.Role.ToString();
+
+            // Separate audit event for role changes (privilege escalation tracking)
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.RoleChanged)
+                    .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
+                    .WithDetails(new
+                    {
+                        oldRole = originalRole.ToString(),
+                        newRole = user.Role.ToString()
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+
+        // General update audit event
+        if (changedFields.Count > 0)
+        {
+            details["changedFields"] = changedFields;
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Updated)
+                    .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
+                    .WithDetails(details)
+                    .AsSuccess(),
+                cancellationToken);
+        }
+
         return MapToDto(user);
     }
 
@@ -135,8 +204,21 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             return false;
         }
 
+        // Capture user details before deletion for audit
+        var displayName = user.DisplayName;
+        var email = user.Email;
+
         dbContext.Users.Remove(user);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful deletion
+        await auditService.LogAsync(
+            new AuditEventBuilder()
+                .WithAction(AuditActionType.Deleted)
+                .WithResource(AuditResourceType.User, id, displayName)
+                .WithDetails(new { email, displayName })
+                .AsSuccess(),
+            cancellationToken);
 
         return true;
     }
