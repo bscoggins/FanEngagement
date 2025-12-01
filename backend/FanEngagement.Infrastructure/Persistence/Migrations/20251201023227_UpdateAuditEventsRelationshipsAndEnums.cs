@@ -10,6 +10,16 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Migrate existing enum values from old (starting at 1) to new (starting at 0)
+            // AuditOutcome: Success=1->0, Failure=2->1, Denied=3->2, Partial=4->3
+            migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"Outcome\" = \"Outcome\" - 1");
+
+            // AuditActionType: Values in 1-9 range (lifecycle) need to shift by -1; values >= 10 stay the same
+            migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ActionType\" = \"ActionType\" - 1 WHERE \"ActionType\" < 10");
+
+            // AuditResourceType: Values in 1-9 range (core entities) need to shift by -1; values >= 10 stay the same
+            migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ResourceType\" = \"ResourceType\" - 1 WHERE \"ResourceType\" < 10");
+
             migrationBuilder.DropIndex(
                 name: "IX_AuditEvents_Outcome_Timestamp",
                 table: "AuditEvents");
@@ -59,6 +69,16 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 columns: new[] { "Outcome", "Timestamp" },
                 descending: new[] { false, true },
                 filter: "\"Outcome\" IN (2, 3)");
+
+            // Reverse migration of enum values from new (starting at 0) back to old (starting at 1)
+            // AuditResourceType: Values in 0-9 range (core entities) need to shift by +1
+            migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ResourceType\" = \"ResourceType\" + 1 WHERE \"ResourceType\" < 10");
+
+            // AuditActionType: Values in 0-9 range (lifecycle) need to shift by +1
+            migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"ActionType\" = \"ActionType\" + 1 WHERE \"ActionType\" < 10");
+
+            // AuditOutcome: Success=0->1, Failure=1->2, Denied=2->3, Partial=3->4
+            migrationBuilder.Sql("UPDATE \"AuditEvents\" SET \"Outcome\" = \"Outcome\" + 1");
         }
     }
 }
