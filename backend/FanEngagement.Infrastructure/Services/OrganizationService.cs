@@ -59,7 +59,7 @@ public class OrganizationService(FanEngagementDbContext dbContext, IAuditService
                     .WithAction(AuditActionType.Created)
                     .WithResource(AuditResourceType.Organization, organization.Id, organization.Name)
                     .WithOrganization(organization.Id, organization.Name)
-                    .WithActor(creatorUserId, string.Empty) // DisplayName will be empty as we don't have it here
+                    .WithActor(creatorUserId, string.Empty) // TODO: DisplayName not available here; consider fetching from User entity if needed for completeness
                     .WithDetails(new
                     {
                         organization.Name,

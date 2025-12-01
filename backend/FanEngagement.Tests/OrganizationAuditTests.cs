@@ -191,7 +191,8 @@ public class OrganizationAuditTests : IClassFixture<TestWebApplicationFactory>
             Name = $"Updated Name {Guid.NewGuid()}",
             Description = "Updated description",
             LogoUrl = "https://example.com/updated-logo.png",
-            PrimaryColor = "#123456"
+            PrimaryColor = "#123456",
+            SecondaryColor = org.SecondaryColor
         };
 
         // Act
@@ -245,7 +246,7 @@ public class OrganizationAuditTests : IClassFixture<TestWebApplicationFactory>
         Assert.True(response.IsSuccessStatusCode, "Organization update should succeed");
 
         // Wait a bit and verify no update audit event was created
-        await Task.Delay(1000);
+        await Task.Delay(200);
 
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
@@ -276,15 +277,23 @@ public class OrganizationAuditTests : IClassFixture<TestWebApplicationFactory>
         var updateRequest = new UpdateOrganizationRequest
         {
             Name = $"Verification Org {Guid.NewGuid()}",
-            Description = "Updated for verification"
+            Description = "Updated for verification",
+            LogoUrl = org.LogoUrl,
+            PrimaryColor = org.PrimaryColor,
+            SecondaryColor = org.SecondaryColor
         };
         await _client.PutAsJsonAsync($"/organizations/{org.Id}", updateRequest);
 
-        // Wait and query all events for this organization
+        // Wait for update audit event to be persisted
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
-        await Task.Delay(1000); // Brief delay to ensure background processing completes
+        // Wait for the update event to ensure it's persisted
+        await WaitForAuditEventAsync(
+            auditService,
+            AuditResourceType.Organization,
+            org.Id,
+            AuditActionType.Updated);
 
         var query = new AuditQuery
         {
