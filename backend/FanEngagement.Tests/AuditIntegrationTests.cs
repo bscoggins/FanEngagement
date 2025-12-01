@@ -42,10 +42,12 @@ public class AuditIntegrationTests : IClassFixture<TestWebApplicationFactory>
         // Act - log event asynchronously
         await auditService.LogAsync(auditEvent);
 
-        // Wait for background service to process
-        await Task.Delay(2000);
-
-        // Assert - verify event was persisted
+        // Wait for background service to process by polling for the event
+        var maxWaitTime = TimeSpan.FromSeconds(5);
+        var pollInterval = TimeSpan.FromMilliseconds(100);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        AuditEventDto? persistedEvent = null;
+        
         var query = new AuditQuery
         {
             ResourceId = auditEvent.ResourceId,
@@ -53,11 +55,15 @@ public class AuditIntegrationTests : IClassFixture<TestWebApplicationFactory>
             PageSize = 10
         };
 
-        var result = await auditService.QueryAsync(query);
+        while (stopwatch.Elapsed < maxWaitTime && persistedEvent == null)
+        {
+            var result = await auditService.QueryAsync(query);
+            persistedEvent = result.Items.FirstOrDefault(e => e.Id == auditEvent.Id);
+            if (persistedEvent == null)
+                await Task.Delay(pollInterval);
+        }
 
-        Assert.NotNull(result);
-        Assert.True(result.TotalCount >= 1, $"Expected at least 1 event, found {result.TotalCount}");
-        var persistedEvent = result.Items.FirstOrDefault(e => e.Id == auditEvent.Id);
+        // Assert - verify event was persisted
         Assert.NotNull(persistedEvent);
         Assert.Equal(auditEvent.ActionType, persistedEvent.ActionType);
         Assert.Equal(auditEvent.ResourceType, persistedEvent.ResourceType);
@@ -176,10 +182,12 @@ public class AuditIntegrationTests : IClassFixture<TestWebApplicationFactory>
         // Act
         await auditService.LogAsync(builder);
 
-        // Wait for background processing
-        await Task.Delay(2000);
-
-        // Assert
+        // Wait for background processing using polling
+        var maxWaitTime = TimeSpan.FromSeconds(5);
+        var pollInterval = TimeSpan.FromMilliseconds(100);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        AuditEventDto? persistedEvent = null;
+        
         var query = new AuditQuery
         {
             ResourceId = resourceId,
@@ -187,11 +195,15 @@ public class AuditIntegrationTests : IClassFixture<TestWebApplicationFactory>
             PageSize = 10
         };
 
-        var result = await auditService.QueryAsync(query);
+        while (stopwatch.Elapsed < maxWaitTime && persistedEvent == null)
+        {
+            var result = await auditService.QueryAsync(query);
+            persistedEvent = result.Items.FirstOrDefault(e => e.ResourceId == resourceId);
+            if (persistedEvent == null)
+                await Task.Delay(pollInterval);
+        }
 
-        Assert.NotNull(result);
-        Assert.True(result.TotalCount >= 1);
-        var persistedEvent = result.Items.FirstOrDefault(e => e.ResourceId == resourceId);
+        // Assert
         Assert.NotNull(persistedEvent);
         Assert.Equal(userId, persistedEvent.ActorUserId);
         Assert.Equal("Test User", persistedEvent.ActorDisplayName);

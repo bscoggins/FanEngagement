@@ -57,60 +57,53 @@ public class AuditPersistenceBackgroundService(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            try
+            // Try to read an event with timeout
+            if (await channel.Reader.WaitToReadAsync(stoppingToken))
             {
-                // Try to read an event with timeout
-                if (await channel.Reader.WaitToReadAsync(stoppingToken))
+                // Read available events up to batch size
+                while (batch.Count < _batchSize && channel.Reader.TryRead(out var auditEvent))
                 {
-                    // Read available events up to batch size
+                    batch.Add(auditEvent);
+                }
+
+                // If batch is full, persist immediately
+                if (batch.Count >= _batchSize)
+                {
+                    await PersistBatchAsync(batch, stoppingToken);
+                    batch.Clear();
+                }
+                else
+                {
+                    // Wait for more events or timeout
+                    // Use try-catch to handle cancellation gracefully during delay
+                    try
+                    {
+                        await Task.Delay(_batchInterval, stoppingToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Cancellation during delay - persist the batch and exit
+                        if (batch.Count > 0)
+                        {
+                            await PersistBatchAsync(batch, CancellationToken.None);
+                            batch.Clear();
+                        }
+                        break;
+                    }
+                    
+                    // Read any additional events that arrived during the delay
                     while (batch.Count < _batchSize && channel.Reader.TryRead(out var auditEvent))
                     {
                         batch.Add(auditEvent);
                     }
 
-                    // If batch is full, persist immediately
-                    if (batch.Count >= _batchSize)
+                    // Persist the accumulated batch if we have any events
+                    if (batch.Count > 0)
                     {
                         await PersistBatchAsync(batch, stoppingToken);
                         batch.Clear();
                     }
-                    else
-                    {
-                        // Wait for more events or timeout
-                        // Use try-catch to handle cancellation gracefully during delay
-                        try
-                        {
-                            await Task.Delay(_batchInterval, stoppingToken);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // Cancellation during delay - persist the batch and exit
-                            if (batch.Count > 0)
-                            {
-                                await PersistBatchAsync(batch, CancellationToken.None);
-                                batch.Clear();
-                            }
-                            break;
-                        }
-                        
-                        // Read any additional events that arrived during the delay
-                        while (batch.Count < _batchSize && channel.Reader.TryRead(out var auditEvent))
-                        {
-                            batch.Add(auditEvent);
-                        }
-
-                        // Persist the accumulated batch if we have any events
-                        if (batch.Count > 0)
-                        {
-                            await PersistBatchAsync(batch, stoppingToken);
-                            batch.Clear();
-                        }
-                    }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                break;
             }
         }
 
