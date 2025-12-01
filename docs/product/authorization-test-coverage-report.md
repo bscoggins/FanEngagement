@@ -20,8 +20,8 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 - **Total API Endpoints:** 46 (production endpoints; 4 dev-only admin endpoints excluded from count)
 - **Endpoints with Authorization Policies:** 44 (96%)
-- **Endpoints with Tests:** 17 (37%)
-- **Missing Tests:** 29 (63%)
+- **Endpoints with Tests:** 16 (35%)
+- **Missing Tests:** 30 (65%)
 - **Test Files Reviewed:** 4 (AuthorizationIntegrationTests.cs, MultiTenancyTests.cs, AdminAuthorizationTests.cs, AuthorizationHandlerTests.cs)
 - **Total Test Methods:** 57 (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 
@@ -44,16 +44,17 @@ This report provides a comprehensive analysis of authorization test coverage for
 |----------|--------|-------|--------|-------------|---------------|
 | Create | POST | `/users` | AllowAnonymous | 201 | ✅ Implicit |
 | GetAll | GET | `/users` | GlobalAdmin | 200 | ✅ Tested |
-| GetById | GET | `/users/{id}` | GlobalAdmin | 200 | ✅ Tested |
+| GetById | GET | `/users/{id}` | GlobalAdmin | 200 | ⚠️ Not Tested |
 | GetMyOrganizations | GET | `/users/me/organizations` | Authenticated | 200 | ⚠️ Not Tested |
 | GetUserMemberships | GET | `/users/{id}/memberships` | Self or Admin | 200 | ⚠️ Not Tested |
 | Update | PUT | `/users/{id}` | GlobalAdmin | 200 | ✅ Tested |
 | Delete | DELETE | `/users/{id}` | GlobalAdmin | 204 | ⚠️ Not Tested |
 | GetAdminStats | GET | `/users/admin/stats` | Admin Role | 200 | ✅ Tested |
 
-**Coverage:** 5/8 (63%)
+**Coverage:** 4/8 (50%)
 
 **Missing Tests:**
+- `GetById` - Should verify GlobalAdmin can access user by ID and regular user cannot (403)
 - `GetMyOrganizations` - Should verify authenticated user can access their own org list
 - `GetUserMemberships` - Should verify self-access and admin access patterns
 - `Delete` - Should verify GlobalAdmin can delete and regular user cannot
@@ -230,7 +231,7 @@ This report provides a comprehensive analysis of authorization test coverage for
 | Controller | Total Endpoints | Tested | Not Tested | Coverage % | Priority |
 |------------|----------------|--------|------------|------------|----------|
 | AuthController | 1 | 1 | 0 | 100% | ✅ Complete |
-| UsersController | 8 | 5 | 3 | 63% | 🟡 Medium |
+| UsersController | 8 | 4 | 4 | 50% | 🟡 Medium |
 | OrganizationsController | 4 | 3 | 1 | 75% | ✅ Good |
 | MembershipsController | 5 | 3 | 2 | 60% | 🟡 Medium |
 | ShareTypesController | 4 | 2 | 2 | 50% | 🟡 Medium |
@@ -242,7 +243,7 @@ This report provides a comprehensive analysis of authorization test coverage for
 | **OutboundEventsController** | 3 | 0 | 3 | **0%** | 🔴 High |
 | AdminController | 4 | 0 | 4 | 0% | 🟢 Low (dev-only) |
 
-**TOTAL:** 50 endpoints (46 production + 4 dev-only), 17 tested (37% of production endpoints), 29 not tested (63%)
+**TOTAL:** 50 endpoints (46 production + 4 dev-only), 16 tested (35% of production endpoints), 30 not tested (65%)
 
 > **Endpoint Counting Methodology:**  
 > The total controller endpoint count is 50 HTTP methods across all controllers. However, this report focuses on **46 production-relevant endpoints**, excluding 4 dev-only admin endpoints (AdminController seed/cleanup operations restricted to Development/Demo environments). The 37% coverage metric represents tested endpoints out of the 46 production endpoints.
@@ -451,8 +452,8 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 ### Overall Coverage
 - **Controllers Tested:** 8 out of 12 (67%)
-- **Endpoints Tested:** 17 out of 46 (37%)
-- **Critical Endpoints Tested:** 12 out of 42 (29%)
+- **Endpoints Tested:** 16 out of 46 (35%)
+- **Critical Endpoints Tested:** 11 out of 42 (26%)
 
 ### Coverage by Authorization Policy
 

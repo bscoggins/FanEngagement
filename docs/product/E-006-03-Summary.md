@@ -21,13 +21,13 @@
 ### ✅ Missing test scenarios identified and documented
 - **Status:** Complete
 - **Deliverable:** Section 4 (Gap Analysis) of main report
-- **Summary:** 29 missing test scenarios identified across 5 categories (High, Medium, Low priority)
+- **Summary:** 30 missing test scenarios identified across 5 categories (High, Medium, Low priority)
 
 ### ✅ Test coverage status documented
 - **Status:** Complete
 - **Deliverable:** Section 2 (Test Coverage Summary) of main report
 - **Metrics:**
-  - Overall: 17/46 production endpoints tested (37%)
+  - Overall: 16/46 production endpoints tested (35%)
   - By controller: Detailed breakdown provided
   - By policy: Detailed coverage percentages
   - By operation type: GET (43%), POST (43%), PUT (75%), DELETE (0%)
@@ -58,8 +58,8 @@
 
 ### Key Metrics
 - **Total Endpoints:** 50 (46 production + 4 dev-only)
-- **Production Endpoints Tested:** 17 of 46 (37%)
-- **Missing Tests:** 29 (63% of production endpoints)
+- **Production Endpoints Tested:** 16 of 46 (35%)
+- **Missing Tests:** 30 (65% of production endpoints)
 - **Total Test Methods Reviewed:** 57 (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 - **Critical Gaps:** 4 controller areas with 0% coverage
 
@@ -173,7 +173,7 @@ This story successfully completed all acceptance criteria:
 
 The FanEngagement application has **strong authorization infrastructure** (96% of endpoints have policies), but **test coverage needs improvement** in specific areas. The report provides a clear roadmap for addressing these gaps in E-006-04.
 
-**Overall Assessment:** Authorization is implemented correctly, but test coverage should be increased from 37% to >90% for production readiness.
+**Overall Assessment:** Authorization is implemented correctly, but test coverage should be increased from 35% to >90% for production readiness.
 
 ---
 
