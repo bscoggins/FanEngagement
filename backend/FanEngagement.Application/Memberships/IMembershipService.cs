@@ -11,6 +11,6 @@ public interface IMembershipService
     Task<MembershipDto?> GetByOrganizationAndUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MembershipWithOrganizationDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid organizationId, Guid userId, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default);
-    Task<MembershipDto> UpdateRoleAsync(Guid organizationId, Guid userId, OrganizationRole newRole, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default);
+    Task<MembershipDto?> UpdateRoleAsync(Guid organizationId, Guid userId, OrganizationRole newRole, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserDto>> GetAvailableUsersAsync(Guid organizationId, CancellationToken cancellationToken = default);
 }

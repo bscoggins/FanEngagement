@@ -204,7 +204,7 @@ public class MembershipAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateMembershipRole_ToHigherPrivilege_FlagsPrivilegeEscalation()
     {
         // Arrange
-        var (organization, adminToken, adminUserId) = await CreateTestOrganizationAsync();
+        var (organization, adminToken, _) = await CreateTestOrganizationAsync();
         var targetUser = await CreateTestUserAsync();
         _client.AddAuthorizationHeader(adminToken);
 
@@ -255,7 +255,7 @@ public class MembershipAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateMembershipRole_ToLowerPrivilege_DoesNotFlagPrivilegeEscalation()
     {
         // Arrange
-        var (organization, adminToken, adminUserId) = await CreateTestOrganizationAsync();
+        var (organization, adminToken, _) = await CreateTestOrganizationAsync();
         var targetUser = await CreateTestUserAsync();
         _client.AddAuthorizationHeader(adminToken);
 
@@ -306,7 +306,7 @@ public class MembershipAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateMembershipRole_WithNoChange_DoesNotGenerateAuditEvent()
     {
         // Arrange
-        var (organization, adminToken, adminUserId) = await CreateTestOrganizationAsync();
+        var (organization, adminToken, _) = await CreateTestOrganizationAsync();
         var targetUser = await CreateTestUserAsync();
         _client.AddAuthorizationHeader(adminToken);
 
@@ -358,7 +358,7 @@ public class MembershipAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task AllMembershipAuditEvents_ContainRequiredFields()
     {
         // Arrange
-        var (organization, adminToken, adminUserId) = await CreateTestOrganizationAsync();
+        var (organization, adminToken, _) = await CreateTestOrganizationAsync();
         var targetUser = await CreateTestUserAsync();
         _client.AddAuthorizationHeader(adminToken);
 

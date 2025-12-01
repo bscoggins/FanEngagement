@@ -88,15 +88,12 @@ public class MembershipsController(IMembershipService membershipService) : Contr
             return Unauthorized();
         }
 
-        try
-        {
-            var membership = await membershipService.UpdateRoleAsync(organizationId, userId, request.Role, actorUserId, actorDisplayName, cancellationToken);
-            return Ok(membership);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        var membership = await membershipService.UpdateRoleAsync(organizationId, userId, request.Role, actorUserId, actorDisplayName, cancellationToken);
+        if (membership == null)
         {
             return NotFound();
         }
+        return Ok(membership);
     }
 
     /// <summary>

@@ -201,7 +201,7 @@ public class MembershipService(FanEngagementDbContext dbContext, IAuditService a
         return true;
     }
 
-    public async Task<MembershipDto> UpdateRoleAsync(Guid organizationId, Guid userId, OrganizationRole newRole, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
+    public async Task<MembershipDto?> UpdateRoleAsync(Guid organizationId, Guid userId, OrganizationRole newRole, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
         var membership = await dbContext.OrganizationMemberships
             .Include(m => m.User)
@@ -210,7 +210,7 @@ public class MembershipService(FanEngagementDbContext dbContext, IAuditService a
 
         if (membership == null)
         {
-            throw new InvalidOperationException($"Membership not found for user {userId} in organization {organizationId}");
+            return null;
         }
 
         var oldRole = membership.Role;
