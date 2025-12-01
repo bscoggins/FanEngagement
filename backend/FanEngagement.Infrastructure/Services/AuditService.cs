@@ -128,17 +128,16 @@ public class AuditService(
 
         if (!string.IsNullOrWhiteSpace(query.SearchText))
         {
-            var searchTerm = query.SearchText.ToLower();
             queryable = queryable.Where(e =>
-                (e.ResourceName != null && e.ResourceName.ToLower().Contains(searchTerm)) ||
-                (e.ActorDisplayName != null && e.ActorDisplayName.ToLower().Contains(searchTerm)));
+                (e.ResourceName != null && EF.Functions.Like(e.ResourceName, $"%{query.SearchText}%")) ||
+                (e.ActorDisplayName != null && EF.Functions.Like(e.ActorDisplayName, $"%{query.SearchText}%")));
         }
 
         // Get total count before pagination
         var totalCount = await queryable.CountAsync(cancellationToken);
 
         // Apply sorting
-        queryable = query.SortOrder.ToLower() == "asc"
+        queryable = query.SortOrder.Equals("asc", StringComparison.OrdinalIgnoreCase)
             ? queryable.OrderBy(e => e.Timestamp)
             : queryable.OrderByDescending(e => e.Timestamp);
 

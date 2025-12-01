@@ -1,11 +1,13 @@
 using System.Text.Json;
 using System.Threading.Channels;
 using FanEngagement.Domain.Entities;
+using FanEngagement.Infrastructure.Configuration;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace FanEngagement.Infrastructure.BackgroundServices;
 
@@ -16,11 +18,14 @@ namespace FanEngagement.Infrastructure.BackgroundServices;
 public class AuditPersistenceBackgroundService(
     Channel<AuditEvent> channel,
     IServiceScopeFactory serviceScopeFactory,
+    IOptions<AuditOptions> options,
     ILogger<AuditPersistenceBackgroundService> logger) : BackgroundService
 {
-    private const int BatchSize = 100;
-    private static readonly TimeSpan BatchInterval = TimeSpan.FromSeconds(1);
-    private readonly string _fallbackDirectory = Path.Combine(Path.GetTempPath(), "fanengagement", "audit-fallback");
+    private readonly AuditOptions _options = options.Value;
+    private readonly int _batchSize = options.Value.BatchSize;
+    private readonly TimeSpan _batchInterval = TimeSpan.FromMilliseconds(options.Value.BatchIntervalMs);
+    private readonly string _fallbackDirectory = options.Value.FallbackDirectory 
+        ?? Path.Combine(Path.GetTempPath(), "fanengagement", "audit-fallback");
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -48,7 +53,7 @@ public class AuditPersistenceBackgroundService(
 
     private async Task ProcessEventsAsync(CancellationToken stoppingToken)
     {
-        var batch = new List<AuditEvent>(BatchSize);
+        var batch = new List<AuditEvent>(_batchSize);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -58,13 +63,13 @@ public class AuditPersistenceBackgroundService(
                 if (await channel.Reader.WaitToReadAsync(stoppingToken))
                 {
                     // Read available events up to batch size
-                    while (batch.Count < BatchSize && channel.Reader.TryRead(out var auditEvent))
+                    while (batch.Count < _batchSize && channel.Reader.TryRead(out var auditEvent))
                     {
                         batch.Add(auditEvent);
                     }
 
                     // If batch is full, persist immediately
-                    if (batch.Count >= BatchSize)
+                    if (batch.Count >= _batchSize)
                     {
                         await PersistBatchAsync(batch, stoppingToken);
                         batch.Clear();
@@ -75,7 +80,7 @@ public class AuditPersistenceBackgroundService(
                         // Use try-catch to handle cancellation gracefully during delay
                         try
                         {
-                            await Task.Delay(BatchInterval, stoppingToken);
+                            await Task.Delay(_batchInterval, stoppingToken);
                         }
                         catch (OperationCanceledException)
                         {
@@ -89,7 +94,7 @@ public class AuditPersistenceBackgroundService(
                         }
                         
                         // Read any additional events that arrived during the delay
-                        while (batch.Count < BatchSize && channel.Reader.TryRead(out var auditEvent))
+                        while (batch.Count < _batchSize && channel.Reader.TryRead(out var auditEvent))
                         {
                             batch.Add(auditEvent);
                         }

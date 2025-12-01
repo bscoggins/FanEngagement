@@ -48,8 +48,14 @@ public static class DependencyInjection
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
 
         // Configure audit services
+        services.Configure<AuditOptions>(
+            configuration.GetSection("Audit"));
+        
+        // Get audit options for channel configuration
+        var auditOptions = configuration.GetSection("Audit").Get<AuditOptions>() ?? new AuditOptions();
+        
         // Channel with bounded capacity to prevent memory issues
-        services.AddSingleton(Channel.CreateBounded<AuditEvent>(new BoundedChannelOptions(10000)
+        services.AddSingleton(Channel.CreateBounded<AuditEvent>(new BoundedChannelOptions(auditOptions.ChannelCapacity)
         {
             FullMode = BoundedChannelFullMode.DropOldest,
             SingleReader = true,
