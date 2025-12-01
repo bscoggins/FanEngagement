@@ -27,10 +27,10 @@
 - **Status:** Complete
 - **Deliverable:** Section 2 (Test Coverage Summary) of main report
 - **Metrics:**
-  - Overall: 35/44 production endpoints tested (79%)
+  - Overall: 17/46 production endpoints tested (37%)
   - By controller: Detailed breakdown provided
   - By policy: Detailed coverage percentages
-  - By operation type: GET (57%), POST (43%), PUT (75%), DELETE (0%)
+  - By operation type: GET (43%), POST (43%), PUT (75%), DELETE (0%)
   - Test methods analyzed: 57 total (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 
 ### ✅ Report produced in `docs/product/`
@@ -47,7 +47,7 @@
 
 **Contents:**
 1. Executive Summary with key findings
-2. Complete endpoint inventory (50 endpoints total: 44 production + 6 dev-only, across 12 controllers)
+2. Complete endpoint inventory (50 endpoints total: 46 production + 4 dev-only, across 12 controllers)
 3. Test coverage summary by controller
 4. Existing test files analysis (4 test files reviewed: 57 test methods analyzed)
 5. Gap analysis with prioritized missing tests
@@ -57,9 +57,9 @@
 9. Appendices with file locations
 
 ### Key Metrics
-- **Total Endpoints:** 50 (44 production + 6 dev-only)
-- **Production Endpoints Tested:** 35 of 44 (79%)
-- **Missing Tests:** 9 (21% of production endpoints)
+- **Total Endpoints:** 50 (46 production + 4 dev-only)
+- **Production Endpoints Tested:** 17 of 46 (37%)
+- **Missing Tests:** 29 (63% of production endpoints)
 - **Total Test Methods Reviewed:** 57 (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 - **Critical Gaps:** 4 controller areas with 0% coverage
 

@@ -18,10 +18,10 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 ### Key Findings
 
-- **Total API Endpoints:** 44 (production endpoints; 6 dev-only admin endpoints excluded from count)
-- **Endpoints with Authorization Policies:** 42 (95%)
-- **Endpoints with Tests:** 35 (79%)
-- **Missing Tests:** 9 (21%)
+- **Total API Endpoints:** 46 (production endpoints; 4 dev-only admin endpoints excluded from count)
+- **Endpoints with Authorization Policies:** 44 (96%)
+- **Endpoints with Tests:** 17 (37%)
+- **Missing Tests:** 29 (63%)
 - **Test Files Reviewed:** 4 (AuthorizationIntegrationTests.cs, MultiTenancyTests.cs, AdminAuthorizationTests.cs, AuthorizationHandlerTests.cs)
 - **Total Test Methods:** 57 (28 integration + 11 multi-tenancy + 5 admin + 13 handler unit tests)
 
@@ -242,10 +242,10 @@ This report provides a comprehensive analysis of authorization test coverage for
 | **OutboundEventsController** | 3 | 0 | 3 | **0%** | 🔴 High |
 | AdminController | 4 | 0 | 4 | 0% | 🟢 Low (dev-only) |
 
-**TOTAL:** 50 endpoints (44 production + 6 dev-only), 35 tested (79% of production endpoints), 9 not tested (21%)
+**TOTAL:** 50 endpoints (46 production + 4 dev-only), 17 tested (37% of production endpoints), 29 not tested (63%)
 
 > **Endpoint Counting Methodology:**  
-> The total controller endpoint count is 50 HTTP methods across all controllers. However, this report focuses on **44 production-relevant endpoints**, excluding 6 dev-only admin endpoints (AdminController seed/cleanup operations restricted to Development/Demo environments). The 79% coverage metric represents tested endpoints out of the 44 production endpoints.
+> The total controller endpoint count is 50 HTTP methods across all controllers. However, this report focuses on **46 production-relevant endpoints**, excluding 4 dev-only admin endpoints (AdminController seed/cleanup operations restricted to Development/Demo environments). The 37% coverage metric represents tested endpoints out of the 46 production endpoints.
 
 ---
 
@@ -451,16 +451,16 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 ### Overall Coverage
 - **Controllers Tested:** 8 out of 12 (67%)
-- **Endpoints Tested:** 35 out of 44 (79%)
-- **Critical Endpoints Tested:** 22 out of 28 (79%)
+- **Endpoints Tested:** 17 out of 46 (37%)
+- **Critical Endpoints Tested:** 12 out of 42 (29%)
 
 ### Coverage by Authorization Policy
 
 | Policy | Endpoints | Tested | Not Tested | Coverage % |
 |--------|-----------|--------|------------|------------|
 | AllowAnonymous | 2 | 1 | 1 | 50% |
-| GlobalAdmin | 7 | 5 | 2 | 71% |
-| OrgMember | 16 | 9 | 7 | 56% |
+| GlobalAdmin | 5 | 4 | 1 | 80% |
+| OrgMember | 14 | 8 | 6 | 57% |
 | OrgAdmin | 16 | 5 | 11 | 31% |
 | ProposalManager | 7 | 2 | 5 | 29% |
 | Self or Admin | 2 | 0 | 2 | 0% |
@@ -472,10 +472,10 @@ This report provides a comprehensive analysis of authorization test coverage for
 
 | Operation | Endpoints | Tested | Not Tested | Coverage % |
 |-----------|-----------|--------|------------|------------|
-| GET (Read) | 23 | 13 | 10 | 57% |
+| GET (Read) | 23 | 10 | 13 | 43% |
 | POST (Create) | 14 | 6 | 8 | 43% |
 | PUT (Update) | 4 | 3 | 1 | 75% |
-| DELETE | 3 | 0 | 3 | 0% |
+| DELETE | 5 | 0 | 5 | 0% |
 
 **Key Observation:** DELETE operations have 0% test coverage.
 
@@ -604,10 +604,10 @@ Or create new test files:
 ## 8. Appendix: Test File Locations
 
 ### Test Files
-- `/backend/FanEngagement.Tests/AuthorizationIntegrationTests.cs` (684 lines, 46 tests)
-- `/backend/FanEngagement.Tests/MultiTenancyTests.cs` (446 lines, 13 tests)
+- `/backend/FanEngagement.Tests/AuthorizationIntegrationTests.cs` (684 lines, 28 tests)
+- `/backend/FanEngagement.Tests/MultiTenancyTests.cs` (446 lines, 11 tests)
 - `/backend/FanEngagement.Tests/AdminAuthorizationTests.cs` (176 lines, 5 tests)
-- `/backend/FanEngagement.Tests/AuthorizationHandlerTests.cs` (unit tests, not integration)
+- `/backend/FanEngagement.Tests/AuthorizationHandlerTests.cs` (13 unit tests for authorization handlers)
 
 ### Controller Files
 - `/backend/FanEngagement.Api/Controllers/UsersController.cs`
