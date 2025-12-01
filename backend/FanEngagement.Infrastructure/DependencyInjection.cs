@@ -1,3 +1,5 @@
+using System.Threading.Channels;
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Application.Memberships;
@@ -8,6 +10,7 @@ using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Application.ShareTypes;
 using FanEngagement.Application.Users;
 using FanEngagement.Application.WebhookEndpoints;
+using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.BackgroundServices;
 using FanEngagement.Infrastructure.Configuration;
 using FanEngagement.Infrastructure.HealthChecks;
@@ -43,6 +46,17 @@ public static class DependencyInjection
         services.AddScoped<IOutboundEventService, OutboundEventService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
+
+        // Configure audit services
+        // Channel with bounded capacity to prevent memory issues
+        services.AddSingleton(Channel.CreateBounded<AuditEvent>(new BoundedChannelOptions(10000)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest,
+            SingleReader = true,
+            SingleWriter = false
+        }));
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddHostedService<AuditPersistenceBackgroundService>();
 
         // Configure background services
         services.Configure<ProposalLifecycleOptions>(
