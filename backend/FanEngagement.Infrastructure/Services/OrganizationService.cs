@@ -1,13 +1,15 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizationService
+public class OrganizationService(FanEngagementDbContext dbContext, IAuditService auditService, ILogger<OrganizationService> logger) : IOrganizationService
 {
     public async Task<Organization> CreateAsync(CreateOrganizationRequest request, Guid creatorUserId, CancellationToken cancellationToken = default)
     {
@@ -48,6 +50,36 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
 
         // Save both in a single transaction
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.Organization, organization.Id, organization.Name)
+                    .WithOrganization(organization.Id, organization.Name)
+                    .WithActor(creatorUserId, string.Empty) // TODO: DisplayName not available here; consider fetching from User entity if needed for completeness
+                    .WithDetails(new
+                    {
+                        organization.Name,
+                        organization.Description,
+                        creatorUserId,
+                        branding = new
+                        {
+                            organization.LogoUrl,
+                            organization.PrimaryColor,
+                            organization.SecondaryColor
+                        }
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail organization operations
+            logger.LogWarning(ex, "Failed to audit organization creation for {OrganizationId}", organization.Id);
+        }
 
         return organization;
     }
@@ -106,6 +138,13 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
             return null;
         }
 
+        // Capture original values for audit
+        var originalName = organization.Name;
+        var originalDescription = organization.Description;
+        var originalLogoUrl = organization.LogoUrl;
+        var originalPrimaryColor = organization.PrimaryColor;
+        var originalSecondaryColor = organization.SecondaryColor;
+
         organization.Name = request.Name;
         organization.Description = request.Description;
         organization.LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl;
@@ -113,6 +152,73 @@ public class OrganizationService(FanEngagementDbContext dbContext) : IOrganizati
         organization.SecondaryColor = string.IsNullOrWhiteSpace(request.SecondaryColor) ? null : request.SecondaryColor;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful update
+        var changedFields = new List<string>();
+        var details = new Dictionary<string, object>();
+        var brandingChanged = false;
+
+        if (originalName != organization.Name)
+        {
+            changedFields.Add("Name");
+            details["oldName"] = originalName;
+            details["newName"] = organization.Name;
+        }
+
+        if (originalDescription != organization.Description)
+        {
+            changedFields.Add("Description");
+            details["oldDescription"] = originalDescription ?? string.Empty;
+            details["newDescription"] = organization.Description ?? string.Empty;
+        }
+
+        if (originalLogoUrl != organization.LogoUrl)
+        {
+            changedFields.Add("LogoUrl");
+            details["oldLogoUrl"] = originalLogoUrl ?? string.Empty;
+            details["newLogoUrl"] = organization.LogoUrl ?? string.Empty;
+            brandingChanged = true;
+        }
+
+        if (originalPrimaryColor != organization.PrimaryColor)
+        {
+            changedFields.Add("PrimaryColor");
+            details["oldPrimaryColor"] = originalPrimaryColor ?? string.Empty;
+            details["newPrimaryColor"] = organization.PrimaryColor ?? string.Empty;
+            brandingChanged = true;
+        }
+
+        if (originalSecondaryColor != organization.SecondaryColor)
+        {
+            changedFields.Add("SecondaryColor");
+            details["oldSecondaryColor"] = originalSecondaryColor ?? string.Empty;
+            details["newSecondaryColor"] = organization.SecondaryColor ?? string.Empty;
+            brandingChanged = true;
+        }
+
+        // Log audit event if any changes were made
+        if (changedFields.Count > 0)
+        {
+            details["changedFields"] = changedFields;
+            details["brandingChanged"] = brandingChanged;
+
+            try
+            {
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithAction(AuditActionType.Updated)
+                        .WithResource(AuditResourceType.Organization, organization.Id, organization.Name)
+                        .WithOrganization(organization.Id, organization.Name)
+                        .WithDetails(details)
+                        .AsSuccess(),
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Audit failures should not fail organization operations
+                logger.LogWarning(ex, "Failed to audit organization update for {OrganizationId}", organization.Id);
+            }
+        }
 
         return organization;
     }
