@@ -6,10 +6,11 @@ using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class UserService(FanEngagementDbContext dbContext, IAuthService authService, IAuditService auditService) : IUserService
+public class UserService(FanEngagementDbContext dbContext, IAuthService authService, IAuditService auditService, ILogger<UserService> logger) : IUserService
 {
     public async Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
@@ -45,9 +46,10 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
                     .AsSuccess(),
                 cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
             // Audit failures should not fail user operations
+            logger.LogWarning(ex, "Failed to audit user creation for {UserId}", user.Id);
         }
 
         return MapToDto(user);
@@ -187,9 +189,10 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
                         .AsSuccess(),
                     cancellationToken);
             }
-            catch
+            catch (Exception ex)
             {
                 // Audit failures should not fail user operations
+                logger.LogWarning(ex, "Failed to audit role change for {UserId}", user.Id);
             }
         }
 
@@ -208,9 +211,10 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
                         .AsSuccess(),
                     cancellationToken);
             }
-            catch
+            catch (Exception ex)
             {
                 // Audit failures should not fail user operations
+                logger.LogWarning(ex, "Failed to audit user update for {UserId}", user.Id);
             }
         }
 
@@ -243,9 +247,10 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
                     .AsSuccess(),
                 cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
             // Audit failures should not fail user operations
+            logger.LogWarning(ex, "Failed to audit user deletion for {UserId}", id);
         }
 
         return true;
