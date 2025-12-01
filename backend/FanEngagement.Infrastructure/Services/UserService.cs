@@ -35,13 +35,20 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         await dbContext.SaveChangesAsync(cancellationToken);
 
         // Audit after successful commit - exclude password from audit details
-        await auditService.LogAsync(
-            new AuditEventBuilder()
-                .WithAction(AuditActionType.Created)
-                .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
-                .WithDetails(new { user.Email, user.DisplayName, user.Role })
-                .AsSuccess(),
-            cancellationToken);
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
+                    .WithDetails(new { user.Email, user.DisplayName, user.Role })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch
+        {
+            // Audit failures should not fail user operations
+        }
 
         return MapToDto(user);
     }
@@ -166,17 +173,24 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             details["newRole"] = user.Role.ToString();
 
             // Separate audit event for role changes (privilege escalation tracking)
-            await auditService.LogAsync(
-                new AuditEventBuilder()
-                    .WithAction(AuditActionType.RoleChanged)
-                    .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
-                    .WithDetails(new
-                    {
-                        oldRole = originalRole.ToString(),
-                        newRole = user.Role.ToString()
-                    })
-                    .AsSuccess(),
-                cancellationToken);
+            try
+            {
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithAction(AuditActionType.RoleChanged)
+                        .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
+                        .WithDetails(new
+                        {
+                            oldRole = originalRole.ToString(),
+                            newRole = user.Role.ToString()
+                        })
+                        .AsSuccess(),
+                    cancellationToken);
+            }
+            catch
+            {
+                // Audit failures should not fail user operations
+            }
         }
 
         // General update audit event
@@ -184,13 +198,20 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         {
             details["changedFields"] = changedFields;
 
-            await auditService.LogAsync(
-                new AuditEventBuilder()
-                    .WithAction(AuditActionType.Updated)
-                    .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
-                    .WithDetails(details)
-                    .AsSuccess(),
-                cancellationToken);
+            try
+            {
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithAction(AuditActionType.Updated)
+                        .WithResource(AuditResourceType.User, user.Id, user.DisplayName)
+                        .WithDetails(details)
+                        .AsSuccess(),
+                    cancellationToken);
+            }
+            catch
+            {
+                // Audit failures should not fail user operations
+            }
         }
 
         return MapToDto(user);
@@ -212,13 +233,20 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         await dbContext.SaveChangesAsync(cancellationToken);
 
         // Audit after successful deletion
-        await auditService.LogAsync(
-            new AuditEventBuilder()
-                .WithAction(AuditActionType.Deleted)
-                .WithResource(AuditResourceType.User, id, displayName)
-                .WithDetails(new { email, displayName })
-                .AsSuccess(),
-            cancellationToken);
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Deleted)
+                    .WithResource(AuditResourceType.User, id, displayName)
+                    .WithDetails(new { email, displayName })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch
+        {
+            // Audit failures should not fail user operations
+        }
 
         return true;
     }
