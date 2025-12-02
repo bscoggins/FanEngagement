@@ -340,13 +340,7 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
         var getResponse = await _client.GetAsync($"/proposals/{proposal.Id}");
         Assert.True(getResponse.IsSuccessStatusCode, "Get should succeed");
         var responseText = await getResponse.Content.ReadAsStringAsync();
-        var proposalDetails = System.Text.Json.JsonSerializer.Deserialize<ProposalDetailsDto>(
-            responseText,
-            new System.Text.Json.JsonSerializerOptions 
-            { 
-                PropertyNameCaseInsensitive = true,
-                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
-            });
+        var proposalDetails = System.Text.Json.JsonSerializer.Deserialize<ProposalDetailsDto>(responseText, JsonOptions);
         Assert.NotNull(proposalDetails);
         var optionToDelete = proposalDetails!.Options.First();
 
@@ -427,6 +421,12 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
 
     #region Helper Methods
 
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+    };
+
     private async Task<Organization> CreateTestOrganizationAsync()
     {
         var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
@@ -503,13 +503,7 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
         var getResponse = await _client.GetAsync($"/proposals/{proposal.Id}");
         Assert.True(getResponse.IsSuccessStatusCode, "Get should succeed");
         var responseText = await getResponse.Content.ReadAsStringAsync();
-        var proposalDetails = System.Text.Json.JsonSerializer.Deserialize<ProposalDetailsDto>(
-            responseText,
-            new System.Text.Json.JsonSerializerOptions 
-            { 
-                PropertyNameCaseInsensitive = true,
-                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
-            });
+        var proposalDetails = System.Text.Json.JsonSerializer.Deserialize<ProposalDetailsDto>(responseText, JsonOptions);
         Assert.NotNull(proposalDetails);
 
         // Cast a vote
@@ -536,13 +530,7 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
         var getResponse = await _client.GetAsync($"/proposals/{proposal.Id}");
         Assert.True(getResponse.IsSuccessStatusCode, "Get should succeed");
         var responseText = await getResponse.Content.ReadAsStringAsync();
-        var updatedProposal = System.Text.Json.JsonSerializer.Deserialize<ProposalDto>(
-            responseText,
-            new System.Text.Json.JsonSerializerOptions 
-            { 
-                PropertyNameCaseInsensitive = true,
-                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
-            });
+        var updatedProposal = System.Text.Json.JsonSerializer.Deserialize<ProposalDto>(responseText, JsonOptions);
         Assert.NotNull(updatedProposal);
 
         return (updatedProposal!, token, org);

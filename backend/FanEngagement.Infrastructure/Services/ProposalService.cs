@@ -13,6 +13,15 @@ using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
+/// <summary>
+/// Service for managing proposals and their lifecycle.
+/// 
+/// Note on Audit Actor IDs: Currently, Update/Open/Close/Finalize/AddOption/DeleteOption methods
+/// log audit events with Guid.Empty for actor IDs due to the constraint of maintaining
+/// existing method signatures. The CreateAsync method captures the actor from CreatedByUserId.
+/// Future enhancement: Pass current user ID through method parameters or use IHttpContextAccessor
+/// to capture actor information for all operations (see E-005-12 follow-up).
+/// </summary>
 public class ProposalService(
     FanEngagementDbContext dbContext, 
     IOutboundEventService outboundEventService,
@@ -207,16 +216,14 @@ public class ProposalService(
 
         // Track changed fields for audit
         var changedFields = new Dictionary<string, object>();
-        var oldTitle = proposal.Title;
-        var oldDescription = proposal.Description;
 
-        if (request.Title is not null && request.Title != proposal.Title)
+        if (request.Title is not null && !string.Equals(request.Title, proposal.Title, StringComparison.Ordinal))
         {
             changedFields["Title"] = new { Old = proposal.Title, New = request.Title };
             proposal.Title = request.Title;
         }
 
-        if (request.Description is not null && request.Description != proposal.Description)
+        if (request.Description is not null && !string.Equals(request.Description, proposal.Description, StringComparison.Ordinal))
         {
             changedFields["Description"] = new { Old = proposal.Description, New = request.Description };
             proposal.Description = request.Description;
