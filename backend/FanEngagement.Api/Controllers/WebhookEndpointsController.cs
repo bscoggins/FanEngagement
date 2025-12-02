@@ -1,6 +1,7 @@
 using FanEngagement.Application.WebhookEndpoints;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FanEngagement.Api.Controllers;
 
@@ -15,7 +16,8 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         [FromBody] CreateWebhookEndpointRequest request,
         CancellationToken cancellationToken)
     {
-        var webhook = await webhookEndpointService.CreateAsync(organizationId, request, cancellationToken);
+        var actorUserId = GetCurrentUserId();
+        var webhook = await webhookEndpointService.CreateAsync(organizationId, request, actorUserId, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { organizationId, webhookId = webhook.Id }, webhook);
     }
 
@@ -50,7 +52,8 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         [FromBody] UpdateWebhookEndpointRequest request,
         CancellationToken cancellationToken)
     {
-        var webhook = await webhookEndpointService.UpdateAsync(organizationId, webhookId, request, cancellationToken);
+        var actorUserId = GetCurrentUserId();
+        var webhook = await webhookEndpointService.UpdateAsync(organizationId, webhookId, request, actorUserId, cancellationToken);
         if (webhook is null)
         {
             return NotFound();
@@ -65,12 +68,23 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         Guid webhookId,
         CancellationToken cancellationToken)
     {
-        var deleted = await webhookEndpointService.DeleteAsync(organizationId, webhookId, cancellationToken);
+        var actorUserId = GetCurrentUserId();
+        var deleted = await webhookEndpointService.DeleteAsync(organizationId, webhookId, actorUserId, cancellationToken);
         if (!deleted)
         {
             return NotFound();
         }
 
         return NoContent();
+    }
+
+    private Guid? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return null;
+        }
+        return userId;
     }
 }
