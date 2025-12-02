@@ -63,8 +63,8 @@ export const AdminLayout: React.FC = () => {
         // Navigate to org admin overview
         navigate(`/admin/organizations/${membership.organizationId}/edit`);
       } else {
-        // Navigate to member view for this org
-        navigate(`/me/organizations/${membership.organizationId}`);
+        // Navigate to member dashboard (home page) for this org
+        navigate(`/me/home`);
       }
     }
   }, [orgMemberships, setActiveOrg, isAdmin, navigate]);
