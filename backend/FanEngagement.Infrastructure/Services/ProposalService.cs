@@ -699,11 +699,12 @@ public class ProposalService(
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
-        // Verify user exists
-        var userExists = await dbContext.Users
-            .AnyAsync(u => u.Id == request.UserId, cancellationToken);
+        // Verify user exists and get user details for audit logging
+        var voter = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
         
-        if (!userExists)
+        if (voter is null)
         {
             logger.LogWarning("User {UserId} not found for voting", request.UserId);
             throw new InvalidOperationException($"User with ID {request.UserId} does not exist.");
@@ -748,11 +749,7 @@ public class ProposalService(
         // Audit after successful commit
         try
         {
-            // Get voter and organization information
-            var voter = await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
-
+            // Get organization information
             var organization = await dbContext.Organizations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
@@ -765,7 +762,7 @@ public class ProposalService(
                     .WithAction(AuditActionType.Created)
                     .WithResource(AuditResourceType.Vote, vote.Id, $"Vote on {proposal.Title}")
                     .WithOrganization(proposal.OrganizationId, organization?.Name)
-                    .WithActor(request.UserId, voter?.DisplayName ?? string.Empty)
+                    .WithActor(request.UserId, voter.DisplayName ?? string.Empty)
                     .WithDetails(new
                     {
                         ProposalId = proposal.Id,
