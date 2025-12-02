@@ -748,7 +748,7 @@ public class ProposalService(
         // Audit after successful commit
         try
         {
-            // Get voter and organization information in a single query
+            // Get voter and organization information
             var voter = await dbContext.Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
@@ -768,7 +768,6 @@ public class ProposalService(
                     .WithActor(request.UserId, voter?.DisplayName ?? string.Empty)
                     .WithDetails(new
                     {
-                        VoterName = voter?.DisplayName,
                         ProposalId = proposal.Id,
                         ProposalTitle = proposal.Title,
                         SelectedOptionId = selectedOption?.Id,
