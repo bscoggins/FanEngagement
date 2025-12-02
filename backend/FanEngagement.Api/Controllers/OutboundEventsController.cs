@@ -1,3 +1,4 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -44,7 +45,8 @@ public class OutboundEventsController(IOutboundEventService outboundEventService
         Guid eventId,
         CancellationToken cancellationToken)
     {
-        var retried = await outboundEventService.RetryAsync(organizationId, eventId, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+        var retried = await outboundEventService.RetryAsync(organizationId, eventId, actorUserId, actorDisplayName, cancellationToken);
         if (!retried)
         {
             return NotFound();

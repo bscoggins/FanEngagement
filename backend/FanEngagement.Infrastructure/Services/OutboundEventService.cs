@@ -1,12 +1,17 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundEventService
+public class OutboundEventService(
+    FanEngagementDbContext dbContext,
+    IAuditService auditService,
+    ILogger<OutboundEventService> logger) : IOutboundEventService
 {
     public async Task<Guid> EnqueueEventAsync(
         Guid organizationId, 
@@ -106,7 +111,9 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
 
     public async Task<bool> RetryAsync(
         Guid organizationId, 
-        Guid eventId, 
+        Guid eventId,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         var outboundEvent = await dbContext.OutboundEvents
@@ -120,6 +127,32 @@ public class OutboundEventService(FanEngagementDbContext dbContext) : IOutboundE
         outboundEvent.Status = OutboundEventStatus.Pending;
         outboundEvent.LastError = null;
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithAction(AuditActionType.StatusChanged)
+                    .WithResource(AuditResourceType.OutboundEvent, outboundEvent.Id, outboundEvent.EventType)
+                    .WithOrganization(organizationId)
+                    .WithDetails(new
+                    {
+                        eventType = outboundEvent.EventType,
+                        manualRetry = true,
+                        previousStatus = OutboundEventStatus.Failed.ToString(),
+                        newStatus = OutboundEventStatus.Pending.ToString(),
+                        attemptCount = outboundEvent.AttemptCount
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail retry operations
+            logger.LogWarning(ex, "Failed to audit outbound event retry for {OutboundEventId}", outboundEvent.Id);
+        }
 
         return true;
     }
