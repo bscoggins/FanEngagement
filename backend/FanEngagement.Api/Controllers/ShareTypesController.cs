@@ -1,3 +1,4 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.ShareTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,9 @@ public class ShareTypesController(IShareTypeService shareTypeService) : Controll
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateShareTypeRequest request, CancellationToken cancellationToken)
     {
-        var shareType = await shareTypeService.CreateAsync(organizationId, request, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+
+        var shareType = await shareTypeService.CreateAsync(organizationId, request, actorUserId, actorDisplayName, cancellationToken);
         return CreatedAtAction(nameof(GetByOrganization), new { organizationId }, shareType);
     }
 
@@ -42,7 +45,9 @@ public class ShareTypesController(IShareTypeService shareTypeService) : Controll
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Update(Guid organizationId, Guid id, [FromBody] UpdateShareTypeRequest request, CancellationToken cancellationToken)
     {
-        var shareType = await shareTypeService.UpdateAsync(organizationId, id, request, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+
+        var shareType = await shareTypeService.UpdateAsync(organizationId, id, request, actorUserId, actorDisplayName, cancellationToken);
         if (shareType is null)
         {
             return NotFound();
