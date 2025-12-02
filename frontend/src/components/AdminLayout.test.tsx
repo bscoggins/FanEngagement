@@ -235,6 +235,10 @@ describe('AdminLayout', () => {
       expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
       // The org name appears in the dropdown option
       expect(screen.getByRole('option', { name: /Test Org/ })).toBeInTheDocument();
+      
+      // Should see "Org Admin" badge in header
+      expect(screen.getByTestId('org-admin-badge')).toBeInTheDocument();
+      expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
     });
 
     it('home link navigates to admin for org admin', async () => {
@@ -346,8 +350,9 @@ describe('AdminLayout', () => {
         expect(screen.getByTestId('org-nav-manageProposals')).toBeInTheDocument();
         expect(screen.getByTestId('org-nav-webhookEvents')).toBeInTheDocument();
         
-        // Should show Org Admin badge
-        expect(screen.getByTestId('active-org-role-badge')).toHaveTextContent('Org Admin');
+        // Should show "Org Admin" badge in header
+        expect(screen.getByTestId('org-admin-badge')).toBeInTheDocument();
+        expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
       });
     });
 
@@ -388,8 +393,8 @@ describe('AdminLayout', () => {
         expect(screen.queryByTestId('org-nav-orgOverview')).not.toBeInTheDocument();
         expect(screen.queryByTestId('org-nav-manageMemberships')).not.toBeInTheDocument();
         
-        // Should show Member badge
-        expect(screen.getByTestId('active-org-role-badge')).toHaveTextContent('Member');
+        // Should NOT show "Org Admin" badge in header (member role doesn't get badge)
+        expect(screen.queryByTestId('org-admin-badge')).not.toBeInTheDocument();
         
         // Should show link to view organization as member
         expect(screen.getByText('View organization →')).toBeInTheDocument();

@@ -92,6 +92,10 @@ test.describe('Top navigation visibility by role', () => {
     
     // OrgAdmin should see organization selector in header (not sidebar)
     await expect(page.getByTestId('admin-header-org-selector')).toBeVisible();
+    
+    // OrgAdmin should see "Org Admin" badge in header
+    await expect(page.getByTestId('org-admin-badge')).toBeVisible();
+    await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
 
   test('User with organization access sees dropdown in unified layout', async ({ page }) => {
@@ -105,5 +109,9 @@ test.describe('Top navigation visibility by role', () => {
     
     // User should see organization selector in unified header
     await expect(page.getByTestId('unified-header-org-selector')).toBeVisible({ timeout: 10000 });
+    
+    // OrgAdmin should see "Org Admin" badge in unified header
+    await expect(page.getByTestId('org-admin-badge')).toBeVisible();
+    await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
 });
