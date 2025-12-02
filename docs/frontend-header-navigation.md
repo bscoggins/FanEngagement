@@ -69,7 +69,7 @@ Instead of a dropdown in the sidebar, the sidebar now displays:
 ### Unit Tests
 - Layout component tests verify the header dropdown and sidebar display
 - AdminLayout component tests verify role-based navigation
-- PlatformAdminLayout tests verify no org selector is shown
+- PlatformAdminLayout "no org selector" behavior is covered by E2E tests (no unit test file)
 
 ### E2E Tests
 E2E tests validate:

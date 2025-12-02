@@ -57,6 +57,7 @@
   background-color: #333;
   color: white;
   cursor: pointer;
+  min-width: 200px;
 }
 
 .admin-header-org-select:hover {
