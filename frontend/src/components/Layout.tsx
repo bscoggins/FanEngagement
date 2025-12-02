@@ -169,8 +169,8 @@ export const Layout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Admin links section - only show when user can access admin area */}
-            {canAccessAdminArea() && (
+            {/* Admin links section - only show when user can access admin area AND either no org is selected or user is admin of the selected org */}
+            {canAccessAdminArea() && (!activeOrg || activeOrgIsAdmin) && (
               <>
                 <div className="unified-nav-divider" />
                 <div className="unified-nav-section-label">Administration</div>

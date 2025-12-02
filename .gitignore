@@ -65,3 +65,56 @@ frontend/node_modules/
 
 # Test coverage
 coverage/
+
+.DS_Store
+.DS_Store/
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# IDEs/Editors
+.idea/
+*.swp
+*.swo
+# Keep VS Code workspace settings tracked for personal backup
+# (settings.json, extensions.json, tasks.json, launch.json, etc.)
+# If you ever want to ignore volatile caches, we can add patterns like:
+# .vscode/*.cache or .vscode/*.db
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Env files (keep out of source control)
+.env
+.env.development
+.env.production
+.env.test
+
+# Playwright/E2E artifacts
+playwright-report/
+test-results/
+
+# Node/Frontend caches
+.pnpm-store/
+.eslintcache
+.parcel-cache/
+frontend/.vite/
+
+# Python (for scripts in /scripts)
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Docker-generated local data (if used)
+docker-data/
+docker-logs/

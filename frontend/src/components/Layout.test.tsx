@@ -514,5 +514,91 @@ describe('Layout', () => {
       // Admin Dashboard should be visible because user is OrgAdmin in one org
       expect(screen.getByTestId('admin-nav-adminDashboard')).toBeInTheDocument();
     });
+
+    it('hides Administration section when user switches to member-only org', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-2',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      // Setup auth state
+      localStorage.setItem('authToken', 'test-token');
+      localStorage.setItem('authUser', JSON.stringify({
+        token: 'test-token',
+        userId: 'user-123',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User',
+      }));
+
+      // Mock memberships API responses
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
+      vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mockMemberships);
+
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <NotificationProvider>
+            <AuthProvider>
+              <OrgProvider isAuthenticated={true}>
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<div>Home Content</div>} />
+                  </Route>
+                  <Route path="/me/organizations/:orgId" element={<Layout />}>
+                    <Route index element={<div data-testid="member-org-view">Member Org View</div>} />
+                  </Route>
+                </Routes>
+              </OrgProvider>
+            </AuthProvider>
+          </NotificationProvider>
+        </MemoryRouter>
+      );
+
+      // Wait for permissions and org data to load
+      await waitFor(() => {
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Initially, Administration section should be visible (user is OrgAdmin in Admin Org)
+      expect(screen.getByText('Administration')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-nav-adminDashboard')).toBeInTheDocument();
+
+      // Switch to the member-only org
+      const user = userEvent.setup();
+      const orgSelector = screen.getByTestId('unified-header-org-selector');
+      await user.selectOptions(orgSelector, 'org-2');
+
+      // Wait for navigation to member view
+      await waitFor(() => {
+        expect(screen.getByTestId('member-org-view')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Administration section should now be hidden (user is only Member in Member Org)
+      await waitFor(() => {
+        expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Admin Dashboard link should not be visible
+      expect(screen.queryByTestId('admin-nav-adminDashboard')).not.toBeInTheDocument();
+
+      // User navigation items should still be present
+      expect(screen.getByTestId('nav-home')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-myAccount')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-myOrganizations')).toBeInTheDocument();
+    });
   });
 });
