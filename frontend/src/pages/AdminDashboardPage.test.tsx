@@ -48,6 +48,9 @@ describe('AdminDashboardPage', () => {
       activeOrg: null,
       setActiveOrg: vi.fn(),
       memberships: [],
+      hasMultipleOrgs: false,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
     });
 
     renderAdminDashboard();
@@ -77,6 +80,9 @@ describe('AdminDashboardPage', () => {
       activeOrg: null,
       setActiveOrg: vi.fn(),
       memberships: [],
+      hasMultipleOrgs: false,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
     });
 
     renderAdminDashboard();
@@ -106,6 +112,9 @@ describe('AdminDashboardPage', () => {
       activeOrg: null,
       setActiveOrg: vi.fn(),
       memberships: [],
+      hasMultipleOrgs: false,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
     });
 
     renderAdminDashboard();
@@ -142,6 +151,9 @@ describe('AdminDashboardPage', () => {
       activeOrg: null,
       setActiveOrg: vi.fn(),
       memberships: [],
+      hasMultipleOrgs: false,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
     });
 
     renderAdminDashboard();
@@ -192,6 +204,9 @@ describe('AdminDashboardPage', () => {
         role: 'OrgAdmin',
         createdAt: '2024-01-01T00:00:00Z',
       }],
+      hasMultipleOrgs: false,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
     });
 
     renderAdminDashboard();
@@ -225,6 +240,9 @@ describe('AdminDashboardPage', () => {
       activeOrg: null,
       setActiveOrg: vi.fn(),
       memberships: [],
+      hasMultipleOrgs: false,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
     });
 
     renderAdminDashboard();
