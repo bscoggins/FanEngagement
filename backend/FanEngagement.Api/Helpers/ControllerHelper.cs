@@ -19,7 +19,7 @@ public static class ControllerHelper
         var userIdClaim = controller.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var actorUserId))
         {
-            throw new InvalidOperationException("User ID claim is missing or invalid. This indicates a configuration issue with authentication middleware.");
+            throw new InvalidOperationException("User ID claim is missing or invalid. This should never occur with the [Authorize] attribute unless authentication middleware is misconfigured.");
         }
 
         var actorDisplayName = controller.User.FindFirst(ClaimTypes.Name)?.Value 
