@@ -34,6 +34,15 @@ The organization dropdown is **always in the header** for non-platform admins, r
 When switching organizations:
 - For **OrgAdmin** role: Navigates to `/admin/organizations/{orgId}/edit`
 - For **Member** role: Navigates to `/me/organizations/{orgId}`
+- The "Home" link in the sidebar footer updates to reflect the user's role in the **currently selected** organization:
+  - OrgAdmin for selected org: Home → `/admin` (Admin Dashboard)
+  - Member of selected org: Home → `/me/home` (Member Dashboard)
+
+### Role-Based Navigation
+The navigation system respects the user's role in the **currently selected organization**:
+- Users who are OrgAdmin in one organization but Member in another will see different navigation options depending on which organization is selected
+- The "Administration" section in the sidebar only appears when the selected organization grants OrgAdmin privileges
+- When a Member-only organization is selected, the sidebar displays a message "You are a member of this organization" with a link to view the organization
 
 ## Sidebar Navigation
 
