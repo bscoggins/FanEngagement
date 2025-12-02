@@ -16,8 +16,8 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         [FromBody] CreateWebhookEndpointRequest request,
         CancellationToken cancellationToken)
     {
-        var (actorUserId, _) = this.GetActorInfo();
-        var webhook = await webhookEndpointService.CreateAsync(organizationId, request, actorUserId, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+        var webhook = await webhookEndpointService.CreateAsync(organizationId, request, actorUserId, actorDisplayName, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { organizationId, webhookId = webhook.Id }, webhook);
     }
 
@@ -52,8 +52,8 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         [FromBody] UpdateWebhookEndpointRequest request,
         CancellationToken cancellationToken)
     {
-        var (actorUserId, _) = this.GetActorInfo();
-        var webhook = await webhookEndpointService.UpdateAsync(organizationId, webhookId, request, actorUserId, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+        var webhook = await webhookEndpointService.UpdateAsync(organizationId, webhookId, request, actorUserId, actorDisplayName, cancellationToken);
         if (webhook is null)
         {
             return NotFound();
@@ -68,8 +68,8 @@ public class WebhookEndpointsController(IWebhookEndpointService webhookEndpointS
         Guid webhookId,
         CancellationToken cancellationToken)
     {
-        var (actorUserId, _) = this.GetActorInfo();
-        var deleted = await webhookEndpointService.DeleteAsync(organizationId, webhookId, actorUserId, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+        var deleted = await webhookEndpointService.DeleteAsync(organizationId, webhookId, actorUserId, actorDisplayName, cancellationToken);
         if (!deleted)
         {
             return NotFound();

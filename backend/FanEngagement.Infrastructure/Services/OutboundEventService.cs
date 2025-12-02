@@ -112,7 +112,8 @@ public class OutboundEventService(
     public async Task<bool> RetryAsync(
         Guid organizationId, 
         Guid eventId,
-        Guid? actorUserId = null,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         var outboundEvent = await dbContext.OutboundEvents
@@ -130,27 +131,22 @@ public class OutboundEventService(
         // Audit after successful commit
         try
         {
-            var builder = new AuditEventBuilder()
-                .WithAction(AuditActionType.StatusChanged)
-                .WithResource(AuditResourceType.OutboundEvent, outboundEvent.Id, outboundEvent.EventType)
-                .WithOrganization(organizationId)
-                .WithDetails(new
-                {
-                    eventType = outboundEvent.EventType,
-                    manualRetry = true,
-                    previousStatus = OutboundEventStatus.Failed.ToString(),
-                    newStatus = OutboundEventStatus.Pending.ToString(),
-                    attemptCount = outboundEvent.AttemptCount
-                })
-                .AsSuccess();
-
-            // Only set actor if available
-            if (actorUserId.HasValue)
-            {
-                builder.WithActor(actorUserId.Value, string.Empty);
-            }
-
-            await auditService.LogAsync(builder, cancellationToken);
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.StatusChanged)
+                    .WithResource(AuditResourceType.OutboundEvent, outboundEvent.Id, outboundEvent.EventType)
+                    .WithOrganization(organizationId)
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithDetails(new
+                    {
+                        eventType = outboundEvent.EventType,
+                        manualRetry = true,
+                        previousStatus = OutboundEventStatus.Failed.ToString(),
+                        newStatus = OutboundEventStatus.Pending.ToString(),
+                        attemptCount = outboundEvent.AttemptCount
+                    })
+                    .AsSuccess(),
+                cancellationToken);
         }
         catch (Exception ex)
         {

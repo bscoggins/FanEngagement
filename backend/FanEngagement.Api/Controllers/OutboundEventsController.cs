@@ -45,8 +45,8 @@ public class OutboundEventsController(IOutboundEventService outboundEventService
         Guid eventId,
         CancellationToken cancellationToken)
     {
-        var (actorUserId, _) = this.GetActorInfo();
-        var retried = await outboundEventService.RetryAsync(organizationId, eventId, actorUserId, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+        var retried = await outboundEventService.RetryAsync(organizationId, eventId, actorUserId, actorDisplayName, cancellationToken);
         if (!retried)
         {
             return NotFound();

@@ -17,7 +17,8 @@ public class WebhookEndpointService(
     public async Task<WebhookEndpointDto> CreateAsync(
         Guid organizationId, 
         CreateWebhookEndpointRequest request,
-        Guid? actorUserId = null,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         // Validate organization exists
@@ -68,25 +69,20 @@ public class WebhookEndpointService(
         // Audit after successful commit
         try
         {
-            var builder = new AuditEventBuilder()
-                .WithAction(AuditActionType.Created)
-                .WithResource(AuditResourceType.WebhookEndpoint, webhookEndpoint.Id, MaskUrl(webhookEndpoint.Url))
-                .WithOrganization(organizationId)
-                .WithDetails(new
-                {
-                    endpointUrl = MaskUrl(webhookEndpoint.Url),
-                    subscribedEvents = request.SubscribedEvents,
-                    isActive = webhookEndpoint.IsActive
-                })
-                .AsSuccess();
-
-            // Only set actor if available
-            if (actorUserId.HasValue)
-            {
-                builder.WithActor(actorUserId.Value, string.Empty);
-            }
-
-            await auditService.LogAsync(builder, cancellationToken);
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.WebhookEndpoint, webhookEndpoint.Id, MaskUrl(webhookEndpoint.Url))
+                    .WithOrganization(organizationId)
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithDetails(new
+                    {
+                        endpointUrl = MaskUrl(webhookEndpoint.Url),
+                        subscribedEvents = request.SubscribedEvents,
+                        isActive = webhookEndpoint.IsActive
+                    })
+                    .AsSuccess(),
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -126,7 +122,8 @@ public class WebhookEndpointService(
         Guid organizationId, 
         Guid webhookId, 
         UpdateWebhookEndpointRequest request,
-        Guid? actorUserId = null,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         var webhook = await dbContext.WebhookEndpoints
@@ -183,27 +180,22 @@ public class WebhookEndpointService(
                     .Select(e => e.Trim())
                     .ToList();
 
-                var builder = new AuditEventBuilder()
-                    .WithAction(AuditActionType.Updated)
-                    .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhook.Url))
-                    .WithOrganization(organizationId)
-                    .WithDetails(new
-                    {
-                        changedFields,
-                        oldUrl = MaskUrl(originalUrl),
-                        newUrl = MaskUrl(webhook.Url),
-                        oldSubscribedEvents = originalEventsList,
-                        newSubscribedEvents = request.SubscribedEvents
-                    })
-                    .AsSuccess();
-
-                // Only set actor if available
-                if (actorUserId.HasValue)
-                {
-                    builder.WithActor(actorUserId.Value, string.Empty);
-                }
-
-                await auditService.LogAsync(builder, cancellationToken);
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithAction(AuditActionType.Updated)
+                        .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhook.Url))
+                        .WithOrganization(organizationId)
+                        .WithActor(actorUserId, actorDisplayName)
+                        .WithDetails(new
+                        {
+                            changedFields,
+                            oldUrl = MaskUrl(originalUrl),
+                            newUrl = MaskUrl(webhook.Url),
+                            oldSubscribedEvents = originalEventsList,
+                            newSubscribedEvents = request.SubscribedEvents
+                        })
+                        .AsSuccess(),
+                    cancellationToken);
             }
             catch (Exception ex)
             {
@@ -218,7 +210,8 @@ public class WebhookEndpointService(
     public async Task<bool> DeleteAsync(
         Guid organizationId, 
         Guid webhookId,
-        Guid? actorUserId = null,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         var webhook = await dbContext.WebhookEndpoints
@@ -239,24 +232,19 @@ public class WebhookEndpointService(
         // Audit after successful commit
         try
         {
-            var builder = new AuditEventBuilder()
-                .WithAction(AuditActionType.Deleted)
-                .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhookUrl))
-                .WithOrganization(organizationId)
-                .WithDetails(new
-                {
-                    endpointUrl = MaskUrl(webhookUrl),
-                    softDelete = true
-                })
-                .AsSuccess();
-
-            // Only set actor if available
-            if (actorUserId.HasValue)
-            {
-                builder.WithActor(actorUserId.Value, string.Empty);
-            }
-
-            await auditService.LogAsync(builder, cancellationToken);
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Deleted)
+                    .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhookUrl))
+                    .WithOrganization(organizationId)
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithDetails(new
+                    {
+                        endpointUrl = MaskUrl(webhookUrl),
+                        softDelete = true
+                    })
+                    .AsSuccess(),
+                cancellationToken);
         }
         catch (Exception ex)
         {

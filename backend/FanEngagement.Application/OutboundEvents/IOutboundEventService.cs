@@ -26,6 +26,7 @@ public interface IOutboundEventService
     Task<bool> RetryAsync(
         Guid organizationId, 
         Guid eventId,
-        Guid? actorUserId = null,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default);
 }
