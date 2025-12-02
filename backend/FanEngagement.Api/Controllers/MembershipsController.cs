@@ -1,3 +1,4 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Memberships;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,9 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateMembershipRequest request, CancellationToken cancellationToken)
     {
-        var membership = await membershipService.CreateAsync(organizationId, request, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+
+        var membership = await membershipService.CreateAsync(organizationId, request, actorUserId, actorDisplayName, cancellationToken);
         return CreatedAtAction(nameof(GetByUser), new { organizationId, userId = membership.UserId }, membership);
     }
 
@@ -56,12 +59,28 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Delete(Guid organizationId, Guid userId, CancellationToken cancellationToken)
     {
-        var deleted = await membershipService.DeleteAsync(organizationId, userId, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+
+        var deleted = await membershipService.DeleteAsync(organizationId, userId, actorUserId, actorDisplayName, cancellationToken);
         if (!deleted)
         {
             return NotFound();
         }
 
         return NoContent();
+    }
+
+    [HttpPut("{userId:guid}")]
+    [Authorize(Policy = "OrgAdmin")]
+    public async Task<ActionResult> UpdateRole(Guid organizationId, Guid userId, [FromBody] UpdateMembershipRequest request, CancellationToken cancellationToken)
+    {
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+
+        var membership = await membershipService.UpdateRoleAsync(organizationId, userId, request.Role, actorUserId, actorDisplayName, cancellationToken);
+        if (membership == null)
+        {
+            return NotFound();
+        }
+        return Ok(membership);
     }
 }
