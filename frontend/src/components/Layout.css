@@ -228,30 +228,6 @@
   margin-bottom: 0.5rem;
 }
 
-.unified-org-selector {
-  padding: 0.5rem 1.5rem;
-}
-
-.unified-org-selector-label {
-  display: block;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #888;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-.unified-org-select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #444;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  background-color: #333;
-  color: white;
-  cursor: pointer;
-}
-
 .unified-role-badge {
   display: inline-block;
   margin-top: 0.5rem;
@@ -330,10 +306,6 @@
     width: 100%;
     border-top: 1px solid #444;
     margin: 0.5rem 0;
-  }
-
-  .unified-org-selector {
-    display: none;
   }
 
   .unified-nav-section-label {

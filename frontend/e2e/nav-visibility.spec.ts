@@ -89,19 +89,15 @@ test.describe('Top navigation visibility by role', () => {
     
     // OrgAdmin should see organization selector in header (not sidebar)
     await expect(page.getByTestId('admin-header-org-selector')).toBeVisible();
-    
-    // Should be able to select from dropdown
-    const orgSelector = page.getByTestId('admin-header-org-selector');
-    await expect(orgSelector).toBeVisible();
   });
 
-  test('Regular Member sees organization dropdown in header', async ({ page }) => {
+  test('User with organization access sees dropdown in unified layout', async ({ page }) => {
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     
-    // Navigate to member home
+    // Navigate to member home to see unified layout
     await page.goto('/me/home');
     
-    // Member should see organization selector in unified header
+    // User should see organization selector in unified header
     await expect(page.getByTestId('unified-header-org-selector')).toBeVisible();
   });
 });
