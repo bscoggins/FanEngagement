@@ -193,7 +193,7 @@ public class AdminController(
     /// </summary>
     private static Guid GenerateResourceIdForActionType(AuditActionType actionType)
     {
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes($"AdminAction:{actionType}"));
         // Take first 16 bytes of the 32-byte SHA256 hash
         return new Guid(hash.Take(16).ToArray());
