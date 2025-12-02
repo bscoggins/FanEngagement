@@ -79,22 +79,6 @@ public class ShareTypeService(FanEngagementDbContext dbContext, IAuditService au
         return await dbContext.ShareTypes.AsNoTracking().FirstOrDefaultAsync(st => st.Id == id, cancellationToken);
     }
 
-    public async Task<ShareType?> UpdateAsync(Guid id, UpdateShareTypeRequest request, CancellationToken cancellationToken = default)
-    {
-        var shareType = await dbContext.ShareTypes.FirstOrDefaultAsync(st => st.Id == id, cancellationToken);
-        
-        if (shareType == null)
-        {
-            return null;
-        }
-
-        UpdateShareTypeProperties(shareType, request);
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return shareType;
-    }
-
     public async Task<ShareType?> UpdateAsync(Guid organizationId, Guid id, UpdateShareTypeRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
         var shareType = await dbContext.ShareTypes.FirstOrDefaultAsync(st => st.Id == id && st.OrganizationId == organizationId, cancellationToken);
