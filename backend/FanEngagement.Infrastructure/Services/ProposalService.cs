@@ -745,6 +745,48 @@ public class ProposalService(
             request.ProposalOptionId,
             votingPower);
 
+        // Audit after successful commit
+        try
+        {
+            // Get voter information
+            var voter = await dbContext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+
+            // Get selected option
+            var selectedOption = proposal.Options.FirstOrDefault(o => o.Id == request.ProposalOptionId);
+
+            // Get organization information
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.Vote, vote.Id, $"Vote on {proposal.Title}")
+                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithActor(request.UserId, voter?.DisplayName ?? string.Empty)
+                    .WithDetails(new
+                    {
+                        VoterId = voter?.Id,
+                        VoterName = voter?.DisplayName,
+                        ProposalId = proposal.Id,
+                        ProposalTitle = proposal.Title,
+                        SelectedOptionId = selectedOption?.Id,
+                        SelectedOptionText = selectedOption?.Text,
+                        VotingPowerUsed = votingPower,
+                        PrivacyNote = "Vote records voter identity for transparency. Future enhancement: organization-configurable anonymization."
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail vote operations
+            logger.LogWarning(ex, "Failed to audit vote cast for {ProposalId} by user {UserId}", proposalId, request.UserId);
+        }
+
         // Record metrics
         metrics.RecordVoteCast(proposalId, proposal.OrganizationId);
 

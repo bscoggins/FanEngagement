@@ -1,7 +1,11 @@
 using System.Net.Http.Json;
 using FanEngagement.Application.Audit;
+using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.Proposals;
+using FanEngagement.Application.ShareIssuances;
+using FanEngagement.Application.ShareTypes;
+using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
@@ -372,6 +376,157 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
         Assert.Contains("optionId", details!.Details ?? string.Empty);
         Assert.Contains("optionText", details.Details ?? string.Empty);
         Assert.Contains("reason", details.Details ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CastVote_GeneratesAuditEvent_WithVoterAndProposalDetails()
+    {
+        // Arrange - Set up complete voting scenario with shares
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create organization
+        var orgRequest = new CreateOrganizationRequest
+        {
+            Name = $"Test Vote Audit Org {Guid.NewGuid()}",
+            Description = "Test Organization for Vote Audit"
+        };
+        var orgResponse = await _client.PostAsJsonAsync("/organizations", orgRequest);
+        var org = await orgResponse.Content.ReadFromJsonAsync<Organization>();
+
+        // Create user
+        var userRequest = new CreateUserRequest
+        {
+            Email = $"voter-{Guid.NewGuid()}@example.com",
+            DisplayName = "Test Voter",
+            Password = "TestPassword123!"
+        };
+        var userResponse = await _client.PostAsJsonAsync("/users", userRequest);
+        var user = await userResponse.Content.ReadFromJsonAsync<User>();
+
+        // Create membership
+        var membershipRequest = new CreateMembershipRequest
+        {
+            UserId = user!.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{org!.Id}/memberships", membershipRequest);
+
+        // Create share type
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Shares",
+            Symbol = "TST",
+            Description = "Test share type",
+            VotingWeight = 1.0m,
+            MaxSupply = null,
+            IsTransferable = true
+        };
+        var shareTypeResponse = await _client.PostAsJsonAsync($"/organizations/{org.Id}/share-types", shareTypeRequest);
+        var shareType = await shareTypeResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        // Issue shares to user to give voting power
+        var issuanceRequest = new CreateShareIssuanceRequest
+        {
+            UserId = user.Id,
+            ShareTypeId = shareType!.Id,
+            Quantity = 100.0m,
+            Reason = "Initial allocation for voting test"
+        };
+        await _client.PostAsJsonAsync($"/organizations/{org.Id}/share-issuances", issuanceRequest);
+
+        // Create proposal with start time in the past
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = $"Test Vote Proposal {Guid.NewGuid()}",
+            Description = "Test proposal for vote auditing",
+            CreatedByUserId = user.Id,
+            StartAt = DateTimeOffset.UtcNow.AddMinutes(-10),
+            EndAt = DateTimeOffset.UtcNow.AddDays(7),
+            QuorumRequirement = 0.5m
+        };
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{org.Id}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add options (need at least 2)
+        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest
+        {
+            Text = "Option A",
+            Description = "First option"
+        });
+        var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest
+        {
+            Text = "Option B",
+            Description = "Second option"
+        });
+
+        // Open the proposal
+        var openResponse = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        Assert.True(openResponse.IsSuccessStatusCode, "Open should succeed");
+
+        // Act - Cast a vote
+        var voteRequest = new CastVoteRequest
+        {
+            ProposalOptionId = option!.Id,
+            UserId = user.Id
+        };
+        
+        var voteResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/votes", voteRequest);
+
+        // Assert
+        Assert.True(voteResponse.IsSuccessStatusCode, "Vote should succeed");
+        var vote = await voteResponse.Content.ReadFromJsonAsync<VoteDto>();
+        Assert.NotNull(vote);
+
+        // Wait for audit event to be persisted
+        using var scope = _factory.Services.CreateScope();
+        var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
+
+        var auditEvent = await WaitForAuditEventAsync(
+            auditService,
+            AuditResourceType.Vote,
+            vote!.Id,
+            AuditActionType.Created,
+            maxWaitSeconds: 10);
+
+        Assert.NotNull(auditEvent);
+        Assert.Equal(AuditActionType.Created, auditEvent.ActionType);
+        Assert.Equal(AuditResourceType.Vote, auditEvent.ResourceType);
+        Assert.Equal(vote.Id, auditEvent.ResourceId);
+        Assert.Equal(org.Id, auditEvent.OrganizationId);
+        Assert.Equal(AuditOutcome.Success, auditEvent.Outcome);
+        Assert.Equal(user.Id, auditEvent.ActorUserId);
+
+        // Verify details contain vote information
+        var details = await auditService.GetByIdAsync(auditEvent.Id);
+        Assert.NotNull(details);
+        
+        // Verify voter information is captured
+        Assert.Contains("voterId", details!.Details ?? string.Empty);
+        Assert.Contains(user.Id.ToString(), details.Details ?? string.Empty);
+        Assert.Contains("voterName", details.Details ?? string.Empty);
+        Assert.Contains(user.DisplayName, details.Details ?? string.Empty);
+        
+        // Verify proposal context is captured
+        Assert.Contains("proposalId", details.Details ?? string.Empty);
+        Assert.Contains(proposal.Id.ToString(), details.Details ?? string.Empty);
+        Assert.Contains("proposalTitle", details.Details ?? string.Empty);
+        Assert.Contains(proposal.Title, details.Details ?? string.Empty);
+        
+        // Verify selected option is captured
+        Assert.Contains("selectedOptionId", details.Details ?? string.Empty);
+        Assert.Contains(option.Id.ToString(), details.Details ?? string.Empty);
+        Assert.Contains("selectedOptionText", details.Details ?? string.Empty);
+        Assert.Contains(option.Text, details.Details ?? string.Empty);
+        
+        // Verify voting power is captured
+        Assert.Contains("votingPowerUsed", details.Details ?? string.Empty);
+        
+        // Verify privacy note is documented
+        Assert.Contains("privacyNote", details.Details ?? string.Empty);
+        Assert.Contains("transparency", details.Details ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
