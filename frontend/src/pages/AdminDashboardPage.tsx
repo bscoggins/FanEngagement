@@ -9,12 +9,15 @@ export const AdminDashboardPage: React.FC = () => {
   const { activeOrg } = useActiveOrganization();
   const navigate = useNavigate();
 
+  // Store the result of isGlobalAdmin() for use in memoization
+  const globalAdmin = isGlobalAdmin();
+
   // Check if user is admin of the active org
   const isActiveOrgAdmin = React.useMemo(() => {
-    if (isGlobalAdmin()) return true;
+    if (globalAdmin) return true;
     if (!activeOrg) return false;
     return memberships.some(m => m.organizationId === activeOrg.id && m.role === 'OrgAdmin');
-  }, [isGlobalAdmin, activeOrg, memberships]);
+  }, [globalAdmin, activeOrg, memberships]);
 
   // Redirect to member dashboard if active org is selected and user is not admin of it
   useEffect(() => {
