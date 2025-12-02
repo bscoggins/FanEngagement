@@ -103,6 +103,12 @@ export const AdminLayout: React.FC = () => {
               Platform Admin
             </span>
           )}
+          {/* Org Admin badge - shown when user is org admin for active org */}
+          {!isGlobalAdmin() && activeOrgIsAdmin && (
+            <span className="admin-badge" data-testid="org-admin-badge">
+              Org Admin
+            </span>
+          )}
           {/* Organization dropdown - only shown for non-platform admins */}
           {!isGlobalAdmin() && orgMemberships.length > 0 && (
             <div className="admin-header-org-selector">
@@ -146,54 +152,35 @@ export const AdminLayout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Organization section - show when user has org memberships and active org is selected */}
-            {activeOrg && orgMemberships.length > 0 && (
+            {/* Organization section - show when user is OrgAdmin for active org */}
+            {activeOrg && activeOrgIsAdmin && orgNavItems.length > 0 && (
               <>
                 <div className="admin-nav-divider" />
-                
-                {/* Organization name and role badge */}
-                <div className="admin-org-info">
-                  <div className="admin-org-name">
-                    {activeOrg.name}
-                  </div>
-                  <span
-                    data-testid="active-org-role-badge"
-                    className={`admin-org-role-badge ${activeOrgIsAdmin ? 'admin' : 'member'}`}
+                <div className="admin-nav-section-label">Administration</div>
+                {orgNavItems.map(item => (
+                  <Link
+                    key={item.id}
+                    to={item.resolvedPath}
+                    className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
+                    data-testid={`org-nav-${item.id}`}
                   >
-                    {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
-                  </span>
-                </div>
-
-                {/* Org-scoped navigation items - only shown when user is OrgAdmin for the active org */}
-                {activeOrgIsAdmin && orgNavItems.length > 0 && (
-                  <>
-                    <div className="admin-nav-divider-small" />
-                    {orgNavItems.map(item => (
-                      <Link
-                        key={item.id}
-                        to={item.resolvedPath}
-                        className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                        data-testid={`org-nav-${item.id}`}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </>
-                )}
-
-                {/* Message for member-only orgs */}
-                {activeOrg && !activeOrgIsAdmin && (
-                  <div className="admin-member-info">
-                    <p>You are a member of this organization.</p>
-                    <Link
-                      to={`/me/organizations/${activeOrg.id}`}
-                      className="admin-member-link"
-                    >
-                      View organization →
-                    </Link>
-                  </div>
-                )}
+                    {item.label}
+                  </Link>
+                ))}
               </>
+            )}
+
+            {/* Message for member-only orgs */}
+            {activeOrg && !activeOrgIsAdmin && (
+              <div className="admin-member-info">
+                <p>You are a member of this organization.</p>
+                <Link
+                  to={`/me/organizations/${activeOrg.id}`}
+                  className="admin-member-link"
+                >
+                  View organization →
+                </Link>
+              </div>
             )}
           </nav>
           <div className="admin-sidebar-footer">
