@@ -17,5 +17,10 @@ public enum AuditActionType : short
 
     // Authentication and Authorization
     Authenticated = 30,
-    AuthorizationDenied = 31
+    AuthorizationDenied = 31,
+
+    // Admin Operations
+    AdminDataSeeded = 40,
+    AdminDataReset = 41,
+    AdminDataCleanup = 42
 }
