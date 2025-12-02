@@ -34,12 +34,6 @@ export const Layout: React.FC = () => {
     return items.map(item => getResolvedNavItem(item, navContext));
   }, [navContext]);
 
-  // Get org-scoped nav items (for members viewing org)
-  const orgNavItems = useMemo(() => {
-    const items = getVisibleNavItems(navContext, { scope: 'org' });
-    return items.map(item => getResolvedNavItem(item, navContext));
-  }, [navContext]);
-
   // Get the appropriate home route
   const homeRoute = useMemo(() => {
     return getDefaultHomeRoute(navContext);
@@ -125,6 +119,12 @@ export const Layout: React.FC = () => {
               Platform Admin
             </span>
           )}
+          {/* Org Admin badge - shown when user is org admin for active org */}
+          {!isGlobalAdmin() && activeOrgIsAdmin && (
+            <span className="unified-admin-badge" data-testid="org-admin-badge">
+              Org Admin
+            </span>
+          )}
           {/* Organization dropdown - only shown for non-platform admins */}
           {!isGlobalAdmin() && orgMemberships.length > 0 && (
             <div className="unified-header-org-selector">
@@ -169,55 +169,7 @@ export const Layout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Organization section - shows organization name and role-based navigation */}
-            {activeOrg && orgMemberships.length > 0 && (
-              <>
-                <div className="unified-nav-divider" />
-                
-                {/* Organization name and role badge */}
-                <div className="unified-org-info">
-                  <div className="unified-org-name">{activeOrg.name}</div>
-                  <span
-                    data-testid="active-org-role-badge"
-                    className={`unified-role-badge ${activeOrgIsAdmin ? 'admin' : 'member'}`}
-                  >
-                    {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
-                  </span>
-                </div>
-
-                {/* Org-scoped navigation items - only shown when user is OrgAdmin for the active org */}
-                {activeOrgIsAdmin && orgNavItems.length > 0 && (
-                  <>
-                    <div className="unified-nav-divider-small" />
-                    {orgNavItems.map(item => (
-                      <Link
-                        key={item.id}
-                        to={item.resolvedPath}
-                        className={`unified-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                        data-testid={`org-nav-${item.id}`}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </>
-                )}
-
-                {/* Quick link to member org view when not admin */}
-                {activeOrg && !activeOrgIsAdmin && location.pathname !== `/me/organizations/${activeOrg.id}` && (
-                  <div className="unified-member-info">
-                    <p>You are a member of this organization.</p>
-                    <Link
-                      to={`/me/organizations/${activeOrg.id}`}
-                      className="unified-member-link"
-                    >
-                      View organization →
-                    </Link>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Admin links section */}
+            {/* Admin links section - only show when user can access admin area */}
             {canAccessAdminArea() && (
               <>
                 <div className="unified-nav-divider" />

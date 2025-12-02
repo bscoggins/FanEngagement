@@ -462,9 +462,10 @@ describe('Layout', () => {
         expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // First org should be selected by default and should show role badge
+      // First org should be selected by default and should show "Org Admin" badge in header
       await waitFor(() => {
-        expect(screen.getByTestId('active-org-role-badge')).toBeInTheDocument();
+        expect(screen.getByTestId('org-admin-badge')).toBeInTheDocument();
+        expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
       }, { timeout: 3000 });
 
       // Should see Administration section (because user is OrgAdmin in at least one org)
