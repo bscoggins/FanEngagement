@@ -5,7 +5,7 @@ import { useActiveOrganization } from '../contexts/OrgContext';
 import { IfGlobalAdmin } from '../components/PermissionWrappers';
 
 export const AdminDashboardPage: React.FC = () => {
-  const { isGlobalAdmin, memberships } = usePermissions();
+  const { isGlobalAdmin, memberships, isLoading } = usePermissions();
   const { activeOrg } = useActiveOrganization();
   const navigate = useNavigate();
 
@@ -20,14 +20,15 @@ export const AdminDashboardPage: React.FC = () => {
   }, [globalAdmin, activeOrg, memberships]);
 
   // Redirect to member dashboard if active org is selected and user is not admin of it
+  // Only redirect after memberships have loaded to avoid race conditions
   useEffect(() => {
-    if (activeOrg && !isActiveOrgAdmin) {
+    if (!isLoading && activeOrg && !isActiveOrgAdmin) {
       navigate('/me/home', { replace: true });
     }
-  }, [activeOrg, isActiveOrgAdmin, navigate]);
+  }, [isLoading, activeOrg, isActiveOrgAdmin, navigate]);
 
   // If redirecting, show nothing (will redirect immediately)
-  if (activeOrg && !isActiveOrgAdmin) {
+  if (!isLoading && activeOrg && !isActiveOrgAdmin) {
     return null;
   }
   
