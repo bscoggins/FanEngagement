@@ -1,10 +1,32 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
+import { useActiveOrganization } from '../contexts/OrgContext';
 import { IfGlobalAdmin } from '../components/PermissionWrappers';
 
 export const AdminDashboardPage: React.FC = () => {
   const { isGlobalAdmin, memberships } = usePermissions();
+  const { activeOrg } = useActiveOrganization();
+  const navigate = useNavigate();
+
+  // Check if user is admin of the active org
+  const isActiveOrgAdmin = React.useMemo(() => {
+    if (isGlobalAdmin()) return true;
+    if (!activeOrg) return false;
+    return memberships.some(m => m.organizationId === activeOrg.id && m.role === 'OrgAdmin');
+  }, [isGlobalAdmin, activeOrg, memberships]);
+
+  // Redirect to member dashboard if active org is selected and user is not admin of it
+  useEffect(() => {
+    if (activeOrg && !isActiveOrgAdmin) {
+      navigate('/me/home', { replace: true });
+    }
+  }, [activeOrg, isActiveOrgAdmin, navigate]);
+
+  // If redirecting, show nothing (will redirect immediately)
+  if (activeOrg && !isActiveOrgAdmin) {
+    return null;
+  }
   
   return (
     <div>

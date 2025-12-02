@@ -4,10 +4,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { AdminDashboardPage } from './AdminDashboardPage';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
+import { useActiveOrganization } from '../contexts/OrgContext';
 
 // Mock dependencies
 vi.mock('../auth/AuthContext');
 vi.mock('../hooks/usePermissions');
+vi.mock('../contexts/OrgContext');
 
 describe('AdminDashboardPage', () => {
   beforeEach(() => {
@@ -42,6 +44,11 @@ describe('AdminDashboardPage', () => {
       canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: null,
+      setActiveOrg: vi.fn(),
+      memberships: [],
+    });
 
     renderAdminDashboard();
     expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
@@ -66,6 +73,11 @@ describe('AdminDashboardPage', () => {
       canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: null,
+      setActiveOrg: vi.fn(),
+      memberships: [],
+    });
 
     renderAdminDashboard();
     expect(screen.getByText(/Welcome to the FanEngagement administration area/i)).toBeInTheDocument();
@@ -89,6 +101,11 @@ describe('AdminDashboardPage', () => {
       hasAnyOrgAdminRole: () => false,
       canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
+    });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: null,
+      setActiveOrg: vi.fn(),
+      memberships: [],
     });
 
     renderAdminDashboard();
@@ -120,6 +137,11 @@ describe('AdminDashboardPage', () => {
       hasAnyOrgAdminRole: () => false,
       canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
+    });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: null,
+      setActiveOrg: vi.fn(),
+      memberships: [],
     });
 
     renderAdminDashboard();
@@ -159,6 +181,18 @@ describe('AdminDashboardPage', () => {
       canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
     });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: null,
+      setActiveOrg: vi.fn(),
+      memberships: [{
+        id: 'membership-1',
+        organizationId: 'org-1',
+        organizationName: 'Test Organization',
+        userId: 'user-1',
+        role: 'OrgAdmin',
+        createdAt: '2024-01-01T00:00:00Z',
+      }],
+    });
 
     renderAdminDashboard();
     
@@ -186,6 +220,11 @@ describe('AdminDashboardPage', () => {
       hasAnyOrgAdminRole: () => false,
       canAccessAdminArea: () => false,
       refreshMemberships: vi.fn(),
+    });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: null,
+      setActiveOrg: vi.fn(),
+      memberships: [],
     });
 
     renderAdminDashboard();
