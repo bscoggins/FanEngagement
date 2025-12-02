@@ -71,10 +71,10 @@ public class WebhookEndpointService(
         {
             await auditService.LogAsync(
                 new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
                     .WithAction(AuditActionType.Created)
                     .WithResource(AuditResourceType.WebhookEndpoint, webhookEndpoint.Id, MaskUrl(webhookEndpoint.Url))
                     .WithOrganization(organizationId)
-                    .WithActor(actorUserId, actorDisplayName)
                     .WithDetails(new
                     {
                         endpointUrl = MaskUrl(webhookEndpoint.Url),
@@ -182,10 +182,10 @@ public class WebhookEndpointService(
 
                 await auditService.LogAsync(
                     new AuditEventBuilder()
+                        .WithActor(actorUserId, actorDisplayName)
                         .WithAction(AuditActionType.Updated)
                         .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhook.Url))
                         .WithOrganization(organizationId)
-                        .WithActor(actorUserId, actorDisplayName)
                         .WithDetails(new
                         {
                             changedFields,
@@ -234,10 +234,10 @@ public class WebhookEndpointService(
         {
             await auditService.LogAsync(
                 new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
                     .WithAction(AuditActionType.Deleted)
                     .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhookUrl))
                     .WithOrganization(organizationId)
-                    .WithActor(actorUserId, actorDisplayName)
                     .WithDetails(new
                     {
                         endpointUrl = MaskUrl(webhookUrl),

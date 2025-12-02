@@ -133,10 +133,10 @@ public class OutboundEventService(
         {
             await auditService.LogAsync(
                 new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
                     .WithAction(AuditActionType.StatusChanged)
                     .WithResource(AuditResourceType.OutboundEvent, outboundEvent.Id, outboundEvent.EventType)
                     .WithOrganization(organizationId)
-                    .WithActor(actorUserId, actorDisplayName)
                     .WithDetails(new
                     {
                         eventType = outboundEvent.EventType,
