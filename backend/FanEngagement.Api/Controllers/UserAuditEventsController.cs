@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
 using FanEngagement.Domain.Enums;
@@ -55,45 +56,17 @@ public class UserAuditEventsController(IAuditService auditService) : ControllerB
         var query = new AuditQuery
         {
             OrganizationId = organizationId,
-            ActionTypes = ParseEnumList<AuditActionType>(actionType),
-            ResourceTypes = ParseEnumList<AuditResourceType>(resourceType),
+            ActionTypes = EnumParsingHelper.ParseEnumList<AuditActionType>(actionType),
+            ResourceTypes = EnumParsingHelper.ParseEnumList<AuditResourceType>(resourceType),
             ResourceId = resourceId,
             FromDate = dateFrom.HasValue ? new DateTimeOffset(dateFrom.Value, TimeSpan.Zero) : null,
             ToDate = dateTo.HasValue ? new DateTimeOffset(dateTo.Value, TimeSpan.Zero) : null,
-            Outcome = ParseEnum<AuditOutcome>(outcome),
+            Outcome = EnumParsingHelper.ParseEnum<AuditOutcome>(outcome),
             Page = page,
             PageSize = Math.Min(pageSize, 100)
         };
 
         var result = await auditService.QueryUserEventsAsync(userId, query, cancellationToken);
         return Ok(result);
-    }
-
-    /// <summary>
-    /// Parse comma-separated enum list.
-    /// </summary>
-    private static List<T>? ParseEnumList<T>(string? input) where T : struct, Enum
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            return null;
-
-        var values = input.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(s => Enum.TryParse<T>(s, true, out var value) ? (T?)value : null)
-            .Where(v => v.HasValue)
-            .Select(v => v!.Value)
-            .ToList();
-
-        return values.Count > 0 ? values : null;
-    }
-
-    /// <summary>
-    /// Parse single enum value.
-    /// </summary>
-    private static T? ParseEnum<T>(string? input) where T : struct, Enum
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            return null;
-
-        return Enum.TryParse<T>(input, true, out var value) ? value : null;
     }
 }
