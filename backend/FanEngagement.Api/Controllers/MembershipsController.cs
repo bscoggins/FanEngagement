@@ -1,7 +1,7 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Memberships;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace FanEngagement.Api.Controllers;
 
@@ -14,11 +14,7 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Create(Guid organizationId, [FromBody] CreateMembershipRequest request, CancellationToken cancellationToken)
     {
-        var (actorUserId, actorDisplayName) = GetActorInfo();
-        if (actorUserId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
 
         var membership = await membershipService.CreateAsync(organizationId, request, actorUserId, actorDisplayName, cancellationToken);
         return CreatedAtAction(nameof(GetByUser), new { organizationId, userId = membership.UserId }, membership);
@@ -63,11 +59,7 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> Delete(Guid organizationId, Guid userId, CancellationToken cancellationToken)
     {
-        var (actorUserId, actorDisplayName) = GetActorInfo();
-        if (actorUserId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
 
         var deleted = await membershipService.DeleteAsync(organizationId, userId, actorUserId, actorDisplayName, cancellationToken);
         if (!deleted)
@@ -82,11 +74,7 @@ public class MembershipsController(IMembershipService membershipService) : Contr
     [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult> UpdateRole(Guid organizationId, Guid userId, [FromBody] UpdateMembershipRequest request, CancellationToken cancellationToken)
     {
-        var (actorUserId, actorDisplayName) = GetActorInfo();
-        if (actorUserId == Guid.Empty)
-        {
-            return Unauthorized();
-        }
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
 
         var membership = await membershipService.UpdateRoleAsync(organizationId, userId, request.Role, actorUserId, actorDisplayName, cancellationToken);
         if (membership == null)
@@ -94,24 +82,5 @@ public class MembershipsController(IMembershipService membershipService) : Contr
             return NotFound();
         }
         return Ok(membership);
-    }
-
-    /// <summary>
-    /// Extracts the actor user ID and display name from the current HTTP context claims.
-    /// </summary>
-    /// <returns>A tuple containing the actor user ID (or Guid.Empty if not found) and display name.</returns>
-    private (Guid ActorUserId, string ActorDisplayName) GetActorInfo()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var actorUserId))
-        {
-            return (Guid.Empty, "Unknown");
-        }
-
-        var actorDisplayName = User.FindFirst(ClaimTypes.Name)?.Value 
-                              ?? User.FindFirst(ClaimTypes.Email)?.Value 
-                              ?? "Unknown";
-
-        return (actorUserId, actorDisplayName);
     }
 }
