@@ -1,3 +1,4 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.ShareIssuances;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,9 @@ public class ShareIssuancesController(IShareIssuanceService shareIssuanceService
         [FromBody] CreateShareIssuanceRequest request,
         CancellationToken cancellationToken)
     {
-        var issuance = await shareIssuanceService.CreateAsync(organizationId, request, cancellationToken);
+        var (actorUserId, actorDisplayName) = this.GetActorInfo();
+
+        var issuance = await shareIssuanceService.CreateAsync(organizationId, request, actorUserId, actorDisplayName, cancellationToken);
         return CreatedAtAction(nameof(GetByOrganization), new { organizationId }, issuance);
     }
 
