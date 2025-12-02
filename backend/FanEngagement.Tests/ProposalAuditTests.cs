@@ -384,13 +384,20 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
         // Perform multiple operations to generate audit events
         await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
 
-        // Wait for events to be persisted
-        await Task.Delay(500);
-
-        // Query all audit events for this proposal
+        // Wait for the StatusChanged event to be persisted (ensures all events are ready)
         using var scope = _factory.Services.CreateScope();
         var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
 
+        var statusChangedEvent = await WaitForAuditEventAsync(
+            auditService,
+            AuditResourceType.Proposal,
+            proposal.Id,
+            AuditActionType.StatusChanged,
+            maxWaitSeconds: 10);
+
+        Assert.NotNull(statusChangedEvent);
+
+        // Query all audit events for this proposal
         var query = new AuditQuery
         {
             ResourceType = AuditResourceType.Proposal,

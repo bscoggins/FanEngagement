@@ -114,4 +114,44 @@ test.describe('Top navigation visibility by role', () => {
     await expect(page.getByTestId('org-admin-badge')).toBeVisible();
     await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
+
+  test('OrgAdmin switching to member org hides Administration section and changes Home link', async ({ page }) => {
+    // alice@example.com is OrgAdmin of "Tech Innovators" and Member of "Green Energy United"
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
+    
+    // Should land on admin dashboard (alice is OrgAdmin for Tech Innovators by default)
+    await expect(page).toHaveURL(/\/admin/);
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 10000 });
+    
+    // Should see Administration section in sidebar
+    await expect(page.getByText('Administration', { exact: true })).toBeVisible();
+    
+    // Switch to Green Energy United (where alice is a Member)
+    const orgSelector = page.getByTestId('admin-header-org-selector');
+    await orgSelector.selectOption({ label: 'Green Energy United' });
+    
+    // Should navigate to member view for Green Energy United
+    await page.waitForURL(/\/me\/organizations\/[^/]+$/);
+    
+    // Navigate to admin path - should still see admin layout but with member-only navigation
+    await page.goto('/admin');
+    
+    // Wait for page to load
+    await page.waitForLoadState('domcontentloaded');
+    
+    // Administration section should NOT be visible (alice is only a Member of Green Energy United)
+    await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
+    
+    // Should see member info message instead
+    await expect(page.getByText('You are a member of this organization')).toBeVisible();
+    
+    // Home link should now go to member dashboard
+    const homeLinkAfterSwitch = page.locator('.admin-sidebar-footer .admin-back-link');
+    await expect(homeLinkAfterSwitch).toHaveAttribute('href', '/me/home');
+    
+    // Verify clicking Home takes us to member dashboard
+    await homeLinkAfterSwitch.click();
+    await page.waitForURL('/me/home');
+    await expect(page.getByTestId('member-dashboard')).toBeVisible();
+  });
 });

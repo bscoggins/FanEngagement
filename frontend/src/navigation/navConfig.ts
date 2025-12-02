@@ -220,7 +220,17 @@ export const getDefaultHomeRoute = (context: NavContext): string => {
     return '/platform-admin/dashboard';
   }
 
-  // OrgAdmins go to admin dashboard
+  // If active org is selected, check role for that specific org
+  if (context.activeOrgId && context.activeOrgRole) {
+    // OrgAdmin for active org goes to admin dashboard
+    if (context.activeOrgRole === 'OrgAdmin') {
+      return '/admin';
+    }
+    // Member of active org goes to member dashboard
+    return '/me/home';
+  }
+
+  // No active org selected - check if user is OrgAdmin in any org
   if (context.memberships.some(m => m.role === 'OrgAdmin')) {
     return '/admin';
   }
