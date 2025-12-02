@@ -1,31 +1,34 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class MembershipService(FanEngagementDbContext dbContext) : IMembershipService
+public class MembershipService(FanEngagementDbContext dbContext, IAuditService auditService, ILogger<MembershipService> logger) : IMembershipService
 {
-    public async Task<MembershipDto> CreateAsync(Guid organizationId, CreateMembershipRequest request, CancellationToken cancellationToken = default)
+    public async Task<MembershipDto> CreateAsync(Guid organizationId, CreateMembershipRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
         // Validate organization exists
-        var organizationExists = await dbContext.Organizations
+        var organization = await dbContext.Organizations
             .AsNoTracking()
-            .AnyAsync(o => o.Id == organizationId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
 
-        if (!organizationExists)
+        if (organization == null)
         {
             throw new InvalidOperationException($"Organization {organizationId} not found");
         }
 
         // Validate user exists
-        var userExists = await dbContext.Users
+        var user = await dbContext.Users
             .AsNoTracking()
-            .AnyAsync(u => u.Id == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
-        if (!userExists)
+        if (user == null)
         {
             throw new InvalidOperationException($"User {request.UserId} not found");
         }
@@ -51,6 +54,35 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
 
         dbContext.OrganizationMemberships.Add(membership);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.Membership, membership.Id)
+                    .WithOrganization(organizationId, organization.Name)
+                    .WithDetails(new
+                    {
+                        TargetUserId = user.Id,
+                        TargetUserName = user.DisplayName,
+                        TargetUserEmail = user.Email,
+                        OrganizationId = organizationId,
+                        OrganizationName = organization.Name,
+                        Role = request.Role.ToString(),
+                        InviterUserId = actorUserId,
+                        InviterDisplayName = actorDisplayName
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail membership operations
+            logger.LogWarning(ex, "Failed to audit membership creation for user {UserId} in organization {OrganizationId}", request.UserId, organizationId);
+        }
 
         return MapToDto(membership);
     }
@@ -116,9 +148,11 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
         }).ToList();
     }
 
-    public async Task<bool> DeleteAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid organizationId, Guid userId, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
         var membership = await dbContext.OrganizationMemberships
+            .Include(m => m.User)
+            .Include(m => m.Organization)
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
 
         if (membership == null)
@@ -126,10 +160,110 @@ public class MembershipService(FanEngagementDbContext dbContext) : IMembershipSe
             return false;
         }
 
+        // Capture details before deletion
+        var targetUserName = membership.User?.DisplayName ?? "Unknown";
+        var targetUserEmail = membership.User?.Email ?? string.Empty;
+        var organizationName = membership.Organization?.Name ?? string.Empty;
+        var role = membership.Role;
+
         dbContext.OrganizationMemberships.Remove(membership);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // Audit after successful commit
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithAction(AuditActionType.Deleted)
+                    .WithResource(AuditResourceType.Membership, membership.Id)
+                    .WithOrganization(organizationId, organizationName)
+                    .WithDetails(new
+                    {
+                        TargetUserId = userId,
+                        TargetUserName = targetUserName,
+                        TargetUserEmail = targetUserEmail,
+                        OrganizationId = organizationId,
+                        OrganizationName = organizationName,
+                        Role = role.ToString(),
+                        RemovedByUserId = actorUserId,
+                        RemovedByDisplayName = actorDisplayName
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail membership operations
+            logger.LogWarning(ex, "Failed to audit membership deletion for user {UserId} in organization {OrganizationId}", userId, organizationId);
+        }
+
         return true;
+    }
+
+    public async Task<MembershipDto?> UpdateRoleAsync(Guid organizationId, Guid userId, OrganizationRole newRole, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
+    {
+        var membership = await dbContext.OrganizationMemberships
+            .Include(m => m.User)
+            .Include(m => m.Organization)
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
+
+        if (membership == null)
+        {
+            return null;
+        }
+
+        var oldRole = membership.Role;
+        
+        // Check if there's actually a change
+        if (oldRole == newRole)
+        {
+            return MapToDto(membership);
+        }
+
+        var targetUserName = membership.User?.DisplayName ?? "Unknown";
+        var targetUserEmail = membership.User?.Email ?? string.Empty;
+        var organizationName = membership.Organization?.Name ?? string.Empty;
+
+        membership.Role = newRole;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            // Determine if this is a privilege escalation
+            // OrgAdmin (0) > Member (1), so lower numeric value = higher privilege
+            var isPrivilegeEscalation = newRole < oldRole;
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithAction(AuditActionType.RoleChanged)
+                    .WithResource(AuditResourceType.Membership, membership.Id)
+                    .WithOrganization(organizationId, organizationName)
+                    .WithDetails(new
+                    {
+                        TargetUserId = userId,
+                        TargetUserName = targetUserName,
+                        TargetUserEmail = targetUserEmail,
+                        OrganizationId = organizationId,
+                        OrganizationName = organizationName,
+                        OldRole = oldRole.ToString(),
+                        NewRole = newRole.ToString(),
+                        IsPrivilegeEscalation = isPrivilegeEscalation,
+                        ChangedByUserId = actorUserId,
+                        ChangedByDisplayName = actorDisplayName
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail membership operations
+            logger.LogWarning(ex, "Failed to audit role change for user {UserId} in organization {OrganizationId}", userId, organizationId);
+        }
+
+        return MapToDto(membership);
     }
 
     public async Task<IReadOnlyList<UserDto>> GetAvailableUsersAsync(Guid organizationId, CancellationToken cancellationToken = default)
