@@ -122,7 +122,7 @@ useEffect(() => {
 ## Key Decision Points
 
 1. **Hide vs Disable**: Chose to hide the Administration section entirely rather than disable it, for cleaner UX
-2. **Redirect vs Show Message**: Chose to redirect from /admin to /me/home rather than show an error message, providing better user experience
+2. **Redirect vs Show Message**: Chose to redirect from /admin to /me/organizations/${activeOrg.id} (organization-specific member view) rather than show an error message, providing better user experience
 3. **Immediate Redirect**: Return null while redirecting to avoid flash of incorrect content
 4. **Preserve Access for No-Org State**: When no org is selected, admin users still see Administration section
 
