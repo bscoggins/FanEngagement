@@ -503,10 +503,8 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
         var details = await auditService.GetByIdAsync(auditEvent.Id);
         Assert.NotNull(details);
         
-        // Verify voter information is captured
-        Assert.Contains("voterId", details!.Details ?? string.Empty);
-        Assert.Contains(user.Id.ToString(), details.Details ?? string.Empty);
-        Assert.Contains("voterName", details.Details ?? string.Empty);
+        // Verify voter information is captured (actor fields + details)
+        Assert.Contains("voterName", details!.Details ?? string.Empty);
         Assert.Contains(user.DisplayName, details.Details ?? string.Empty);
         
         // Verify proposal context is captured

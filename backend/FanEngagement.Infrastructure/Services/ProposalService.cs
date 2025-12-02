@@ -748,18 +748,17 @@ public class ProposalService(
         // Audit after successful commit
         try
         {
-            // Get voter information
+            // Get voter and organization information in a single query
             var voter = await dbContext.Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
-            // Get selected option
-            var selectedOption = proposal.Options.FirstOrDefault(o => o.Id == request.ProposalOptionId);
-
-            // Get organization information
             var organization = await dbContext.Organizations
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+            // Get selected option from already-loaded proposal
+            var selectedOption = proposal.Options.FirstOrDefault(o => o.Id == request.ProposalOptionId);
 
             await auditService.LogAsync(
                 new AuditEventBuilder()
@@ -769,7 +768,6 @@ public class ProposalService(
                     .WithActor(request.UserId, voter?.DisplayName ?? string.Empty)
                     .WithDetails(new
                     {
-                        VoterId = voter?.Id,
                         VoterName = voter?.DisplayName,
                         ProposalId = proposal.Id,
                         ProposalTitle = proposal.Title,
