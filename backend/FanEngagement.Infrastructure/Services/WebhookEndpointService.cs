@@ -1,16 +1,24 @@
 using System.Net;
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.WebhookEndpoints;
 using FanEngagement.Domain.Entities;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhookEndpointService
+public class WebhookEndpointService(
+    FanEngagementDbContext dbContext,
+    IAuditService auditService,
+    ILogger<WebhookEndpointService> logger) : IWebhookEndpointService
 {
     public async Task<WebhookEndpointDto> CreateAsync(
         Guid organizationId, 
-        CreateWebhookEndpointRequest request, 
+        CreateWebhookEndpointRequest request,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         // Validate organization exists
@@ -58,6 +66,30 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
         dbContext.WebhookEndpoints.Add(webhookEndpoint);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // Audit after successful commit
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.WebhookEndpoint, webhookEndpoint.Id, MaskUrl(webhookEndpoint.Url))
+                    .WithOrganization(organizationId)
+                    .WithDetails(new
+                    {
+                        endpointUrl = MaskUrl(webhookEndpoint.Url),
+                        subscribedEvents = request.SubscribedEvents,
+                        isActive = webhookEndpoint.IsActive
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail webhook operations
+            logger.LogWarning(ex, "Failed to audit webhook endpoint creation for {WebhookEndpointId}", webhookEndpoint.Id);
+        }
+
         return MapToDto(webhookEndpoint);
     }
 
@@ -89,7 +121,9 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
     public async Task<WebhookEndpointDto?> UpdateAsync(
         Guid organizationId, 
         Guid webhookId, 
-        UpdateWebhookEndpointRequest request, 
+        UpdateWebhookEndpointRequest request,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         var webhook = await dbContext.WebhookEndpoints
@@ -99,6 +133,10 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
         {
             return null;
         }
+
+        // Capture original values for audit
+        var originalUrl = webhook.Url;
+        var originalSubscribedEvents = webhook.SubscribedEvents;
 
         // Validate URL - must be HTTP/HTTPS and not point to private networks (SSRF prevention)
         if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
@@ -119,18 +157,61 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             throw new ArgumentException("At least one subscribed event type is required.", nameof(request.SubscribedEvents));
         }
 
+        // Track what changed
+        var changedFields = new List<string>();
+        if (webhook.Url != request.Url) changedFields.Add("Url");
+        if (webhook.SubscribedEvents != string.Join(",", request.SubscribedEvents)) changedFields.Add("SubscribedEvents");
+        if (webhook.Secret != request.Secret) changedFields.Add("Secret");
+
         webhook.Url = request.Url;
         webhook.Secret = request.Secret;
         webhook.SubscribedEvents = string.Join(",", request.SubscribedEvents);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // Audit after successful commit - only if there were actual changes
+        if (changedFields.Any())
+        {
+            try
+            {
+                var originalEventsList = originalSubscribedEvents
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Where(e => !string.IsNullOrWhiteSpace(e))
+                    .Select(e => e.Trim())
+                    .ToList();
+
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithActor(actorUserId, actorDisplayName)
+                        .WithAction(AuditActionType.Updated)
+                        .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhook.Url))
+                        .WithOrganization(organizationId)
+                        .WithDetails(new
+                        {
+                            changedFields,
+                            oldUrl = MaskUrl(originalUrl),
+                            newUrl = MaskUrl(webhook.Url),
+                            oldSubscribedEvents = originalEventsList,
+                            newSubscribedEvents = request.SubscribedEvents
+                        })
+                        .AsSuccess(),
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Audit failures should not fail webhook operations
+                logger.LogWarning(ex, "Failed to audit webhook endpoint update for {WebhookEndpointId}", webhook.Id);
+            }
+        }
+
         return MapToDto(webhook);
     }
 
     public async Task<bool> DeleteAsync(
         Guid organizationId, 
-        Guid webhookId, 
+        Guid webhookId,
+        Guid actorUserId,
+        string actorDisplayName,
         CancellationToken cancellationToken = default)
     {
         var webhook = await dbContext.WebhookEndpoints
@@ -141,9 +222,35 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             return false;
         }
 
+        // Capture URL before soft delete for audit
+        var webhookUrl = webhook.Url;
+
         // Soft delete by setting IsActive to false
         webhook.IsActive = false;
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorUserId, actorDisplayName)
+                    .WithAction(AuditActionType.Deleted)
+                    .WithResource(AuditResourceType.WebhookEndpoint, webhook.Id, MaskUrl(webhookUrl))
+                    .WithOrganization(organizationId)
+                    .WithDetails(new
+                    {
+                        endpointUrl = MaskUrl(webhookUrl),
+                        softDelete = true
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail webhook operations
+            logger.LogWarning(ex, "Failed to audit webhook endpoint deletion for {WebhookEndpointId}", webhook.Id);
+        }
 
         return true;
     }
@@ -170,6 +277,25 @@ public class WebhookEndpointService(FanEngagementDbContext dbContext) : IWebhook
             webhook.CreatedAt,
             maskedSecret
         );
+    }
+
+    /// <summary>
+    /// Masks webhook URLs to prevent full endpoint exposure in audit logs.
+    /// </summary>
+    private static string MaskUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return url;
+        }
+
+        const int MaxVisibleLength = 30;
+        if (url.Length <= MaxVisibleLength)
+        {
+            return url;
+        }
+
+        return url[..MaxVisibleLength] + "...";
     }
 
     /// <summary>
