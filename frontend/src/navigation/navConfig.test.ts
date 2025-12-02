@@ -115,6 +115,40 @@ describe('navConfig', () => {
       });
       expect(getDefaultHomeRoute(context)).toBe('/platform-admin/dashboard');
     });
+
+    it('returns /admin for OrgAdmin when active org is their admin org', () => {
+      const context = createContext({
+        memberships: [
+          createMembership({ role: 'OrgAdmin', organizationId: 'org-1' }),
+          createMembership({ role: 'Member', organizationId: 'org-2' }),
+        ],
+        activeOrgId: 'org-1',
+        activeOrgRole: 'OrgAdmin',
+      });
+      expect(getDefaultHomeRoute(context)).toBe('/admin');
+    });
+
+    it('returns /me/home for OrgAdmin when active org is their member-only org', () => {
+      const context = createContext({
+        memberships: [
+          createMembership({ role: 'OrgAdmin', organizationId: 'org-1' }),
+          createMembership({ role: 'Member', organizationId: 'org-2' }),
+        ],
+        activeOrgId: 'org-2',
+        activeOrgRole: 'Member',
+      });
+      expect(getDefaultHomeRoute(context)).toBe('/me/home');
+    });
+
+    it('returns /admin for OrgAdmin when no active org is selected', () => {
+      const context = createContext({
+        memberships: [
+          createMembership({ role: 'OrgAdmin', organizationId: 'org-1' }),
+          createMembership({ role: 'Member', organizationId: 'org-2' }),
+        ],
+      });
+      expect(getDefaultHomeRoute(context)).toBe('/admin');
+    });
   });
 
   describe('resolvePath', () => {
@@ -343,6 +377,34 @@ describe('navConfig', () => {
       const homeItem = navItems.find(i => i.id === 'home')!;
       const resolved = getResolvedNavItem(homeItem, context);
       expect(resolved.resolvedPath).toBe('/platform-admin/dashboard');
+    });
+
+    it('resolves home path based on active org role (OrgAdmin with Member org active)', () => {
+      const context = createContext({
+        memberships: [
+          createMembership({ role: 'OrgAdmin', organizationId: 'org-1' }),
+          createMembership({ role: 'Member', organizationId: 'org-2' }),
+        ],
+        activeOrgId: 'org-2',
+        activeOrgRole: 'Member',
+      });
+      const homeItem = navItems.find(i => i.id === 'home')!;
+      const resolved = getResolvedNavItem(homeItem, context);
+      expect(resolved.resolvedPath).toBe('/me/home');
+    });
+
+    it('resolves home path based on active org role (OrgAdmin with admin org active)', () => {
+      const context = createContext({
+        memberships: [
+          createMembership({ role: 'OrgAdmin', organizationId: 'org-1' }),
+          createMembership({ role: 'Member', organizationId: 'org-2' }),
+        ],
+        activeOrgId: 'org-1',
+        activeOrgRole: 'OrgAdmin',
+      });
+      const homeItem = navItems.find(i => i.id === 'home')!;
+      const resolved = getResolvedNavItem(homeItem, context);
+      expect(resolved.resolvedPath).toBe('/admin');
     });
 
     it('resolves org-scoped paths with active org ID', () => {
