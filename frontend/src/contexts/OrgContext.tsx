@@ -91,8 +91,9 @@ export const OrgProvider: React.FC<{ children: ReactNode; isAuthenticated: boole
           
           // If no org is selected or the stored org is no longer in memberships, select one
           if (!storedOrg || !data.find(m => m.organizationId === storedOrg.id)) {
-            // Default to the first organization
-            const firstMembership = data[0];
+            // Prefer OrgAdmin memberships when auto-selecting
+            const orgAdminMembership = data.find(m => m.role === 'OrgAdmin');
+            const firstMembership = orgAdminMembership || data[0];
             const newActiveOrg: ActiveOrganization = {
               id: firstMembership.organizationId,
               name: firstMembership.organizationName,

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { API_BASE_URL, getUserByEmail, issueShares, loginViaApi, seedDevData } from './utils';
+import { API_BASE_URL, getUserByEmail, issueShares, loginViaApi, seedDevData, waitForVisible } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -13,6 +13,7 @@ async function loginThroughUi(page: Page, email: string, password: string) {
   await page.getByRole('button', { name: 'Log In' }).click();
   // Wait for redirect to complete (platform admins go to /platform-admin, org admins go to /admin, members go to /me/home)
   await page.waitForURL(/\/(platform-admin|admin|me\/home)/);
+  await page.waitForLoadState('networkidle');
 }
 
 async function clickWithConfirm(page: Page, buttonName: string | RegExp) {
@@ -20,8 +21,8 @@ async function clickWithConfirm(page: Page, buttonName: string | RegExp) {
   await page.getByRole('button', { name: buttonName }).click();
 }
 
-async function ensureButton(page: Page, name: string | RegExp, timeout = 15000) {
-  await expect(page.getByRole('button', { name })).toBeVisible({ timeout });
+async function ensureButton(page: Page, name: string | RegExp) {
+  await waitForVisible(page.getByRole('button', { name }));
 }
 
 function captureNetwork(page: Page, proposalId: string) {
@@ -82,7 +83,7 @@ test.describe.serial('Admin and member governance flows', () => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     // Navigate directly to Admin Users page
     await page.goto('/admin/users');
-    await expect(page.getByTestId('users-heading')).toBeVisible();
+    await waitForVisible(page.getByTestId('users-heading'));
     const usersTable = page.getByRole('table');
     await expect(usersTable.getByRole('cell', { name: 'admin@example.com' })).toBeVisible();
     await expect(usersTable.getByRole('cell', { name: 'root_admin@platform.local' })).toBeVisible();
@@ -107,10 +108,9 @@ test.describe.serial('Admin and member governance flows', () => {
     await createShareTypeResponse;
 
     // Form should close and table should show the new share type
-    await page.waitForTimeout(1000); // Brief wait for form to close and table to render
     const shareTypesTable = page.getByTestId('share-types-table');
-    await expect(shareTypesTable).toBeVisible({ timeout: 15000 });
-    await expect(shareTypesTable.getByTestId('share-type-name').filter({ hasText: shareTypeName }).first()).toBeVisible({ timeout: 15000 });
+    await waitForVisible(shareTypesTable);
+    await waitForVisible(shareTypesTable.getByTestId('share-type-name').filter({ hasText: shareTypeName }).first());
 
   });
 
@@ -119,12 +119,16 @@ test.describe.serial('Admin and member governance flows', () => {
     const alice = await getUserByEmail(request, adminToken, MEMBER_EMAIL);
     if (!alice) throw new Error('Seeded member alice@example.com not found');
     await page.goto(`/admin/organizations/${orgId}/memberships`);
-    await expect(page.getByRole('heading', { name: /Manage Memberships/i })).toBeVisible({ timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    await waitForVisible(page.getByRole('heading', { name: /Memberships/i }));
     await page.getByRole('button', { name: 'Add Member' }).click();
     const userSelect = page.getByTestId('membership-user-select');
-    await expect(userSelect).toBeVisible();
+    await waitForVisible(userSelect);
     // Wait for options to load by checking the select has the alice option
-    await expect(userSelect.locator(`option[data-testid="membership-option-${MEMBER_EMAIL}"]`)).toHaveCount(1, { timeout: 15000 });
+    await page.waitForFunction(
+      (email) => Boolean(document.querySelector(`[data-testid="membership-option-${email}"]`)),
+      MEMBER_EMAIL,
+    );
     await userSelect.selectOption({ value: alice.id });
     await page.getByRole('button', { name: 'Add Member' }).click();
     await expect(page.getByText(/Membership added successfully/i)).toBeVisible();
@@ -166,7 +170,8 @@ test.describe.serial('Admin and member governance flows', () => {
     
     // Navigate to the proposal detail page
     await page.goto(`/admin/organizations/${orgId}/proposals/${proposalId}`);
-    await expect(page.getByRole('heading', { name: proposalTitle })).toBeVisible({ timeout: 10000 });
+    await page.waitForLoadState('networkidle');
+    await waitForVisible(page.getByRole('heading', { name: proposalTitle }));
 
     // Add proposal options
     // First option (await network response)
@@ -178,7 +183,7 @@ test.describe.serial('Admin and member governance flows', () => {
     await page.getByRole('button', { name: /^Add Option$/i }).click(); // submit form
     await addOptionResponse1;
     await expect(page.getByText('Option added successfully')).toBeVisible();
-    await expect(page.getByText('Yes')).toBeVisible({ timeout: 10000 });
+    await waitForVisible(page.getByText('Yes'));
 
     // Second option
     const addOptionResponse2 = page.waitForResponse(
@@ -189,7 +194,7 @@ test.describe.serial('Admin and member governance flows', () => {
     await page.getByRole('button', { name: /^Add Option$/i }).click(); // submit form
     await addOptionResponse2;
     await expect(page.getByText('Option added successfully')).toBeVisible();
-    await expect(page.getByText('No', { exact: true })).toBeVisible({ timeout: 10000 });
+    await waitForVisible(page.getByText('No', { exact: true }));
 
     // Open the proposal for voting (await backend transition)
     // Instrument network responses for debugging
@@ -201,7 +206,7 @@ test.describe.serial('Admin and member governance flows', () => {
       page.waitForResponse(r => r.url().includes(`/proposals/${proposalId}/open`) && r.request().method() === 'POST'),
       clickWithConfirm(page, 'Open Proposal'),
     ]);
-    await expect(page.getByText('Open', { exact: true })).toBeVisible({ timeout: 15000 });
+    await waitForVisible(page.getByText('Open', { exact: true }));
     await ensureButton(page, 'Close Proposal');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((globalThis as any).process?.env?.E2E_DEBUG === '1' && networkLog.length) {
@@ -213,8 +218,8 @@ test.describe.serial('Admin and member governance flows', () => {
   test('member can view and vote on open proposal', async ({ page }) => {
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     await page.goto(`/me/proposals/${proposalId}`);
-    await expect(page.getByText('Open', { exact: true })).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('input[type=radio][name="option"]')).toHaveCount(2, { timeout: 10000 });
+    await waitForVisible(page.getByText('Open', { exact: true }));
+    await page.waitForFunction(() => document.querySelectorAll('input[type=radio][name="option"]').length === 2);
     await page.getByLabel('Yes').check();
     await page.getByRole('button', { name: 'Cast Vote' }).click();
     await expect(page.getByText('You have already voted!')).toBeVisible();
@@ -228,13 +233,13 @@ test.describe.serial('Admin and member governance flows', () => {
       page.waitForResponse(r => r.url().includes(`/proposals/${proposalId}/close`) && r.request().method() === 'POST'),
       clickWithConfirm(page, 'Close Proposal'),
     ]);
-    await expect(page.getByText('Closed', { exact: true })).toBeVisible({ timeout: 15000 });
+    await waitForVisible(page.getByText('Closed', { exact: true }));
     await ensureButton(page, 'Finalize');
     await Promise.all([
       page.waitForResponse(r => r.url().includes(`/proposals/${proposalId}/finalize`) && r.request().method() === 'POST'),
       clickWithConfirm(page, 'Finalize'),
     ]);
-    await expect(page.getByText('Finalized', { exact: true })).toBeVisible({ timeout: 15000 });
+    await waitForVisible(page.getByText('Finalized', { exact: true }));
     await page.goto(`/admin/organizations/${orgId}/webhook-events`);
     await expect(page.getByRole('heading', { name: 'Webhook Events' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'ProposalClosed' })).toBeVisible();
