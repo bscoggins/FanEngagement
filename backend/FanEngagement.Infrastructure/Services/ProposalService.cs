@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
@@ -15,6 +16,7 @@ namespace FanEngagement.Infrastructure.Services;
 public class ProposalService(
     FanEngagementDbContext dbContext, 
     IOutboundEventService outboundEventService,
+    IAuditService auditService,
     FanEngagementMetrics metrics,
     ILogger<ProposalService> logger) : IProposalService
 {
@@ -54,6 +56,39 @@ public class ProposalService(
 
         dbContext.Proposals.Add(proposal);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
+                    .WithOrganization(organizationId, organization?.Name)
+                    .WithActor(request.CreatedByUserId, string.Empty)
+                    .WithDetails(new
+                    {
+                        proposal.Title,
+                        proposal.Description,
+                        proposal.OrganizationId,
+                        CreatedByUserId = request.CreatedByUserId,
+                        proposal.StartAt,
+                        proposal.EndAt,
+                        proposal.QuorumRequirement,
+                        InitialStatus = proposal.Status.ToString()
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail proposal operations
+            logger.LogWarning(ex, "Failed to audit proposal creation for {ProposalId}", proposal.Id);
+        }
 
         return MapToDto(proposal);
     }
@@ -170,17 +205,54 @@ public class ProposalService(
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
-        if (request.Title is not null)
+        // Track changed fields for audit
+        var changedFields = new Dictionary<string, object>();
+        var oldTitle = proposal.Title;
+        var oldDescription = proposal.Description;
+
+        if (request.Title is not null && request.Title != proposal.Title)
         {
+            changedFields["Title"] = new { Old = proposal.Title, New = request.Title };
             proposal.Title = request.Title;
         }
 
-        if (request.Description is not null)
+        if (request.Description is not null && request.Description != proposal.Description)
         {
+            changedFields["Description"] = new { Old = proposal.Description, New = request.Description };
             proposal.Description = request.Description;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit (only if there were changes)
+        if (changedFields.Count > 0)
+        {
+            try
+            {
+                var organization = await dbContext.Organizations
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithAction(AuditActionType.Updated)
+                        .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
+                        .WithOrganization(proposal.OrganizationId, organization?.Name)
+                        .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
+                        .WithDetails(new
+                        {
+                            ProposalId = proposal.Id,
+                            ChangedFields = changedFields
+                        })
+                        .AsSuccess(),
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Audit failures should not fail proposal operations
+                logger.LogWarning(ex, "Failed to audit proposal update for {ProposalId}", proposal.Id);
+            }
+        }
 
         return MapToDto(proposal);
     }
@@ -234,6 +306,36 @@ public class ProposalService(
             oldStatus,
             proposal.Status,
             proposal.EligibleVotingPowerSnapshot);
+
+        // Audit after successful commit
+        try
+        {
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.StatusChanged)
+                    .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
+                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
+                    .WithDetails(new
+                    {
+                        ProposalId = proposal.Id,
+                        FromStatus = oldStatus.ToString(),
+                        ToStatus = proposal.Status.ToString(),
+                        EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot,
+                        TransitionTimestamp = DateTimeOffset.UtcNow
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail proposal operations
+            logger.LogWarning(ex, "Failed to audit proposal open for {ProposalId}", proposal.Id);
+        }
 
         // Record metrics
         metrics.RecordProposalTransition(oldStatus.ToString(), proposal.Status.ToString(), proposal.OrganizationId);
@@ -296,6 +398,38 @@ public class ProposalService(
             proposal.TotalVotesCast,
             proposal.WinningOptionId);
 
+        // Audit after successful commit
+        try
+        {
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.StatusChanged)
+                    .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
+                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
+                    .WithDetails(new
+                    {
+                        ProposalId = proposal.Id,
+                        FromStatus = oldStatus.ToString(),
+                        ToStatus = proposal.Status.ToString(),
+                        WinningOptionId = proposal.WinningOptionId,
+                        TotalVotesCast = proposal.TotalVotesCast,
+                        QuorumMet = proposal.QuorumMet,
+                        ClosedAt = proposal.ClosedAt
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail proposal operations
+            logger.LogWarning(ex, "Failed to audit proposal close for {ProposalId}", proposal.Id);
+        }
+
         // Record metrics
         metrics.RecordProposalTransition(oldStatus.ToString(), proposal.Status.ToString(), proposal.OrganizationId);
 
@@ -344,6 +478,35 @@ public class ProposalService(
             oldStatus,
             proposal.Status);
 
+        // Audit after successful commit
+        try
+        {
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.StatusChanged)
+                    .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
+                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
+                    .WithDetails(new
+                    {
+                        ProposalId = proposal.Id,
+                        FromStatus = oldStatus.ToString(),
+                        ToStatus = proposal.Status.ToString(),
+                        FinalizedAt = DateTimeOffset.UtcNow
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail proposal operations
+            logger.LogWarning(ex, "Failed to audit proposal finalize for {ProposalId}", proposal.Id);
+        }
+
         // Record metrics
         metrics.RecordProposalTransition(oldStatus.ToString(), proposal.Status.ToString(), proposal.OrganizationId);
 
@@ -381,6 +544,36 @@ public class ProposalService(
 
         dbContext.ProposalOptions.Add(option);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .Include(o => o.Proposals.Where(p => p.Id == proposalId))
+                .FirstOrDefaultAsync(o => o.Proposals.Any(p => p.Id == proposalId), cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Created)
+                    .WithResource(AuditResourceType.ProposalOption, option.Id, option.Text)
+                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
+                    .WithDetails(new
+                    {
+                        ProposalId = proposalId,
+                        OptionId = option.Id,
+                        OptionText = option.Text,
+                        OptionDescription = option.Description
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail proposal operations
+            logger.LogWarning(ex, "Failed to audit proposal option addition for {ProposalId}", proposalId);
+        }
 
         return new ProposalOptionDto
         {
@@ -421,8 +614,42 @@ public class ProposalService(
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
+        // Store option details before deletion for audit
+        var optionText = option.Text;
+        var optionDescription = option.Description;
+
         dbContext.ProposalOptions.Remove(option);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit after successful commit
+        try
+        {
+            var organization = await dbContext.Organizations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
+
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithAction(AuditActionType.Deleted)
+                    .WithResource(AuditResourceType.ProposalOption, optionId, optionText)
+                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
+                    .WithDetails(new
+                    {
+                        ProposalId = proposalId,
+                        OptionId = optionId,
+                        OptionText = optionText,
+                        OptionDescription = optionDescription,
+                        Reason = hasVotes ? "Deleted despite having votes" : "Deleted before any votes"
+                    })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail proposal operations
+            logger.LogWarning(ex, "Failed to audit proposal option deletion for {ProposalId}", proposalId);
+        }
 
         return true;
     }
