@@ -70,7 +70,7 @@ When a user who is an admin of at least one organization accesses an organizatio
 4. Clear UX - only sees member-appropriate navigation and pages
 
 ## Testing
-- ✅ All unit tests pass (387 tests)
+- ✅ All unit tests pass (388 tests)
 - ✅ Build succeeds
 - ✅ No new linting errors introduced
 - ✅ E2E test updated to validate new behavior
