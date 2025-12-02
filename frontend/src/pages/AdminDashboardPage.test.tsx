@@ -309,7 +309,7 @@ describe('AdminDashboardPage', () => {
     const { container } = renderAdminDashboard();
     
     // Verify navigate was called with correct arguments
-    expect(mockNavigate).toHaveBeenCalledWith('/me/home', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/me/organizations/org-member-only', { replace: true });
     
     // Verify component returns null during redirect
     expect(container.firstChild).toBeNull();

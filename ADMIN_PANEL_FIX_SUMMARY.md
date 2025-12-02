@@ -16,10 +16,10 @@ When a user who is an admin of at least one organization accesses an organizatio
 - Added `useActiveOrganization` hook to get the currently selected organization
 - Added `useNavigate` hook for programmatic navigation
 - Added logic to check if the user is admin of the active organization
-- Added redirect to `/me/home` when the active org is selected and user is not admin of it
+- Added redirect to `/me/organizations/${activeOrg.id}` when the active org is selected and user is not admin of it
 - Returns `null` while redirecting to avoid flash of incorrect content
 
-**Impact**: When a user navigates to `/admin` with a member-only organization selected, they are immediately redirected to the member dashboard.
+**Impact**: When a user navigates to `/admin` with a member-only organization selected, they are immediately redirected to that organization's member view page.
 
 ### 2. Layout.tsx
 **File**: `frontend/src/components/Layout.tsx`

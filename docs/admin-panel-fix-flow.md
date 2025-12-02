@@ -81,8 +81,8 @@ User switches to Org B (Member only)
 If user tries to navigate to /admin
             ↓
   Automatically redirected to:
-      /me/home
-   (Member Dashboard)
+      /me/organizations/{orgB-id}
+   (Member view for selected org)
 ```
 
 ## Technical Implementation
