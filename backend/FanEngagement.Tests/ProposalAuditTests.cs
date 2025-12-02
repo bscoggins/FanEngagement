@@ -129,7 +129,7 @@ public class ProposalAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task UpdateProposal_WithNoChanges_DoesNotGenerateAuditEvent()
     {
         // Arrange
-        var (proposal, token, org) = await CreateTestProposalAsync();
+        var (proposal, token, _) = await CreateTestProposalAsync();
         _client.AddAuthorizationHeader(token);
 
         var updateRequest = new UpdateProposalRequest

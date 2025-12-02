@@ -332,8 +332,7 @@ public class ProposalService(
                         ProposalId = proposal.Id,
                         FromStatus = oldStatus.ToString(),
                         ToStatus = proposal.Status.ToString(),
-                        EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot,
-                        TransitionTimestamp = DateTimeOffset.UtcNow
+                        EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot
                     })
                     .AsSuccess(),
                 cancellationToken);
@@ -557,8 +556,7 @@ public class ProposalService(
         {
             var organization = await dbContext.Organizations
                 .AsNoTracking()
-                .Include(o => o.Proposals.Where(p => p.Id == proposalId))
-                .FirstOrDefaultAsync(o => o.Proposals.Any(p => p.Id == proposalId), cancellationToken);
+                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
 
             await auditService.LogAsync(
                 new AuditEventBuilder()
