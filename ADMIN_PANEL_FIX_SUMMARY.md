@@ -49,9 +49,9 @@ When a user who is an admin of at least one organization accesses an organizatio
 - Updated the test "OrgAdmin switching to member org hides Administration section and changes Home link"
 - Modified expectations to reflect the redirect behavior
 - Test now expects:
-  - Navigation to `/admin` redirects to `/me/home`
+  - Navigation to `/admin` redirects to `/me/organizations/${activeOrg.id}`
   - Administration section is not visible after switching to member org
-  - Member dashboard is displayed after redirect
+  - Organization-specific member view is displayed after redirect
 
 **Impact**: E2E test now validates the correct behavior of hiding admin panel and redirecting to member view.
 
@@ -66,7 +66,7 @@ When a user who is an admin of at least one organization accesses an organizatio
 ### After
 1. User with admin rights to Org A and member rights to Org B switches to Org B
 2. "Administration" section is hidden from left sidebar
-3. User navigates to `/admin` and is immediately redirected to `/me/home` (member dashboard)
+3. User navigates to `/admin` and is immediately redirected to `/me/organizations/${orgB.id}` (member view for selected org)
 4. Clear UX - only sees member-appropriate navigation and pages
 
 ## Testing

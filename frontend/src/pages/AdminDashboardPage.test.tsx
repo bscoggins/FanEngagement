@@ -314,4 +314,45 @@ describe('AdminDashboardPage', () => {
     // Verify component returns null during redirect
     expect(container.firstChild).toBeNull();
   });
+
+  it('does not redirect when memberships are still loading', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      token: 'token',
+      isAuthenticated: true,
+      isAdmin: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    vi.mocked(usePermissions).mockReturnValue({
+      isGlobalAdmin: () => false,
+      isOrgAdmin: () => false,
+      isOrgMember: (orgId: string) => orgId === 'org-member-only',
+      memberships: [], // Empty while loading
+      isLoading: true, // Still loading
+      hasAnyOrgAdminRole: () => false,
+      canAccessAdminArea: () => false,
+      refreshMemberships: vi.fn(),
+    });
+    vi.mocked(useActiveOrganization).mockReturnValue({
+      activeOrg: {
+        id: 'org-member-only',
+        name: 'Member Only Org',
+        role: 'Member',
+      },
+      setActiveOrg: vi.fn(),
+      memberships: [],
+      hasMultipleOrgs: false,
+      isLoading: true,
+      refreshMemberships: vi.fn(),
+    });
+
+    renderAdminDashboard();
+    
+    // Verify navigate was NOT called while loading
+    expect(mockNavigate).not.toHaveBeenCalled();
+    
+    // Component should still render (not return null) while loading
+    expect(screen.getByRole('heading', { name: 'Admin Dashboard' })).toBeInTheDocument();
+  });
 });

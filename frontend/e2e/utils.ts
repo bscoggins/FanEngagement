@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext, Locator } from '@playwright/test';
 
 export const API_BASE_URL = process.env.VITE_API_BASE_URL ?? 'http://localhost:5049';
 
@@ -8,6 +8,13 @@ export type LoginResult = {
   email: string;
   displayName: string;
   role: string;
+};
+
+/**
+ * Helper to wait for an element to be visible with extended timeout
+ */
+export const waitForVisible = async (locator: Locator) => {
+  await locator.waitFor({ state: 'visible', timeout: 10000 });
 };
 
 export async function loginViaApi(request: APIRequestContext, email: string, password: string): Promise<LoginResult> {

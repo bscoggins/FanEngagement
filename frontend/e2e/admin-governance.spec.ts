@@ -1,14 +1,10 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { API_BASE_URL, getUserByEmail, issueShares, loginViaApi, seedDevData } from './utils';
+import { expect, test, type Page } from '@playwright/test';
+import { API_BASE_URL, getUserByEmail, issueShares, loginViaApi, seedDevData, waitForVisible } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
 const MEMBER_EMAIL = 'alice@example.com';
 const MEMBER_PASSWORD = 'UserDemo1!';
-
-const waitForVisible = async (locator: Locator) => {
-  await locator.waitFor({ state: 'visible' });
-};
 
 async function loginThroughUi(page: Page, email: string, password: string) {
   await page.goto('/login');

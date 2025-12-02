@@ -113,10 +113,10 @@ const isActiveOrgAdmin = useMemo(() => {
 }, [globalAdmin, activeOrg, memberships]);
 
 useEffect(() => {
-  if (activeOrg && !isActiveOrgAdmin) {
-    navigate('/me/home', { replace: true });
+  if (!isLoading && activeOrg && !isActiveOrgAdmin) {
+    navigate(`/me/organizations/${activeOrg.id}`, { replace: true });
   }
-}, [activeOrg, isActiveOrgAdmin, navigate]);
+}, [isLoading, activeOrg, isActiveOrgAdmin, navigate]);
 ```
 
 ## Key Decision Points
