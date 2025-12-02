@@ -1,13 +1,16 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Domain.Entities;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class ShareIssuanceService(FanEngagementDbContext dbContext) : IShareIssuanceService
+public class ShareIssuanceService(FanEngagementDbContext dbContext, IAuditService auditService, ILogger<ShareIssuanceService> logger) : IShareIssuanceService
 {
-    public async Task<ShareIssuanceDto> CreateAsync(Guid organizationId, CreateShareIssuanceRequest request, CancellationToken cancellationToken = default)
+    public async Task<ShareIssuanceDto> CreateAsync(Guid organizationId, CreateShareIssuanceRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
         // Validate quantity
         if (request.Quantity <= 0)
@@ -41,6 +44,11 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext) : IShareIssu
         {
             throw new InvalidOperationException($"User {request.UserId} is not a member of organization {organizationId}");
         }
+
+        // Get organization for audit context
+        var organization = await dbContext.Organizations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
 
         // Use transaction for relational databases to prevent race conditions
         // In-memory database doesn't support transactions but automatically handles atomicity
@@ -101,6 +109,40 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext) : IShareIssu
             if (transaction != null)
             {
                 await transaction.CommitAsync(cancellationToken);
+            }
+
+            // Audit after successful commit
+            try
+            {
+                var totalVotingPowerAdded = request.Quantity * shareType.VotingWeight;
+
+                await auditService.LogAsync(
+                    new AuditEventBuilder()
+                        .WithActor(actorUserId, actorDisplayName)
+                        .WithAction(AuditActionType.Created)
+                        .WithResource(AuditResourceType.ShareIssuance, issuance.Id)
+                        .WithOrganization(organizationId, organization?.Name)
+                        .WithDetails(new
+                        {
+                            RecipientUserId = user.Id,
+                            RecipientName = user.DisplayName,
+                            RecipientEmail = user.Email,
+                            ShareTypeId = shareType.Id,
+                            ShareTypeName = shareType.Name,
+                            ShareTypeSymbol = shareType.Symbol,
+                            Quantity = request.Quantity,
+                            VotingWeightPerShare = shareType.VotingWeight,
+                            TotalVotingPowerAdded = totalVotingPowerAdded,
+                            IssuerId = actorUserId,
+                            IssuerName = actorDisplayName
+                        })
+                        .AsSuccess(),
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Audit failures should not fail issuance operations
+                logger.LogWarning(ex, "Failed to audit share issuance for {IssuanceId} in organization {OrganizationId}", issuance.Id, organizationId);
             }
 
             return new ShareIssuanceDto
