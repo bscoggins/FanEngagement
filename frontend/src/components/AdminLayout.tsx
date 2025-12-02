@@ -7,7 +7,7 @@ import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavCo
 import './AdminLayout.css';
 
 export const AdminLayout: React.FC = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const { isGlobalAdmin, memberships } = usePermissions();
   const { activeOrg, setActiveOrg, memberships: orgMemberships } = useActiveOrganization();
   const navigate = useNavigate();
@@ -99,21 +99,34 @@ export const AdminLayout: React.FC = () => {
         <h1>FanEngagement Admin</h1>
         <div className="admin-header-right">
           {isGlobalAdmin() && (
-            <span className="admin-badge" style={{ 
-              marginRight: '1rem', 
-              padding: '0.25rem 0.75rem', 
-              backgroundColor: '#dc3545', 
-              color: 'white', 
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-              fontWeight: 'bold'
-            }}>
+            <span className="admin-badge">
               Platform Admin
             </span>
           )}
-          <span className="admin-user-info">
-            {user?.email}
-          </span>
+          {/* Organization dropdown - only shown for non-platform admins */}
+          {!isGlobalAdmin() && orgMemberships.length > 0 && (
+            <div className="admin-header-org-selector">
+              <label
+                htmlFor="admin-header-org-selector"
+                className="admin-header-org-selector-label"
+              >
+                Organization:
+              </label>
+              <select
+                id="admin-header-org-selector"
+                data-testid="admin-header-org-selector"
+                value={activeOrg?.id || ''}
+                onChange={handleOrgChange}
+                className="admin-header-org-select"
+              >
+                {orgMemberships.map((membership) => (
+                  <option key={membership.organizationId} value={membership.organizationId}>
+                    {membership.organizationName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <button onClick={handleLogout} className="admin-logout-button">
             Logout
           </button>
@@ -133,78 +146,28 @@ export const AdminLayout: React.FC = () => {
               </Link>
             ))}
 
-            {/* Organization section - always shown if user has org memberships */}
-            {orgMemberships.length > 0 && (
+            {/* Organization section - show when user has org memberships and active org is selected */}
+            {activeOrg && orgMemberships.length > 0 && (
               <>
-                <div className="admin-nav-divider" style={{
-                  borderTop: '1px solid #444',
-                  margin: '0.5rem 0',
-                }} />
+                <div className="admin-nav-divider" />
                 
-                {/* Organization Switcher */}
-                <div style={{ padding: '0.5rem 1.5rem' }}>
-                  <label
-                    htmlFor="admin-org-selector"
-                    style={{
-                      display: 'block',
-                      fontSize: '0.75rem',
-                      textTransform: 'uppercase',
-                      color: '#888',
-                      letterSpacing: '0.05em',
-                      marginBottom: '0.5rem',
-                    }}
+                {/* Organization name and role badge */}
+                <div className="admin-org-info">
+                  <div className="admin-org-name">
+                    {activeOrg.name}
+                  </div>
+                  <span
+                    data-testid="active-org-role-badge"
+                    className={`admin-org-role-badge ${activeOrgIsAdmin ? 'admin' : 'member'}`}
                   >
-                    Organization
-                  </label>
-                  <select
-                    id="admin-org-selector"
-                    data-testid="admin-org-selector"
-                    value={activeOrg?.id || ''}
-                    onChange={handleOrgChange}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #444',
-                      borderRadius: '4px',
-                      fontSize: '0.875rem',
-                      backgroundColor: '#333',
-                      color: 'white',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {orgMemberships.map((membership) => (
-                      <option key={membership.organizationId} value={membership.organizationId}>
-                        {membership.organizationName} ({membership.role === 'OrgAdmin' ? 'Admin' : 'Member'})
-                      </option>
-                    ))}
-                  </select>
-                  {/* Role badge for active org */}
-                  {activeOrg && (
-                    <span
-                      data-testid="active-org-role-badge"
-                      style={{
-                        display: 'inline-block',
-                        marginTop: '0.5rem',
-                        padding: '0.25rem 0.5rem',
-                        backgroundColor: activeOrgIsAdmin ? '#007bff' : '#6c757d',
-                        color: 'white',
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
-                    </span>
-                  )}
+                    {activeOrgIsAdmin ? 'Org Admin' : 'Member'}
+                  </span>
                 </div>
 
                 {/* Org-scoped navigation items - only shown when user is OrgAdmin for the active org */}
                 {activeOrgIsAdmin && orgNavItems.length > 0 && (
                   <>
-                    <div style={{
-                      borderTop: '1px solid #444',
-                      margin: '0.5rem 1.5rem',
-                    }} />
+                    <div className="admin-nav-divider-small" />
                     {orgNavItems.map(item => (
                       <Link
                         key={item.id}
@@ -220,19 +183,11 @@ export const AdminLayout: React.FC = () => {
 
                 {/* Message for member-only orgs */}
                 {activeOrg && !activeOrgIsAdmin && (
-                  <div style={{
-                    padding: '0.75rem 1.5rem',
-                    fontSize: '0.8rem',
-                    color: '#888',
-                  }}>
-                    <p style={{ margin: 0 }}>You are a member of this organization.</p>
+                  <div className="admin-member-info">
+                    <p>You are a member of this organization.</p>
                     <Link
                       to={`/me/organizations/${activeOrg.id}`}
-                      style={{
-                        color: '#6ea8fe',
-                        textDecoration: 'none',
-                        fontSize: '0.8rem',
-                      }}
+                      className="admin-member-link"
                     >
                       View organization →
                     </Link>

@@ -72,4 +72,38 @@ test.describe('Top navigation visibility by role', () => {
     await page.goto('/platform-admin/dashboard');
     await expect(page).not.toHaveURL('/platform-admin/dashboard');
   });
+
+  test('Platform Admin does not see organization dropdown in header', async ({ page }) => {
+    await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+    
+    // Wait for page to be fully loaded
+    await expect(page.getByText('Platform Admin')).toBeVisible();
+    
+    // Platform admin should not see organization selector in header
+    await expect(page.getByTestId('admin-header-org-selector')).not.toBeVisible();
+    await expect(page.getByTestId('unified-header-org-selector')).not.toBeVisible();
+  });
+
+  test('OrgAdmin sees organization dropdown in header', async ({ page }) => {
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
+    
+    // Wait for admin dashboard to load
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 10000 });
+    
+    // OrgAdmin should see organization selector in header (not sidebar)
+    await expect(page.getByTestId('admin-header-org-selector')).toBeVisible();
+  });
+
+  test('User with organization access sees dropdown in unified layout', async ({ page }) => {
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
+    
+    // Navigate to member home to see unified layout
+    await page.goto('/me/home');
+    
+    // Wait for the page to load
+    await page.waitForLoadState('networkidle');
+    
+    // User should see organization selector in unified header
+    await expect(page.getByTestId('unified-header-org-selector')).toBeVisible({ timeout: 10000 });
+  });
 });

@@ -107,9 +107,8 @@ describe('Layout', () => {
       // Should NOT see Admin section (only regular members)
       expect(screen.queryByText('Administration')).not.toBeInTheDocument();
 
-      // Should see logout button and user info
+      // Should see logout button (user email no longer displayed in header)
       expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
-      expect(screen.getByText(/alice@example.com/i)).toBeInTheDocument();
     });
 
     it('does NOT show Users link for a member without admin roles', async () => {
@@ -284,7 +283,7 @@ describe('Layout', () => {
       renderLayout({ isAuthenticated: true, role: 'User' }, mockMemberships);
 
       await waitFor(() => {
-        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       });
     });
 
@@ -295,7 +294,7 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
-      expect(screen.queryByTestId('unified-org-selector')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('unified-header-org-selector')).not.toBeInTheDocument();
     });
   });
 
@@ -352,11 +351,11 @@ describe('Layout', () => {
 
       // Wait for the org selector to appear
       await waitFor(() => {
-        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       });
 
       const user = userEvent.setup();
-      const orgSelector = screen.getByTestId('unified-org-selector');
+      const orgSelector = screen.getByTestId('unified-header-org-selector');
 
       // Switch to the Admin Org (which is OrgAdmin role)
       await user.selectOptions(orgSelector, 'org-1');
@@ -419,11 +418,11 @@ describe('Layout', () => {
 
       // Wait for the org selector to appear
       await waitFor(() => {
-        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       });
 
       const user = userEvent.setup();
-      const orgSelector = screen.getByTestId('unified-org-selector');
+      const orgSelector = screen.getByTestId('unified-header-org-selector');
 
       // Switch to the Member Org (which is Member role)
       await user.selectOptions(orgSelector, 'org-2');
@@ -460,7 +459,7 @@ describe('Layout', () => {
 
       // Wait for permissions and org data to load
       await waitFor(() => {
-        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       }, { timeout: 3000 });
 
       // First org should be selected by default and should show role badge
@@ -496,7 +495,7 @@ describe('Layout', () => {
 
       // Wait for permissions and org data to load
       await waitFor(() => {
-        expect(screen.getByTestId('unified-org-selector')).toBeInTheDocument();
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       }, { timeout: 3000 });
 
       // Key user navigation items should always be present and in consistent order

@@ -71,13 +71,6 @@ describe('AdminLayout', () => {
     expect(screen.getByText('FanEngagement Admin')).toBeInTheDocument();
   });
 
-  it('displays user email in header', async () => {
-    renderAdminLayout();
-    await waitFor(() => {
-      expect(screen.getByText('admin@example.com')).toBeInTheDocument();
-    });
-  });
-
   it('displays logout button', () => {
     renderAdminLayout();
     expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
@@ -238,8 +231,8 @@ describe('AdminLayout', () => {
       // Should see org admin dashboard
       expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       
-      // Should see org switcher with org name
-      expect(screen.getByTestId('admin-org-selector')).toBeInTheDocument();
+      // Should see org switcher with org name in header
+      expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
       // The org name appears in the dropdown option
       expect(screen.getByRole('option', { name: /Test Org/ })).toBeInTheDocument();
     });
@@ -304,12 +297,12 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        const orgSelector = screen.getByTestId('admin-org-selector');
+        const orgSelector = screen.getByTestId('admin-header-org-selector');
         expect(orgSelector).toBeInTheDocument();
         
-        // Both orgs should be in the dropdown
-        expect(screen.getByRole('option', { name: /Admin Org.*Admin/ })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: /Member Org.*Member/ })).toBeInTheDocument();
+        // Both orgs should be in the dropdown (without role suffix now)
+        expect(screen.getByRole('option', { name: /Admin Org/ })).toBeInTheDocument();
+        expect(screen.getByRole('option', { name: /Member Org/ })).toBeInTheDocument();
       });
     });
 
