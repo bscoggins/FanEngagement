@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.DevDataSeeding;
@@ -155,14 +156,26 @@ public class AdminController(
             // Get IP address
             var ipAddress = ClientContextHelper.GetClientIpAddress(HttpContext);
 
+            // Get correlation ID if present
+            var correlationId = HttpContext.Request.Headers["X-Correlation-ID"].FirstOrDefault();
+
+            // Generate deterministic resource ID based on action type for correlation
+            var resourceId = GenerateResourceIdForActionType(actionType);
+
             // Build audit event
             var auditBuilder = new AuditEventBuilder()
                 .WithActor(userId, userEmail)
                 .WithIpAddress(ipAddress)
                 .WithAction(actionType)
-                .WithResource(AuditResourceType.SystemConfiguration, Guid.NewGuid(), "Admin Operation")
-                .WithDetails(details)
-                .AsSuccess();
+                .WithResource(AuditResourceType.SystemConfiguration, resourceId, "Admin Operation")
+                .WithDetails(details);
+
+            if (!string.IsNullOrWhiteSpace(correlationId))
+            {
+                auditBuilder.WithCorrelationId(correlationId);
+            }
+
+            auditBuilder.AsSuccess();
 
             // Log asynchronously (fire-and-forget, failures won't affect the operation)
             await auditService.LogAsync(auditBuilder, cancellationToken);
@@ -172,5 +185,17 @@ public class AdminController(
             // Audit failures must not fail admin operations
             // The audit service already has internal error handling and logging
         }
+    }
+
+    /// <summary>
+    /// Generates a deterministic GUID from an action type for resource correlation.
+    /// This allows all admin operations of the same type to be grouped together in audit queries.
+    /// </summary>
+    private static Guid GenerateResourceIdForActionType(AuditActionType actionType)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes($"AdminAction:{actionType}"));
+        // Take first 16 bytes of the 32-byte SHA256 hash
+        return new Guid(hash.Take(16).ToArray());
     }
 }
