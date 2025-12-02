@@ -19,11 +19,11 @@ export const AdminDashboardPage: React.FC = () => {
     return memberships.some(m => m.organizationId === activeOrg.id && m.role === 'OrgAdmin');
   }, [globalAdmin, activeOrg, memberships]);
 
-  // Redirect to member dashboard if active org is selected and user is not admin of it
+  // Redirect to the member view if active org is selected and user is not admin of it
   // Only redirect after memberships have loaded to avoid race conditions
   useEffect(() => {
     if (!isLoading && activeOrg && !isActiveOrgAdmin) {
-      navigate('/me/home', { replace: true });
+      navigate(`/me/organizations/${activeOrg.id}`, { replace: true });
     }
   }, [isLoading, activeOrg, isActiveOrgAdmin, navigate]);
 

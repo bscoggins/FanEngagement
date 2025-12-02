@@ -1,10 +1,14 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { loginViaApi, seedDevData } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
 const MEMBER_EMAIL = 'alice@example.com';
 const MEMBER_PASSWORD = 'UserDemo1!';
+
+const waitForVisible = async (locator: Locator) => {
+  await locator.waitFor({ state: 'visible' });
+};
 
 async function loginThroughUi(page: Page, email: string, password: string) {
   await page.goto('/login');
@@ -13,6 +17,7 @@ async function loginThroughUi(page: Page, email: string, password: string) {
   await page.getByRole('button', { name: 'Log In' }).click();
   // Wait for redirect to complete (platform admins go to /platform-admin, org admins go to /admin, members go to /me/home)
   await page.waitForURL(/\/(platform-admin|admin|me\/home)/);
+  await page.waitForLoadState('networkidle');
 }
 
 test.describe('Top navigation visibility by role', () => {
@@ -36,15 +41,15 @@ test.describe('Top navigation visibility by role', () => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
 
     // Verify platform admin dashboard displayed
-    await expect(page.getByRole('heading', { name: 'Platform Overview' })).toBeVisible();
+    await waitForVisible(page.getByRole('heading', { name: 'Platform Overview' }));
     
     // Direct navigation to Users page should be accessible for platform admin
     await page.goto('/admin/users');
-    await expect(page.getByTestId('users-heading')).toBeVisible();
+    await waitForVisible(page.getByTestId('users-heading'));
     
     // Platform admin should also be able to access organizations
     await page.goto('/admin/organizations');
-    await expect(page.getByRole('heading', { name: 'Organization Management' })).toBeVisible();
+    await waitForVisible(page.getByRole('heading', { name: 'Organization Management' }));
   });
 
   test('Regular Member does not see Admin or Users links in header', async ({ page }) => {
@@ -66,7 +71,7 @@ test.describe('Top navigation visibility by role', () => {
     
     // OrgAdmins land on /admin and should see the admin dashboard
     await expect(page).toHaveURL(/\/admin/);
-    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 10000 });
+    await waitForVisible(page.getByRole('heading', { name: 'Admin Dashboard' }));
     
     // Platform admin dashboard should be forbidden; ensure navigation fails or redirects
     await page.goto('/platform-admin/dashboard');
@@ -77,7 +82,7 @@ test.describe('Top navigation visibility by role', () => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     
     // Wait for page to be fully loaded
-    await expect(page.getByText('Platform Admin')).toBeVisible();
+    await waitForVisible(page.getByRole('heading', { name: 'FanEngagement Platform Admin' }));
     
     // Platform admin should not see organization selector in header
     await expect(page.getByTestId('admin-header-org-selector')).not.toBeVisible();
@@ -88,13 +93,13 @@ test.describe('Top navigation visibility by role', () => {
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     
     // Wait for admin dashboard to load
-    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 10000 });
+    await waitForVisible(page.getByRole('heading', { name: 'Admin Dashboard' }));
     
     // OrgAdmin should see organization selector in header (not sidebar)
-    await expect(page.getByTestId('admin-header-org-selector')).toBeVisible();
+    await waitForVisible(page.getByTestId('admin-header-org-selector'));
     
     // OrgAdmin should see "Org Admin" badge in header
-    await expect(page.getByTestId('org-admin-badge')).toBeVisible();
+    await waitForVisible(page.getByTestId('org-admin-badge'));
     await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
 
@@ -108,10 +113,10 @@ test.describe('Top navigation visibility by role', () => {
     await page.waitForLoadState('networkidle');
     
     // User should see organization selector in unified header
-    await expect(page.getByTestId('unified-header-org-selector')).toBeVisible({ timeout: 10000 });
+    await waitForVisible(page.getByTestId('unified-header-org-selector'));
     
     // OrgAdmin should see "Org Admin" badge in unified header
-    await expect(page.getByTestId('org-admin-badge')).toBeVisible();
+    await waitForVisible(page.getByTestId('org-admin-badge'));
     await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
 
@@ -121,30 +126,33 @@ test.describe('Top navigation visibility by role', () => {
     
     // Should land on admin dashboard (alice is OrgAdmin for Tech Innovators by default)
     await expect(page).toHaveURL(/\/admin/);
-    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 10000 });
+    await waitForVisible(page.getByRole('heading', { name: 'Admin Dashboard' }));
     
     // Should see Administration section in sidebar
     await expect(page.getByText('Administration', { exact: true })).toBeVisible();
     
     // Switch to Green Energy United (where alice is a Member)
     const orgSelector = page.getByTestId('admin-header-org-selector');
-    await orgSelector.selectOption({ label: 'Green Energy United' });
-    
-    // Should navigate to member view for Green Energy United
-    await page.waitForURL(/\/me\/organizations\/[^/]+$/);
+    const memberOrgPattern = /\/me\/organizations\/[^/]+$/;
+    await Promise.all([
+      page.waitForURL(memberOrgPattern),
+      orgSelector.selectOption({ label: 'Green Energy United' }),
+    ]);
+    await page.waitForLoadState('networkidle');
+    const memberOrgUrl = await page.url();
     
     // Administration section should NOT be visible in the unified layout sidebar
     await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
     
     // Verify we're on the member organization view
-    await expect(page.getByText('Green Energy United')).toBeVisible();
+    await waitForVisible(page.getByRole('heading', { name: 'Green Energy United' }));
     
     // Navigate to admin path - should redirect to member dashboard
     await page.goto('/admin');
     
-    // Should be redirected to member home
-    await page.waitForURL('/me/home');
-    await expect(page.getByTestId('member-dashboard')).toBeVisible();
+    // Should be redirected back to the member org view rather than member home
+    await page.waitForURL(memberOrgUrl);
+    await waitForVisible(page.getByRole('heading', { name: 'Green Energy United' }));
     
     // Administration section should still NOT be visible (we're viewing Green Energy United as Member)
     await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
