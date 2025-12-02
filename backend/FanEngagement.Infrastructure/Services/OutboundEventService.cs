@@ -130,22 +130,27 @@ public class OutboundEventService(
         // Audit after successful commit
         try
         {
-            await auditService.LogAsync(
-                new AuditEventBuilder()
-                    .WithAction(AuditActionType.StatusChanged)
-                    .WithResource(AuditResourceType.OutboundEvent, outboundEvent.Id, outboundEvent.EventType)
-                    .WithOrganization(organizationId)
-                    .WithActor(actorUserId ?? Guid.Empty, string.Empty)
-                    .WithDetails(new
-                    {
-                        eventType = outboundEvent.EventType,
-                        manualRetry = true,
-                        previousStatus = OutboundEventStatus.Failed.ToString(),
-                        newStatus = OutboundEventStatus.Pending.ToString(),
-                        attemptCount = outboundEvent.AttemptCount
-                    })
-                    .AsSuccess(),
-                cancellationToken);
+            var builder = new AuditEventBuilder()
+                .WithAction(AuditActionType.StatusChanged)
+                .WithResource(AuditResourceType.OutboundEvent, outboundEvent.Id, outboundEvent.EventType)
+                .WithOrganization(organizationId)
+                .WithDetails(new
+                {
+                    eventType = outboundEvent.EventType,
+                    manualRetry = true,
+                    previousStatus = OutboundEventStatus.Failed.ToString(),
+                    newStatus = OutboundEventStatus.Pending.ToString(),
+                    attemptCount = outboundEvent.AttemptCount
+                })
+                .AsSuccess();
+
+            // Only set actor if available
+            if (actorUserId.HasValue)
+            {
+                builder.WithActor(actorUserId.Value, string.Empty);
+            }
+
+            await auditService.LogAsync(builder, cancellationToken);
         }
         catch (Exception ex)
         {
