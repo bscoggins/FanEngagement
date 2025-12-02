@@ -378,10 +378,13 @@ public class WebhookAuditTests : IClassFixture<TestWebApplicationFactory>
 
         var result = await auditService.QueryAsync(query);
 
-        // Verify no audit events contain any secrets
-        foreach (var evt in result.Items)
+        // Verify no audit events contain any secrets - get all details and check
+        var auditDetails = await Task.WhenAll(
+            result.Items.Select(async evt => await auditService.GetByIdAsync(evt.Id))
+        );
+
+        foreach (var details in auditDetails)
         {
-            var details = await auditService.GetByIdAsync(evt.Id);
             Assert.NotNull(details);
             var detailsJson = details!.Details ?? string.Empty;
 

@@ -1,8 +1,8 @@
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace FanEngagement.Api.Controllers;
 
@@ -45,7 +45,7 @@ public class OutboundEventsController(IOutboundEventService outboundEventService
         Guid eventId,
         CancellationToken cancellationToken)
     {
-        var actorUserId = GetCurrentUserId();
+        var (actorUserId, _) = this.GetActorInfo();
         var retried = await outboundEventService.RetryAsync(organizationId, eventId, actorUserId, cancellationToken);
         if (!retried)
         {
@@ -53,15 +53,5 @@ public class OutboundEventsController(IOutboundEventService outboundEventService
         }
 
         return NoContent();
-    }
-
-    private Guid? GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return null;
-        }
-        return userId;
     }
 }
