@@ -19,6 +19,10 @@ namespace FanEngagement.Tests;
 /// </summary>
 public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory>
 {
+    private const int AuditDelayMilliseconds = 200;
+    private const int AuditPollIntervalMilliseconds = 100;
+    private const int DisplayNameSuffixLength = 8;
+    
     private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
     private readonly ITestOutputHelper _output;
@@ -112,7 +116,7 @@ public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory
         Assert.NotNull(shareType);
 
         // Wait a moment for the create audit to complete
-        await Task.Delay(200);
+        await Task.Delay(AuditDelayMilliseconds);
 
         // Act - Update the share type
         var updateRequest = new UpdateShareTypeRequest
@@ -197,7 +201,7 @@ public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory
         Assert.NotNull(shareType);
 
         // Wait for previous audit events to complete
-        await Task.Delay(200);
+        await Task.Delay(AuditDelayMilliseconds);
 
         // Act - Issue shares
         var issuanceRequest = new CreateShareIssuanceRequest
@@ -293,7 +297,7 @@ public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory
         var shareType = await shareTypeResponse.Content.ReadFromJsonAsync<ShareType>();
         Assert.NotNull(shareType);
 
-        await Task.Delay(200);
+        await Task.Delay(AuditDelayMilliseconds);
 
         // Update share type
         var updateShareTypeRequest = new UpdateShareTypeRequest
@@ -307,7 +311,7 @@ public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory
         };
         await _client.PutAsJsonAsync($"/organizations/{organization.Id}/share-types/{shareType!.Id}", updateShareTypeRequest);
 
-        await Task.Delay(200);
+        await Task.Delay(AuditDelayMilliseconds);
 
         // Issue shares
         var issuanceRequest = new CreateShareIssuanceRequest
@@ -392,7 +396,7 @@ public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory
         var createUserRequest = new CreateUserRequest
         {
             Email = $"test-user-{Guid.NewGuid()}@example.com",
-            DisplayName = $"Test User {Guid.NewGuid().ToString()[..8]}",
+            DisplayName = $"Test User {Guid.NewGuid().ToString("N")[..DisplayNameSuffixLength]}",
             Password = "TestPassword123!"
         };
 
@@ -415,7 +419,7 @@ public class ShareManagementAuditTests : IClassFixture<TestWebApplicationFactory
     {
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var maxWait = TimeSpan.FromSeconds(maxWaitSeconds);
-        var pollInterval = TimeSpan.FromMilliseconds(100);
+        var pollInterval = TimeSpan.FromMilliseconds(AuditPollIntervalMilliseconds);
 
         while (stopwatch.Elapsed < maxWait)
         {
