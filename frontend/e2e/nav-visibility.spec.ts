@@ -115,7 +115,7 @@ test.describe('Top navigation visibility by role', () => {
     await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
 
-  test('OrgAdmin switching to member org hides Administration section and changes Home link', async ({ page }) => {
+  test('OrgAdmin switching to member org hides Administration section and redirects to member view', async ({ page }) => {
     // alice@example.com is OrgAdmin of "Tech Innovators" and Member of "Green Energy United"
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     
@@ -133,25 +133,20 @@ test.describe('Top navigation visibility by role', () => {
     // Should navigate to member view for Green Energy United
     await page.waitForURL(/\/me\/organizations\/[^/]+$/);
     
-    // Navigate to admin path - should still see admin layout but with member-only navigation
-    await page.goto('/admin');
-    
-    // Wait for page to load
-    await page.waitForLoadState('domcontentloaded');
-    
-    // Administration section should NOT be visible (alice is only a Member of Green Energy United)
+    // Administration section should NOT be visible in the unified layout sidebar
     await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
     
-    // Should see member info message instead
-    await expect(page.getByText('You are a member of this organization')).toBeVisible();
+    // Verify we're on the member organization view
+    await expect(page.getByText('Green Energy United')).toBeVisible();
     
-    // Home link should now go to member dashboard
-    const homeLinkAfterSwitch = page.locator('.admin-sidebar-footer .admin-back-link');
-    await expect(homeLinkAfterSwitch).toHaveAttribute('href', '/me/home');
+    // Navigate to admin path - should redirect to member dashboard
+    await page.goto('/admin');
     
-    // Verify clicking Home takes us to member dashboard
-    await homeLinkAfterSwitch.click();
+    // Should be redirected to member home
     await page.waitForURL('/me/home');
     await expect(page.getByTestId('member-dashboard')).toBeVisible();
+    
+    // Administration section should still NOT be visible (we're viewing Green Energy United as Member)
+    await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
   });
 });
