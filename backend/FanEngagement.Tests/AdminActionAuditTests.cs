@@ -30,7 +30,7 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task SeedDevData_CreatesAuditEvent_WithAdminUserAndEnvironment()
     {
         // Arrange - Create an admin user and get token
-        var (adminUser, token) = await CreateAdminUserAsync();
+        var (_, token) = await CreateAdminUserAsync();
         _client.AddAuthorizationHeader(token);
 
         // Act - Seed dev data
@@ -64,7 +64,7 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task ResetDevData_CreatesAuditEvent_WithScopeInformation()
     {
         // Arrange - Create an admin user and get token
-        var (adminUser, token) = await CreateAdminUserAsync();
+        var (_, token) = await CreateAdminUserAsync();
         _client.AddAuthorizationHeader(token);
 
         // First seed some data
@@ -108,7 +108,7 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task CleanupE2eData_CreatesAuditEvent_WithCleanupDetails()
     {
         // Arrange - Create an admin user and get token
-        var (adminUser, token) = await CreateAdminUserAsync();
+        var (_, token) = await CreateAdminUserAsync();
         _client.AddAuthorizationHeader(token);
 
         // First seed some data to have something to clean up
@@ -166,7 +166,7 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
     public async Task SeedDevData_MultipleScenarios_CreatesSeparateAuditEvents()
     {
         // Arrange
-        var (adminUser, token) = await CreateAdminUserAsync();
+        var (_, token) = await CreateAdminUserAsync();
         _client.AddAuthorizationHeader(token);
 
         // Act - Seed with different scenarios

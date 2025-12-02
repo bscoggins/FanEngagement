@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Domain.Enums;
@@ -13,8 +14,7 @@ namespace FanEngagement.Api.Controllers;
 public class AdminController(
     IDevDataSeedingService devDataSeedingService,
     IHostEnvironment hostEnvironment,
-    IAuditService auditService,
-    IHttpContextAccessor httpContextAccessor) : ControllerBase
+    IAuditService auditService) : ControllerBase
 {
     /// <summary>
     /// Get available seeding scenarios.
@@ -153,7 +153,7 @@ public class AdminController(
             }
 
             // Get IP address
-            var ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            var ipAddress = ClientContextHelper.GetClientIpAddress(HttpContext);
 
             // Build audit event
             var auditBuilder = new AuditEventBuilder()
