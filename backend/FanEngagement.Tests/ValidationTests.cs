@@ -67,6 +67,69 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task CreateUser_ReturnsBadRequest_WhenPasswordMissingUppercase()
+    {
+        // Arrange
+        var request = new CreateUserRequest
+        {
+            Email = "test@example.com",
+            DisplayName = "Test User",
+            Password = "testpassword123!" // Missing uppercase
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/users", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problemDetails);
+        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
+    }
+
+    [Fact]
+    public async Task CreateUser_ReturnsBadRequest_WhenPasswordMissingNumber()
+    {
+        // Arrange
+        var request = new CreateUserRequest
+        {
+            Email = "test@example.com",
+            DisplayName = "Test User",
+            Password = "TestPassword!" // Missing number
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/users", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problemDetails);
+        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
+    }
+
+    [Fact]
+    public async Task CreateUser_ReturnsBadRequest_WhenPasswordMissingSpecialCharacter()
+    {
+        // Arrange
+        var request = new CreateUserRequest
+        {
+            Email = "test@example.com",
+            DisplayName = "Test User",
+            Password = "TestPassword123" // Missing special character
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/users", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problemDetails);
+        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
+    }
+
+    [Fact]
     public async Task CreateUser_ReturnsBadRequest_WhenEmailMissing()
     {
         // Arrange
