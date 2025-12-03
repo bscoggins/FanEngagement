@@ -8,8 +8,6 @@ import { parseApiError } from '../utils/errorUtils';
 import { formatRelativeTime } from '../utils/proposalUtils';
 import type { AuditEvent } from '../types/api';
 
-const PAGE_SIZE = 20;
-
 type DateFilter = 'all' | '7days' | '30days';
 
 const getDateFilterLabel = (filter: DateFilter): string => {
@@ -124,6 +122,7 @@ export const MyActivityPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const pageSize = 20;
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -134,7 +133,7 @@ export const MyActivityPage: React.FC = () => {
       const result = await auditEventsApi.getMyActivity({
         dateFrom,
         page: currentPage,
-        pageSize: PAGE_SIZE,
+        pageSize,
       });
       
       setActivities(result.items);
