@@ -344,6 +344,8 @@ test.describe('Audit Log E2E Tests', () => {
 
 /**
  * Helper function to generate audit events via API operations
+ * @param request - Playwright APIRequestContext for making API calls
+ * @param token - Authentication token for API requests
  */
 async function generateAuditEvents(request: any, token: string): Promise<void> {
   // Create a user (generates audit event) with unique email
