@@ -1,4 +1,9 @@
+using System.Security.Claims;
+using System.Security.Cryptography;
+using FanEngagement.Api.Helpers;
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.DevDataSeeding;
+using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +12,10 @@ namespace FanEngagement.Api.Controllers;
 [ApiController]
 [Route("admin")]
 [Authorize(Roles = "Admin")]
-public class AdminController(IDevDataSeedingService devDataSeedingService, IHostEnvironment hostEnvironment) : ControllerBase
+public class AdminController(
+    IDevDataSeedingService devDataSeedingService,
+    IHostEnvironment hostEnvironment,
+    IAuditService auditService) : ControllerBase
 {
     /// <summary>
     /// Get available seeding scenarios.
@@ -48,6 +56,26 @@ public class AdminController(IDevDataSeedingService devDataSeedingService, IHost
         }
 
         var result = await devDataSeedingService.SeedDevDataAsync(scenario, cancellationToken);
+
+        // Audit the seeding operation
+        await AuditAdminActionAsync(
+            AuditActionType.AdminDataSeeded,
+            new
+            {
+                scenario = scenario.ToString(),
+                environment = hostEnvironment.EnvironmentName,
+                organizationsCreated = result.OrganizationsCreated,
+                usersCreated = result.UsersCreated,
+                membershipsCreated = result.MembershipsCreated,
+                shareTypesCreated = result.ShareTypesCreated,
+                shareIssuancesCreated = result.ShareIssuancesCreated,
+                proposalsCreated = result.ProposalsCreated,
+                votesCreated = result.VotesCreated,
+                webhookEndpointsCreated = result.WebhookEndpointsCreated,
+                outboundEventsCreated = result.OutboundEventsCreated
+            },
+            cancellationToken);
+
         return Ok(result);
     }
 
@@ -64,6 +92,17 @@ public class AdminController(IDevDataSeedingService devDataSeedingService, IHost
         }
 
         var result = await devDataSeedingService.CleanupE2eDataAsync(cancellationToken);
+
+        // Audit the cleanup operation
+        await AuditAdminActionAsync(
+            AuditActionType.AdminDataCleanup,
+            new
+            {
+                environment = hostEnvironment.EnvironmentName,
+                organizationsDeleted = result.OrganizationsDeleted
+            },
+            cancellationToken);
+
         return Ok(result);
     }
 
@@ -80,6 +119,83 @@ public class AdminController(IDevDataSeedingService devDataSeedingService, IHost
         }
 
         var result = await devDataSeedingService.ResetToSeedDataAsync(cancellationToken);
+
+        // Audit the reset operation
+        await AuditAdminActionAsync(
+            AuditActionType.AdminDataReset,
+            new
+            {
+                environment = hostEnvironment.EnvironmentName,
+                scope = "AllData"
+            },
+            cancellationToken);
+
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Helper method to audit admin actions with consistent structure.
+    /// </summary>
+    private async Task AuditAdminActionAsync(
+        AuditActionType actionType,
+        object details,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get admin user information from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "Unknown Admin";
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                // If we can't get user ID, still log the event but with system user
+                userId = Guid.Empty;
+            }
+
+            // Get IP address
+            var ipAddress = ClientContextHelper.GetClientIpAddress(HttpContext);
+
+            // Get correlation ID if present
+            var correlationId = HttpContext.Request.Headers["X-Correlation-ID"].FirstOrDefault();
+
+            // Generate deterministic resource ID based on action type for correlation
+            var resourceId = GenerateResourceIdForActionType(actionType);
+
+            // Build audit event
+            var auditBuilder = new AuditEventBuilder()
+                .WithActor(userId, userEmail)
+                .WithIpAddress(ipAddress)
+                .WithAction(actionType)
+                .WithResource(AuditResourceType.SystemConfiguration, resourceId, "Admin Operation")
+                .WithDetails(details);
+
+            if (!string.IsNullOrWhiteSpace(correlationId))
+            {
+                auditBuilder.WithCorrelationId(correlationId);
+            }
+
+            auditBuilder.AsSuccess();
+
+            // Log asynchronously (fire-and-forget, failures won't affect the operation)
+            await auditService.LogAsync(auditBuilder, cancellationToken);
+        }
+        catch
+        {
+            // Audit failures must not fail admin operations
+            // The audit service already has internal error handling and logging
+        }
+    }
+
+    /// <summary>
+    /// Generates a deterministic GUID from an action type for resource correlation.
+    /// This allows all admin operations of the same type to be grouped together in audit queries.
+    /// </summary>
+    private static Guid GenerateResourceIdForActionType(AuditActionType actionType)
+    {
+        using var sha256 = SHA256.Create();
+        var hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes($"AdminAction:{actionType}"));
+        // Take first 16 bytes of the 32-byte SHA256 hash
+        return new Guid(hash.Take(16).ToArray());
     }
 }
