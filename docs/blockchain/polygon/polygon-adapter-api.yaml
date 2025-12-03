@@ -442,6 +442,7 @@ paths:
                   totalVotesCast: 3500
                   quorumMet: true
                   network: "mumbai"
+                  closedAt: "2024-12-17T00:00:00Z"
       responses:
         '200':
           description: Results committed successfully
