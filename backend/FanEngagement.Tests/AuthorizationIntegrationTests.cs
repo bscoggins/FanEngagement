@@ -167,7 +167,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     {
         // Arrange
         var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        var (otherUser, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         _client.AddAuthorizationHeader(otherToken);
 
         // Act
@@ -197,7 +197,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     {
         // Arrange
         var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        var (otherUser, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         _client.AddAuthorizationHeader(otherToken);
 
         // Act
@@ -255,7 +255,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     {
         // Arrange
         var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
-        var (otherUser, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         _client.AddAuthorizationHeader(otherToken);
 
         // Act
@@ -1396,6 +1396,127 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Act
         var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task FinalizeProposal_ReturnsOk_ForProposalCreator()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Open and close the proposal first
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/finalize", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task FinalizeProposal_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Open and close the proposal
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Switch to admin token
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/finalize", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task FinalizeProposal_ReturnsForbidden_ForNonCreatorRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Open and close the proposal
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Create another member who is not the creator
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newMember.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Now try to finalize as the new member (not creator)
+        _client.AddAuthorizationHeader(newMemberToken);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/finalize", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
