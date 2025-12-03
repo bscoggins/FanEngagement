@@ -132,6 +132,8 @@ cd frontend
 VITE_API_BASE_URL=http://localhost:8080 npm run e2e
 ```
 
+> **Note:** Playwright specs must interact with the product exactly as a user would. Avoid calling backend APIs or mutating storage directly from a test—drive the UI using page actions instead. The `./scripts/run-e2e.sh` helper logs in as the seeded admin, resets dev data, and cleans up after the run, so new tests should assume a fresh seed rather than attempting to seed data themselves.
+
 ## Common Workflows
 
 ### Spin Up Everything and Start Coding
