@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using FanEngagement.Api.Authorization;
 using FanEngagement.Api.Middleware;
 using FanEngagement.Application.Validators;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -95,6 +97,33 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(origins)
               .AllowAnyMethod()
               .AllowAnyHeader();
+    });
+});
+
+// Configure rate limiting for audit export endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    
+    // Fixed window rate limiter for audit exports: 5 exports per hour per user
+    options.AddFixedWindowLimiter("AuditExport", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = builder.Configuration.GetValue("RateLimiting:AuditExport:PermitLimit", 5);
+        limiterOptions.Window = TimeSpan.FromHours(builder.Configuration.GetValue("RateLimiting:AuditExport:WindowHours", 1.0));
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0; // No queueing
+    })
+    .AddPolicy("AuditExportPerUser", httpContext =>
+    {
+        // Partition by user ID so each user has their own rate limit
+        var userId = httpContext.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = builder.Configuration.GetValue("RateLimiting:AuditExport:PermitLimit", 5),
+            Window = TimeSpan.FromHours(builder.Configuration.GetValue("RateLimiting:AuditExport:WindowHours", 1.0)),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
     });
 });
 
@@ -283,6 +312,9 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
+
+// Add rate limiting middleware
+app.UseRateLimiter();
 
 // Add authorization auditing middleware (must be between UseAuthentication and UseAuthorization)
 app.UseMiddleware<AuditingAuthorizationMiddleware>();

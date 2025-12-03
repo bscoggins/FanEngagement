@@ -5,6 +5,7 @@ using FanEngagement.Application.Validators;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Api.Controllers;
@@ -90,9 +91,11 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Streamed export file</returns>
     [HttpGet("export")]
+    [EnableRateLimiting("AuditExportPerUser")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task ExportAuditEvents(
         Guid organizationId,
         [FromQuery] string format = "csv",
