@@ -49,9 +49,10 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-001   | T1    | Improve Member Proposal Discovery       | Proposed | Next     | Brent | Initial draft by PO agent |
 | E-002   | T2    | Streamline OrgAdmin Proposal Management | Drafting | Now      | Brent |                           |
 | E-003   | T3    | Enhance Governance Results Transparency | Backlog  | Later    | TBD   |                           |
-| E-004   | T5    | Blockchain Integration Initiative (Solana): Discovery → MVP Definition → Implementation Planning | Proposed | Next | TBD | Major market differentiator; PO agent comprehensive epic |
+| E-004   | T5    | Blockchain Integration Initiative (Solana): Discovery → MVP Definition → Implementation Planning | Superseded | Next | TBD | **SUPERSEDED by E-007** - Original direct Solana integration approach; archived stories in docs/product/archive/E-004-*.md |
 | E-005   | T3    | Implement Thorough Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
 | E-006   | T3    | Security Documentation Update and Enhancements | Proposed | Now      | TBD   | Update outdated auth docs; verify test coverage; optional security enhancements |
+| E-007   | T5    | Blockchain Adapter Platform — Dockerized API for Multi-Chain Support | Proposed | Next | TBD | Modular multi-chain architecture with isolated Docker containers for Solana, Polygon, and future blockchains |
 
 **Status values (for the PO agent to use):**
 
@@ -1571,6 +1572,459 @@ The `docs/architecture.md` file contains **outdated information** that incorrect
 3. **MFA Scope**: Should MFA be mandatory for GlobalAdmin or optional for all admin users?
 
 ---
+
+### E-007 – Blockchain Adapter Platform — Dockerized API for Multi-Chain Support (Theme: T5, Status: Proposed)
+
+#### Motivation
+
+E-004 laid the foundation for blockchain integration by exploring Solana capabilities, governance models, and tokenization strategies. However, its architecture was tightly coupled to a single blockchain (Solana) with direct integration into the FanEngagement backend. This approach creates several challenges:
+
+1. **Vendor Lock-in**: Hard dependency on Solana limits organizational choice and flexibility
+2. **Limited Extensibility**: Adding new blockchains (Polygon, Ethereum, etc.) requires substantial backend refactoring
+3. **Maintenance Complexity**: Blockchain-specific logic mixed with business logic increases complexity and testing burden
+4. **Operational Fragility**: Blockchain RPC provider issues or network outages directly impact the main application
+
+E-007 addresses these challenges by introducing a **modular Blockchain Adapter Platform** that:
+
+- Isolates blockchain interactions in dedicated Docker containers
+- Provides a consistent API contract across all supported blockchains
+- Enables organizations to select their preferred blockchain
+- Allows independent scaling, deployment, and versioning of blockchain adapters
+- Simplifies testing through standardized adapter interfaces
+
+#### Target Users / Roles
+
+- **OrgAdmins**: Can select and configure which blockchain their organization uses
+- **Platform Developers**: Work with consistent blockchain APIs regardless of underlying chain
+- **DevOps Engineers**: Deploy and monitor blockchain adapters independently
+- **Organizations**: Benefit from transparency and verifiability without blockchain vendor lock-in
+
+#### Success Signals
+
+- Organizations can select from multiple blockchains (Solana, Polygon) in configuration
+- New blockchains can be added without modifying FanEngagement core backend
+- Blockchain adapter failures do not crash or impact the main application
+- Adapter containers can be deployed and scaled independently
+- Clear API contracts enable testing without blockchain network dependencies
+
+#### Architecture Overview
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                 FanEngagement Backend API                      │
+│  (Organizations, Proposals, Votes, ShareTypes, Users)          │
+└────────────────────────┬───────────────────────────────────────┘
+                         │
+                         │ Consistent Adapter API
+                         │ (OpenAPI contract)
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Solana     │  │   Polygon    │  │  Future      │
+│   Adapter    │  │   Adapter    │  │  Adapter     │
+│  Container   │  │  Container   │  │  Container   │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       ▼                 ▼                 ▼
+    Solana           Polygon          Ethereum/
+    Network          Network          Other Chain
+```
+
+**Key Design Principles:**
+
+1. **Isolation**: Each blockchain adapter runs in its own Docker container with independent lifecycle
+2. **Consistent Interface**: All adapters implement the same API contract (OpenAPI spec)
+3. **Configuration**: Organizations select blockchain in database; backend routes requests to appropriate adapter
+4. **Resilience**: Adapter failures handled gracefully; main application remains operational
+5. **Extensibility**: New blockchains added by implementing adapter contract and deploying container
+
+#### API Contract (Consistent Across All Adapters)
+
+All blockchain adapters must implement these endpoints:
+
+- `POST /adapter/organizations` - Create on-chain organization representation
+- `POST /adapter/share-types` - Create token mint for ShareType
+- `POST /adapter/share-issuances` - Record share issuance on-chain
+- `POST /adapter/proposals` - Create on-chain proposal
+- `POST /adapter/votes` - Record vote on-chain
+- `POST /adapter/proposal-results` - Commit proposal results hash on-chain
+- `GET /adapter/transactions/{txId}` - Query transaction status
+- `GET /adapter/health` - Health check endpoint
+- `GET /adapter/metrics` - Prometheus metrics endpoint
+
+#### Stories
+
+##### Group 1: Architecture & Design Foundation
+
+###### Story E-007-01
+
+> As an **architect**, I want to **design the multi-chain adapter architecture**, so that **we have a clear blueprint for implementing isolated blockchain adapters**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Document adapter container architecture (Docker, API gateway pattern)
+- [ ] Define OpenAPI contract for blockchain adapter interface
+- [ ] Design organization blockchain selection mechanism (database schema)
+- [ ] Define adapter discovery and routing strategy
+- [ ] Design failure handling and circuit breaker patterns
+- [ ] Document adapter-to-backend communication security
+- [ ] Define adapter deployment model (Kubernetes, Docker Compose)
+- [ ] Produce architecture document in `docs/blockchain/adapter-platform-architecture.md`
+
+**Notes for implementation:**
+
+- Architecture/design task, no production code
+- Output: Comprehensive architecture specification
+- Consider: service mesh, API versioning, monitoring, logging aggregation
+
+---
+
+###### Story E-007-02
+
+> As a **developer**, I want to **define the API contract for the Solana adapter**, so that **the backend can interact with Solana through a consistent interface**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Create OpenAPI 3.0 specification for Solana adapter
+- [ ] Define all required endpoints (org creation, token minting, voting, etc.)
+- [ ] Define request/response schemas with validation rules
+- [ ] Define error responses and status codes
+- [ ] Document authentication mechanism (API key, JWT, mutual TLS)
+- [ ] Include example requests/responses for each endpoint
+- [ ] Validate OpenAPI spec with validator tools
+- [ ] Store spec in `docs/blockchain/solana/solana-adapter-api.yaml`
+
+**Notes for implementation:**
+
+- Leverage existing Solana documentation from E-004
+- Reference: `/docs/blockchain/solana/*.md` for domain concepts
+- Use OpenAPI Generator to validate specification
+
+---
+
+###### Story E-007-03
+
+> As a **developer**, I want to **define the API contract for the Polygon adapter**, so that **the backend can interact with Polygon through a consistent interface matching Solana's contract**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Create OpenAPI 3.0 specification for Polygon adapter
+- [ ] Ensure endpoint structure matches Solana adapter contract
+- [ ] Define Polygon-specific parameters (gas estimation, network selection)
+- [ ] Define request/response schemas aligned with Solana adapter
+- [ ] Document authentication mechanism (consistent with Solana adapter)
+- [ ] Include example requests/responses for each endpoint
+- [ ] Validate OpenAPI spec with validator tools
+- [ ] Store spec in `docs/blockchain/polygon/polygon-adapter-api.yaml`
+
+**Notes for implementation:**
+
+- Mirror Solana adapter API structure for consistency
+- Polygon-specific considerations: ERC-20 tokens, gas fees, network selection (Mumbai testnet, Polygon mainnet)
+
+---
+
+##### Group 2: Blockchain-Specific Documentation
+
+###### Story E-007-06
+
+> As a **developer**, I want to **comprehensive Polygon blockchain documentation**, so that **I understand Polygon's capabilities, costs, and governance models for FanEngagement**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Create `docs/blockchain/polygon/polygon-capabilities-analysis.md` covering:
+  - Transaction costs and gas fees
+  - ERC-20 token standard evaluation
+  - Block finality and confirmation times
+  - Development framework comparison (Hardhat, Foundry)
+- [ ] Create `docs/blockchain/polygon/governance-models-evaluation.md` covering:
+  - On-chain vs. off-chain voting on Polygon
+  - Cost projections at scale
+  - Integration with existing governance platforms (Snapshot, Tally)
+- [ ] Create `docs/blockchain/polygon/sharetype-tokenization-strategy.md` covering:
+  - ERC-20 token creation for ShareTypes
+  - Metadata structure (name, symbol, decimals)
+  - Token issuance and burn mechanics
+  - MaxSupply enforcement
+- [ ] Create `docs/blockchain/polygon/polygon-key-management-security.md` covering:
+  - Key generation and storage for Polygon
+  - Smart contract deployment security
+  - Multisig wallet patterns
+- [ ] All documentation follows structure of Solana documentation in `/docs/blockchain/solana/`
+
+**Notes for implementation:**
+
+- Research task, no production code
+- Mirror Solana documentation structure for consistency
+- Consider Polygon-specific factors: L2 architecture, bridge to Ethereum, lower gas costs vs. Solana
+
+---
+
+##### Group 3: Adapter Implementation
+
+###### Story E-007-04
+
+> As a **developer**, I want to **implement the Solana adapter container**, so that **FanEngagement can interact with Solana blockchain through a standardized API**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Create Dockerfile for Solana adapter service
+- [ ] Implement all endpoints from Solana adapter OpenAPI contract
+- [ ] Integrate Solana RPC client (Solnet or equivalent)
+- [ ] Implement retry logic with exponential backoff
+- [ ] Implement structured logging (JSON format, log levels)
+- [ ] Implement Prometheus metrics endpoint (`/metrics`)
+- [ ] Implement health check endpoint (`/health`)
+- [ ] Add comprehensive error handling with standard error responses
+- [ ] Add integration tests using Solana test validator
+- [ ] Create docker-compose.yml for local development
+- [ ] Document deployment in `docs/blockchain/solana/solana-adapter-deployment.md`
+
+**Notes for implementation:**
+
+- Technology: Node.js/TypeScript OR .NET (choose based on team expertise)
+- Dependencies: Solana Web3.js (if Node) or Solnet (if .NET)
+- Testing: Use Solana test validator for integration tests
+- Consider: Rate limiting, request validation, circuit breaker
+
+---
+
+###### Story E-007-05
+
+> As a **developer**, I want to **implement the Polygon adapter container**, so that **FanEngagement can interact with Polygon blockchain through a standardized API**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Create Dockerfile for Polygon adapter service
+- [ ] Implement all endpoints from Polygon adapter OpenAPI contract
+- [ ] Integrate Polygon/Ethereum RPC client (Nethereum or Web3.js)
+- [ ] Implement smart contract for governance operations (if needed)
+- [ ] Deploy smart contract to Polygon Mumbai testnet
+- [ ] Implement retry logic with exponential backoff
+- [ ] Implement structured logging (JSON format, log levels)
+- [ ] Implement Prometheus metrics endpoint (`/metrics`)
+- [ ] Implement health check endpoint (`/health`)
+- [ ] Add comprehensive error handling with standard error responses
+- [ ] Add integration tests using Polygon Mumbai testnet
+- [ ] Create docker-compose.yml for local development
+- [ ] Document deployment in `docs/blockchain/polygon/polygon-adapter-deployment.md`
+
+**Notes for implementation:**
+
+- Technology: Should match Solana adapter (Node.js OR .NET)
+- Dependencies: Ethers.js/Web3.js (if Node) or Nethereum (if .NET)
+- Smart Contract: May need Solidity contract for proposal results commitment
+- Testing: Use Mumbai testnet for integration tests
+
+---
+
+##### Group 4: Backend Integration
+
+###### Story E-007-07
+
+> As an **OrgAdmin**, I want to **select which blockchain my organization uses**, so that **my organization's governance is recorded on my preferred blockchain network**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Add `BlockchainType` enum to codebase (`None`, `Solana`, `Polygon`)
+- [ ] Add `BlockchainType` and `BlockchainConfig` (JSON) columns to `Organizations` table
+- [ ] Create EF Core migration for schema change
+- [ ] Update `CreateOrganizationRequest` and `UpdateOrganizationRequest` DTOs
+- [ ] Update `OrganizationService` to store blockchain configuration
+- [ ] Add validation: only one blockchain type per organization
+- [ ] Create `IBlockchainAdapterFactory` interface for adapter routing
+- [ ] Implement `BlockchainAdapterFactory` that routes to correct adapter based on org config
+- [ ] Update organization API to expose blockchain selection
+- [ ] Add frontend UI for blockchain selection in organization settings (OrgAdmin only)
+- [ ] Document configuration in `docs/architecture.md`
+- [ ] Unit tests for blockchain selection logic
+- [ ] Integration tests for organization creation with blockchain config
+
+**Notes for implementation:**
+
+- Database schema change requires migration
+- Frontend: dropdown in org settings with "Solana", "Polygon", "None" options
+- Default: `BlockchainType.None` for backwards compatibility
+
+---
+
+##### Group 5: Operations & Testing
+
+###### Story E-007-08
+
+> As a **DevOps engineer**, I want to **CI/CD pipeline support for blockchain adapter containers**, so that **adapters can be built, tested, and deployed automatically**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Add Dockerfile build steps to CI pipeline for Solana adapter
+- [ ] Add Dockerfile build steps to CI pipeline for Polygon adapter
+- [ ] Configure automated tests for Solana adapter in CI
+- [ ] Configure automated tests for Polygon adapter in CI
+- [ ] Add Docker image publishing to container registry (GitHub Container Registry or Docker Hub)
+- [ ] Create deployment manifests (Kubernetes YAML or Docker Compose)
+- [ ] Add health check monitoring in deployment
+- [ ] Document CI/CD pipeline in `docs/blockchain/adapter-cicd.md`
+- [ ] Configure image vulnerability scanning (Trivy or Snyk)
+
+**Notes for implementation:**
+
+- Use GitHub Actions (existing CI platform)
+- Consider: Multi-stage builds for smaller images, layer caching
+- Security: Scan images for vulnerabilities before deployment
+
+---
+
+###### Story E-007-09
+
+> As a **QA engineer**, I want to **comprehensive testing strategy for blockchain adapters**, so that **we can verify adapter functionality without production blockchain costs**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Document unit testing approach (mock blockchain clients)
+- [ ] Document integration testing approach (test validators, testnets)
+- [ ] Create test harness for adapter contract validation
+- [ ] Implement contract testing (Pact or OpenAPI contract tests)
+- [ ] Create test data fixtures for common scenarios
+- [ ] Document local testing setup in `docs/blockchain/adapter-testing.md`
+- [ ] Add performance/load testing strategy for adapters
+- [ ] Define acceptable latency thresholds per operation
+- [ ] Create smoke tests for production adapter health
+
+**Notes for implementation:**
+
+- Solana: Use `solana-test-validator` for integration tests
+- Polygon: Use Mumbai testnet for integration tests
+- Contract Testing: Ensure adapters match OpenAPI spec exactly
+- Performance: Target <2s response time for transaction submission
+
+---
+
+###### Story E-007-10
+
+> As a **platform operator**, I want to **operational readiness documentation and monitoring for blockchain adapters**, so that **I can deploy, monitor, and troubleshoot adapters in production**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Document deployment architecture (how adapters connect to main app)
+- [ ] Define monitoring metrics (transaction success rate, latency, error rate)
+- [ ] Create Grafana dashboard for adapter monitoring (or equivalent)
+- [ ] Define alerting thresholds (adapter down, high error rate, slow responses)
+- [ ] Document runbook for common failure scenarios:
+  - Adapter container crashes
+  - Blockchain RPC provider outage
+  - Transaction failures
+  - Blockchain network congestion
+- [ ] Document scaling strategy (when to scale adapters)
+- [ ] Document backup and disaster recovery for adapter keys
+- [ ] Create operational readiness checklist
+- [ ] Store documentation in `docs/blockchain/adapter-operations.md`
+
+**Notes for implementation:**
+
+- Monitoring: Use Prometheus + Grafana (industry standard)
+- Logging: Centralized logging (Loki, Elasticsearch, or CloudWatch)
+- Alerts: Integration with PagerDuty or Opsgenie for on-call
+- Key Management: Document secure key storage (AWS KMS, Azure Key Vault, HashiCorp Vault)
+
+---
+
+#### Dependencies
+
+- **E-004 Solana Documentation**: Solana adapter leverages research from E-004 (capabilities, governance, tokenization)
+- **Docker Infrastructure**: Requires Docker/Kubernetes deployment capability
+- **Polygon Research**: Story E-007-06 must complete before E-007-05 (Polygon adapter implementation)
+- **API Contract Definition**: Stories E-007-02 and E-007-03 must complete before adapter implementation
+
+#### Value Proposition
+
+**For Organizations:**
+- **Choice**: Select blockchain that aligns with their values, costs, and technical preferences
+- **Future-Proof**: New blockchains can be added without migration or disruption
+- **Transparency**: Governance backed by blockchain verification without vendor lock-in
+
+**For Platform:**
+- **Reduced Risk**: Blockchain issues isolated from main application
+- **Easier Testing**: Standardized adapter interface simplifies testing and mocking
+- **Market Differentiation**: Multi-chain support appeals to broader market
+- **Independent Scaling**: High-volume organizations can scale their blockchain adapter independently
+
+**For Developers:**
+- **Clean Architecture**: Blockchain logic isolated from business logic
+- **Easier Onboarding**: Consistent API reduces learning curve for new blockchains
+- **Better Testing**: Mock adapters for fast unit tests; real adapters for integration tests
+
+#### Risks
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Adapter API contract divergence | High | Medium | Contract testing in CI; OpenAPI validation |
+| Blockchain network outages impact availability | Medium | Low | Circuit breaker pattern; graceful degradation |
+| Key management complexity increases | High | Medium | Comprehensive key management documentation; use cloud KMS |
+| Performance overhead from adapter layer | Medium | Low | Performance testing; optimize hot paths; caching |
+| Increased operational complexity | Medium | Medium | Comprehensive runbooks; automated monitoring; training |
+
+#### Open Questions
+
+1. **Adapter Technology Stack**: Should adapters be Node.js/TypeScript (better blockchain SDK support) or .NET (team expertise)? Recommendation: Node.js for blockchain ecosystem compatibility.
+2. **Smart Contract Strategy**: Does Polygon adapter require custom smart contracts, or can we use on-chain memo transactions like Solana? Research needed.
+3. **Adapter Authentication**: How should main backend authenticate to adapters? Options: API keys, mutual TLS, service mesh auth.
+4. **Deployment Platform**: Kubernetes or Docker Compose? Recommendation: Docker Compose for MVP, Kubernetes migration path documented.
+5. **Blockchain Selection UI**: Should blockchain selection be immutable after org creation, or allow migration? Recommendation: Immutable for MVP (migration is complex).
+
+#### Epic Supersedes E-004
+
+This epic **supersedes** the original E-004 (Blockchain Integration Initiative - Solana). Key differences:
+
+| Aspect | E-004 (Old) | E-007 (New) |
+|--------|-------------|-------------|
+| Architecture | Direct Solana integration in backend | Isolated Docker adapters |
+| Blockchain Support | Solana only | Multi-chain (Solana, Polygon, extensible) |
+| Coupling | Tight coupling with backend | Loose coupling via API contract |
+| Extensibility | Requires backend refactor for new chains | Add new adapter container |
+| Testing | Complex (needs Solana test validator in backend tests) | Simpler (mock adapter API) |
+| Operations | Backend and blockchain tightly coupled | Independent scaling and deployment |
+
+**Migration from E-004:**
+
+- Solana research documentation (in `/docs/blockchain/solana/`) remains valid and will be referenced
+- Archived E-004 stories (in `/docs/product/archive/E-004-*.md`) are marked as superseded
+- E-004 insights inform E-007 Solana adapter implementation
+- Organizations will not be migrated; E-007 starts fresh with new architecture
+
+---
+
 ## 5. Ready-for-Issue Stories
 
 This section lists **only stories that a human has approved as “Ready”** and that should be turned into GitHub issues.

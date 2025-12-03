@@ -11,6 +11,29 @@ This document is the single place to capture ideas that should not be prioritize
 
 ## Ideas Backlog
 
+### Blockchain Adapter Platform — Dockerized API for Multi-Chain Support (Epic E-007)
+
+Design and deliver a modular Blockchain Adapter Platform that enables FanEngagement organizations to select their preferred blockchain (Solana, Polygon, or future chains) through isolated Docker containers exposing standardized APIs. This architecture replaces the original single-chain Solana integration (E-004) with an extensible, maintainable multi-chain platform.
+
+- **Epic:** E-007 in `docs/product/backlog.md`
+- **Theme:** T5 – Blockchain & Web3
+- **Key Deliverables:**
+  - Multi-chain adapter architecture specification
+  - OpenAPI contracts for Solana and Polygon adapters
+  - Solana and Polygon adapter Docker container implementations
+  - Comprehensive Polygon blockchain documentation (mirroring Solana docs)
+  - Organization blockchain selection configuration (backend + frontend)
+  - CI/CD pipeline for adapter builds and deployments
+  - Testing strategy with contract, integration, and performance tests
+  - Operational readiness documentation (monitoring, runbooks, DR)
+- **Value Proposition:**
+  - **For Organizations:** Choice of blockchain without vendor lock-in
+  - **For Platform:** Easier testing, independent scaling, reduced risk
+  - **For Developers:** Clean architecture, consistent API, extensibility
+- **Priority:** Next
+- **Status:** Proposed (pending human review)
+- **Note:** Supersedes E-004 (direct Solana integration); E-004 research documentation remains valid
+
 ### Implement Thorough Audit Logging Across the Application
 
 Implement comprehensive audit logging to provide clear traceability for all significant actions taken within the system. This epic covers architecture updates, dedicated audit event storage, user-facing interfaces for reviewing audit trails, and robust testing strategies to ensure reliability and coverage.
