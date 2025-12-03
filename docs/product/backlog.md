@@ -1714,24 +1714,34 @@ All blockchain adapters must implement these endpoints:
 
 > As a **developer**, I want to **define the API contract for the Polygon adapter**, so that **the backend can interact with Polygon through a consistent interface matching Solana's contract**.
 
-**Status:** Proposed  
+**Status:** Complete  
 **Priority:** Now  
 
 **Acceptance Criteria:**
 
-- [ ] Create OpenAPI 3.0 specification for Polygon adapter
-- [ ] Ensure endpoint structure matches Solana adapter contract
-- [ ] Define Polygon-specific parameters (gas estimation, network selection)
-- [ ] Define request/response schemas aligned with Solana adapter
-- [ ] Document authentication mechanism (consistent with Solana adapter)
-- [ ] Include example requests/responses for each endpoint
-- [ ] Validate OpenAPI spec with validator tools
-- [ ] Store spec in `docs/blockchain/polygon/polygon-adapter-api.yaml`
+- [x] Create OpenAPI 3.0 specification for Polygon adapter
+- [x] Ensure endpoint structure matches Solana adapter contract
+- [x] Define Polygon-specific parameters (gas estimation, network selection)
+- [x] Define request/response schemas aligned with Solana adapter
+- [x] Document authentication mechanism (consistent with Solana adapter)
+- [x] Include example requests/responses for each endpoint
+- [x] Validate OpenAPI spec with validator tools
+- [x] Store spec in `docs/blockchain/polygon/polygon-adapter-api.yaml`
+
+**Deliverables:**
+
+- ✅ OpenAPI specification created at `docs/blockchain/polygon/polygon-adapter-api.yaml`
+- ✅ All 9 endpoints defined: organizations, share-types, share-issuances, proposals, votes, proposal-results, transactions/{txId}, health, metrics
+- ✅ Polygon-specific fields documented: gasUsed, gasPrice, network (mumbai/polygon), contractAddress, tokenAddress, transactionHash
+- ✅ RFC 7807 Problem Details error format implemented
+- ✅ API Key authentication matching Solana adapter
+- ✅ Validated successfully with swagger-cli
 
 **Notes for implementation:**
 
 - Mirror Solana adapter API structure for consistency
 - Polygon-specific considerations: ERC-20 tokens, gas fees, network selection (Mumbai testnet, Polygon mainnet)
+- Key differences from Solana: 0x transaction hashes, Ethereum-style addresses, 18 decimals (ERC-20 standard), gas model
 
 ---
 
