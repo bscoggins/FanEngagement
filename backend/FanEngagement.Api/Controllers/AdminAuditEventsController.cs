@@ -141,10 +141,12 @@ public class AdminAuditEventsController(IAuditService auditService, ILogger<Admi
         // Audit the export action itself
         if (Guid.TryParse(userId, out var actorId))
         {
-            await auditService.LogAsync(new AuditEventBuilder()
+            // For admin export, use a pseudo resource ID (could be the first org ID or a specific sentinel value)
+            var exportResourceId = organizationId ?? Guid.Parse("00000000-0000-0000-0000-000000000001");
+            await auditService.LogSyncAsync(new AuditEventBuilder()
                 .WithActor(actorId, User.Identity?.Name ?? "Unknown")
                 .WithAction(AuditActionType.Exported)
-                .WithResource(AuditResourceType.AuditEvent, Guid.Empty, $"Admin Export {format}")
+                .WithResource(AuditResourceType.AuditEvent, exportResourceId, $"Admin Export {format}")
                 .AsSuccess()
                 .WithDetailsJson($"{{\"format\":\"{format}\",\"organizationId\":\"{organizationId}\",\"dateFrom\":\"{dateFrom}\",\"dateTo\":\"{dateTo}\",\"actionType\":\"{actionType}\",\"resourceType\":\"{resourceType}\"}}")
                 .Build(), cancellationToken);

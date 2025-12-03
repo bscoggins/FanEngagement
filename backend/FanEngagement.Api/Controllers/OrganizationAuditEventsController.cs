@@ -141,7 +141,7 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         // Audit the export action itself
         if (Guid.TryParse(userId, out var actorId))
         {
-            await auditService.LogAsync(new AuditEventBuilder()
+            await auditService.LogSyncAsync(new AuditEventBuilder()
                 .WithActor(actorId, User.Identity?.Name ?? "Unknown")
                 .WithAction(AuditActionType.Exported)
                 .WithResource(AuditResourceType.AuditEvent, organizationId, $"Export {format}")

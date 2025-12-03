@@ -49,7 +49,8 @@ public static class AuditExportHelper
             }
             sb.Append(JsonSerializer.Serialize(events[i], new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
             }));
         }
 
