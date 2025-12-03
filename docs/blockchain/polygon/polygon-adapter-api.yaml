@@ -184,7 +184,7 @@ paths:
                   name: "Season Ticket Holder Share"
                   symbol: "MUFC-STH"
                   decimals: 18
-                  maxSupply: 10000000000000000000000
+                  maxSupply: "10000000000000000000000"
                   metadata:
                     votingWeight: 1.0
                   isTransferable: true
@@ -242,7 +242,7 @@ paths:
                   issuanceId: "abc12345-6789-def0-1234-567890abcdef"
                   shareTypeId: "456e7890-a12b-34c5-d678-901234567890"
                   userId: "12345678-1234-5678-90ab-cdef01234567"
-                  quantity: 100000000000000000000
+                  quantity: "100000000000000000000"
                   network: "mumbai"
       responses:
         '200':
@@ -370,6 +370,8 @@ paths:
                   userId: "12345678-1234-5678-90ab-cdef01234567"
                   optionId: "option-a"
                   votingPower: 100
+                  voterAddress: "0x8a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b"
+                  timestamp: "2024-12-03T12:00:00Z"
                   network: "mumbai"
       responses:
         '200':
