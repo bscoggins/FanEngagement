@@ -139,9 +139,17 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     
     uint256 public maxSupply;
+    
+    // Track addresses authorized for admin burn (e.g., after off-chain policy approval)
+    mapping(address => bool) public authorizedForAdminBurn;
+    
+    event AdminBurnAuthorized(address indexed account, address indexed authorizer);
+    event AdminBurnRevoked(address indexed account, address indexed revoker);
+    event AdminBurnExecuted(address indexed from, uint256 amount, address indexed executor);
     
     constructor(
         string memory name,
@@ -163,14 +171,28 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
         _burn(msg.sender, amount);
     }
     
-    // Admin burn for share revocation (requires MINTER_ROLE with strict controls)
-    function adminBurn(address from, uint256 amount) public onlyRole(MINTER_ROLE) {
-        // Note: In production, this should be guarded by:
-        // - Multi-sig approval (Gnosis Safe)
-        // - Timelock delay for accountability
-        // - Event logging for audit trail
-        // - Clear policy for when admin burns are permitted
+    // Authorize an address for admin burn (requires multisig in production)
+    function authorizeAdminBurn(address account) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        authorizedForAdminBurn[account] = true;
+        emit AdminBurnAuthorized(account, msg.sender);
+    }
+    
+    // Revoke admin burn authorization
+    function revokeAdminBurn(address account) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        authorizedForAdminBurn[account] = false;
+        emit AdminBurnRevoked(account, msg.sender);
+    }
+    
+    // Admin burn for share revocation with strict controls
+    function adminBurn(address from, uint256 amount) public onlyRole(BURNER_ROLE) {
+        require(authorizedForAdminBurn[from], "Address not authorized for admin burn");
+        // Note: In production, this should be further guarded by:
+        // - Multisig approval via Gnosis Safe for BURNER_ROLE
+        // - Timelock contract delay (e.g., 48 hours) for accountability
+        // - Off-chain policy verification and approval workflow
+        // - Integration with compliance/audit systems
         _burn(from, amount);
+        emit AdminBurnExecuted(from, amount, msg.sender);
     }
     
     // Override required by Solidity for ERC20Votes
