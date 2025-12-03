@@ -66,4 +66,17 @@ public interface IAuditService
         Guid userId,
         AuditQuery query,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams audit events in batches for export, using the same filters as QueryAsync.
+    /// This is memory-efficient for large datasets.
+    /// </summary>
+    /// <param name="query">Query parameters including filters (pagination is ignored for streaming).</param>
+    /// <param name="batchSize">Number of events to return in each batch.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Async enumerable of batches of audit events.</returns>
+    IAsyncEnumerable<List<AuditEventDto>> StreamEventsAsync(
+        AuditQuery query,
+        int batchSize = 100,
+        CancellationToken cancellationToken = default);
 }
