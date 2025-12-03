@@ -64,7 +64,7 @@ For FanEngagement governance operations using ERC-20 tokens:
 | Token Transfer | 50,000 | 50 | 0.0025 | $0.001 |
 | Approve Token | 46,000 | 50 | 0.0023 | $0.001 |
 | TransferFrom | 60,000 | 50 | 0.003 | $0.002 |
-| Vote Record (on-chain) | 100,000 | 50 | 0.005 | $0.003 |
+| Vote Record (on-chain) | 100,000 | 50 | 0.005 | $0.0025 |
 | Create Proposal | 200,000 | 50 | 0.010 | $0.005 |
 | Commit Results Hash | 80,000 | 50 | 0.004 | $0.002 |
 
@@ -135,12 +135,13 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Nonces.sol";
 
 contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     
     uint256 public maxSupply;
     
