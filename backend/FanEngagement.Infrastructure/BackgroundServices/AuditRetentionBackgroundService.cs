@@ -118,9 +118,10 @@ public class AuditRetentionBackgroundService(
         }
 
         // Check if current time matches the schedule
-        // Since we check hourly, we allow a window: the minute must be within the current hour
+        // Since we check hourly, we allow a window: the minute must be within 5 minutes of scheduled time
         var hourMatches = scheduleHour == -1 || now.Hour == scheduleHour;
-        var minuteMatches = scheduleMinute == -1 || (now.Minute >= scheduleMinute && now.Minute < scheduleMinute + 5);
+        var minuteMatches = scheduleMinute == -1 ||
+            ((now.Minute - scheduleMinute + 60) % 60 < 5);
 
         return hourMatches && minuteMatches;
     }

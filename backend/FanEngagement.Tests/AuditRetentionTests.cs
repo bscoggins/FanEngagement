@@ -22,7 +22,7 @@ public class AuditRetentionTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task AuditRetention_ConfigurationValidation_EnforcesMinimumRetentionDays()
+    public void AuditRetention_ConfigurationValidation_EnforcesMinimumRetentionDays()
     {
         // Arrange & Act & Assert
         var options = new AuditRetentionOptions();
@@ -422,7 +422,6 @@ public class AuditRetentionTests : IClassFixture<TestWebApplicationFactory>
             .Where(e => e.Timestamp < cutoffDate)
             .ToListAsync();
 
-        var deleted = eventsToDelete.Count;
         dbContext.AuditEvents.RemoveRange(eventsToDelete);
         await dbContext.SaveChangesAsync();
 
