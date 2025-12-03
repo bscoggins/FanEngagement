@@ -1272,6 +1272,42 @@ Potential improvements for branding (not currently implemented):
 - ORM: EF Core
 - Auth: JWT-based (can be stubbed initially; structure should allow multi-tenant auth later)
 
+## Blockchain Integration (Optional)
+
+FanEngagement supports optional blockchain integration through a modular **Blockchain Adapter Platform** that enables organizations to record governance events on-chain for transparency and verifiability.
+
+**Key Features:**
+- **Multi-Chain Support:** Organizations can choose between Solana, Polygon, or no blockchain integration
+- **Isolated Architecture:** Each blockchain runs in a separate Docker container with a consistent API interface
+- **Graceful Degradation:** Blockchain operations are asynchronous; adapter failures do not impact core governance functionality
+- **Future-Proof:** New blockchains can be added by implementing the standard adapter contract
+
+**Architecture Overview:**
+```
+Backend API → IBlockchainAdapterFactory → Adapter Containers (Solana, Polygon) → Blockchain Networks
+```
+
+**Use Cases:**
+- Record proposal lifecycle events on-chain (creation, opening, closing, finalization)
+- Tokenize share types as fungible tokens (SPL tokens on Solana, ERC-20 on Polygon)
+- Commit cryptographic hashes of proposal results for immutable audit trails
+- Optional: Record individual votes on-chain for maximum transparency
+
+**Documentation:**
+- **Comprehensive Architecture Specification:** [Blockchain Adapter Platform Architecture](./blockchain/adapter-platform-architecture.md)
+- **Solana Research:** [/docs/blockchain/solana/](./blockchain/solana/)
+- **Epic E-007:** Multi-Chain Adapter Platform (see `docs/product/backlog.md`)
+
+**Database Integration:**
+- Organizations have optional `BlockchainType` field (`None`, `Solana`, `Polygon`)
+- Blockchain transaction IDs stored in `ShareTypes`, `Proposals`, `Votes`, and `ShareIssuances` tables
+- Backend routes blockchain operations through adapter factory based on organization configuration
+
+**Backward Compatibility:**
+- Existing organizations without blockchain configuration (`BlockchainType = None`) continue working unchanged
+- Blockchain integration is opt-in per organization
+- All blockchain operations are best-effort; failures do not block user workflows
+
 ## Validation & Error Handling
 
 ### Validation Strategy
