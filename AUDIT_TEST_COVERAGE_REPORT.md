@@ -334,7 +334,7 @@ npm run test:e2e -- audit-log.spec.ts
 - [x] LogSyncAsync_PerformanceImpact ⭐ NEW
 
 ### ✅ E2E Tests
-- [x] OrgAdmin can navigate to audit log page ⭐ NEW
+- [x] Platform admin can navigate to audit log page ⭐ NEW
 - [x] Audit log displays events in table ⭐ NEW
 - [x] Filters work correctly (action, resource, outcome, date) ⭐ NEW
 - [x] Pagination works correctly ⭐ NEW
