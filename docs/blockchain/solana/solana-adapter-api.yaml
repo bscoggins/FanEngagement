@@ -455,7 +455,6 @@ paths:
         4. **Failed**: Transaction failed or rejected
         
       operationId: getTransactionStatus
-      security: []
       parameters:
         - name: txId
           in: path
@@ -541,7 +540,7 @@ components:
     ApiKeyAuth:
       type: apiKey
       in: header
-      name: X-API-Key
+      name: X-Adapter-API-Key
       description: |
         API key for authenticating requests to the Solana adapter.
 
