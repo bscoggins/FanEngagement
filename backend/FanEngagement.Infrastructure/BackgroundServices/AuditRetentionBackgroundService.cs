@@ -87,6 +87,16 @@ public class AuditRetentionBackgroundService(
 
         // For simplicity, we only support basic patterns for hour and minute
         // Day/month/dow support can be added later if needed
+        
+        // Warn if day/month/dow fields are not wildcards (they will be ignored)
+        if (parts[2] != "*" || parts[3] != "*" || parts[4] != "*")
+        {
+            logger.LogWarning(
+                "Day-of-month, month, and day-of-week fields in cron schedule are not supported and will be ignored. " +
+                "Only minute and hour fields are used. Schedule: {Schedule}",
+                _options.PurgeSchedule);
+        }
+        
         if (!int.TryParse(parts[0], out var scheduleMinute) || scheduleMinute < 0 || scheduleMinute > 59)
         {
             if (parts[0] != "*")
@@ -107,9 +117,10 @@ public class AuditRetentionBackgroundService(
             scheduleHour = -1; // Wildcard
         }
 
-        // Check if current time matches the schedule (within the last hour since we check hourly)
+        // Check if current time matches the schedule
+        // Since we check hourly, we allow a window: the minute must be within the current hour
         var hourMatches = scheduleHour == -1 || now.Hour == scheduleHour;
-        var minuteMatches = scheduleMinute == -1 || now.Minute >= scheduleMinute;
+        var minuteMatches = scheduleMinute == -1 || (now.Minute >= scheduleMinute && now.Minute < scheduleMinute + 5);
 
         return hourMatches && minuteMatches;
     }
