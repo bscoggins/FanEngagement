@@ -80,6 +80,23 @@ Users who are OrgAdmin in one organization and Member in another:
 - Org-scoped admin items appear only when viewing an organization where the user has OrgAdmin role
 - Switching between organizations updates which org-scoped items are visible, but user and global items stay in place
 
+#### Organization Switching Behavior
+
+When a mixed-role user switches organizations from the header dropdown:
+- **Selecting an OrgAdmin org**: Navigates to `/admin/organizations/:orgId/edit` (organization admin overview)
+- **Selecting a Member org**: Navigates to `/me/home` (member dashboard)
+
+This ensures users land on the appropriate view based on their role in the selected organization.
+
+#### Member Dashboard Filtering
+
+The member dashboard (`/me/home`) displays different organization lists based on the active organization context:
+- **When active org is a Member org**: Only shows organizations where the user has Member role (filters out OrgAdmin orgs)
+- **When active org is an OrgAdmin org**: Shows all organizations (both Member and OrgAdmin)
+- **When no active org selected**: Shows all organizations
+
+This contextual filtering ensures the dashboard content is relevant to the user's current role context.
+
 ### Navigation Consistency
 
 The navigation is designed to maintain consistent positioning:

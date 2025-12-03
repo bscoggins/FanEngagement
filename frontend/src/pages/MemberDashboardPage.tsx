@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useActiveOrganization } from '../contexts/OrgContext';
 import { membershipsApi } from '../api/membershipsApi';
 import { proposalsApi } from '../api/proposalsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -43,6 +44,7 @@ const getTargetOrganization = (
 
 export const MemberDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { activeOrg } = useActiveOrganization();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -89,6 +91,21 @@ export const MemberDashboardPage: React.FC = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  // Filter memberships to display based on active org context
+  // If active org is a Member org, only show Member orgs
+  // Otherwise, show all orgs (for admin users or when no active org)
+  const displayedMemberships = useMemo(() => {
+    if (!data?.memberships) return [];
+    
+    // If active org is a Member role org, filter to only show Member orgs
+    if (activeOrg && activeOrg.role === 'Member') {
+      return data.memberships.filter(m => m.role === 'Member');
+    }
+    
+    // Otherwise show all memberships
+    return data.memberships;
+  }, [data?.memberships, activeOrg]);
+
   if (loading) {
     return <LoadingSpinner message="Loading your dashboard..." />;
   }
@@ -134,13 +151,13 @@ export const MemberDashboardPage: React.FC = () => {
             <h2 style={{ margin: 0, fontSize: '1.25rem' }}>My Organizations</h2>
           </div>
           
-          {data?.memberships && data.memberships.length > 0 ? (
+          {displayedMemberships.length > 0 ? (
             <>
               <p style={{ color: '#666', marginBottom: '1rem' }}>
-                You are a member of <strong>{data.memberships.length}</strong> organization{data.memberships.length !== 1 ? 's' : ''}.
+                You are a member of <strong>{displayedMemberships.length}</strong> organization{displayedMemberships.length !== 1 ? 's' : ''}.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
-                {data.memberships.slice(0, 3).map((membership) => (
+                {displayedMemberships.slice(0, 3).map((membership) => (
                   <li key={membership.id} style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
                     <Link
                       to={`/me/organizations/${membership.organizationId}`}
@@ -162,9 +179,9 @@ export const MemberDashboardPage: React.FC = () => {
                     </span>
                   </li>
                 ))}
-                {data.memberships.length > 3 && (
+                {displayedMemberships.length > 3 && (
                   <li style={{ padding: '0.5rem 0', color: '#666', fontStyle: 'italic' }}>
-                    and {data.memberships.length - 3} more...
+                    and {displayedMemberships.length - 3} more...
                   </li>
                 )}
               </ul>
@@ -245,7 +262,7 @@ export const MemberDashboardPage: React.FC = () => {
           )}
           
           {(() => {
-            const targetOrg = getTargetOrganization(data?.memberships || [], data?.activeProposals || []);
+            const targetOrg = getTargetOrganization(displayedMemberships, data?.activeProposals || []);
             if (!targetOrg) return null;
             
             return (

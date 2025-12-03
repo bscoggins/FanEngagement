@@ -3,14 +3,17 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
+import { OrgProvider } from '../contexts/OrgContext';
 import { MemberDashboardPage } from '../pages/MemberDashboardPage';
 import { membershipsApi } from '../api/membershipsApi';
 import { proposalsApi } from '../api/proposalsApi';
+import type { MembershipWithOrganizationDto } from '../types/api';
 
 // Mock the APIs
 vi.mock('../api/membershipsApi', () => ({
   membershipsApi: {
     getByUserId: vi.fn(),
+    getMyOrganizations: vi.fn(),
   },
 }));
 
@@ -24,6 +27,8 @@ describe('MemberDashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // Mock getMyOrganizations to return empty array by default
+    vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue([]);
     // Suppress console warnings for cleaner test output
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -52,11 +57,13 @@ describe('MemberDashboardPage', () => {
       <MemoryRouter initialEntries={['/me/home']}>
         <NotificationProvider>
           <AuthProvider>
-            <Routes>
-              <Route path="/me/home" element={<MemberDashboardPage />} />
-              <Route path="/me/organizations/:orgId" element={<div>Org Detail Page</div>} />
-              <Route path="/me/proposals/:proposalId" element={<div>Proposal Page</div>} />
-            </Routes>
+            <OrgProvider isAuthenticated={true}>
+              <Routes>
+                <Route path="/me/home" element={<MemberDashboardPage />} />
+                <Route path="/me/organizations/:orgId" element={<div>Org Detail Page</div>} />
+                <Route path="/me/proposals/:proposalId" element={<div>Proposal Page</div>} />
+              </Routes>
+            </OrgProvider>
           </AuthProvider>
         </NotificationProvider>
       </MemoryRouter>
@@ -361,5 +368,101 @@ describe('MemberDashboardPage', () => {
     // Should show both organizations in the organizations card
     const orgLinks = screen.getAllByRole('link', { name: /Org One|Org Two/ });
     expect(orgLinks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('filters to show only Member orgs when active org is a Member org', async () => {
+    setupAuthenticatedUser();
+    const mixedMemberships: MembershipWithOrganizationDto[] = [
+      {
+        id: 'membership-1',
+        organizationId: 'org-admin',
+        organizationName: 'Admin Org',
+        userId: 'user-123',
+        role: 'OrgAdmin',
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'membership-2',
+        organizationId: 'org-member',
+        organizationName: 'Member Org',
+        userId: 'user-123',
+        role: 'Member',
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    ];
+    
+    // Set active org to a Member org in localStorage
+    localStorage.setItem('activeOrganization', JSON.stringify({
+      id: 'org-member',
+      name: 'Member Org',
+      role: 'Member',
+    }));
+    
+    // Mock memberships to return mixed roles
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedMemberships);
+    vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mixedMemberships);
+    vi.mocked(proposalsApi.getByOrganization).mockResolvedValue([]);
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('organizations-card')).toBeInTheDocument();
+    });
+
+    // Should only show Member Org, not Admin Org
+    expect(screen.getByText('Member Org')).toBeInTheDocument();
+    expect(screen.queryByText('Admin Org')).not.toBeInTheDocument();
+    
+    // Count should be 1 (only member org)
+    expect(screen.getByText(/you are a member of/i)).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+  });
+
+  it('shows all orgs when active org is an OrgAdmin org', async () => {
+    setupAuthenticatedUser();
+    const mixedMemberships: MembershipWithOrganizationDto[] = [
+      {
+        id: 'membership-1',
+        organizationId: 'org-admin',
+        organizationName: 'Admin Org',
+        userId: 'user-123',
+        role: 'OrgAdmin',
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'membership-2',
+        organizationId: 'org-member',
+        organizationName: 'Member Org',
+        userId: 'user-123',
+        role: 'Member',
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    ];
+    
+    // Set active org to an OrgAdmin org in localStorage
+    localStorage.setItem('activeOrganization', JSON.stringify({
+      id: 'org-admin',
+      name: 'Admin Org',
+      role: 'OrgAdmin',
+    }));
+    
+    // Mock memberships to return mixed roles
+    vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedMemberships);
+    vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mixedMemberships);
+    vi.mocked(proposalsApi.getByOrganization).mockResolvedValue([]);
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('organizations-card')).toBeInTheDocument();
+    });
+
+    // Should show both orgs
+    expect(screen.getByText('Admin Org')).toBeInTheDocument();
+    expect(screen.getByText('Member Org')).toBeInTheDocument();
+    
+    // Count should be 2 (all orgs)
+    expect(screen.getByText(/you are a member of/i)).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
   });
 });
