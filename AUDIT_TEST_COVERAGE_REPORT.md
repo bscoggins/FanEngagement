@@ -225,7 +225,7 @@ All resource types have comprehensive event capture tests:
 ### 6. E2E Tests (8 tests - NEW)
 
 **UI Navigation:**
-- ✅ `OrgAdmin can navigate to audit log page` - Navigation flow validated
+- ✅ `Platform admin can navigate to audit log page` - Navigation flow validated
 
 **Display & Structure:**
 - ✅ `Audit log displays events in table` - Event structure and display validated
