@@ -15,6 +15,7 @@ import { MyAccountPage } from '../pages/MyAccountPage';
 import { MyOrganizationsPage } from '../pages/MyOrganizationsPage';
 import { MyOrganizationPage } from '../pages/MyOrganizationPage';
 import { MyProposalPage } from '../pages/MyProposalPage';
+import { MyActivityPage } from '../pages/MyActivityPage';
 import { MemberDashboardPage } from '../pages/MemberDashboardPage';
 import { PlatformAdminDashboardPage } from '../pages/PlatformAdminDashboardPage';
 import { AdminDashboardPage } from '../pages/AdminDashboardPage';
@@ -97,6 +98,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MyOrganizationPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'me/activity',
+        element: (
+          <ProtectedRoute>
+            <MyActivityPage />
           </ProtectedRoute>
         ),
       },
