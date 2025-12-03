@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
@@ -32,13 +32,13 @@ const getDateFromFilter = (filter: DateFilter): string | undefined => {
 
 const getIconForAction = (actionType: string, resourceType: string): string => {
   // Vote-related actions
-  if (resourceType === 'Vote' || actionType === 'Created' && resourceType === 'Vote') {
+  if (resourceType === 'Vote') {
     return '🗳️';
   }
   
   // Membership changes
   if (resourceType === 'Membership') {
-    if (actionType === 'Created') return '👋';
+    if (actionType === 'Created') return '➕';
     if (actionType === 'Deleted') return '👋';
     if (actionType === 'RoleChanged') return '🔄';
   }
@@ -151,7 +151,7 @@ export const MyActivityPage: React.FC = () => {
   const [hasNextPage, setHasNextPage] = useState(false);
   const pageSize = 20;
 
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -175,12 +175,11 @@ export const MyActivityPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateFilter, currentPage, pageSize]);
 
   useEffect(() => {
     fetchActivities();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateFilter, currentPage]);
+  }, [fetchActivities]);
 
   const handleDateFilterChange = (filter: DateFilter) => {
     setDateFilter(filter);
