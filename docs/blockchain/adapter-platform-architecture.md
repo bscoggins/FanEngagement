@@ -595,20 +595,20 @@ public class BlockchainAdapterFactory(
         
         return org.BlockchainType switch
         {
-            BlockchainType.Solana => CreateSolanaAdapter(org.BlockchainConfig),
-            BlockchainType.Polygon => CreatePolygonAdapter(org.BlockchainConfig),
+            BlockchainType.Solana => await CreateSolanaAdapterAsync(org.BlockchainConfig, ct),
+            BlockchainType.Polygon => await CreatePolygonAdapterAsync(org.BlockchainConfig, ct),
             BlockchainType.None => new NullBlockchainAdapter(),
             _ => throw new InvalidOperationException(
                 $"Unknown blockchain type: {org.BlockchainType}")
         };
     }
     
-    private IBlockchainAdapter CreateSolanaAdapter(string? configJson)
+    private async Task<IBlockchainAdapter> CreateSolanaAdapterAsync(string? configJson, CancellationToken ct)
     {
         var config = ParseConfig(configJson);
         
         // SECURITY: Validate adapter URL to prevent SSRF attacks
-        ValidateAdapterUrl(config.AdapterUrl, "SolanaAdapter");
+        await ValidateAdapterUrlAsync(config.AdapterUrl, "SolanaAdapter", ct);
         
         var httpClient = httpClientFactory.CreateClient("SolanaAdapter");
         httpClient.BaseAddress = new Uri(config.AdapterUrl);
@@ -617,7 +617,7 @@ public class BlockchainAdapterFactory(
         return new SolanaAdapterClient(httpClient, logger);
     }
     
-    private void ValidateAdapterUrl(string adapterUrl, string adapterName)
+    private async Task ValidateAdapterUrlAsync(string adapterUrl, string adapterName, CancellationToken ct)
     {
         // Enforce strict allowlist of adapter hosts to prevent SSRF
         var allowedHosts = configuration
@@ -648,8 +648,9 @@ public class BlockchainAdapterFactory(
                 $"Adapter host '{uri.Host}' is not in the allowed hosts list for {adapterName}");
         }
         
-        // Block localhost, loopback, and private IP ranges
-        if (IsLocalOrPrivateHost(uri.Host))
+        // Block localhost, loopback, and private IP ranges by resolving the host
+        var addresses = await System.Net.Dns.GetHostAddressesAsync(uri.Host, ct);
+        if (addresses.Any(IsPrivateOrLocalIp))
         {
             throw new InvalidOperationException(
                 $"Adapter host '{uri.Host}' resolves to a local or private address, which is not allowed.");
@@ -660,39 +661,35 @@ public class BlockchainAdapterFactory(
             adapterName, uri.Host);
     }
     
-    // Helper to check if host is localhost, loopback, or private IP
-    private static bool IsLocalOrPrivateHost(string host)
+    // Helper to check if IP address is localhost, loopback, or private
+    private static bool IsPrivateOrLocalIp(System.Net.IPAddress ip)
     {
-        // Check for localhost
-        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-            host.Equals("127.0.0.1") ||
-            host.Equals("::1"))
-        {
+        // Check for loopback
+        if (System.Net.IPAddress.IsLoopback(ip))
             return true;
-        }
         
-        // Try to parse as IP address
-        if (System.Net.IPAddress.TryParse(host, out var ip))
+        // IPv4 private ranges
+        if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
         {
-            // IPv4 private ranges
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-            {
-                byte[] bytes = ip.GetAddressBytes();
-                // 10.0.0.0/8
-                if (bytes[0] == 10) return true;
-                // 172.16.0.0/12
-                if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
-                // 192.168.0.0/16
-                if (bytes[0] == 192 && bytes[1] == 168) return true;
-                // Loopback
-                if (bytes[0] == 127) return true;
-            }
-            // IPv6 loopback or private
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-            {
-                if (ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.Equals(System.Net.IPAddress.IPv6Loopback))
-                    return true;
-            }
+            byte[] bytes = ip.GetAddressBytes();
+            // 10.0.0.0/8
+            if (bytes[0] == 10)
+                return true;
+            // 172.16.0.0/12
+            if (bytes[0] == 172 && (bytes[1] >= 16 && bytes[1] <= 31))
+                return true;
+            // 192.168.0.0/16
+            if (bytes[0] == 192 && bytes[1] == 168)
+                return true;
+            // 169.254.0.0/16 (link-local & cloud metadata)
+            if (bytes[0] == 169 && bytes[1] == 254)
+                return true;
+        }
+        // IPv6 loopback or private
+        if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+        {
+            if (ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.Equals(System.Net.IPAddress.IPv6Loopback))
+                return true;
         }
         return false;
     }
@@ -808,6 +805,10 @@ Use Polly library for retry, timeout, and circuit breaker:
 ```csharp
 // In DependencyInjection.cs
 services.AddHttpClient("SolanaAdapter")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler 
+    { 
+        AllowAutoRedirect = false  // SECURITY: Prevent redirect-based SSRF attacks
+    })
     .AddPolicyHandler(GetRetryPolicy())
     .AddPolicyHandler(GetCircuitBreakerPolicy())
     .AddPolicyHandler(GetTimeoutPolicy());
@@ -1028,18 +1029,24 @@ function loadKeypair(): Keypair {
 2. **URL Validation:** Validate scheme, host, and port before creating HTTP client
    - Only `https://` scheme allowed in production
    - Host must match allowlist (case-insensitive)
-   - Reject IP addresses, localhost, private IP ranges
+   - **DNS Resolution Required:** Resolve hostname and validate all IPs to prevent DNS rebinding attacks
+   - Reject localhost, loopback, private IP ranges (10.x, 172.16-31.x, 192.168.x, 127.x, 169.254.x)
 
-3. **Certificate Validation:** Require valid TLS certificates with hostname verification
+3. **Disable HTTP Redirects:** Configure `HttpClient` with `AllowAutoRedirect = false`
+   - Prevents 30x redirect from allowed host to internal/attacker URLs
+   - Protects API keys from being sent to unvalidated redirect targets
+   - See Section 6.2 for HttpClient configuration example
+
+4. **Certificate Validation:** Require valid TLS certificates with hostname verification
    - Use mTLS with certificate pinning for highest security
    - Service mesh (Istio, Linkerd) can enforce this automatically
 
-4. **Configuration Review:** Treat `BlockchainConfig` changes as sensitive operations
+5. **Configuration Review:** Treat `BlockchainConfig` changes as sensitive operations
    - Require additional approval for production changes
    - Audit all adapter URL modifications
    - Alert on suspicious patterns (IP addresses, non-standard ports)
 
-See Section 5.1 for implementation example with `ValidateAdapterUrl()` method.
+See Section 5.1 for implementation example with `ValidateAdapterUrlAsync()` method and Section 6.2 for HttpClient redirect prevention.
 
 ---
 
@@ -1625,7 +1632,8 @@ public async Task GetAdapterAsync_SolanaOrg_ReturnsSolanaAdapter()
     await dbContext.Organizations.AddAsync(org);
     await dbContext.SaveChangesAsync();
     
-    var factory = new BlockchainAdapterFactory(dbContext, httpClientFactory, config, logger);
+    var environment = Mock.Of<IWebHostEnvironment>(e => e.EnvironmentName == "Development");
+    var factory = new BlockchainAdapterFactory(dbContext, httpClientFactory, config, environment, logger);
     
     // Act
     var adapter = await factory.GetAdapterAsync(org.Id, CancellationToken.None);
