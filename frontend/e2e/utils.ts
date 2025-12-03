@@ -49,5 +49,8 @@ export const getExistingOrgId = async (
     throw new Error(`Unable to locate proposals link for ${orgName}`);
   }
   const segments = href.split('/');
+  if (segments.length < 5) {
+    throw new Error(`Unexpected href format for ${orgName}: ${href}`);
+  }
   return segments[3];
 };
