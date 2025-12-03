@@ -145,8 +145,9 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
     
     uint256 public maxSupply;
     
-    // Track addresses authorized for admin burn (e.g., after off-chain policy approval)
-    mapping(address => bool) public authorizedForAdminBurn;
+    // Timelock for admin burn authorization (2 days = 48 hours)
+    uint256 public constant ADMIN_BURN_TIMELOCK = 2 days;
+    mapping(address => uint256) public pendingAdminBurn;
     
     event AdminBurnAuthorized(address indexed account, address indexed authorizer);
     event AdminBurnRevoked(address indexed account, address indexed revoker);
@@ -172,22 +173,24 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
         _burn(msg.sender, amount);
     }
     
-    // Authorize an address for admin burn (requires multisig in production)
+    // Authorize an address for admin burn (records timestamp, requires multisig in production)
     function authorizeAdminBurn(address account) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        authorizedForAdminBurn[account] = true;
+        pendingAdminBurn[account] = block.timestamp;
         emit AdminBurnAuthorized(account, msg.sender);
     }
     
     // Revoke admin burn authorization
     function revokeAdminBurn(address account) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        authorizedForAdminBurn[account] = false;
+        pendingAdminBurn[account] = 0;
         emit AdminBurnRevoked(account, msg.sender);
     }
     
-    // Admin burn for share revocation with strict controls
+    // Admin burn for share revocation with strict controls and timelock
     function adminBurn(address from, uint256 amount) public onlyRole(BURNER_ROLE) {
-        require(authorizedForAdminBurn[from], "Address not authorized for admin burn");
+        require(pendingAdminBurn[from] != 0, "Address not authorized for admin burn");
+        require(block.timestamp >= pendingAdminBurn[from] + ADMIN_BURN_TIMELOCK, "Timelock not expired");
         _burn(from, amount);
+        pendingAdminBurn[from] = 0; // Clear authorization after burn
         emit AdminBurnExecuted(from, amount, msg.sender);
     }
     
@@ -212,12 +215,13 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
 
 **Security Note for Production Implementation:**
 
-The example contract above demonstrates the basic structure for governance tokens with admin burn capability. However, **production deployments require significantly stronger security controls** to prevent unauthorized token confiscation:
+The example contract above demonstrates a governance token with admin burn capability **including a basic 2-day timelock** between authorization and execution. This timelock provides transparency and allows stakeholders to react to unauthorized attempts. However, **production deployments require additional security controls**:
 
-1. **Timelock Requirements:**
-   - Authorization via `authorizeAdminBurn()` should have a mandatory waiting period (e.g., 48-72 hours) before `adminBurn()` can execute
-   - Implement using OpenZeppelin's `TimelockController` or similar timelock contract
-   - This provides transparency and allows stakeholders to react to unauthorized authorization attempts
+1. **Enhanced Timelock Implementation:**
+   - The example uses a simple timelock (2 days); production should use OpenZeppelin's `TimelockController` for more robust functionality
+   - Consider longer delays for high-value operations (48-72 hours minimum)
+   - Implement queuing system for multiple pending burns
+   - Add cancellation mechanism for authorized-but-not-executed burns
 
 2. **Multi-Signature Governance:**
    - Both `DEFAULT_ADMIN_ROLE` and `BURNER_ROLE` must be controlled by multi-signature wallets (e.g., Gnosis Safe)
@@ -238,7 +242,7 @@ The example contract above demonstrates the basic structure for governance token
    - Implement `ERC20Pausable` to halt all token operations if compromise is detected
    - Pause functionality should also require multi-sig + timelock
 
-For a complete production-ready implementation with timelock and enhanced security, refer to OpenZeppelin's Governor framework and Compound's governance patterns.
+The example provides a foundation showing the timelock pattern; production implementations should build on this with the additional controls listed above. Refer to OpenZeppelin's Governor framework and Compound's governance patterns for complete production-ready implementations.
 
 ### 2.3 Share Tokenization Strategy
 
