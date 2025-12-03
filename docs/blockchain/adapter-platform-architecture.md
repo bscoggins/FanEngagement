@@ -16,6 +16,15 @@ This document defines the architecture for FanEngagement's multi-chain blockchai
 3. **Flexibility** - Organizations select blockchain via database configuration; backend routes requests to appropriate adapter
 4. **Resilience** - Adapter failures handled gracefully; main application remains operational
 5. **Extensibility** - New blockchains added by implementing adapter contract and deploying container
+6. **Security** - Mandatory TLS, SSRF prevention, and strict allowlist validation protect against attacks
+
+**Security Critical Requirements:**
+
+⚠️ **HTTPS/TLS is MANDATORY** for all adapter communication to prevent credential interception  
+⚠️ **Allowlist validation REQUIRED** to prevent SSRF attacks from malicious adapter URLs  
+⚠️ **Certificate validation REQUIRED** to prevent man-in-the-middle attacks  
+
+See Section 7 (Security Model) for complete security requirements.
 
 **Benefits:**
 
@@ -596,11 +605,46 @@ public class BlockchainAdapterFactory(
     private IBlockchainAdapter CreateSolanaAdapter(string? configJson)
     {
         var config = ParseConfig(configJson);
+        
+        // SECURITY: Validate adapter URL to prevent SSRF attacks
+        ValidateAdapterUrl(config.AdapterUrl, "SolanaAdapter");
+        
         var httpClient = httpClientFactory.CreateClient("SolanaAdapter");
         httpClient.BaseAddress = new Uri(config.AdapterUrl);
         httpClient.DefaultRequestHeaders.Add("X-Adapter-API-Key", config.ApiKey);
         
         return new SolanaAdapterClient(httpClient, logger);
+    }
+    
+    private void ValidateAdapterUrl(string adapterUrl, string adapterName)
+    {
+        // Enforce strict allowlist of adapter hosts to prevent SSRF
+        var allowedHosts = configuration
+            .GetSection($"BlockchainAdapters:{adapterName}:AllowedHosts")
+            .Get<string[]>() ?? Array.Empty<string>();
+        
+        if (!Uri.TryCreate(adapterUrl, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException($"Invalid adapter URL: {adapterUrl}");
+        }
+        
+        // Only HTTPS allowed in production
+        if (uri.Scheme != "https" && !environment.IsDevelopment())
+        {
+            throw new InvalidOperationException(
+                $"Adapter URL must use HTTPS in non-development environments: {adapterUrl}");
+        }
+        
+        // Validate against allowlist
+        if (allowedHosts.Length > 0 && !allowedHosts.Contains(uri.Host, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Adapter host '{uri.Host}' is not in the allowed hosts list for {adapterName}");
+        }
+        
+        logger.LogInformation(
+            "Validated adapter URL for {AdapterName}: {Host}",
+            adapterName, uri.Host);
     }
     
     // Similar for Polygon...
@@ -899,8 +943,53 @@ function loadKeypair(): Keypair {
 
 - **Private Network:** Adapters communicate with backend on private network (Docker network or Kubernetes cluster network)
 - **Firewall Rules:** Adapters not exposed to public internet; only accessible from backend
-- **TLS Termination:** Optional TLS between backend and adapters for added confidentiality
+- **TLS Required:** **MANDATORY HTTPS** between backend and adapters to prevent credential interception and tampering
+  - Development: Self-signed certificates acceptable (configured in Docker Compose)
+  - Production: Valid certificates via cert-manager, service mesh, or cloud provider
+- **Certificate Validation:** Backend must validate adapter certificates to prevent MITM attacks
+- **mTLS Recommended:** Mutual TLS for production deployments ensures both parties authenticate each other
 - **Rate Limiting:** Adapters enforce rate limits per API key to prevent abuse
+
+**SECURITY CRITICAL:** All adapter communication must use HTTPS/TLS to protect authentication headers (`X-Adapter-API-Key`, `Authorization`) from interception. Plain HTTP is **NOT SECURE** even on private networks.
+
+### 7.5 SSRF Prevention
+
+**Critical Security Control:** The `Organization.BlockchainConfig` field allows OrgAdmins to specify adapter URLs. Without validation, this creates an SSRF (Server-Side Request Forgery) vulnerability where attackers can:
+- Point `AdapterUrl` to internal services (databases, metadata endpoints, admin interfaces)
+- Force the backend to send authenticated requests to attacker-controlled endpoints
+- Exfiltrate data or perform unauthorized actions
+
+**Required Mitigations:**
+
+1. **Strict Allowlist:** Enforce allowlist of permitted adapter hostnames
+   ```json
+   {
+     "BlockchainAdapters": {
+       "Solana": {
+         "AllowedHosts": [
+           "solana-adapter",
+           "solana-adapter.default.svc.cluster.local"
+         ]
+       }
+     }
+   }
+   ```
+
+2. **URL Validation:** Validate scheme, host, and port before creating HTTP client
+   - Only `https://` scheme allowed in production
+   - Host must match allowlist (case-insensitive)
+   - Reject IP addresses, localhost, private IP ranges
+
+3. **Certificate Validation:** Require valid TLS certificates with hostname verification
+   - Use mTLS with certificate pinning for highest security
+   - Service mesh (Istio, Linkerd) can enforce this automatically
+
+4. **Configuration Review:** Treat `BlockchainConfig` changes as sensitive operations
+   - Require additional approval for production changes
+   - Audit all adapter URL modifications
+   - Alert on suspicious patterns (IP addresses, non-standard ports)
+
+See Section 5.1 for implementation example with `ValidateAdapterUrl()` method.
 
 ---
 
@@ -920,8 +1009,8 @@ services:
       - "8080:80"
     environment:
       - ConnectionStrings__DefaultConnection=Host=db;Database=fanengagement;Username=postgres;Password=postgres
-      - BlockchainAdapters__Solana__BaseUrl=http://solana-adapter:3001
-      - BlockchainAdapters__Polygon__BaseUrl=http://polygon-adapter:3002
+      - BlockchainAdapters__Solana__BaseUrl=https://solana-adapter:3001
+      - BlockchainAdapters__Polygon__BaseUrl=https://polygon-adapter:3002
     depends_on:
       - db
       - solana-adapter
@@ -938,6 +1027,10 @@ services:
       - SOLANA_RPC_URL=https://api.devnet.solana.com
       - SOLANA_PRIVATE_KEY=${SOLANA_PRIVATE_KEY}
       - API_KEY=${SOLANA_ADAPTER_API_KEY}
+      - TLS_CERT_FILE=/certs/tls.crt
+      - TLS_KEY_FILE=/certs/tls.key
+    volumes:
+      - ./certs/dev:/certs:ro  # Mount self-signed certs for dev
     networks:
       - fanengagement-network
 
@@ -950,6 +1043,10 @@ services:
       - POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com
       - POLYGON_PRIVATE_KEY=${POLYGON_PRIVATE_KEY}
       - API_KEY=${POLYGON_ADAPTER_API_KEY}
+      - TLS_CERT_FILE=/certs/tls.crt
+      - TLS_KEY_FILE=/certs/tls.key
+    volumes:
+      - ./certs/dev:/certs:ro  # Mount self-signed certs for dev
     networks:
       - fanengagement-network
 
@@ -972,9 +1069,33 @@ volumes:
   postgres-data:
 ```
 
+**TLS Configuration for Development:**
+
+To enable HTTPS in development, generate self-signed certificates:
+
+```bash
+# Create certs directory
+mkdir -p certs/dev
+
+# Generate self-signed certificate (valid for 365 days)
+openssl req -x509 -newkey rsa:4096 -nodes \
+  -keyout certs/dev/tls.key \
+  -out certs/dev/tls.crt \
+  -days 365 \
+  -subj "/CN=solana-adapter" \
+  -addext "subjectAltName=DNS:solana-adapter,DNS:polygon-adapter,DNS:localhost"
+
+# Backend must trust this certificate in development
+# Add to backend HttpClient configuration:
+# - Disable certificate validation (dev only): ServicePointManager.ServerCertificateValidationCallback
+# - Or add cert to trusted root store
+```
+
+**Security Note:** Self-signed certificates are acceptable for development but **NEVER** for production. Production must use valid certificates from a trusted CA or service mesh.
+
 **Usage:**
 ```bash
-# Start all services
+# Start all services with TLS
 docker compose up -d
 
 # View logs
@@ -985,6 +1106,11 @@ docker compose down
 ```
 
 ### 8.2 Production (Kubernetes)
+
+**Security Requirements:**
+- **TLS Mandatory:** All adapter Services must use HTTPS with valid certificates
+- **Certificate Management:** Use cert-manager for automatic certificate issuance/renewal
+- **mTLS Recommended:** Implement mutual TLS between backend and adapters using service mesh (Istio, Linkerd) or manual certificate configuration
 
 **Architecture:**
 
@@ -1039,14 +1165,14 @@ spec:
               name: database-secret
               key: connection-string
         - name: BlockchainAdapters__Solana__BaseUrl
-          value: "http://solana-adapter.default.svc.cluster.local"
+          value: "https://solana-adapter.default.svc.cluster.local"
         - name: BlockchainAdapters__Solana__ApiKey
           valueFrom:
             secretKeyRef:
               name: adapter-secrets
               key: solana-api-key
         - name: BlockchainAdapters__Polygon__BaseUrl
-          value: "http://polygon-adapter.default.svc.cluster.local"
+          value: "https://polygon-adapter.default.svc.cluster.local"
         - name: BlockchainAdapters__Polygon__ApiKey
           valueFrom:
             secretKeyRef:
@@ -1122,6 +1248,14 @@ spec:
             secretKeyRef:
               name: adapter-secrets
               key: solana-api-key
+        - name: TLS_CERT_FILE
+          value: "/certs/tls.crt"
+        - name: TLS_KEY_FILE
+          value: "/certs/tls.key"
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /certs
+          readOnly: true
         resources:
           requests:
             memory: "128Mi"
@@ -1133,28 +1267,73 @@ spec:
           httpGet:
             path: /v1/adapter/health
             port: 3001
+            scheme: HTTPS  # Health check over HTTPS
           initialDelaySeconds: 20
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /v1/adapter/health
             port: 3001
+            scheme: HTTPS  # Health check over HTTPS
           initialDelaySeconds: 5
           periodSeconds: 5
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: solana-adapter-tls  # Certificate from cert-manager or manual
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: solana-adapter
+  annotations:
+    # For cert-manager automatic certificate issuance
+    cert-manager.io/issuer: "letsencrypt-prod"
 spec:
   selector:
     app: solana-adapter
   ports:
   - protocol: TCP
-    port: 80
+    port: 443  # Expose on standard HTTPS port
     targetPort: 3001
+    name: https
   type: ClusterIP
 ```
+
+**TLS Certificate Management (Production):**
+
+```yaml
+# cert-manager Certificate resource for automatic TLS
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: solana-adapter-tls
+spec:
+  secretName: solana-adapter-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - solana-adapter.default.svc.cluster.local
+```
+
+**Service Mesh Alternative (Istio):**
+
+For production, consider using a service mesh for automatic mTLS:
+
+```yaml
+# Istio PeerAuthentication for strict mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: default
+spec:
+  mtls:
+    mode: STRICT  # Enforce mTLS for all services
+```
+
+With Istio, adapters can use HTTP internally while the mesh handles TLS, certificate rotation, and authentication automatically.
 
 ### 8.3 Scaling Strategy
 
@@ -1468,6 +1647,7 @@ Test resilience by injecting failures:
 | **Testing** | Complex (needs Solana test validator in backend tests) | Simpler (mock adapter HTTP API) |
 | **Operations** | Backend and blockchain tightly coupled | Independent scaling and deployment |
 | **Key Management** | Keys in backend secrets | Keys isolated in adapter containers |
+| **Security** | Mixed security model | TLS mandatory, SSRF prevention, strict allowlists |
 
 ### 11.2 Preserved E-004 Research
 
@@ -1533,6 +1713,7 @@ All archived E-004 stories in `/docs/product/archive/E-004-*.md` are marked as s
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2024-12-03 | Documentation Agent | Initial architecture specification |
+| 1.1 | 2024-12-03 | Documentation Agent | Security hardening: Added SSRF prevention, mandatory TLS/HTTPS, certificate validation, allowlist validation |
 
 ---
 
@@ -1549,18 +1730,26 @@ See: `/docs/blockchain/solana/solana-adapter-api.yaml` (to be created in E-007-0
 {
   "BlockchainAdapters": {
     "Solana": {
-      "BaseUrl": "http://solana-adapter:3001",
+      "BaseUrl": "https://solana-adapter:3001",
       "ApiKey": "${SOLANA_ADAPTER_API_KEY}",
       "Timeout": "00:00:30",
       "RetryCount": 3,
-      "CircuitBreakerThreshold": 5
+      "CircuitBreakerThreshold": 5,
+      "AllowedHosts": [
+        "solana-adapter",
+        "solana-adapter.default.svc.cluster.local"
+      ]
     },
     "Polygon": {
-      "BaseUrl": "http://polygon-adapter:3002",
+      "BaseUrl": "https://polygon-adapter:3002",
       "ApiKey": "${POLYGON_ADAPTER_API_KEY}",
       "Timeout": "00:00:30",
       "RetryCount": 3,
-      "CircuitBreakerThreshold": 5
+      "CircuitBreakerThreshold": 5,
+      "AllowedHosts": [
+        "polygon-adapter",
+        "polygon-adapter.default.svc.cluster.local"
+      ]
     }
   }
 }
@@ -1571,7 +1760,12 @@ See: `/docs/blockchain/solana/solana-adapter-api.yaml` (to be created in E-007-0
 {
   "server": {
     "port": 3001,
-    "logLevel": "info"
+    "logLevel": "info",
+    "tls": {
+      "enabled": true,
+      "certFile": "/certs/tls.crt",
+      "keyFile": "/certs/tls.key"
+    }
   },
   "blockchain": {
     "network": "devnet",
@@ -1596,12 +1790,14 @@ See: `/docs/blockchain/solana/solana-adapter-api.yaml` (to be created in E-007-0
 | **Adapter** | Docker container implementing blockchain operations via consistent API |
 | **Circuit Breaker** | Pattern that prevents cascading failures by opening when error threshold reached |
 | **Factory Pattern** | Design pattern for creating objects; used to route to correct adapter |
+| **mTLS (Mutual TLS)** | Authentication protocol where both client and server present certificates |
 | **Null Adapter** | No-op implementation for organizations not using blockchain |
 | **OpenAPI Contract** | Standard API specification defining endpoints, schemas, and responses |
 | **PDA (Program Derived Address)** | Solana-specific deterministic account address pattern |
 | **Polly** | .NET library for resilience policies (retry, circuit breaker, timeout) |
 | **RPC Provider** | Service providing JSON-RPC interface to blockchain network |
 | **SPL Token** | Solana Program Library token standard for fungible tokens |
+| **SSRF (Server-Side Request Forgery)** | Attack where attacker forces server to make requests to unintended destinations |
 | **ERC-20** | Ethereum Request for Comment 20, fungible token standard |
 
 ---
