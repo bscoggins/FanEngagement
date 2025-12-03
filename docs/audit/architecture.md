@@ -77,7 +77,12 @@ graph TD
 3. **Bounded Channel**
    - In-memory queue for pending audit events
    - Capacity: 1000 events
-   - Overflow strategy: Drop oldest on full channel (with warning logged)
+   - Overflow strategy: **Current implementation drops oldest events** (with warning logged)
+   - **Security Consideration:** Drop-oldest policy can be exploited by attackers flooding the system with audit-generating actions (e.g., repeated 403s, failed logins) to evict earlier, potentially incriminating events before persistence. Production systems should consider:
+     - Implementing durable overflow (disk-backed queue) to prevent event loss
+     - Using priority queues that never drop security-critical events (authentication, authorization, proposal finalization, votes)
+     - Applying per-actor rate limiting to prevent audit flood attacks
+     - Switching to drop-newest with alerting to preserve already-enqueued events
    - Provides natural backpressure during high load
 
 4. **Audit Persistence Background Service**

@@ -91,12 +91,17 @@ try
 }
 catch (Exception ex)
 {
+    // Log full exception details to secure application logs
+    logger.LogError(ex, "Failed to create entity for user {UserId}", userId);
+
+    // Use a generic failure reason in audit event to avoid leaking sensitive info
+    // DO NOT include ex.Message as it may contain connection strings, PII, or internal details
     await auditService.LogAsync(
         new AuditEventBuilder()
             .WithActor(userId, displayName)
             .WithAction(AuditActionType.Created)
             .WithResource(AuditResourceType.MyEntity, Guid.Empty, "Unknown")
-            .AsFailure($"Failed to create entity: {ex.Message}")
+            .AsFailure("CreateMyEntityFailed")
             .WithDetails(new { attemptedName = request.Name }),
         cancellationToken);
     throw;
@@ -527,15 +532,19 @@ try
 }
 catch (Exception ex)
 {
+    // Log full exception details to secure application logs
+    logger.LogError(ex, "Operation failed for user {UserId}", actorUserId);
+
     // Audit the failure
     try
     {
+        // Use a generic failure code instead of ex.Message to avoid leaking sensitive data
         await auditService.LogAsync(
             new AuditEventBuilder()
                 .WithActor(actorUserId, actorDisplayName)
                 .WithAction(AuditActionType.Created)
                 .WithResource(AuditResourceType.MyEntity, Guid.Empty, "Unknown")
-                .AsFailure($"Operation failed: {ex.Message}")
+                .AsFailure("OperationFailed")
                 .WithDetails(new { attemptedName = request.Name }),
             cancellationToken);
     }
@@ -853,6 +862,22 @@ await auditService.LogAsync(builder, cancellationToken);
 ```csharp
 // Never log passwords, API keys, secrets, etc.
 .WithDetails(new { user.Email, user.Password }) // ❌ NEVER
+
+// Never include raw exception messages in failure reasons
+.AsFailure($"Failed: {ex.Message}") // ❌ May leak sensitive info
+```
+
+**Security Note:** Exception messages may contain sensitive information such as connection strings, database details, file paths, or PII. Always log full exception details to secure application logs and use generic failure codes in audit events:
+
+```csharp
+// CORRECT: Log full exception to secure logs, use generic code in audit
+catch (Exception ex)
+{
+    logger.LogError(ex, "Failed to create entity for user {UserId}", userId);
+    await auditService.LogAsync(
+        builder.AsFailure("CreateEntityFailed"), // Generic code
+        cancellationToken);
+}
 ```
 
 ### 3. Details Granularity

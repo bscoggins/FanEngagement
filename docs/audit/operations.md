@@ -145,24 +145,51 @@ For compliance requirements (GDPR, SOX, HIPAA), document your retention policy:
 
 ## Performance Tuning
 
-### Channel Capacity Tuning
+### Channel Capacity and Overflow Handling
 
 **Symptom:** Logs show "Audit channel full, dropping oldest event"
 
-**Solution:** Increase `ChannelCapacity`
+**Security Risk:** The current implementation uses a drop-oldest policy when the audit channel is full. This can be exploited by attackers flooding the system with audit-generating actions (e.g., repeated authorization denials, failed logins) to evict earlier, potentially incriminating events before they are persisted. Simply increasing `ChannelCapacity` is not sufficient to address this security concern.
+
+**Recommended Solutions:**
+
+1. **Implement Durable Overflow** (Highest Priority)
+   - Use a disk-backed buffer to persist audit events when the in-memory channel is full
+   - Ensures no events are lost even during high-load scenarios
+   - Requires code changes to implement
+
+2. **Prioritize Security-Critical Events**
+   - Never drop critical events: authentication, authorization, proposal finalization, vote records
+   - Lower-priority events (e.g., read operations) may be dropped only after all overflow options are exhausted
+   - Requires code changes to implement priority queues
+
+3. **Per-Actor Rate Limiting**
+   - Apply rate limits to audit event generation per actor (user/service)
+   - Generate alerts when limits are exceeded or drops occur
+   - Prevents single actors from flooding the audit system
+   - Requires code changes to implement
+
+4. **Switch to Drop-Newest with Alerting**
+   - Preserve already-enqueued events instead of dropping oldest
+   - Set up monitoring and alerting for any dropped or overflowed audit events
+   - Requires configuration changes
+
+**Temporary Mitigation:**
+
+Increasing `ChannelCapacity` can help with short-term spikes but does not address the fundamental security issue:
 
 ```json
 {
   "Audit": {
-    "ChannelCapacity": 5000  // Increase from default 1000
+    "ChannelCapacity": 5000  // Increase from default 1000 (temporary only)
   }
 }
 ```
 
-**When to Increase:**
+**When to Increase ChannelCapacity:**
 - High-volume write operations (>1000 events/sec)
 - Batch imports or data migrations
-- Peak traffic periods
+- As a stopgap while implementing durable overflow and prioritization
 
 **Trade-off:** More memory usage (~500 bytes per event in channel)
 
