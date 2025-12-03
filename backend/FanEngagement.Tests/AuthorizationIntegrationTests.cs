@@ -1231,10 +1231,10 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1261,13 +1261,13 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Switch to admin token
         _client.AddAuthorizationHeader(adminToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1294,7 +1294,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Create another member who is not the creator
         _client.DefaultRequestHeaders.Remove("Authorization");
@@ -1313,7 +1313,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(newMemberToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1340,13 +1340,13 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open the proposal first
-        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1373,10 +1373,10 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open the proposal
-        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
 
         // Create another member who is not the creator
         _client.DefaultRequestHeaders.Remove("Authorization");
@@ -1395,7 +1395,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(newMemberToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1422,14 +1422,14 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open and close the proposal first
-        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
-        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/finalize", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/finalize", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1456,17 +1456,17 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open and close the proposal
-        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
-        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
 
         // Switch to admin token
         _client.AddAuthorizationHeader(adminToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/finalize", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/finalize", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1493,11 +1493,11 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Add required options (minimum 2)
         await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open and close the proposal
-        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
-        await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal!.Id}/close", null);
 
         // Create another member who is not the creator
         _client.DefaultRequestHeaders.Remove("Authorization");
@@ -1516,7 +1516,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(newMemberToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal.Id}/finalize", null);
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/finalize", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
