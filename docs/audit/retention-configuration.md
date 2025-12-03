@@ -144,7 +144,7 @@ AuditRetentionBackgroundService started (retention: 365 days, schedule: 0 2 * * 
 
 The purge process follows these steps:
 
-1. **Calculate Cutoff Date**: `DateTime.UtcNow.AddDays(-RetentionDays)`
+1. **Calculate Cutoff Date**: `DateTimeOffset.UtcNow.AddDays(-RetentionDays)`
 2. **Delete in Batches**: 
    - Select up to `PurgeBatchSize` events older than cutoff
    - Delete them using `ExecuteDeleteAsync` (efficient bulk delete)
