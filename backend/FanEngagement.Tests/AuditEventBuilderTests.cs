@@ -26,6 +26,112 @@ public class AuditEventBuilderTests
     }
 
     [Fact]
+    public void Build_WithAllFields_CreatesCompleteEvent()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+        var orgId = Guid.NewGuid();
+        var correlationId = "test-correlation-123";
+
+        var builder = new AuditEventBuilder()
+            .WithActor(userId, "Test User")
+            .WithIpAddress("192.168.1.100")
+            .WithAction(AuditActionType.Updated)
+            .WithResource(AuditResourceType.Proposal, resourceId, "Test Proposal")
+            .WithOrganization(orgId, "Test Organization")
+            .WithCorrelationId(correlationId)
+            .WithDetails(new { Field1 = "Value1", Field2 = 123 })
+            .AsSuccess();
+
+        // Act
+        var result = builder.Build();
+
+        // Assert - Verify all fields are set correctly
+        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.True(result.Timestamp > DateTimeOffset.MinValue);
+        Assert.Equal(AuditActionType.Updated, result.ActionType);
+        Assert.Equal(AuditResourceType.Proposal, result.ResourceType);
+        Assert.Equal(resourceId, result.ResourceId);
+        Assert.Equal("Test Proposal", result.ResourceName);
+        Assert.Equal(userId, result.ActorUserId);
+        Assert.Equal("Test User", result.ActorDisplayName);
+        Assert.Equal("192.168.1.100", result.ActorIpAddress);
+        Assert.Equal(orgId, result.OrganizationId);
+        Assert.Equal("Test Organization", result.OrganizationName);
+        Assert.Equal(correlationId, result.CorrelationId);
+        Assert.Equal(AuditOutcome.Success, result.Outcome);
+        Assert.Null(result.FailureReason);
+        Assert.NotNull(result.Details);
+        Assert.Contains("field1", result.Details); // camelCase
+        Assert.Contains("Value1", result.Details);
+        Assert.Contains("123", result.Details);
+    }
+
+    [Fact]
+    public void Build_WithMinimalFields_CreatesValidEvent()
+    {
+        // Arrange - Only resource is required
+        var resourceId = Guid.NewGuid();
+        var builder = new AuditEventBuilder()
+            .WithResource(AuditResourceType.User, resourceId);
+
+        // Act
+        var result = builder.Build();
+
+        // Assert - Verify minimal required fields
+        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.True(result.Timestamp > DateTimeOffset.MinValue);
+        Assert.Equal(AuditResourceType.User, result.ResourceType);
+        Assert.Equal(resourceId, result.ResourceId);
+        Assert.Equal(AuditOutcome.Success, result.Outcome); // Default outcome
+        Assert.Null(result.ActorUserId);
+        Assert.Null(result.ActorDisplayName);
+        Assert.Null(result.ActorIpAddress);
+        Assert.Null(result.OrganizationId);
+        Assert.Null(result.OrganizationName);
+        Assert.Null(result.CorrelationId);
+        Assert.Null(result.Details);
+        Assert.Null(result.FailureReason);
+    }
+
+    [Fact]
+    public void Build_WithDetails_SerializesCorrectly()
+    {
+        // Arrange
+        var complexObject = new
+        {
+            StringField = "test string",
+            NumberField = 42,
+            BoolField = true,
+            NullField = (string?)null,
+            NestedObject = new
+            {
+                InnerField = "nested value"
+            },
+            ArrayField = new[] { 1, 2, 3 }
+        };
+
+        var builder = new AuditEventBuilder()
+            .WithResource(AuditResourceType.Proposal, Guid.NewGuid())
+            .WithDetails(complexObject);
+
+        // Act
+        var result = builder.Build();
+
+        // Assert
+        Assert.NotNull(result.Details);
+        
+        // Verify JSON serialization of various data types
+        Assert.Contains("\"stringField\":\"test string\"", result.Details);
+        Assert.Contains("\"numberField\":42", result.Details);
+        Assert.Contains("\"boolField\":true", result.Details);
+        Assert.Contains("\"nestedObject\":", result.Details);
+        Assert.Contains("\"innerField\":\"nested value\"", result.Details);
+        Assert.Contains("\"arrayField\":[1,2,3]", result.Details);
+    }
+
+    [Fact]
     public void Build_WithoutCallingWithResource_ThrowsInvalidOperationException()
     {
         // Arrange
