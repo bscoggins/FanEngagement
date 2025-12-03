@@ -35,9 +35,9 @@ export const auditEventsApi = {
       if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
     }
 
-    const response = await apiClient.get(
-      `/organizations/${organizationId}/audit-events?${params.toString()}`
-    );
+    const queryString = params.toString();
+    const url = `/organizations/${organizationId}/audit-events${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get(url);
     return response.data;
   },
 };

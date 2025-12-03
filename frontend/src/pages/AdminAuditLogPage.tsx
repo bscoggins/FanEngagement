@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
@@ -103,7 +103,6 @@ export const AdminAuditLogPage: React.FC = () => {
   const [dateTo, setDateTo] = useState('');
   const [selectedActionTypes, setSelectedActionTypes] = useState<string[]>([]);
   const [selectedResourceTypes, setSelectedResourceTypes] = useState<string[]>([]);
-  const [searchText, setSearchText] = useState('');
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -126,14 +125,14 @@ export const AdminAuditLogPage: React.FC = () => {
       const filters = {
         page,
         pageSize,
-        dateFrom: dateFrom ? new Date(dateFrom).toISOString() : undefined,
-        dateTo: dateTo ? new Date(dateTo).toISOString() : undefined,
+        dateFrom: dateFrom ? `${dateFrom}T00:00:00.000Z` : undefined,
+        dateTo: dateTo ? `${dateTo}T23:59:59.999Z` : undefined,
         actionType: selectedActionTypes.length > 0 ? selectedActionTypes.join(',') : undefined,
         resourceType: selectedResourceTypes.length > 0 ? selectedResourceTypes.join(',') : undefined,
       };
 
       const [orgData, eventsData] = await Promise.all([
-        organization ? Promise.resolve(organization) : organizationsApi.getById(orgId),
+        organizationsApi.getById(orgId),
         auditEventsApi.getByOrganization(orgId, filters),
       ]);
 
@@ -146,7 +145,7 @@ export const AdminAuditLogPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [orgId, page, pageSize, dateFrom, dateTo, selectedActionTypes, selectedResourceTypes, organization]);
+  }, [orgId, page, pageSize, dateFrom, dateTo, selectedActionTypes, selectedResourceTypes]);
 
   React.useEffect(() => {
     fetchData();
@@ -183,18 +182,6 @@ export const AdminAuditLogPage: React.FC = () => {
     setExpandedRowId((prev) => (prev === eventId ? null : eventId));
   };
 
-  const filteredEvents = useMemo(() => {
-    if (!auditEvents) return [];
-    if (!searchText) return auditEvents.items;
-
-    const lowerSearch = searchText.toLowerCase();
-    return auditEvents.items.filter(
-      (event) =>
-        event.actorDisplayName?.toLowerCase().includes(lowerSearch) ||
-        event.resourceName?.toLowerCase().includes(lowerSearch)
-    );
-  }, [auditEvents, searchText]);
-
   if (isLoading && !organization) {
     return (
       <div>
@@ -222,20 +209,7 @@ export const AdminAuditLogPage: React.FC = () => {
         </div>
       </div>
 
-      {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <ErrorMessage message={error} onRetry={fetchData} />}
 
       {/* Filters */}
       <div
@@ -392,30 +366,6 @@ export const AdminAuditLogPage: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* Search */}
-        <div>
-          <label
-            htmlFor="search"
-            style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-          >
-            Search (Actor or Resource Name)
-          </label>
-          <input
-            id="search"
-            type="text"
-            placeholder="Search by actor name or resource name..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              width: '100%',
-            }}
-          />
-        </div>
       </div>
 
       {/* Pagination controls */}
@@ -457,10 +407,10 @@ export const AdminAuditLogPage: React.FC = () => {
 
       {isLoading ? (
         <LoadingSpinner message="Loading audit events..." />
-      ) : filteredEvents.length === 0 ? (
+      ) : !auditEvents || auditEvents.items.length === 0 ? (
         <EmptyState
           message={
-            dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0 || searchText
+            dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0
               ? 'No audit events found matching your filters.'
               : 'No audit events found for this organization.'
           }
@@ -487,13 +437,13 @@ export const AdminAuditLogPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredEvents.map((event) => (
+                {auditEvents.items.map((event) => (
                   <React.Fragment key={event.id}>
-                    <tr style={{ borderBottom: '1px solid #dee2e6', cursor: 'pointer' }}>
-                      <td
-                        style={{ padding: '1rem', textAlign: 'center' }}
-                        onClick={() => toggleRowExpansion(event.id)}
-                      >
+                    <tr 
+                      style={{ borderBottom: '1px solid #dee2e6', cursor: 'pointer' }}
+                      onClick={() => toggleRowExpansion(event.id)}
+                    >
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <button
                           style={{
                             background: 'none',
@@ -611,7 +561,7 @@ export const AdminAuditLogPage: React.FC = () => {
 
           {auditEvents && auditEvents.totalPages > 1 && (
             <Pagination
-              currentPage={auditEvents.page}
+              currentPage={page}
               totalPages={auditEvents.totalPages}
               onPageChange={handlePageChange}
               hasPreviousPage={auditEvents.hasPreviousPage}
