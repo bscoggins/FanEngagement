@@ -278,4 +278,64 @@ public class AuditService(
 
         return queryable;
     }
+
+    /// <summary>
+    /// Streams audit events in batches for export.
+    /// </summary>
+    public async IAsyncEnumerable<List<AuditEventDto>> StreamEventsAsync(
+        AuditQuery query,
+        int batchSize = 100,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        // Constrain batch size
+        batchSize = Math.Min(Math.Max(batchSize, 10), 1000);
+
+        // Start with base query and apply filters
+        var queryable = ApplyFilters(dbContext.AuditEvents.AsNoTracking(), query, includeSearchText: true);
+
+        // Apply sorting (always descending for export)
+        queryable = query.SortOrder.Equals("asc", StringComparison.OrdinalIgnoreCase)
+            ? queryable.OrderBy(e => e.Timestamp)
+            : queryable.OrderByDescending(e => e.Timestamp);
+
+        // Stream in batches using keyset pagination
+        var skip = 0;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var batch = await queryable
+                .Skip(skip)
+                .Take(batchSize)
+                .Select(e => new AuditEventDto(
+                    e.Id,
+                    e.Timestamp,
+                    e.ActorUserId,
+                    e.ActorDisplayName,
+                    e.ActorIpAddress,
+                    e.ActionType,
+                    e.Outcome,
+                    e.FailureReason,
+                    e.ResourceType,
+                    e.ResourceId,
+                    e.ResourceName,
+                    e.OrganizationId,
+                    e.OrganizationName,
+                    e.CorrelationId
+                ))
+                .ToListAsync(cancellationToken);
+
+            if (batch.Count == 0)
+            {
+                break;
+            }
+
+            yield return batch;
+
+            skip += batch.Count;
+
+            if (batch.Count < batchSize)
+            {
+                break;
+            }
+        }
+    }
 }

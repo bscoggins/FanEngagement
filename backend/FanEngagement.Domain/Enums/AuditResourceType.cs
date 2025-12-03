@@ -21,6 +21,9 @@ public enum AuditResourceType : short
     WebhookEndpoint = 30,
     OutboundEvent = 31,
 
+    // Audit
+    AuditEvent = 40,
+
     // System
     SystemConfiguration = 100
 }
