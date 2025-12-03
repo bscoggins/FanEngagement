@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
@@ -10,15 +9,15 @@ import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
-export const AdminAuditLogPage: React.FC = () => {
-  const { orgId } = useParams<{ orgId: string }>();
-
-  const [organization, setOrganization] = useState<Organization | null>(null);
+export const PlatformAdminAuditLogPage: React.FC = () => {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [auditEvents, setAuditEvents] = useState<PagedResult<AuditEvent> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedActionTypes, setSelectedActionTypes] = useState<string[]>([]);
@@ -32,17 +31,12 @@ export const AdminAuditLogPage: React.FC = () => {
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!orgId) {
-      setError('Invalid organization ID');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
 
       const filters = {
+        organizationId: selectedOrgId || undefined,
         page,
         pageSize,
         dateFrom: dateFrom ? `${dateFrom}T00:00:00.000Z` : undefined,
@@ -51,12 +45,12 @@ export const AdminAuditLogPage: React.FC = () => {
         resourceType: selectedResourceTypes.length > 0 ? selectedResourceTypes.join(',') : undefined,
       };
 
-      const [orgData, eventsData] = await Promise.all([
-        organizationsApi.getById(orgId),
-        auditEventsApi.getByOrganization(orgId, filters),
+      const [orgsData, eventsData] = await Promise.all([
+        organizationsApi.getAll(),
+        auditEventsApi.getAllAcrossOrganizations(filters),
       ]);
 
-      setOrganization(orgData);
+      setOrganizations(orgsData);
       setAuditEvents(eventsData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -65,7 +59,7 @@ export const AdminAuditLogPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [orgId, page, pageSize, dateFrom, dateTo, selectedActionTypes, selectedResourceTypes]);
+  }, [selectedOrgId, page, pageSize, dateFrom, dateTo, selectedActionTypes, selectedResourceTypes]);
 
   React.useEffect(() => {
     fetchData();
@@ -102,20 +96,44 @@ export const AdminAuditLogPage: React.FC = () => {
     setExpandedRowId((prev) => (prev === eventId ? null : eventId));
   };
 
-  if (isLoading && !organization) {
-    return (
-      <div>
-        <h1 data-testid="audit-log-heading">Audit Log</h1>
-        <LoadingSpinner message="Loading audit log..." />
-      </div>
-    );
-  }
+  const handleExport = async (format: 'csv' | 'json') => {
+    try {
+      setIsExporting(true);
+      setError(null);
 
-  if (!organization) {
+      const filters = {
+        organizationId: selectedOrgId || undefined,
+        dateFrom: dateFrom ? `${dateFrom}T00:00:00.000Z` : undefined,
+        dateTo: dateTo ? `${dateTo}T23:59:59.999Z` : undefined,
+        actionType: selectedActionTypes.length > 0 ? selectedActionTypes.join(',') : undefined,
+        resourceType: selectedResourceTypes.length > 0 ? selectedResourceTypes.join(',') : undefined,
+      };
+
+      const blob = await auditEventsApi.exportAllAcrossOrganizations(format, filters);
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `platform-audit-events-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export audit events:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  if (isLoading && organizations.length === 0) {
     return (
       <div>
-        <h1 data-testid="audit-log-heading">Audit Log</h1>
-        <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
+        <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
+        <LoadingSpinner message="Loading audit log..." />
       </div>
     );
   }
@@ -123,9 +141,9 @@ export const AdminAuditLogPage: React.FC = () => {
   return (
     <div>
       <div style={{ marginBottom: '1.5rem' }}>
-        <h1 data-testid="audit-log-heading">Audit Log</h1>
+        <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
         <div style={{ color: '#666', fontSize: '1rem' }}>
-          Organization: {organization.name}
+          Cross-organization audit events for platform-wide security monitoring
         </div>
       </div>
 
@@ -141,7 +159,80 @@ export const AdminAuditLogPage: React.FC = () => {
           marginBottom: '1.5rem',
         }}
       >
-        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Filters</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ margin: 0 }}>Filters</h3>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => handleExport('csv')}
+              disabled={isExporting}
+              data-testid="export-csv-button"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isExporting ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                opacity: isExporting ? 0.6 : 1,
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export CSV'}
+            </button>
+            <button
+              onClick={() => handleExport('json')}
+              disabled={isExporting}
+              data-testid="export-json-button"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#17a2b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isExporting ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                opacity: isExporting ? 0.6 : 1,
+              }}
+            >
+              {isExporting ? 'Exporting...' : 'Export JSON'}
+            </button>
+          </div>
+        </div>
+
+        {/* Organization filter */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label
+            htmlFor="organizationFilter"
+            style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
+          >
+            Organization
+          </label>
+          <select
+            id="organizationFilter"
+            data-testid="organization-filter"
+            value={selectedOrgId}
+            onChange={(e) => {
+              setSelectedOrgId(e.target.value);
+              setPage(1);
+            }}
+            style={{
+              padding: '0.5rem',
+              border: '1px solid #ced4da',
+              borderRadius: '4px',
+              fontSize: '1rem',
+              width: '100%',
+            }}
+          >
+            <option value="">All Organizations</option>
+            {organizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
           {/* Date range */}
@@ -155,7 +246,7 @@ export const AdminAuditLogPage: React.FC = () => {
             <input
               id="dateFrom"
               type="date"
-              data-testid="audit-log-filter-date"
+              data-testid="audit-log-filter-date-from"
               value={dateFrom}
               onChange={(e) => {
                 setDateFrom(e.target.value);
@@ -181,6 +272,7 @@ export const AdminAuditLogPage: React.FC = () => {
             <input
               id="dateTo"
               type="date"
+              data-testid="audit-log-filter-date-to"
               value={dateTo}
               onChange={(e) => {
                 setDateTo(e.target.value);
@@ -330,9 +422,9 @@ export const AdminAuditLogPage: React.FC = () => {
       ) : !auditEvents || auditEvents.items.length === 0 ? (
         <EmptyState
           message={
-            dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0
+            selectedOrgId || dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0
               ? 'No audit events found matching your filters.'
-              : 'No audit events found for this organization.'
+              : 'No audit events found.'
           }
         />
       ) : (
@@ -349,6 +441,7 @@ export const AdminAuditLogPage: React.FC = () => {
               <thead>
                 <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                   <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, width: '30px' }}></th>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Organization</th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Timestamp</th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Actor</th>
                   <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Action</th>
@@ -377,6 +470,9 @@ export const AdminAuditLogPage: React.FC = () => {
                         >
                           {expandedRowId === event.id ? '▼' : '▶'}
                         </button>
+                      </td>
+                      <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
+                        {event.organizationName || '-'}
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#666' }}>
                         {formatDate(event.timestamp)}
@@ -414,7 +510,7 @@ export const AdminAuditLogPage: React.FC = () => {
                     </tr>
                     {expandedRowId === event.id && (
                       <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-                        <td colSpan={6} style={{ padding: '1.5rem' }}>
+                        <td colSpan={7} style={{ padding: '1.5rem' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div>
                               <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
@@ -442,10 +538,10 @@ export const AdminAuditLogPage: React.FC = () => {
                             </div>
                             <div>
                               <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                                Organization
+                                Organization ID
                               </label>
-                              <div style={{ fontSize: '0.875rem' }}>
-                                {event.organizationName || '-'}
+                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
+                                {event.organizationId || '-'}
                               </div>
                             </div>
                           </div>
