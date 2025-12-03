@@ -133,7 +133,7 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         };
 
         // Set response headers
-        Response.ContentType = format == "csv" ? "text/csv" : "application/json";
+        Response.ContentType = format == "csv" ? "text/csv; charset=utf-8" : "application/json; charset=utf-8";
         Response.Headers.ContentDisposition = 
             $"attachment; filename=audit-events-{DateTime.UtcNow:yyyyMMddHHmmss}.{format}";
 
@@ -146,34 +146,44 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         // Audit the export action itself
         if (Guid.TryParse(userId, out var actorId))
         {
+            var details = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                format,
+                dateFrom,
+                dateTo,
+                actionType,
+                resourceType
+            });
+            
             await auditService.LogSyncAsync(new AuditEventBuilder()
                 .WithActor(actorId, User.Identity?.Name ?? "Unknown")
                 .WithAction(AuditActionType.Exported)
                 .WithResource(AuditResourceType.AuditEvent, organizationId, $"Export {format}")
                 .WithOrganization(organizationId, null)
                 .AsSuccess()
-                .WithDetailsJson($"{{\"format\":\"{format}\",\"dateFrom\":\"{dateFrom}\",\"dateTo\":\"{dateTo}\",\"actionType\":\"{actionType}\",\"resourceType\":\"{resourceType}\"}}")
+                .WithDetailsJson(details)
                 .Build(), cancellationToken);
         }
 
         // Stream the export
         var isFirstBatch = true;
-        var hasMoreBatches = true;
+        var lastBatchSize = 0;
 
         await foreach (var batch in auditService.StreamEventsAsync(query, ExportBatchSize, cancellationToken))
         {
-            hasMoreBatches = batch.Count == ExportBatchSize; // If batch is full, there might be more
+            lastBatchSize = batch.Count;
+            var isLastBatch = batch.Count < ExportBatchSize;
 
             string content = format == "csv"
                 ? AuditExportHelper.ToCsv(batch, isFirstBatch)
-                : AuditExportHelper.ToJson(batch, isFirstBatch, !hasMoreBatches);
+                : AuditExportHelper.ToJson(batch, isFirstBatch, isLastBatch);
 
             await Response.Body.WriteAsync(System.Text.Encoding.UTF8.GetBytes(content), cancellationToken);
             await Response.Body.FlushAsync(cancellationToken);
 
             isFirstBatch = false;
 
-            if (cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested || isLastBatch)
             {
                 break;
             }
@@ -183,6 +193,12 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         if (format == "json" && isFirstBatch)
         {
             await Response.Body.WriteAsync(System.Text.Encoding.UTF8.GetBytes("[]"), cancellationToken);
+            await Response.Body.FlushAsync(cancellationToken);
+        }
+        // If we had data and the last batch was exactly the batch size, we need to close the array
+        else if (format == "json" && !isFirstBatch && lastBatchSize == ExportBatchSize)
+        {
+            await Response.Body.WriteAsync(System.Text.Encoding.UTF8.GetBytes("]"), cancellationToken);
             await Response.Body.FlushAsync(cancellationToken);
         }
     }

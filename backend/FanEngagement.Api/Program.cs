@@ -105,15 +105,8 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     
-    // Fixed window rate limiter for audit exports: 5 exports per hour per user
-    options.AddFixedWindowLimiter("AuditExport", limiterOptions =>
-    {
-        limiterOptions.PermitLimit = builder.Configuration.GetValue("RateLimiting:AuditExport:PermitLimit", 5);
-        limiterOptions.Window = TimeSpan.FromHours(builder.Configuration.GetValue("RateLimiting:AuditExport:WindowHours", 1.0));
-        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 0; // No queueing
-    })
-    .AddPolicy("AuditExportPerUser", httpContext =>
+    // Per-user rate limiter for audit exports: 5 exports per hour per user
+    options.AddPolicy("AuditExportPerUser", httpContext =>
     {
         // Partition by user ID so each user has their own rate limit
         var userId = httpContext.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "anonymous";

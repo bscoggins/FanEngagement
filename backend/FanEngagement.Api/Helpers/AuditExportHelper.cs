@@ -23,14 +23,31 @@ public static class AuditExportHelper
 
         foreach (var evt in events)
         {
-            sb.AppendLine($"{EscapeCsv(evt.Id.ToString())},{EscapeCsv(evt.Timestamp.ToString("o"))},{EscapeCsv(evt.ActorUserId?.ToString())},{EscapeCsv(evt.ActorDisplayName)},{EscapeCsv(evt.ActorIpAddress)},{EscapeCsv(evt.ActionType.ToString())},{EscapeCsv(evt.Outcome.ToString())},{EscapeCsv(evt.FailureReason)},{EscapeCsv(evt.ResourceType.ToString())},{EscapeCsv(evt.ResourceId.ToString())},{EscapeCsv(evt.ResourceName)},{EscapeCsv(evt.OrganizationId?.ToString())},{EscapeCsv(evt.OrganizationName)},{EscapeCsv(evt.CorrelationId)}");
+            var fields = new[]
+            {
+                EscapeCsv(evt.Id.ToString()),
+                EscapeCsv(evt.Timestamp.ToString("o")),
+                EscapeCsv(evt.ActorUserId?.ToString()),
+                EscapeCsv(evt.ActorDisplayName),
+                EscapeCsv(evt.ActorIpAddress),
+                EscapeCsv(evt.ActionType.ToString()),
+                EscapeCsv(evt.Outcome.ToString()),
+                EscapeCsv(evt.FailureReason),
+                EscapeCsv(evt.ResourceType.ToString()),
+                EscapeCsv(evt.ResourceId.ToString()),
+                EscapeCsv(evt.ResourceName),
+                EscapeCsv(evt.OrganizationId?.ToString()),
+                EscapeCsv(evt.OrganizationName),
+                EscapeCsv(evt.CorrelationId)
+            };
+            sb.AppendLine(string.Join(",", fields));
         }
 
         return sb.ToString();
     }
 
     /// <summary>
-    /// Converts a batch of audit events to JSON format (newline-delimited JSON for streaming).
+    /// Converts a batch of audit events to JSON format (streaming JSON array).
     /// </summary>
     public static string ToJson(List<AuditEventDto> events, bool isFirstBatch, bool isLastBatch)
     {

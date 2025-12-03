@@ -86,7 +86,7 @@ public class AuditExportApiTests : IClassFixture<TestWebApplicationFactory>
     public async Task OrganizationAuditExport_JSON_StreamsCorrectFormat()
     {
         // Arrange: Create admin user and organization
-        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         var client = _factory.CreateClient();
         client.AddAuthorizationHeader(adminToken);
 
@@ -208,7 +208,7 @@ public class AuditExportApiTests : IClassFixture<TestWebApplicationFactory>
     public async Task AdminAuditExport_GlobalAdmin_CanExportAcrossOrganizations()
     {
         // Arrange
-        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         var client = _factory.CreateClient();
         client.AddAuthorizationHeader(adminToken);
 
@@ -377,7 +377,7 @@ public class AuditExportApiTests : IClassFixture<TestWebApplicationFactory>
     public async Task OrganizationAuditExport_LargeDataset_StreamsEfficiently()
     {
         // Arrange: Create admin user and organization
-        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         var client = _factory.CreateClient();
         client.AddAuthorizationHeader(adminToken);
 
@@ -427,6 +427,70 @@ public class AuditExportApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(events);
         Assert.Equal(250, events.Count);
         _output.WriteLine($"Successfully exported {events.Count} events");
+    }
+
+    [Fact]
+    public async Task OrganizationAuditExport_JSON_ExactMultipleOfBatchSize()
+    {
+        // Arrange: Create admin user and organization
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var client = _factory.CreateClient();
+        client.AddAuthorizationHeader(adminToken);
+
+        var createOrgRequest = new CreateOrganizationRequest { Name = $"Test Org {Guid.NewGuid()}" };
+        var createOrgResponse = await client.PostAsJsonAsync("/organizations", createOrgRequest);
+        var org = await createOrgResponse.Content.ReadFromJsonAsync<Organization>();
+        Assert.NotNull(org);
+
+        // Create exactly 200 audit events (2 * batch size of 100) with specific test user
+        var testUserId = Guid.NewGuid();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
+            
+            for (int i = 0; i < 200; i++)
+            {
+                await auditService.LogSyncAsync(new AuditEvent
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = DateTimeOffset.UtcNow.AddMinutes(-i),
+                    ActionType = AuditActionType.Created,
+                    ResourceType = AuditResourceType.Proposal,
+                    ResourceId = Guid.NewGuid(),
+                    ResourceName = $"Test Resource {i}",
+                    OrganizationId = org.Id,
+                    OrganizationName = org.Name,
+                    ActorUserId = testUserId,
+                    ActorDisplayName = "Test User",
+                    Outcome = AuditOutcome.Success
+                });
+            }
+        }
+
+        // Act: Request JSON export with actor filter
+        var response = await client.GetAsync($"/organizations/{org.Id}/audit-events/export?format=json&actorUserId={testUserId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var jsonContent = await response.Content.ReadAsStringAsync();
+        
+        _output.WriteLine("JSON Export (200 events):");
+        _output.WriteLine($"First 500 chars: {jsonContent.Substring(0, Math.Min(500, jsonContent.Length))}");
+        _output.WriteLine($"Last 100 chars: {jsonContent.Substring(Math.Max(0, jsonContent.Length - 100))}");
+        
+        // Verify JSON structure - must start with [ and end with ]
+        Assert.StartsWith("[", jsonContent);
+        Assert.EndsWith("]", jsonContent.TrimEnd());
+        
+        // Parse JSON to verify it's valid and complete
+        var events = System.Text.Json.JsonSerializer.Deserialize<List<AuditEventDto>>(jsonContent, new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+        });
+        Assert.NotNull(events);
+        Assert.Equal(200, events.Count);
+        _output.WriteLine($"Successfully exported and parsed {events.Count} events");
     }
 
     private async Task<Organization> CreateOrganization(HttpClient client)
