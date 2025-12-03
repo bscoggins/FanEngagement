@@ -1748,3 +1748,127 @@ For comprehensive details on the blockchain adapter platform architecture, inclu
 - Deployment configurations (Docker Compose, Kubernetes)
 
 See: **[Blockchain Adapter Platform Architecture](./blockchain/adapter-platform-architecture.md)**
+
+---
+
+## Audit Logging
+
+### Overview
+
+FanEngagement includes a comprehensive audit logging system that captures all significant user actions, authentication events, authorization failures, and system operations. The audit system provides:
+
+- **Comprehensive Coverage**: Logs all create, update, delete, and state change operations across all entities
+- **Security Monitoring**: Automatic capture of authentication attempts and authorization failures
+- **Compliance Support**: Immutable audit trail with configurable retention and export capabilities
+- **Non-Intrusive**: Fire-and-forget asynchronous logging that never impacts business operations
+- **Queryable**: Flexible filtering by organization, user, resource, time range, and outcome
+
+### Architecture Highlights
+
+**Asynchronous Persistence:**
+- Events queued in bounded channel (1000 event capacity)
+- Background service persists events in batches
+- Fire-and-forget API ensures business operations are never blocked
+
+**Captured Information:**
+- **Who**: Actor user ID, display name, and IP address
+- **What**: Action type (Created, Updated, Deleted, StatusChanged, etc.)
+- **On What**: Resource type and ID (User, Organization, Proposal, Vote, etc.)
+- **When**: Timestamp with microsecond precision
+- **Where**: Organization context for multi-tenant operations
+- **Why**: Outcome (Success, Failure, Denied, Partial) and failure reason
+- **Details**: Structured JSON with operation-specific information
+
+**Retention Management:**
+- Automated purge of events older than retention period (default: 365 days, minimum: 30 days)
+- Scheduled daily at 2:00 AM UTC (configurable)
+- Batch deletion to prevent database locks
+
+**Query APIs:**
+- **Admin**: Query all events across all organizations
+- **Organization**: Query events within a specific organization (OrgAdmin)
+- **User**: Query own events with privacy filtering (no IP addresses)
+- **Export**: CSV and JSON export with rate limiting
+
+### Audited Events by Category
+
+#### User Management
+- User created, updated, deleted
+- User role changed (User → GlobalAdmin)
+
+#### Authentication
+- Successful and failed login attempts
+- IP address and user agent captured
+
+#### Authorization
+- Authorization denied (403 responses)
+- Automatic capture via middleware
+- Includes requested endpoint and user roles
+
+#### Organization Management
+- Organization created, updated
+- Branding and blockchain configuration changes
+
+#### Membership Management
+- Member added to organization
+- Membership role changed (Member → OrgAdmin)
+- Member removed from organization
+
+#### Share Management
+- Share type created, updated, deleted
+- Share issuance to users
+- Share balance changes
+
+#### Proposal Lifecycle
+- Proposal created, updated
+- Status changes: Draft → Open → Closed → Finalized
+- Proposal options added
+- Eligible voting power snapshot captured at opening
+
+#### Voting
+- Vote cast with voting power
+- Proposal, option, and user information
+
+#### Webhook Management
+- Webhook endpoint created, updated, deleted
+- Webhook delivery status changes (Pending → Delivered/Failed)
+
+#### Admin Actions
+- Demo data seeded
+- Data reset operations
+- Data cleanup operations
+- Audit log access and exports
+
+### Privacy and Security
+
+**Immutable Audit Trail:**
+- Append-only design prevents tampering
+- Only automated retention service can purge old events
+- Database constraints enforce immutability
+
+**Privacy Controls:**
+- Admin APIs include all fields including IP addresses
+- User-facing API filters out IP addresses
+- Sensitive data (passwords, secrets, API keys) never logged
+- Webhook URLs masked to hide embedded credentials
+
+**Compliance Support:**
+- GDPR: Data subject access and anonymization support
+- SOX/HIPAA: Immutable audit trail with 7-year retention capability
+- ISO 27001: Comprehensive security event logging
+
+### Documentation
+
+For comprehensive details on the audit logging system, including:
+- System architecture and data model
+- Complete event catalog with examples
+- Developer guide for adding new audit events
+- Operations runbook for production management
+
+See: **[Audit Logging Documentation](./audit/architecture.md)**
+
+**Quick Links:**
+- **[Architecture Overview](./audit/architecture.md)** - System design, data model, and integration points
+- **[Event Catalog](./audit/events.md)** - Complete list of all audited events organized by category
+- **[Development Guide](./audit/development.md)** - How to add new audit events and testing strategies
+- **[Operations Guide](./audit/operations.md)** - Configuration, monitoring, and troubleshooting
