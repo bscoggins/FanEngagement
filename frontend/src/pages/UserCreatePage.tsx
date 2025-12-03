@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import type { CreateUserRequest } from '../types/api';
+import { InfoBox } from '../components/InfoBox';
 
 export const UserCreatePage: React.FC = () => {
   const navigate = useNavigate();
@@ -90,6 +91,15 @@ export const UserCreatePage: React.FC = () => {
               borderRadius: '4px',
             }}
           />
+          <InfoBox>
+            <strong>Password Requirements:</strong>
+            <ul style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.5rem' }}>
+              <li>At least 12 characters long</li>
+              <li>At least one uppercase letter (A-Z)</li>
+              <li>At least one number (0-9)</li>
+              <li>At least one special character (any non-alphanumeric character)</li>
+            </ul>
+          </InfoBox>
         </div>
 
         <div>
