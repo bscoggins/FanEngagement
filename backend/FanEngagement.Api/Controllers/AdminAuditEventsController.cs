@@ -18,6 +18,10 @@ namespace FanEngagement.Api.Controllers;
 [Authorize(Policy = "GlobalAdmin")]
 public class AdminAuditEventsController(IAuditService auditService, ILogger<AdminAuditEventsController> logger) : ControllerBase
 {
+    private const int ExportBatchSize = 100;
+    // Sentinel GUID for admin exports that don't have a specific organization context
+    private static readonly Guid AdminExportSentinelId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
     /// <summary>
     /// Query audit events across all organizations (GlobalAdmin only).
     /// </summary>
@@ -145,7 +149,7 @@ public class AdminAuditEventsController(IAuditService auditService, ILogger<Admi
         if (Guid.TryParse(userId, out var actorId))
         {
             // For admin export, use a pseudo resource ID (could be the first org ID or a specific sentinel value)
-            var exportResourceId = organizationId ?? Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var exportResourceId = organizationId ?? AdminExportSentinelId;
             await auditService.LogSyncAsync(new AuditEventBuilder()
                 .WithActor(actorId, User.Identity?.Name ?? "Unknown")
                 .WithAction(AuditActionType.Exported)
@@ -159,9 +163,9 @@ public class AdminAuditEventsController(IAuditService auditService, ILogger<Admi
         var isFirstBatch = true;
         var hasMoreBatches = true;
 
-        await foreach (var batch in auditService.StreamEventsAsync(query, 100, cancellationToken))
+        await foreach (var batch in auditService.StreamEventsAsync(query, ExportBatchSize, cancellationToken))
         {
-            hasMoreBatches = batch.Count == 100; // If batch is full, there might be more
+            hasMoreBatches = batch.Count == ExportBatchSize; // If batch is full, there might be more
 
             string content = format == "csv"
                 ? AuditExportHelper.ToCsv(batch, isFirstBatch)

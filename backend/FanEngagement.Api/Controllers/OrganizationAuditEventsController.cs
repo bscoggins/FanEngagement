@@ -18,6 +18,8 @@ namespace FanEngagement.Api.Controllers;
 [Authorize(Policy = "OrgAdmin")]
 public class OrganizationAuditEventsController(IAuditService auditService, ILogger<OrganizationAuditEventsController> logger) : ControllerBase
 {
+    private const int ExportBatchSize = 100;
+
     /// <summary>
     /// Query audit events for a specific organization.
     /// </summary>
@@ -158,9 +160,9 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         var isFirstBatch = true;
         var hasMoreBatches = true;
 
-        await foreach (var batch in auditService.StreamEventsAsync(query, 100, cancellationToken))
+        await foreach (var batch in auditService.StreamEventsAsync(query, ExportBatchSize, cancellationToken))
         {
-            hasMoreBatches = batch.Count == 100; // If batch is full, there might be more
+            hasMoreBatches = batch.Count == ExportBatchSize; // If batch is full, there might be more
 
             string content = format == "csv"
                 ? AuditExportHelper.ToCsv(batch, isFirstBatch)
