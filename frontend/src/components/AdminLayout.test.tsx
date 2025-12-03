@@ -51,6 +51,7 @@ describe('AdminLayout', () => {
                   <Route index element={<div>Dashboard Content</div>} />
                   <Route path="users" element={<div>Users Content</div>} />
                   <Route path="organizations" element={<div>Organizations Content</div>} />
+                  <Route path="organizations/:orgId/edit" element={<div>Org Edit Content</div>} />
                   <Route path="organizations/:orgId/memberships" element={<div>Memberships Content</div>} />
                   <Route path="dev-tools" element={<div>Dev Tools Content</div>} />
                 </Route>
@@ -398,6 +399,88 @@ describe('AdminLayout', () => {
         
         // Should show link to view organization as member
         expect(screen.getByText('View organization →')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to member home when switching to a member org', async () => {
+      const user = userEvent.setup();
+      const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-admin',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-member',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships: mixedRoleMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
+      });
+
+      const selector = screen.getByTestId('admin-header-org-selector');
+      
+      // Switch to the member org
+      await user.selectOptions(selector, 'org-member');
+
+      // Should navigate to member home, not org detail page
+      await waitFor(() => {
+        expect(screen.getByText('Member Home Page')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to admin org page when switching to an admin org', async () => {
+      const user = userEvent.setup();
+      const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-admin',
+          organizationName: 'Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'membership-2',
+          organizationId: 'org-member',
+          organizationName: 'Member Org',
+          userId: 'user-123',
+          role: 'Member',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships: mixedRoleMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
+      });
+
+      const selector = screen.getByTestId('admin-header-org-selector');
+      
+      // Switch to the admin org
+      await user.selectOptions(selector, 'org-admin');
+
+      // Should navigate to admin org edit page
+      await waitFor(() => {
+        expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
       });
     });
   });
