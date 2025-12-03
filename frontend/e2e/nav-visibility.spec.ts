@@ -1,36 +1,14 @@
-import { test, expect, type Page } from '@playwright/test';
-import { loginViaApi, seedDevData, waitForVisible } from './utils';
+import { test, expect } from '@playwright/test';
+import { clearAuthState, loginThroughUi, waitForVisible } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
 const MEMBER_EMAIL = 'alice@example.com';
 const MEMBER_PASSWORD = 'UserDemo1!';
 
-async function loginThroughUi(page: Page, email: string, password: string) {
-  await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Log In' }).click();
-  // Wait for redirect to complete (platform admins go to /platform-admin, org admins go to /admin, members go to /me/home)
-  await page.waitForURL(/\/(platform-admin|admin|me\/home)/);
-  await page.waitForLoadState('networkidle');
-}
-
 test.describe('Top navigation visibility by role', () => {
-  test.beforeAll(async ({ request }) => {
-    const { token } = await loginViaApi(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await seedDevData(request, token);
-  });
-
   test.beforeEach(async ({ page }) => {
-    // Ensure clean auth state
-    await page.goto('/login');
-    await page.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
-    await page.context().clearCookies();
-    await page.reload();
+    await clearAuthState(page);
   });
 
   test('Platform Admin lands on platform admin dashboard with full access', async ({ page }) => {

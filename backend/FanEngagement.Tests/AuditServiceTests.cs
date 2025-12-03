@@ -287,6 +287,37 @@ public class AuditServiceTests
         Assert.Null(result);
     }
 
+    [Fact]
+    public async Task QueryAsync_NoResults_ReturnsEmptyPage()
+    {
+        // Arrange
+        var channel = Channel.CreateUnbounded<AuditEvent>();
+        var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        
+        using var dbContext = new FanEngagementDbContext(options);
+        var service = new AuditService(channel, dbContext, _logger);
+
+        var query = new AuditQuery
+        {
+            OrganizationId = Guid.NewGuid(), // Non-existent organization
+            Page = 1,
+            PageSize = 10
+        };
+
+        // Act
+        var result = await service.QueryAsync(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(0, result.TotalCount);
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.TotalPages);
+        Assert.False(result.HasNextPage);
+        Assert.False(result.HasPreviousPage);
+    }
+
     private static AuditEvent CreateTestAuditEvent()
     {
         return new AuditEvent

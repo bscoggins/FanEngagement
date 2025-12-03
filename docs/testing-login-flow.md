@@ -107,9 +107,19 @@ cd backend
 dotnet test
 ```
 
+### End-to-End (Playwright) Expectations
+
+Our Playwright suites exercise the experience exactly as users see it in the browser. When writing new e2e coverage:
+
+- Drive all actions through the UI only (forms, buttons, navigation). Avoid calling the API or modifying storage directly from a test.
+- Use the shared helpers in `frontend/e2e/utils.ts` to clear auth state and log in through the interface when needed.
+- Rely on the `./scripts/run-e2e.sh` workflow (or `POST /admin/reset-dev-data`) to seed the database before tests start, rather than seeding inside the tests themselves.
+- If a flow requires specific records, create them through the UI as part of the test scenario so the assertions reflect user-visible behavior.
+
 ## Test Scenarios Covered
 
 ### Login Page Tests
+
 - ✅ Renders login form with email and password fields
 - ✅ Successfully logs in with valid credentials
 - ✅ Displays error message for invalid credentials (401)
@@ -118,10 +128,12 @@ dotnet test
 - ✅ Disables submit button while logging in
 
 ### Protected Route Tests
+
 - ✅ Redirects to /login when user is not authenticated
 - ✅ Renders protected content when user is authenticated
 
 ### API Integration
+
 - ✅ Authorization header is automatically attached to requests
 - ✅ 401 responses trigger automatic logout and redirect to login
 - ✅ Token and user info are persisted in localStorage
