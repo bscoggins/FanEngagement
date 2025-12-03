@@ -493,7 +493,7 @@ ADD COLUMN "BlockchainConfig" JSONB;
 
 -- Example values:
 -- BlockchainType: 'None' | 'Solana' | 'Polygon'
--- BlockchainConfig: { "adapterUrl": "http://solana-adapter:3001", "network": "devnet", "apiKey": "..." }
+-- BlockchainConfig: { "adapterUrl": "https://solana-adapter:3001", "network": "devnet", "apiKey": "..." }
 ```
 
 ### 4.2 Domain Model
@@ -577,6 +577,7 @@ public class BlockchainAdapterFactory(
     FanEngagementDbContext dbContext,
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration,
+    IWebHostEnvironment environment,
     ILogger<BlockchainAdapterFactory> logger) : IBlockchainAdapterFactory
 {
     public async Task<IBlockchainAdapter> GetAdapterAsync(
@@ -635,16 +636,65 @@ public class BlockchainAdapterFactory(
                 $"Adapter URL must use HTTPS in non-development environments: {adapterUrl}");
         }
         
-        // Validate against allowlist
-        if (allowedHosts.Length > 0 && !allowedHosts.Contains(uri.Host, StringComparer.OrdinalIgnoreCase))
+        // Enforce allowlist is mandatory
+        if (allowedHosts.Length == 0)
+        {
+            throw new InvalidOperationException(
+                $"No allowed hosts configured for {adapterName}; refusing to use adapter URL.");
+        }
+        if (!allowedHosts.Contains(uri.Host, StringComparer.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
                 $"Adapter host '{uri.Host}' is not in the allowed hosts list for {adapterName}");
         }
         
+        // Block localhost, loopback, and private IP ranges
+        if (IsLocalOrPrivateHost(uri.Host))
+        {
+            throw new InvalidOperationException(
+                $"Adapter host '{uri.Host}' resolves to a local or private address, which is not allowed.");
+        }
+        
         logger.LogInformation(
             "Validated adapter URL for {AdapterName}: {Host}",
             adapterName, uri.Host);
+    }
+    
+    // Helper to check if host is localhost, loopback, or private IP
+    private static bool IsLocalOrPrivateHost(string host)
+    {
+        // Check for localhost
+        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+            host.Equals("127.0.0.1") ||
+            host.Equals("::1"))
+        {
+            return true;
+        }
+        
+        // Try to parse as IP address
+        if (System.Net.IPAddress.TryParse(host, out var ip))
+        {
+            // IPv4 private ranges
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                byte[] bytes = ip.GetAddressBytes();
+                // 10.0.0.0/8
+                if (bytes[0] == 10) return true;
+                // 172.16.0.0/12
+                if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
+                // 192.168.0.0/16
+                if (bytes[0] == 192 && bytes[1] == 168) return true;
+                // Loopback
+                if (bytes[0] == 127) return true;
+            }
+            // IPv6 loopback or private
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                if (ip.IsIPv6LinkLocal || ip.IsIPv6SiteLocal || ip.Equals(System.Net.IPAddress.IPv6Loopback))
+                    return true;
+            }
+        }
+        return false;
     }
     
     // Similar for Polygon...
@@ -727,13 +777,13 @@ public class NullBlockchainAdapter : IBlockchainAdapter
 ### 5.4 Service Discovery
 
 **Development (Docker Compose):**
-- Adapters exposed on `http://solana-adapter:3001` and `http://polygon-adapter:3002`
+- Adapters exposed on `https://solana-adapter:3001` and `https://polygon-adapter:3002`
 - Configured via `docker-compose.yml` service names
 - Backend resolves via Docker DNS
 
 **Production (Kubernetes):**
 - Adapters deployed as separate Deployments with Services
-- Service discovery via Kubernetes DNS: `http://solana-adapter.default.svc.cluster.local:80`
+- Service discovery via Kubernetes DNS: `https://solana-adapter.default.svc.cluster.local:443`
 - Configured via environment variables or ConfigMap
 - Optional: Service mesh (Istio, Linkerd) for advanced routing
 
@@ -1569,7 +1619,7 @@ public async Task GetAdapterAsync_SolanaOrg_ReturnsSolanaAdapter()
     { 
         Id = Guid.NewGuid(), 
         BlockchainType = BlockchainType.Solana,
-        BlockchainConfig = "{\"adapterUrl\":\"http://solana-adapter:3001\"}"
+        BlockchainConfig = "{\"adapterUrl\":\"https://solana-adapter:3001\"}"
     };
     var dbContext = CreateInMemoryDbContext();
     await dbContext.Organizations.AddAsync(org);
