@@ -385,8 +385,7 @@ public class AuditSecurityTests : IClassFixture<TestWebApplicationFactory>
             Email = testEmail,
             Password = testPassword
         };
-        var loginResponse = await client.PostAsJsonAsync("/auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+        await client.PostAsJsonAsync("/auth/login", loginRequest);
 
         // Wait for async audit events to be persisted
         await Task.Delay(500);
@@ -484,7 +483,7 @@ public class AuditSecurityTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange: Create various audit events through the system
         var client = _factory.CreateClient();
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
         client.AddAuthorizationHeader(token);
 
         // Wait for async audit events to be persisted
@@ -596,11 +595,6 @@ public class AuditSecurityTests : IClassFixture<TestWebApplicationFactory>
         globalAdminClient.AddAuthorizationHeader(globalAdminToken);
 
         var org = await CreateOrganization(globalAdminClient);
-
-        // Get the count of audit events before the query
-        var beforeResponse = await globalAdminClient.GetAsync("/admin/audit-events?pageSize=1");
-        var beforeResult = await beforeResponse.Content.ReadFromJsonAsync<PagedResult<AuditEventDto>>();
-        var countBefore = beforeResult?.TotalCount ?? 0;
 
         // Act: Query organization audit events
         await globalAdminClient.GetAsync($"/organizations/{org.Id}/audit-events");
