@@ -7,7 +7,7 @@ This document provides a complete overview of the audit logging test coverage cr
 - **Total Audit Tests**: 123 (113 existing + 10 new)
 - **Test Success Rate**: 100% (all tests passing)
 - **Performance Tests**: 6 new tests, all meeting thresholds
-- **E2E Tests**: 8 new tests for API validation
+- **E2E Tests**: 4 new UI-driven tests
 - **Test Execution Time**: ~29 seconds for full audit test suite
 
 ## Coverage by Category
