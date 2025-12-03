@@ -69,11 +69,18 @@ export const navItems: NavItem[] = [
     order: 2,
   },
   {
+    id: 'myActivity',
+    label: 'My Activity',
+    path: '/me/activity',
+    scope: 'user',
+    order: 3,
+  },
+  {
     id: 'myOrganizations',
     label: 'My Organizations',
     path: '/me/organizations',
     scope: 'user',
-    order: 3,
+    order: 4,
   },
 
   // Platform Admin items - only for GlobalAdmin
