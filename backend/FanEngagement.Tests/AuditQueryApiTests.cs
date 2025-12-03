@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using FanEngagement.Application.Audit;
@@ -154,6 +155,7 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
         var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         var client = _factory.CreateClient();
         client.AddAuthorizationHeader(adminToken);
+        var paginationTestActorId = Guid.NewGuid();
 
         var createOrgRequest = new CreateOrganizationRequest { Name = $"Test Org {Guid.NewGuid()}" };
         var createOrgResponse = await client.PostAsJsonAsync("/organizations", createOrgRequest);
@@ -175,18 +177,20 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
                     ResourceType = AuditResourceType.Proposal,
                     ResourceId = Guid.NewGuid(),
                     OrganizationId = org.Id,
-                    ActorUserId = adminId,
+                    ActorUserId = paginationTestActorId,
+                    ActorDisplayName = "Pagination Test Actor",
                     Outcome = AuditOutcome.Success
                 });
             }
         }
 
-        // Act: Query first page with page size 10
-        var response1 = await client.GetAsync($"/organizations/{org.Id}/audit-events?page=1&pageSize=10");
+        // Act: Query first page with page size 10, filtered to the unique actor we used when seeding
+        var baseQuery = $"/organizations/{org.Id}/audit-events?actorUserId={paginationTestActorId}";
+        var response1 = await client.GetAsync($"{baseQuery}&page=1&pageSize=10");
         var result1 = await response1.Content.ReadFromJsonAsync<PagedResult<AuditEventDto>>();
 
         // Query second page
-        var response2 = await client.GetAsync($"/organizations/{org.Id}/audit-events?page=2&pageSize=10");
+        var response2 = await client.GetAsync($"{baseQuery}&page=2&pageSize=10");
         var result2 = await response2.Content.ReadFromJsonAsync<PagedResult<AuditEventDto>>();
 
         // Assert
@@ -198,6 +202,10 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(5, result2.Items.Count);
         Assert.True(result1.HasNextPage);
         Assert.False(result2.HasNextPage);
+        Assert.All(result1.Items.Concat(result2.Items), item =>
+        {
+            Assert.Equal(paginationTestActorId, item.ActorUserId);
+        });
     }
 
     [Fact]
