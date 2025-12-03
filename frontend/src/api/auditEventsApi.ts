@@ -17,6 +17,13 @@ export interface AdminAuditEventsFilter extends AuditEventsFilter {
   organizationId?: string; // Optional organization filter for admin queries
 }
 
+export interface MyActivityFilter {
+  dateFrom?: string; // ISO 8601 format
+  dateTo?: string; // ISO 8601 format
+  page?: number;
+  pageSize?: number;
+}
+
 export const auditEventsApi = {
   /**
    * Get audit events for a specific organization with filters
@@ -95,6 +102,27 @@ export const auditEventsApi = {
     const queryString = params.toString();
     const url = `/admin/audit-events/export${queryString ? `?${queryString}` : ''}`;
     const response = await apiClient.get(url, { responseType: 'blob' });
+    return response.data;
+  },
+
+  /**
+   * Get current user's audit events (member-accessible)
+   */
+  getMyActivity: async (
+    filters?: MyActivityFilter
+  ): Promise<PagedResult<AuditEvent>> => {
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.pageSize) params.append('pageSize', filters.pageSize.toString());
+    }
+
+    const queryString = params.toString();
+    const url = `/users/me/audit-events${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get(url);
     return response.data;
   },
 };
