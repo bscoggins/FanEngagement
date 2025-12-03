@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Validators;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -79,59 +80,11 @@ public class AuditService(
         CancellationToken cancellationToken = default)
     {
         // Validate and constrain page size
-        var pageSize = Math.Min(Math.Max(query.PageSize, 1), 100);
+        var pageSize = Math.Min(Math.Max(query.PageSize, 1), PaginationValidators.MaxPageSize);
         var page = Math.Max(query.Page, 1);
 
-        // Start with base query
-        var queryable = dbContext.AuditEvents.AsNoTracking();
-
-        // Apply filters
-        if (query.OrganizationId.HasValue)
-        {
-            queryable = queryable.Where(e => e.OrganizationId == query.OrganizationId.Value);
-        }
-
-        if (query.ActorUserId.HasValue)
-        {
-            queryable = queryable.Where(e => e.ActorUserId == query.ActorUserId.Value);
-        }
-
-        if (query.ActionType.HasValue)
-        {
-            queryable = queryable.Where(e => e.ActionType == query.ActionType.Value);
-        }
-
-        if (query.ResourceType.HasValue)
-        {
-            queryable = queryable.Where(e => e.ResourceType == query.ResourceType.Value);
-        }
-
-        if (query.ResourceId.HasValue)
-        {
-            queryable = queryable.Where(e => e.ResourceId == query.ResourceId.Value);
-        }
-
-        if (query.Outcome.HasValue)
-        {
-            queryable = queryable.Where(e => e.Outcome == query.Outcome.Value);
-        }
-
-        if (query.FromDate.HasValue)
-        {
-            queryable = queryable.Where(e => e.Timestamp >= query.FromDate.Value);
-        }
-
-        if (query.ToDate.HasValue)
-        {
-            queryable = queryable.Where(e => e.Timestamp <= query.ToDate.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.SearchText))
-        {
-            queryable = queryable.Where(e =>
-                (e.ResourceName != null && EF.Functions.Like(e.ResourceName, $"%{query.SearchText}%")) ||
-                (e.ActorDisplayName != null && EF.Functions.Like(e.ActorDisplayName, $"%{query.SearchText}%")));
-        }
+        // Start with base query and apply filters
+        var queryable = ApplyFilters(dbContext.AuditEvents.AsNoTracking(), query, includeSearchText: true);
 
         // Get total count before pagination
         var totalCount = await queryable.CountAsync(cancellationToken);
@@ -202,5 +155,127 @@ public class AuditService(
             .FirstOrDefaultAsync(cancellationToken);
 
         return auditEvent;
+    }
+
+    /// <summary>
+    /// Queries audit events for a specific user with privacy filtering (no IP addresses).
+    /// </summary>
+    public async Task<PagedResult<AuditEventUserDto>> QueryUserEventsAsync(
+        Guid userId,
+        AuditQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate and constrain page size
+        var pageSize = Math.Min(Math.Max(query.PageSize, 1), PaginationValidators.MaxPageSize);
+        var page = Math.Max(query.Page, 1);
+
+        // Start with base query - filter by actor user ID
+        var queryable = dbContext.AuditEvents
+            .AsNoTracking()
+            .Where(e => e.ActorUserId == userId);
+
+        // Apply filters (no search text for user queries)
+        queryable = ApplyFilters(queryable, query, includeSearchText: false);
+
+        // Get total count before pagination
+        var totalCount = await queryable.CountAsync(cancellationToken);
+
+        // Apply sorting
+        queryable = query.SortOrder.Equals("asc", StringComparison.OrdinalIgnoreCase)
+            ? queryable.OrderBy(e => e.Timestamp)
+            : queryable.OrderByDescending(e => e.Timestamp);
+
+        // Apply pagination and project to privacy-filtered DTO
+        var items = await queryable
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(e => new AuditEventUserDto(
+                e.Id,
+                e.Timestamp,
+                e.ActionType,
+                e.Outcome,
+                e.FailureReason,
+                e.ResourceType,
+                e.ResourceId,
+                e.ResourceName,
+                e.OrganizationId,
+                e.OrganizationName,
+                e.CorrelationId
+            ))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<AuditEventUserDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    /// <summary>
+    /// Apply common filters to audit event queries.
+    /// </summary>
+    private static IQueryable<AuditEvent> ApplyFilters(
+        IQueryable<AuditEvent> queryable,
+        AuditQuery query,
+        bool includeSearchText)
+    {
+        if (query.OrganizationId.HasValue)
+        {
+            queryable = queryable.Where(e => e.OrganizationId == query.OrganizationId.Value);
+        }
+
+        if (query.ActorUserId.HasValue)
+        {
+            queryable = queryable.Where(e => e.ActorUserId == query.ActorUserId.Value);
+        }
+
+        if (query.ActionTypes is { Count: > 0 })
+        {
+            queryable = queryable.Where(e => query.ActionTypes.Contains(e.ActionType));
+        }
+        else if (query.ActionType.HasValue)
+        {
+            queryable = queryable.Where(e => e.ActionType == query.ActionType.Value);
+        }
+
+        if (query.ResourceTypes is { Count: > 0 })
+        {
+            queryable = queryable.Where(e => query.ResourceTypes.Contains(e.ResourceType));
+        }
+        else if (query.ResourceType.HasValue)
+        {
+            queryable = queryable.Where(e => e.ResourceType == query.ResourceType.Value);
+        }
+
+        if (query.ResourceId.HasValue)
+        {
+            queryable = queryable.Where(e => e.ResourceId == query.ResourceId.Value);
+        }
+
+        if (query.Outcome.HasValue)
+        {
+            queryable = queryable.Where(e => e.Outcome == query.Outcome.Value);
+        }
+
+        if (query.FromDate.HasValue)
+        {
+            queryable = queryable.Where(e => e.Timestamp >= query.FromDate.Value);
+        }
+
+        if (query.ToDate.HasValue)
+        {
+            queryable = queryable.Where(e => e.Timestamp <= query.ToDate.Value);
+        }
+
+        if (includeSearchText && !string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            queryable = queryable.Where(e =>
+                (e.ResourceName != null && EF.Functions.Like(e.ResourceName, $"%{query.SearchText}%")) ||
+                (e.ActorDisplayName != null && EF.Functions.Like(e.ActorDisplayName, $"%{query.SearchText}%")));
+        }
+
+        return queryable;
     }
 }

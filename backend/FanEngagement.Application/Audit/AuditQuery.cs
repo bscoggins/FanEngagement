@@ -23,9 +23,19 @@ public class AuditQuery
     public AuditActionType? ActionType { get; set; }
 
     /// <summary>
+    /// Filter by multiple action types. If specified, takes precedence over ActionType.
+    /// </summary>
+    public List<AuditActionType>? ActionTypes { get; set; }
+
+    /// <summary>
     /// Filter by resource type (User, Organization, Proposal, etc.).
     /// </summary>
     public AuditResourceType? ResourceType { get; set; }
+
+    /// <summary>
+    /// Filter by multiple resource types. If specified, takes precedence over ResourceType.
+    /// </summary>
+    public List<AuditResourceType>? ResourceTypes { get; set; }
 
     /// <summary>
     /// Filter by specific resource ID.

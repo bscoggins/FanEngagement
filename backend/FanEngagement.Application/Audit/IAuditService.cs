@@ -54,4 +54,16 @@ public interface IAuditService
     Task<AuditEventDetailsDto?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Queries audit events for a specific user (privacy-filtered, no IP addresses).
+    /// </summary>
+    /// <param name="userId">The user ID to query events for.</param>
+    /// <param name="query">Query parameters including filters and pagination.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Paged result of privacy-filtered audit events.</returns>
+    Task<PagedResult<AuditEventUserDto>> QueryUserEventsAsync(
+        Guid userId,
+        AuditQuery query,
+        CancellationToken cancellationToken = default);
 }
