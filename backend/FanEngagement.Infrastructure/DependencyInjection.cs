@@ -68,9 +68,13 @@ public static class DependencyInjection
         services.Configure<ProposalLifecycleOptions>(
             configuration.GetSection("ProposalLifecycle"));
         
+        services.Configure<AuditRetentionOptions>(
+            configuration.GetSection("AuditRetention"));
+        
         services.AddHttpClient();
         services.AddHostedService<WebhookDeliveryBackgroundService>();
         services.AddHostedService<ProposalLifecycleBackgroundService>();
+        services.AddHostedService<AuditRetentionBackgroundService>();
 
         // Configure metrics - AddMetrics() registers IMeterFactory
         services.AddMetrics();
