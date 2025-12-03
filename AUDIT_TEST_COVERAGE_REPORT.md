@@ -222,39 +222,15 @@ All resource types have comprehensive event capture tests:
 
 ---
 
-### 6. E2E Tests (8 tests - NEW)
+### 6. E2E Tests (4 tests - NEW)
 
-**API Access:**
-- ✅ `Platform admin can access audit events via API` - Validates admin access to audit API
+**UI Navigation & Interaction:**
+- ✅ `Platform admin expands audit event details via UI` - Tests expand/collapse functionality for event details
+- ✅ `Platform admin sees empty state when filtering future date range` - Validates empty state UI rendering
+- ✅ `Org admin paginates organization audit log using UI controls` - Tests page size selection and pagination
+- ✅ `Org admin filters audit log by resource type through the UI` - Tests filter functionality via UI
 
-**Display & Structure:**
-- ✅ `Audit log displays events in table` - Event structure and display validated
-- Event properties verified: id, timestamp, actionType, resourceType, outcome
-
-**Filtering:**
-- ✅ `Audit log filters work correctly`
-  - Action type filter: Only returns matching action types
-  - Resource type filter: Only returns matching resource types
-  - Outcome filter: Only returns matching outcomes
-  - Date range filter: Events within specified date range
-
-**Pagination:**
-- ✅ `Audit log pagination works correctly`
-  - Page 1 and page 2 have different items
-  - No overlap between pages
-  - Correct page sizes
-
-**User Privacy:**
-- ✅ `User can query their own audit events`
-  - Users see only their events (as actor or resource)
-  - IP addresses are NOT included (privacy protection)
-
-**Authorization:**
-- ✅ `Admin can query across all organizations` - Cross-org query works
-- ✅ `Non-admin cannot access admin audit endpoint` - Returns 403
-- ✅ `Date range filtering works correctly` - Temporal filtering validated
-
-**Coverage**: Meets all acceptance criteria for E2E tests
+**Coverage**: These tests focus on UI interactions and user workflows for the audit log functionality, complementing the comprehensive API and integration tests that validate the underlying audit system behavior.
 
 ---
 
@@ -334,14 +310,10 @@ npm run test:e2e -- audit-log.spec.ts
 - [x] LogSyncAsync_PerformanceImpact ⭐ NEW
 
 ### ✅ E2E Tests
-- [x] Platform admin can access audit events via API ⭐ NEW
-- [x] Audit log displays events in table ⭐ NEW
-- [x] Filters work correctly (action, resource, outcome, date) ⭐ NEW
-- [x] Pagination works correctly ⭐ NEW
-- [x] User can query own events (with privacy) ⭐ NEW
-- [x] Admin can query across organizations ⭐ NEW
-- [x] Non-admin authorization check (403) ⭐ NEW
-- [x] Date range filtering ⭐ NEW
+- [x] Platform admin expands audit event details via UI ⭐ NEW
+- [x] Platform admin sees empty state when filtering future date range ⭐ NEW
+- [x] Org admin paginates organization audit log using UI controls ⭐ NEW
+- [x] Org admin filters audit log by resource type through the UI ⭐ NEW
 
 ---
 

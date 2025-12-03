@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { clearAuthState, loginThroughUi, waitForVisible } from './utils';
+import { clearAuthState, loginThroughUi, waitForVisible, getExistingOrgId } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -14,16 +14,7 @@ test.describe('Audit Log UI flows', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto('/admin/organizations');
-    const orgRow = page.locator('tbody tr', { hasText: EXISTING_ORG_NAME }).first();
-    await waitForVisible(orgRow);
-    const auditLink = orgRow.getByRole('link', { name: 'Proposals' });
-    const href = await auditLink.getAttribute('href');
-    if (!href) {
-      throw new Error('Unable to derive organization id for Tech Innovators');
-    }
-    const segments = href.split('/');
-    existingOrgId = segments[3];
+    existingOrgId = await getExistingOrgId(page, EXISTING_ORG_NAME);
     await context.close();
   });
 
