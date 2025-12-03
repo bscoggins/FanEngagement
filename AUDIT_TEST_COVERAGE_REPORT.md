@@ -224,8 +224,8 @@ All resource types have comprehensive event capture tests:
 
 ### 6. E2E Tests (8 tests - NEW)
 
-**UI Navigation:**
-- ✅ `Platform admin can navigate to audit log page` - Navigation flow validated
+**API Access:**
+- ✅ `Platform admin can access audit events via API` - Validates admin access to audit API
 
 **Display & Structure:**
 - ✅ `Audit log displays events in table` - Event structure and display validated
@@ -334,7 +334,7 @@ npm run test:e2e -- audit-log.spec.ts
 - [x] LogSyncAsync_PerformanceImpact ⭐ NEW
 
 ### ✅ E2E Tests
-- [x] Platform admin can navigate to audit log page ⭐ NEW
+- [x] Platform admin can access audit events via API ⭐ NEW
 - [x] Audit log displays events in table ⭐ NEW
 - [x] Filters work correctly (action, resource, outcome, date) ⭐ NEW
 - [x] Pagination works correctly ⭐ NEW

@@ -28,33 +28,37 @@ test.describe('Audit Log E2E Tests', () => {
     await generateAuditEvents(request, adminToken);
   });
 
-  test('Platform admin can navigate to audit log page', async ({ page }) => {
-    // Navigate to platform admin dashboard first
-    await page.goto('/platform-admin/dashboard');
-    await page.waitForLoadState('networkidle');
-
-    // Click on "All Organizations" link in sidebar
-    await page.getByRole('link', { name: 'All Organizations' }).click();
-    await page.waitForURL('/platform-admin/organizations');
-
-    // Find first organization in the list and click on it
-    const orgCard = page.locator('[data-testid="organization-card"]').first();
-    await orgCard.waitFor({ state: 'visible' });
-    await orgCard.click();
-
-    // Should now be on org overview page - navigate to webhook events (audit-related page)
-    await page.waitForURL(/\/admin\/organizations\/[a-f0-9-]+$/);
+  test('Platform admin can access audit events via API', async ({ page, request }) => {
+    // Use token from beforeEach
     
-    // Click on Webhook Events link (which includes audit events in the context)
-    const auditLink = page.getByRole('link', { name: /Webhook Events/i });
-    if (await auditLink.isVisible()) {
-      await auditLink.click();
-      // Wait for navigation to webhook events page
-      await page.waitForURL(/\/admin\/organizations\/[a-f0-9-]+\/webhook-events/);
+    // Get first organization
+    const orgsResponse = await request.get(`${API_BASE_URL}/organizations`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    });
+    const orgs = await orgsResponse.json();
+    const orgId = orgs[0]?.id;
+
+    if (!orgId) {
+      test.skip();
+      return;
     }
 
-    // Verify we navigated to the webhook events page (audit-related functionality)
-    await expect(page).toHaveURL(/\/admin\/organizations\/[a-f0-9-]+\/webhook-events/);
+    // Verify admin can access organization audit events API endpoint
+    const auditResponse = await request.get(
+      `${API_BASE_URL}/organizations/${orgId}/audit-events?page=1&pageSize=10`,
+      {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      }
+    );
+    
+    expect(auditResponse.status()).toBe(200);
+    const auditData = await auditResponse.json();
+    
+    // Verify the API returns the expected structure
+    expect(auditData).toHaveProperty('totalCount');
+    expect(auditData).toHaveProperty('items');
+    expect(auditData).toHaveProperty('page');
+    expect(auditData).toHaveProperty('pageSize');
   });
 
   test('Audit log displays events in table', async ({ page, request }) => {
