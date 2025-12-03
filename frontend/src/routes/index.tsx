@@ -27,6 +27,7 @@ import { AdminOrganizationShareTypesPage } from '../pages/AdminOrganizationShare
 import { AdminOrganizationProposalsPage } from '../pages/AdminOrganizationProposalsPage';
 import { AdminProposalDetailPage } from '../pages/AdminProposalDetailPage';
 import { AdminWebhookEventsPage } from '../pages/AdminWebhookEventsPage';
+import { AdminAuditLogPage } from '../pages/AdminAuditLogPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 
 export const router = createBrowserRouter([
@@ -203,6 +204,14 @@ export const router = createBrowserRouter([
         element: (
           <OrgAdminRoute>
             <AdminWebhookEventsPage />
+          </OrgAdminRoute>
+        ),
+      },
+      {
+        path: 'organizations/:orgId/audit-log',
+        element: (
+          <OrgAdminRoute>
+            <AdminAuditLogPage />
           </OrgAdminRoute>
         ),
       },

@@ -263,3 +263,56 @@ export interface OutboundEvent {
 export interface OutboundEventDetails extends OutboundEvent {
   payload: string;
 }
+
+// Audit Event types
+export type AuditActionType =
+  | 'Created'
+  | 'Updated'
+  | 'Deleted'
+  | 'Accessed'
+  | 'Exported'
+  | 'StatusChanged'
+  | 'RoleChanged'
+  | 'Authenticated'
+  | 'AuthorizationDenied'
+  | 'AdminDataSeeded'
+  | 'AdminDataReset'
+  | 'AdminDataCleanup';
+
+export type AuditResourceType =
+  | 'User'
+  | 'Organization'
+  | 'Membership'
+  | 'ShareType'
+  | 'ShareIssuance'
+  | 'ShareBalance'
+  | 'Proposal'
+  | 'ProposalOption'
+  | 'Vote'
+  | 'WebhookEndpoint'
+  | 'OutboundEvent'
+  | 'AuditEvent'
+  | 'SystemConfiguration';
+
+export type AuditOutcome = 'Success' | 'Failure' | 'Denied' | 'Partial';
+
+export interface AuditEvent {
+  id: string;
+  timestamp: string;
+  actorUserId?: string;
+  actorDisplayName?: string;
+  actorIpAddress?: string;
+  actionType: AuditActionType;
+  outcome: AuditOutcome;
+  failureReason?: string;
+  resourceType: AuditResourceType;
+  resourceId: string;
+  resourceName?: string;
+  organizationId?: string;
+  organizationName?: string;
+  correlationId?: string;
+}
+
+export interface AuditEventDetails extends AuditEvent {
+  details?: string;
+}

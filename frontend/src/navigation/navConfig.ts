@@ -159,6 +159,14 @@ export const navItems: NavItem[] = [
     scope: 'org',
     order: 24,
   },
+  {
+    id: 'auditLog',
+    label: 'Audit Log',
+    path: '/admin/organizations/:orgId/audit-log',
+    roles: ['PlatformAdmin', 'OrgAdmin'],
+    scope: 'org',
+    order: 25,
+  },
 ];
 
 /**
