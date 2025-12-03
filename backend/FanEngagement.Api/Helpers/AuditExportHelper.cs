@@ -21,25 +21,26 @@ public static class AuditExportHelper
             sb.AppendLine("Id,Timestamp,ActorUserId,ActorDisplayName,ActorIpAddress,ActionType,Outcome,FailureReason,ResourceType,ResourceId,ResourceName,OrganizationId,OrganizationName,CorrelationId");
         }
 
-        foreach (var evt in events)
+        var csvLines = events.Select(evt => new[]
         {
-            var fields = new[]
-            {
-                EscapeCsv(evt.Id.ToString()),
-                EscapeCsv(evt.Timestamp.ToString("o")),
-                EscapeCsv(evt.ActorUserId?.ToString()),
-                EscapeCsv(evt.ActorDisplayName),
-                EscapeCsv(evt.ActorIpAddress),
-                EscapeCsv(evt.ActionType.ToString()),
-                EscapeCsv(evt.Outcome.ToString()),
-                EscapeCsv(evt.FailureReason),
-                EscapeCsv(evt.ResourceType.ToString()),
-                EscapeCsv(evt.ResourceId.ToString()),
-                EscapeCsv(evt.ResourceName),
-                EscapeCsv(evt.OrganizationId?.ToString()),
-                EscapeCsv(evt.OrganizationName),
-                EscapeCsv(evt.CorrelationId)
-            };
+            EscapeCsv(evt.Id.ToString()),
+            EscapeCsv(evt.Timestamp.ToString("o")),
+            EscapeCsv(evt.ActorUserId?.ToString()),
+            EscapeCsv(evt.ActorDisplayName),
+            EscapeCsv(evt.ActorIpAddress),
+            EscapeCsv(evt.ActionType.ToString()),
+            EscapeCsv(evt.Outcome.ToString()),
+            EscapeCsv(evt.FailureReason),
+            EscapeCsv(evt.ResourceType.ToString()),
+            EscapeCsv(evt.ResourceId.ToString()),
+            EscapeCsv(evt.ResourceName),
+            EscapeCsv(evt.OrganizationId?.ToString()),
+            EscapeCsv(evt.OrganizationName),
+            EscapeCsv(evt.CorrelationId)
+        });
+
+        foreach (var fields in csvLines)
+        {
             sb.AppendLine(string.Join(",", fields));
         }
 
