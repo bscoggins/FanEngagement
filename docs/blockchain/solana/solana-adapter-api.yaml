@@ -63,7 +63,7 @@ servers:
 
 security:
   - ApiKeyAuth: []
-    BearerAuth: []
+  - BearerAuth: []
 
 tags:
   - name: Organizations
@@ -897,6 +897,8 @@ components:
         - userId
         - optionId
         - votingPower
+        - voterAddress
+        - timestamp
       properties:
         voteId:
           type: string
@@ -962,6 +964,7 @@ components:
         - resultsHash
         - totalVotesCast
         - quorumMet
+        - closedAt
       properties:
         proposalId:
           type: string
