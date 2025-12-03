@@ -29,6 +29,7 @@ import { AdminProposalDetailPage } from '../pages/AdminProposalDetailPage';
 import { AdminWebhookEventsPage } from '../pages/AdminWebhookEventsPage';
 import { AdminAuditLogPage } from '../pages/AdminAuditLogPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
+import { PlatformAdminAuditLogPage } from '../pages/PlatformAdminAuditLogPage';
 
 export const router = createBrowserRouter([
   {
@@ -120,6 +121,10 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <PlatformAdminDashboardPage />,
+      },
+      {
+        path: 'audit-log',
+        element: <PlatformAdminAuditLogPage />,
       },
     ],
   },

@@ -86,12 +86,20 @@ export const navItems: NavItem[] = [
     order: 10,
   },
   {
+    id: 'platformAuditLog',
+    label: 'Audit Log',
+    path: '/platform-admin/audit-log',
+    roles: ['PlatformAdmin'],
+    scope: 'global',
+    order: 11,
+  },
+  {
     id: 'adminDashboard',
     label: 'Admin Dashboard',
     path: '/admin',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'global',
-    order: 11,
+    order: 12,
   },
   {
     id: 'manageUsers',
@@ -99,7 +107,7 @@ export const navItems: NavItem[] = [
     path: '/admin/users',
     roles: ['PlatformAdmin'],
     scope: 'global',
-    order: 12,
+    order: 13,
   },
   {
     id: 'manageOrganizations',
@@ -107,7 +115,7 @@ export const navItems: NavItem[] = [
     path: '/admin/organizations',
     roles: ['PlatformAdmin'],
     scope: 'global',
-    order: 13,
+    order: 14,
   },
   {
     id: 'devTools',
@@ -115,7 +123,7 @@ export const navItems: NavItem[] = [
     path: '/admin/dev-tools',
     roles: ['PlatformAdmin'],
     scope: 'global',
-    order: 14,
+    order: 15,
   },
 
   // Org Admin items - scoped to current organization
