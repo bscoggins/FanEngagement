@@ -2,92 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
+import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeStyle, getActionBadgeStyle, formatDate } from '../utils/auditUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
-import type { AuditEvent, AuditActionType, AuditResourceType, AuditOutcome, Organization, PagedResult } from '../types/api';
-
-const ACTION_TYPES: AuditActionType[] = [
-  'Created',
-  'Updated',
-  'Deleted',
-  'Accessed',
-  'Exported',
-  'StatusChanged',
-  'RoleChanged',
-  'Authenticated',
-  'AuthorizationDenied',
-  'AdminDataSeeded',
-  'AdminDataReset',
-  'AdminDataCleanup',
-];
-
-const RESOURCE_TYPES: AuditResourceType[] = [
-  'User',
-  'Organization',
-  'Membership',
-  'ShareType',
-  'ShareIssuance',
-  'ShareBalance',
-  'Proposal',
-  'ProposalOption',
-  'Vote',
-  'WebhookEndpoint',
-  'OutboundEvent',
-  'AuditEvent',
-  'SystemConfiguration',
-];
-
-const getOutcomeBadgeStyle = (outcome: AuditOutcome): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    display: 'inline-block',
-  };
-
-  switch (outcome) {
-    case 'Success':
-      return { ...baseStyle, backgroundColor: '#d4edda', color: '#155724' };
-    case 'Failure':
-      return { ...baseStyle, backgroundColor: '#f8d7da', color: '#721c24' };
-    case 'Denied':
-      return { ...baseStyle, backgroundColor: '#fff3cd', color: '#856404' };
-    case 'Partial':
-      return { ...baseStyle, backgroundColor: '#d1ecf1', color: '#0c5460' };
-    default:
-      return { ...baseStyle, backgroundColor: '#e9ecef', color: '#495057' };
-  }
-};
-
-const getActionBadgeStyle = (actionType: AuditActionType): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.25rem 0.5rem',
-    borderRadius: '4px',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    display: 'inline-block',
-  };
-
-  if (actionType === 'Created') {
-    return { ...baseStyle, backgroundColor: '#d4edda', color: '#155724' };
-  } else if (actionType === 'Updated') {
-    return { ...baseStyle, backgroundColor: '#d1ecf1', color: '#0c5460' };
-  } else if (actionType === 'Deleted') {
-    return { ...baseStyle, backgroundColor: '#f8d7da', color: '#721c24' };
-  } else if (actionType === 'AuthorizationDenied') {
-    return { ...baseStyle, backgroundColor: '#fff3cd', color: '#856404' };
-  } else {
-    return { ...baseStyle, backgroundColor: '#e9ecef', color: '#495057' };
-  }
-};
-
-const formatDate = (dateStr?: string): string => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleString();
-};
+import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
 export const PlatformAdminAuditLogPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
