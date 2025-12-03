@@ -158,7 +158,18 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
         _mint(to, amount);
     }
     
-    function burn(address from, uint256 amount) public onlyRole(MINTER_ROLE) {
+    // Holder-initiated burn (safer approach)
+    function burn(uint256 amount) public {
+        _burn(msg.sender, amount);
+    }
+    
+    // Admin burn for share revocation (requires MINTER_ROLE with strict controls)
+    function adminBurn(address from, uint256 amount) public onlyRole(MINTER_ROLE) {
+        // Note: In production, this should be guarded by:
+        // - Multi-sig approval (Gnosis Safe)
+        // - Timelock delay for accountability
+        // - Event logging for audit trail
+        // - Clear policy for when admin burns are permitted
         _burn(from, amount);
     }
     
@@ -365,10 +376,10 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
       chainId: 137,
     },
-    polygonMumbai: {
-      url: process.env.MUMBAI_RPC_URL || "",
+    polygonAmoy: {
+      url: process.env.AMOY_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-      chainId: 80001,
+      chainId: 80002,
     },
   },
   etherscan: {
@@ -993,9 +1004,11 @@ contract FanGovernor is Governor, GovernorCountingSimple, GovernorVotes, Governo
 
 ### Related FanEngagement Documents
 
-- [Governance Models Evaluation (Polygon)](./governance-models-evaluation.md) - On-chain vs off-chain voting analysis
-- [ShareType Tokenization Strategy (Polygon)](./sharetype-tokenization-strategy.md) - ERC-20 token design for ShareTypes
-- [Polygon Key Management Security](./polygon-key-management-security.md) - Ethereum key management and security
+> **Note:** The following three Polygon-specific documents are planned for future completion and will mirror the depth and structure of the Solana documentation. See PR description for current status.
+
+- [Governance Models Evaluation (Polygon)](./governance-models-evaluation.md) - On-chain vs off-chain voting analysis *(Planned)*
+- [ShareType Tokenization Strategy (Polygon)](./sharetype-tokenization-strategy.md) - ERC-20 token design for ShareTypes *(Planned)*
+- [Polygon Key Management Security](./polygon-key-management-security.md) - Ethereum key management and security *(Planned)*
 - [Architecture Overview](../../architecture.md) - Current system architecture
 - [Solana Capabilities Analysis](../solana/solana-capabilities-analysis.md) - Comparison with Solana approach
 
@@ -1021,11 +1034,11 @@ contract FanGovernor is Governor, GovernorCountingSimple, GovernorVotes, Governo
 
 ## Appendix B: Related Documents
 
-> **Note:** The following documents are part of Epic E-007. Links are to documents in the same directory.
+> **Note:** The following documents are part of Epic E-007 and are planned for future completion. They will mirror the structure and depth of the corresponding Solana documentation.
 
-- E-007-02: [Governance Models Evaluation (Polygon)](./governance-models-evaluation.md) - On-chain vs off-chain voting analysis
-- E-007-03: [ShareType Tokenization Strategy (Polygon)](./sharetype-tokenization-strategy.md) - ERC-20 token design for ShareTypes
-- E-007-04: [Polygon Key Management Security](./polygon-key-management-security.md) - Ethereum key management and security
+- E-007-02: [Governance Models Evaluation (Polygon)](./governance-models-evaluation.md) - On-chain vs off-chain voting analysis *(Planned)*
+- E-007-03: [ShareType Tokenization Strategy (Polygon)](./sharetype-tokenization-strategy.md) - ERC-20 token design for ShareTypes *(Planned)*
+- E-007-04: [Polygon Key Management Security](./polygon-key-management-security.md) - Ethereum key management and security *(Planned)*
 
 ## Appendix C: Gas Optimization Tips
 
