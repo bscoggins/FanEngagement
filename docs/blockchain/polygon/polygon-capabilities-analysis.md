@@ -72,8 +72,8 @@ For FanEngagement governance operations using ERC-20 tokens:
 
 | Scenario | Gas Price | ERC-20 Transfer Cost | Vote Record Cost |
 |----------|-----------|---------------------|------------------|
-| Low congestion | 30 GWEI | $0.0008 | $0.002 |
-| Normal | 50 GWEI | $0.001 | $0.003 |
+| Low congestion | 30 GWEI | $0.0008 | $0.0015 |
+| Normal | 50 GWEI | $0.001 | $0.0025 |
 | High congestion | 100 GWEI | $0.003 | $0.005 |
 | Peak (rare) | 200 GWEI | $0.005 | $0.010 |
 
@@ -187,11 +187,6 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
     // Admin burn for share revocation with strict controls
     function adminBurn(address from, uint256 amount) public onlyRole(BURNER_ROLE) {
         require(authorizedForAdminBurn[from], "Address not authorized for admin burn");
-        // Note: In production, this should be further guarded by:
-        // - Multisig approval via Gnosis Safe for BURNER_ROLE
-        // - Timelock contract delay (e.g., 48 hours) for accountability
-        // - Off-chain policy verification and approval workflow
-        // - Integration with compliance/audit systems
         _burn(from, amount);
         emit AdminBurnExecuted(from, amount, msg.sender);
     }
@@ -214,6 +209,36 @@ contract FanEngagementShare is ERC20, ERC20Votes, AccessControl {
     }
 }
 ```
+
+**Security Note for Production Implementation:**
+
+The example contract above demonstrates the basic structure for governance tokens with admin burn capability. However, **production deployments require significantly stronger security controls** to prevent unauthorized token confiscation:
+
+1. **Timelock Requirements:**
+   - Authorization via `authorizeAdminBurn()` should have a mandatory waiting period (e.g., 48-72 hours) before `adminBurn()` can execute
+   - Implement using OpenZeppelin's `TimelockController` or similar timelock contract
+   - This provides transparency and allows stakeholders to react to unauthorized authorization attempts
+
+2. **Multi-Signature Governance:**
+   - Both `DEFAULT_ADMIN_ROLE` and `BURNER_ROLE` must be controlled by multi-signature wallets (e.g., Gnosis Safe)
+   - Require M-of-N signatures (e.g., 3-of-5) for all administrative actions
+   - Never assign these roles to externally owned accounts (EOAs) in production
+
+3. **Per-Address Burn Limits:**
+   - Implement maximum burn amounts per address per time period
+   - Prevents mass revocation attacks even if roles are compromised
+   - Example: Maximum 10% of an address's balance per week
+
+4. **On-Chain Reason Codes:**
+   - Require documented reason codes for all admin burns
+   - Store reason on-chain for permanent audit trail
+   - Integrate with off-chain compliance systems for approval workflow
+
+5. **Emergency Pause:**
+   - Implement `ERC20Pausable` to halt all token operations if compromise is detected
+   - Pause functionality should also require multi-sig + timelock
+
+For a complete production-ready implementation with timelock and enhanced security, refer to OpenZeppelin's Governor framework and Compound's governance patterns.
 
 ### 2.3 Share Tokenization Strategy
 
@@ -886,8 +911,8 @@ contract FanGovernor is Governor, GovernorCountingSimple, GovernorVotes, Governo
 
 | Gas Price | ERC-20 Transfer | Vote Record | Annual Cost (10M votes) |
 |-----------|----------------|-------------|-------------------------|
-| 30 GWEI | $0.0008 | $0.002 | $15,000 |
-| 50 GWEI (base) | $0.001 | $0.003 | $25,000 |
+| 30 GWEI | $0.0008 | $0.0015 | $15,000 |
+| 50 GWEI (base) | $0.001 | $0.0025 | $25,000 |
 | 100 GWEI | $0.003 | $0.005 | $50,000 |
 | 200 GWEI (peak) | $0.005 | $0.010 | $100,000 |
 
