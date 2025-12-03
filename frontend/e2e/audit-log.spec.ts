@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import { loginViaApi, seedDevData, API_BASE_URL } from './utils';
 
 test.describe('Audit Log E2E Tests', () => {
+  let adminToken: string;
+
   test.beforeEach(async ({ page, request }) => {
     // Navigate to clear storage
     await page.goto('/login');
@@ -13,19 +15,20 @@ test.describe('Audit Log E2E Tests', () => {
 
     // Login as admin and seed dev data
     const loginResult = await loginViaApi(request, 'admin@example.com', 'Admin123!');
-    await seedDevData(request, loginResult.token);
+    adminToken = loginResult.token;
+    await seedDevData(request, adminToken);
 
     // Set auth token in localStorage
     await page.goto('/');
     await page.evaluate((token) => {
       localStorage.setItem('token', token);
-    }, loginResult.token);
+    }, adminToken);
 
     // Generate some audit events via API
-    await generateAuditEvents(request, loginResult.token);
+    await generateAuditEvents(request, adminToken);
   });
 
-  test('OrgAdmin can navigate to audit log page', async ({ page }) => {
+  test('Platform admin can navigate to audit log page', async ({ page }) => {
     // Navigate to platform admin dashboard first
     await page.goto('/platform-admin/dashboard');
     await page.waitForLoadState('networkidle');
@@ -39,28 +42,27 @@ test.describe('Audit Log E2E Tests', () => {
     await orgCard.waitFor({ state: 'visible' });
     await orgCard.click();
 
-    // Should now be on org overview page - navigate to audit events
+    // Should now be on org overview page - navigate to webhook events (audit-related page)
     await page.waitForURL(/\/admin\/organizations\/[a-f0-9-]+$/);
     
-    // Click on Webhook Events or similar link if it exists, otherwise we need to check the actual navigation
+    // Click on Webhook Events link (which includes audit events in the context)
     const auditLink = page.getByRole('link', { name: /Webhook Events/i });
     if (await auditLink.isVisible()) {
       await auditLink.click();
-      // Wait for navigation - adjust URL pattern based on actual routes
-      await page.waitForLoadState('networkidle');
+      // Wait for navigation to webhook events page
+      await page.waitForURL(/\/admin\/organizations\/[a-f0-9-]+\/webhook-events/);
     }
 
-    // Verify we're on an audit-related page
-    await expect(page).toHaveURL(/\/admin\/organizations\/[a-f0-9-]+/);
+    // Verify we navigated to the webhook events page (audit-related functionality)
+    await expect(page).toHaveURL(/\/admin\/organizations\/[a-f0-9-]+\/webhook-events/);
   });
 
   test('Audit log displays events in table', async ({ page, request }) => {
-    // Login via API to get org ID
-    const loginResult = await loginViaApi(request, 'admin@example.com', 'Admin123!');
+    // Use token from beforeEach
     
     // Get first organization
     const orgsResponse = await request.get(`${API_BASE_URL}/organizations`, {
-      headers: { Authorization: `Bearer ${loginResult.token}` }
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
     const orgs = await orgsResponse.json();
     const orgId = orgs[0]?.id;
@@ -74,7 +76,7 @@ test.describe('Audit Log E2E Tests', () => {
     const auditResponse = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?page=1&pageSize=10`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     
@@ -96,11 +98,11 @@ test.describe('Audit Log E2E Tests', () => {
   });
 
   test('Audit log filters work correctly', async ({ page, request }) => {
-    const loginResult = await loginViaApi(request, 'admin@example.com', 'Admin123!');
+    // Use token from beforeEach
     
     // Get first organization
     const orgsResponse = await request.get(`${API_BASE_URL}/organizations`, {
-      headers: { Authorization: `Bearer ${loginResult.token}` }
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
     const orgs = await orgsResponse.json();
     const orgId = orgs[0]?.id;
@@ -114,7 +116,7 @@ test.describe('Audit Log E2E Tests', () => {
     const createdEventsResponse = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?actionType=Created&page=1&pageSize=10`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     
@@ -130,7 +132,7 @@ test.describe('Audit Log E2E Tests', () => {
     const proposalEventsResponse = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?resourceType=Proposal&page=1&pageSize=10`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     
@@ -146,7 +148,7 @@ test.describe('Audit Log E2E Tests', () => {
     const successEventsResponse = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?outcome=Success&page=1&pageSize=10`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     
@@ -160,11 +162,11 @@ test.describe('Audit Log E2E Tests', () => {
   });
 
   test('Audit log pagination works correctly', async ({ page, request }) => {
-    const loginResult = await loginViaApi(request, 'admin@example.com', 'Admin123!');
+    // Use token from beforeEach
     
     // Get first organization
     const orgsResponse = await request.get(`${API_BASE_URL}/organizations`, {
-      headers: { Authorization: `Bearer ${loginResult.token}` }
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
     const orgs = await orgsResponse.json();
     const orgId = orgs[0]?.id;
@@ -178,7 +180,7 @@ test.describe('Audit Log E2E Tests', () => {
     const page1Response = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?page=1&pageSize=5`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     
@@ -189,7 +191,7 @@ test.describe('Audit Log E2E Tests', () => {
     const page2Response = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?page=2&pageSize=5`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     
@@ -257,11 +259,11 @@ test.describe('Audit Log E2E Tests', () => {
   });
 
   test('Admin can query across all organizations', async ({ page, request }) => {
-    const loginResult = await loginViaApi(request, 'admin@example.com', 'Admin123!');
+    // Use token from beforeEach
 
     // Query all audit events across organizations
     const adminAuditResponse = await request.get(`${API_BASE_URL}/admin/audit-events?page=1&pageSize=20`, {
-      headers: { Authorization: `Bearer ${loginResult.token}` }
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
     
     expect(adminAuditResponse.status()).toBe(200);
@@ -308,10 +310,10 @@ test.describe('Audit Log E2E Tests', () => {
   });
 
   test('Date range filtering works correctly', async ({ page, request }) => {
-    const loginResult = await loginViaApi(request, 'admin@example.com', 'Admin123!');
+    // Use token from beforeEach
     
     const orgsResponse = await request.get(`${API_BASE_URL}/organizations`, {
-      headers: { Authorization: `Bearer ${loginResult.token}` }
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
     const orgs = await orgsResponse.json();
     const orgId = orgs[0]?.id;
@@ -327,7 +329,7 @@ test.describe('Audit Log E2E Tests', () => {
     const recentEventsResponse = await request.get(
       `${API_BASE_URL}/organizations/${orgId}/audit-events?dateFrom=${encodeURIComponent(oneHourAgo)}&page=1&pageSize=20`,
       {
-        headers: { Authorization: `Bearer ${loginResult.token}` }
+        headers: { Authorization: `Bearer ${adminToken}` }
       }
     );
     

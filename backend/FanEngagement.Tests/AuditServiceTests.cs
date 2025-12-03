@@ -295,7 +295,8 @@ public class AuditServiceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
         var service = new AuditService(channel, dbContext, _logger);
 
         var query = new AuditQuery

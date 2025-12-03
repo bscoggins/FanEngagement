@@ -41,7 +41,8 @@ public class AuditPerformanceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
 
         var orgId = Guid.NewGuid();
         var testUserId = Guid.NewGuid();
@@ -116,7 +117,8 @@ public class AuditPerformanceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
         var service = new AuditService(channel, dbContext, NullLogger<AuditService>.Instance);
 
         // Warm up
@@ -149,7 +151,8 @@ public class AuditPerformanceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
         var service = new AuditService(channel, dbContext, NullLogger<AuditService>.Instance);
 
         // Act - Simulate 100 concurrent writes
@@ -197,7 +200,8 @@ public class AuditPerformanceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
 
         var orgId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -270,7 +274,8 @@ public class AuditPerformanceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
 
         var orgId = Guid.NewGuid();
 
@@ -347,7 +352,8 @@ public class AuditPerformanceTests
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        var dbContext = new FanEngagementDbContext(options);
+        
+        using var dbContext = new FanEngagementDbContext(options);
         var service = new AuditService(channel, dbContext, NullLogger<AuditService>.Instance);
 
         // Act - Measure synchronous logging (which persists immediately)
