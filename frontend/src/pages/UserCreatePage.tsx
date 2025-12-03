@@ -106,7 +106,7 @@ export const UserCreatePage: React.FC = () => {
               <li>At least 12 characters long</li>
               <li>At least one uppercase letter (A-Z)</li>
               <li>At least one number (0-9)</li>
-              <li>At least one special character (!@#$%^&*()_+-=[]{}|;:',."&lt;&gt;?/~`)</li>
+              <li>At least one special character (any non-alphanumeric character)</li>
             </ul>
           </div>
         </div>
