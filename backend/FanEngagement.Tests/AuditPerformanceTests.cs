@@ -19,6 +19,14 @@ namespace FanEngagement.Tests;
 public class AuditPerformanceTests
 {
     private readonly ITestOutputHelper _output;
+    
+    // Test dataset sizes
+    private const int LargeDatasetSize = 100000;
+    private const int MediumDatasetSize = 50000;
+    private const int SmallDatasetSize = 10000;
+    
+    // Batch processing configuration
+    private const int BatchInsertSize = 1000;
 
     public AuditPerformanceTests(ITestOutputHelper output)
     {
@@ -38,12 +46,12 @@ public class AuditPerformanceTests
         var orgId = Guid.NewGuid();
         var testUserId = Guid.NewGuid();
 
-        // Seed 100K audit events
-        _output.WriteLine("Seeding 100,000 audit events...");
+        // Seed large dataset of audit events
+        _output.WriteLine($"Seeding {LargeDatasetSize:N0} audit events...");
         var seedStopwatch = Stopwatch.StartNew();
         
         var events = new List<AuditEvent>();
-        for (int i = 0; i < 100000; i++)
+        for (int i = 0; i < LargeDatasetSize; i++)
         {
             events.Add(new AuditEvent
             {
@@ -58,7 +66,7 @@ public class AuditPerformanceTests
             });
 
             // Batch insert for performance
-            if (events.Count >= 1000)
+            if (events.Count >= BatchInsertSize)
             {
                 dbContext.AuditEvents.AddRange(events);
                 await dbContext.SaveChangesAsync();
@@ -184,7 +192,7 @@ public class AuditPerformanceTests
     [Fact]
     public async Task QueryWithComplexFilters_PerformsWell()
     {
-        // Arrange - Create service with 50K events
+        // Arrange - Create service with medium dataset
         var channel = Channel.CreateUnbounded<AuditEvent>();
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -194,10 +202,10 @@ public class AuditPerformanceTests
         var orgId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        // Seed 50K events with varied attributes
-        _output.WriteLine("Seeding 50,000 audit events...");
+        // Seed medium dataset with varied attributes
+        _output.WriteLine($"Seeding {MediumDatasetSize:N0} audit events...");
         var events = new List<AuditEvent>();
-        for (int i = 0; i < 50000; i++)
+        for (int i = 0; i < MediumDatasetSize; i++)
         {
             events.Add(new AuditEvent
             {
@@ -211,7 +219,7 @@ public class AuditPerformanceTests
                 Outcome = i % 10 == 0 ? AuditOutcome.Failure : AuditOutcome.Success
             });
 
-            if (events.Count >= 1000)
+            if (events.Count >= BatchInsertSize)
             {
                 dbContext.AuditEvents.AddRange(events);
                 await dbContext.SaveChangesAsync();
@@ -249,14 +257,15 @@ public class AuditPerformanceTests
         _output.WriteLine($"Complex query completed in {stopwatch.ElapsedMilliseconds}ms");
         _output.WriteLine($"Found {result.TotalCount} matching events");
 
-        Assert.True(stopwatch.ElapsedMilliseconds < 1000,
-            $"Complex query took {stopwatch.ElapsedMilliseconds}ms, expected <1000ms");
+        const int ComplexQueryThresholdMs = 1000;
+        Assert.True(stopwatch.ElapsedMilliseconds < ComplexQueryThresholdMs,
+            $"Complex query took {stopwatch.ElapsedMilliseconds}ms, expected <{ComplexQueryThresholdMs}ms");
     }
 
     [Fact]
     public async Task PaginationThroughLargeDataset_MaintainsPerformance()
     {
-        // Arrange - Create service with 10K events
+        // Arrange - Create service with small dataset
         var channel = Channel.CreateUnbounded<AuditEvent>();
         var options = new DbContextOptionsBuilder<FanEngagementDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -265,10 +274,10 @@ public class AuditPerformanceTests
 
         var orgId = Guid.NewGuid();
 
-        // Seed 10K events
-        _output.WriteLine("Seeding 10,000 audit events...");
+        // Seed small dataset
+        _output.WriteLine($"Seeding {SmallDatasetSize:N0} audit events...");
         var events = new List<AuditEvent>();
-        for (int i = 0; i < 10000; i++)
+        for (int i = 0; i < SmallDatasetSize; i++)
         {
             events.Add(new AuditEvent
             {
@@ -281,7 +290,7 @@ public class AuditPerformanceTests
                 Outcome = AuditOutcome.Success
             });
 
-            if (events.Count >= 1000)
+            if (events.Count >= BatchInsertSize)
             {
                 dbContext.AuditEvents.AddRange(events);
                 await dbContext.SaveChangesAsync();

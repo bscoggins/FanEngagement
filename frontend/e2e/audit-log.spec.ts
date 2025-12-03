@@ -215,10 +215,11 @@ test.describe('Audit Log E2E Tests', () => {
   });
 
   test('User can query their own audit events', async ({ page, request }) => {
-    // Create a regular user
+    // Create a regular user with unique email
+    const uniqueEmail = `testuser-${crypto.randomUUID()}@example.com`;
     const createUserResponse = await request.post(`${API_BASE_URL}/users`, {
       data: {
-        email: `testuser-${Date.now()}@example.com`,
+        email: uniqueEmail,
         displayName: 'Test User',
         password: 'TestPassword123!'
       }
@@ -281,10 +282,11 @@ test.describe('Audit Log E2E Tests', () => {
   });
 
   test('Non-admin cannot access admin audit endpoint', async ({ page, request }) => {
-    // Create a regular user
+    // Create a regular user with unique email
+    const uniqueEmail = `regular-${crypto.randomUUID()}@example.com`;
     const createUserResponse = await request.post(`${API_BASE_URL}/users`, {
       data: {
-        email: `regular-${Date.now()}@example.com`,
+        email: uniqueEmail,
         displayName: 'Regular User',
         password: 'TestPassword123!'
       }
@@ -344,11 +346,12 @@ test.describe('Audit Log E2E Tests', () => {
  * Helper function to generate audit events via API operations
  */
 async function generateAuditEvents(request: any, token: string): Promise<void> {
-  // Create a user (generates audit event)
+  // Create a user (generates audit event) with unique email
+  const uniqueEmail = `audit-test-${crypto.randomUUID()}@example.com`;
   await request.post(`${API_BASE_URL}/users`, {
     headers: { Authorization: `Bearer ${token}` },
     data: {
-      email: `audit-test-${Date.now()}@example.com`,
+      email: uniqueEmail,
       displayName: 'Audit Test User',
       password: 'TestPassword123!'
     }
