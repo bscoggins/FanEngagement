@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { clearAuthState, loginThroughUi, waitForVisible } from './utils';
+import { clearAuthState, loginThroughUi, waitForVisible, getExistingOrgId } from './utils';
 
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -33,16 +33,7 @@ test.describe.serial('Admin and member governance flows', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto('/admin/organizations');
-    const orgRow = page.locator('tbody tr', { hasText: EXISTING_ORG_NAME }).first();
-    await waitForVisible(orgRow);
-    const proposalsLink = orgRow.getByRole('link', { name: 'Proposals' });
-    const href = await proposalsLink.getAttribute('href');
-    if (!href) {
-      throw new Error('Unable to locate proposals link for Tech Innovators');
-    }
-    const parts = href.split('/');
-    existingOrgId = parts[3];
+    existingOrgId = await getExistingOrgId(page, EXISTING_ORG_NAME);
     await context.close();
   });
 
