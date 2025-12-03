@@ -559,7 +559,7 @@ export const AdminAuditLogPage: React.FC = () => {
             </table>
           </div>
 
-          {auditEvents && auditEvents.totalPages > 1 && (
+          {auditEvents.totalPages > 1 && (
             <Pagination
               currentPage={page}
               totalPages={auditEvents.totalPages}
