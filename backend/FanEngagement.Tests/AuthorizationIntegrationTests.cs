@@ -147,6 +147,124 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetUserById_ReturnsOk_ForGlobalAdmin()
+    {
+        // Arrange
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/users/{user.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserById_ReturnsForbidden_ForRegularUser()
+    {
+        // Arrange
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (otherUser, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(otherToken);
+
+        // Act
+        var response = await _client.GetAsync($"/users/{user.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_ReturnsNoContent_ForGlobalAdmin()
+    {
+        // Arrange
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.DeleteAsync($"/users/{user.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_ReturnsForbidden_ForRegularUser()
+    {
+        // Arrange
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (otherUser, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(otherToken);
+
+        // Act
+        var response = await _client.DeleteAsync($"/users/{user.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetMyOrganizations_ReturnsOk_ForAuthenticatedUser()
+    {
+        // Arrange
+        var (_, userToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(userToken);
+
+        // Act
+        var response = await _client.GetAsync("/users/me/organizations");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserMemberships_ReturnsOk_ForSelf()
+    {
+        // Arrange
+        var (user, userToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(userToken);
+
+        // Act
+        var response = await _client.GetAsync($"/users/{user.Id}/memberships");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserMemberships_ReturnsOk_ForGlobalAdmin()
+    {
+        // Arrange
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/users/{user.Id}/memberships");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserMemberships_ReturnsForbidden_ForOtherUser()
+    {
+        // Arrange
+        var (user, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (otherUser, otherToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(otherToken);
+
+        // Act
+        var response = await _client.GetAsync($"/users/{user.Id}/memberships");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     #endregion
 
     #region Organization Authorization Tests
@@ -398,6 +516,75 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         Assert.DoesNotContain(availableUsers, u => u.Id == adminUserId);
     }
 
+    [Fact]
+    public async Task GetMembershipByUser_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/memberships/{memberId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetMembershipByUser_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/memberships/{memberId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteMembership_ReturnsNoContent_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.DeleteAsync($"/organizations/{orgId}/memberships/{memberId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteMembership_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, memberToken) = await CreateOrgWithUsersAsync();
+        
+        // Create another member to delete
+        var (newUser, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newUser.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Switch to regular member trying to delete
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.DeleteAsync($"/organizations/{orgId}/memberships/{newUser.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     #endregion
 
     #region ShareType Authorization Tests
@@ -456,6 +643,320 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareTypeById_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await createResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        // Switch to member token
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/share-types/{shareType!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareTypeById_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await createResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        // Switch to non-member
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/share-types/{shareType!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateShareType_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await createResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        var updateRequest = new Application.ShareTypes.UpdateShareTypeRequest
+        {
+            Name = "Updated Share",
+            Symbol = "UPD",
+            VotingWeight = 2.0m
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/share-types/{shareType!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateShareType_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await createResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        // Switch to member token
+        _client.AddAuthorizationHeader(memberToken);
+
+        var updateRequest = new Application.ShareTypes.UpdateShareTypeRequest
+        {
+            Name = "Updated Share",
+            Symbol = "UPD",
+            VotingWeight = 2.0m
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/share-types/{shareType!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    #endregion
+
+    #region ShareIssuance Authorization Tests
+
+    [Fact]
+    public async Task CreateShareIssuance_ReturnsCreated_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, adminUserId, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var shareTypeResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await shareTypeResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        var issuanceRequest = new Application.ShareIssuances.CreateShareIssuanceRequest
+        {
+            ShareTypeId = shareType!.Id,
+            UserId = adminUserId,
+            Quantity = 100,
+            Reason = "Test issuance"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", issuanceRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateShareIssuance_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var shareTypeResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await shareTypeResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        // Switch to member token
+        _client.AddAuthorizationHeader(memberToken);
+
+        var issuanceRequest = new Application.ShareIssuances.CreateShareIssuanceRequest
+        {
+            ShareTypeId = shareType!.Id,
+            UserId = memberId,
+            Quantity = 100,
+            Reason = "Test issuance"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", issuanceRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateShareIssuance_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        var (nonMember, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a share type first
+        var shareTypeRequest = new CreateShareTypeRequest
+        {
+            Name = "Test Share",
+            Symbol = "TST",
+            VotingWeight = 1.0m
+        };
+        var shareTypeResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-types", shareTypeRequest);
+        var shareType = await shareTypeResponse.Content.ReadFromJsonAsync<ShareType>();
+
+        // Switch to non-member token
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        var issuanceRequest = new Application.ShareIssuances.CreateShareIssuanceRequest
+        {
+            ShareTypeId = shareType!.Id,
+            UserId = nonMember.Id,
+            Quantity = 100,
+            Reason = "Test issuance"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/share-issuances", issuanceRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareIssuancesByOrganization_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/share-issuances");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareIssuancesByOrganization_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/share-issuances");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareIssuancesByUser_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/users/{memberId}/share-issuances");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareIssuancesByUser_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/users/{memberId}/share-issuances");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareBalances_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/users/{memberId}/balances");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetShareBalances_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/users/{memberId}/balances");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     #endregion
@@ -678,6 +1179,827 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProposalsByOrganization_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/proposals");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProposalsByOrganization_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/proposals");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task OpenProposal_ReturnsOk_ForProposalCreator()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task OpenProposal_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Switch to admin token
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task OpenProposal_ReturnsForbidden_ForNonCreatorRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Create another member who is not the creator
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newMember.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Now try to open as the new member (not creator)
+        _client.AddAuthorizationHeader(newMemberToken);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CloseProposal_ReturnsOk_ForProposalCreator()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Open the proposal first
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CloseProposal_ReturnsForbidden_ForNonCreatorRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Add required options (minimum 2)
+        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
+
+        // Open the proposal
+        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+
+        // Create another member who is not the creator
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newMember.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Now try to close as the new member (not creator)
+        _client.AddAuthorizationHeader(newMemberToken);
+
+        // Act
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddProposalOption_ReturnsCreated_ForProposalCreator()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var optionRequest = new AddProposalOptionRequest
+        {
+            Text = "Test Option"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddProposalOption_ReturnsForbidden_ForNonCreatorRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Create another member who is not the creator
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newMember.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Now try to add option as the new member (not creator)
+        _client.AddAuthorizationHeader(newMemberToken);
+
+        var optionRequest = new AddProposalOptionRequest
+        {
+            Text = "Test Option"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteProposalOption_ReturnsNoContent_ForProposalCreator()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var optionRequest = new AddProposalOptionRequest
+        {
+            Text = "Test Option"
+        };
+
+        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+
+        // Act
+        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteProposalOption_ReturnsForbidden_ForNonCreatorRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        var optionRequest = new AddProposalOptionRequest
+        {
+            Text = "Test Option"
+        };
+
+        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+
+        // Create another member who is not the creator
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newMember.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Now try to delete option as the new member (not creator)
+        _client.AddAuthorizationHeader(newMemberToken);
+
+        // Act
+        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProposalResults_ReturnsOk_ForOrgMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Act
+        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/results");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetProposalResults_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Try to access as non-member
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/results");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetUserVote_ReturnsOkOrNotFound_ForSelf()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Act
+        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/votes/{memberId}");
+
+        // Assert - NotFound is OK since no vote was cast, Forbidden would be authorization failure
+        Assert.True(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetUserVote_ReturnsOkOrNotFound_ForGlobalAdmin()
+    {
+        // Arrange
+        var (orgId, _, _, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Switch to global admin
+        var (_, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(globalAdminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/votes/{memberId}");
+
+        // Assert - NotFound is OK since no vote was cast, Forbidden would be authorization failure
+        Assert.True(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetUserVote_ReturnsForbidden_ForOtherUser()
+    {
+        // Arrange
+        var (orgId, _, adminToken, memberId, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test Description",
+            CreatedByUserId = memberId,
+            StartAt = DateTimeOffset.UtcNow,
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/proposals", proposalRequest);
+        var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
+
+        // Create another member who is not the voter
+        _client.DefaultRequestHeaders.Remove("Authorization");
+        var (newMember, newMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        
+        // Add new member to org using OrgAdmin token
+        _client.AddAuthorizationHeader(adminToken);
+        var newMembershipRequest = new CreateMembershipRequest
+        {
+            UserId = newMember.Id,
+            Role = OrganizationRole.Member
+        };
+        await _client.PostAsJsonAsync($"/organizations/{orgId}/memberships", newMembershipRequest);
+
+        // Now try to view memberId's vote as the new member
+        _client.AddAuthorizationHeader(newMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/votes/{memberId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Webhook Authorization Tests
+
+    [Fact]
+    public async Task CreateWebhook_ReturnsCreated_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateWebhook_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateWebhook_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAllWebhooks_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAllWebhooks_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetWebhookById_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a webhook first
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+        var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetWebhookById_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a webhook first
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+        var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
+
+        // Switch to member token
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateWebhook_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a webhook first
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+        var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
+
+        var updateRequest = new Application.WebhookEndpoints.UpdateWebhookEndpointRequest("https://example.com/webhook-updated", "updated-secret-at-least-16-chars", new List<string> { "proposal.updated" });
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateWebhook_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a webhook first
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+        var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
+
+        // Switch to member token
+        _client.AddAuthorizationHeader(memberToken);
+
+        var updateRequest = new Application.WebhookEndpoints.UpdateWebhookEndpointRequest("https://example.com/webhook-updated", "updated-secret-at-least-16-chars", new List<string> { "proposal.updated" });
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteWebhook_ReturnsNoContent_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a webhook first
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+        var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
+
+        // Act
+        var response = await _client.DeleteAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteWebhook_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create a webhook first
+        var webhookRequest = new Application.WebhookEndpoints.CreateWebhookEndpointRequest("https://example.com/webhook", "test-secret-at-least-16-chars", new List<string> { "proposal.created" });
+        var createResponse = await _client.PostAsJsonAsync($"/organizations/{orgId}/webhooks", webhookRequest);
+        var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
+
+        // Switch to member token
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.DeleteAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetWebhooks_ReturnsOk_ForGlobalAdmin()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(globalAdminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    #endregion
+
+    #region OutboundEvent Authorization Tests
+
+    [Fact]
+    public async Task GetAllOutboundEvents_ReturnsOk_ForOrgAdmin()
+    {
+        // Arrange
+        var (orgId, _, adminToken, _, _) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/outbound-events");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAllOutboundEvents_ReturnsForbidden_ForRegularMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, memberToken) = await CreateOrgWithUsersAsync();
+        _client.AddAuthorizationHeader(memberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/outbound-events");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAllOutboundEvents_ReturnsForbidden_ForNonMember()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, nonMemberToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        _client.AddAuthorizationHeader(nonMemberToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/outbound-events");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAllOutboundEvents_ReturnsOk_ForGlobalAdmin()
+    {
+        // Arrange
+        var (orgId, _, _, _, _) = await CreateOrgWithUsersAsync();
+        var (_, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(globalAdminToken);
+
+        // Act
+        var response = await _client.GetAsync($"/organizations/{orgId}/outbound-events");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     #endregion
