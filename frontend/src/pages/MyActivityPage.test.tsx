@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../auth/AuthContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
 import { MyActivityPage } from './MyActivityPage';
 import * as auditEventsApiModule from '../api/auditEventsApi';
 import type { PagedResult, AuditEvent } from '../types/api';
@@ -16,9 +19,34 @@ vi.mocked(auditEventsApiModule).auditEventsApi = {
   getMyActivity: mockGetMyActivity,
 };
 
+const renderWithProviders = () => {
+  // Mock localStorage for auth
+  const mockUser = {
+    token: 'test-token',
+    userId: 'user-1',
+    email: 'test@example.com',
+    displayName: 'Test User',
+    role: 'User',
+  };
+  
+  localStorage.setItem('authToken', mockUser.token);
+  localStorage.setItem('authUser', JSON.stringify(mockUser));
+
+  return render(
+    <NotificationProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <MyActivityPage />
+        </AuthProvider>
+      </MemoryRouter>
+    </NotificationProvider>
+  );
+};
+
 describe('MyActivityPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   const createMockEvent = (override?: Partial<AuditEvent>): AuditEvent => ({
@@ -48,7 +76,7 @@ describe('MyActivityPage', () => {
 
   it('renders loading state initially', () => {
     mockGetMyActivity.mockReturnValue(new Promise(() => {}));
-    render(<MyActivityPage />);
+    renderWithProviders();
     expect(screen.getByText('Loading your activity...')).toBeInTheDocument();
   });
 
@@ -56,7 +84,7 @@ describe('MyActivityPage', () => {
     const mockEvent = createMockEvent();
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([mockEvent]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByTestId('activity-list')).toBeInTheDocument();
@@ -68,7 +96,7 @@ describe('MyActivityPage', () => {
   it('displays empty state when no activities', async () => {
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByText(/No activities found/)).toBeInTheDocument();
@@ -78,7 +106,7 @@ describe('MyActivityPage', () => {
   it('displays error message on API failure', async () => {
     mockGetMyActivity.mockRejectedValue(new Error('API Error'));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByText(/API Error/)).toBeInTheDocument();
@@ -89,7 +117,7 @@ describe('MyActivityPage', () => {
     const user = userEvent.setup();
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByTestId('activity-date-filters')).toBeInTheDocument();
@@ -114,7 +142,7 @@ describe('MyActivityPage', () => {
     });
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([voteEvent]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByText(/Voted on proposal "Budget Proposal" in Dev Team/)).toBeInTheDocument();
@@ -129,7 +157,7 @@ describe('MyActivityPage', () => {
     });
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([membershipEvent]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByText(/Joined organization "New Org"/)).toBeInTheDocument();
@@ -143,7 +171,7 @@ describe('MyActivityPage', () => {
     });
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([profileEvent]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByText('Updated profile information')).toBeInTheDocument();
@@ -163,7 +191,7 @@ describe('MyActivityPage', () => {
     };
     mockGetMyActivity.mockResolvedValue(pagedResult);
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByTestId('activity-list')).toBeInTheDocument();
@@ -178,7 +206,7 @@ describe('MyActivityPage', () => {
     });
     mockGetMyActivity.mockResolvedValue(createMockPagedResult([failedEvent]));
 
-    render(<MyActivityPage />);
+    renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByTestId('activity-outcome')).toBeInTheDocument();

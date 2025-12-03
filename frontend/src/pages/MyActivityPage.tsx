@@ -5,7 +5,10 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import { parseApiError } from '../utils/errorUtils';
+import { formatRelativeTime } from '../utils/proposalUtils';
 import type { AuditEvent } from '../types/api';
+
+const PAGE_SIZE = 20;
 
 type DateFilter = 'all' | '7days' | '30days';
 
@@ -111,34 +114,6 @@ const formatActivityDescription = (event: AuditEvent): string => {
   return `${actionType} ${resourceType}${resourceName ? ` "${resourceName}"` : ''}${organizationName ? ` in ${organizationName}` : ''}`;
 };
 
-const formatRelativeTime = (timestamp: string): string => {
-  const now = new Date();
-  const eventTime = new Date(timestamp);
-  const diffMs = now.getTime() - eventTime.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffSeconds < 60) {
-    return 'Just now';
-  } else if (diffMinutes < 60) {
-    return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-  } else {
-    return eventTime.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-};
-
 export const MyActivityPage: React.FC = () => {
   const [activities, setActivities] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,7 +124,6 @@ export const MyActivityPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
-  const pageSize = 20;
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -160,7 +134,7 @@ export const MyActivityPage: React.FC = () => {
       const result = await auditEventsApi.getMyActivity({
         dateFrom,
         page: currentPage,
-        pageSize,
+        pageSize: PAGE_SIZE,
       });
       
       setActivities(result.items);
@@ -175,7 +149,7 @@ export const MyActivityPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateFilter, currentPage, pageSize]);
+  }, [dateFilter, currentPage]);
 
   useEffect(() => {
     fetchActivities();
@@ -276,7 +250,7 @@ export const MyActivityPage: React.FC = () => {
                     fontSize: '1.5rem',
                     flexShrink: 0,
                   }}
-                  aria-label="activity icon"
+                  aria-label={`${event.actionType} ${event.resourceType}`}
                 >
                   {getIconForAction(event.actionType, event.resourceType)}
                 </span>
