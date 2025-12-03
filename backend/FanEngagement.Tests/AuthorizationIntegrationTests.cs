@@ -666,7 +666,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(memberToken);
 
         // Act
-        var response = await _client.GetAsync($"/organizations/{orgId}/share-types/{shareType!.Id}");
+        var response = await _client.GetAsync($"/organizations/{orgId}/share-types/{shareType.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -694,7 +694,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(nonMemberToken);
 
         // Act
-        var response = await _client.GetAsync($"/organizations/{orgId}/share-types/{shareType!.Id}");
+        var response = await _client.GetAsync($"/organizations/{orgId}/share-types/{shareType.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -725,7 +725,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/share-types/{shareType!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/share-types/{shareType.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -759,7 +759,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/share-types/{shareType!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/share-types/{shareType.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1036,7 +1036,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/proposals/{proposal!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/proposals/{proposal.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1071,7 +1071,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/proposals/{proposal!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/proposals/{proposal.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1119,7 +1119,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/proposals/{proposal!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/proposals/{proposal.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1145,7 +1145,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1175,7 +1175,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(nonMemberToken);
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1230,7 +1230,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Add required options (minimum 2)
-        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
         await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Act
@@ -1260,14 +1260,14 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Add required options (minimum 2)
-        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
         await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Switch to admin token
         _client.AddAuthorizationHeader(adminToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1293,7 +1293,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Add required options (minimum 2)
-        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
         await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Create another member who is not the creator
@@ -1313,7 +1313,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(newMemberToken);
 
         // Act
-        var response = await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        var response = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1339,11 +1339,11 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Add required options (minimum 2)
-        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
         await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open the proposal first
-        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
 
         // Act
         var response = await _client.PostAsync($"/proposals/{proposal.Id}/close", null);
@@ -1372,11 +1372,11 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Add required options (minimum 2)
-        await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
+        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 1" });
         await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option 2" });
 
         // Open the proposal
-        await _client.PostAsync($"/proposals/{proposal!.Id}/open", null);
+        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
 
         // Create another member who is not the creator
         _client.DefaultRequestHeaders.Remove("Authorization");
@@ -1426,7 +1426,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var response = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", optionRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -1473,7 +1473,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var response = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", optionRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1503,11 +1503,11 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
             Text = "Test Option"
         };
 
-        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", optionRequest);
         var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
 
         // Act
-        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option!.Id}");
+        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -1537,7 +1537,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
             Text = "Test Option"
         };
 
-        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal!.Id}/options", optionRequest);
+        var optionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", optionRequest);
         var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
 
         // Create another member who is not the creator
@@ -1557,7 +1557,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(newMemberToken);
 
         // Act
-        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option!.Id}");
+        var response = await _client.DeleteAsync($"/proposals/{proposal.Id}/options/{option.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1583,7 +1583,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/results");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}/results");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1613,7 +1613,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(nonMemberToken);
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/results");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}/results");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1639,7 +1639,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var proposal = await createResponse.Content.ReadFromJsonAsync<ProposalDto>();
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/votes/{memberId}");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}/votes/{memberId}");
 
         // Assert - NotFound is OK since no vote was cast, Forbidden would be authorization failure
         Assert.True(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotFound);
@@ -1669,7 +1669,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(globalAdminToken);
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/votes/{memberId}");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}/votes/{memberId}");
 
         // Assert - NotFound is OK since no vote was cast, Forbidden would be authorization failure
         Assert.True(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotFound);
@@ -1711,7 +1711,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(newMemberToken);
 
         // Act
-        var response = await _client.GetAsync($"/proposals/{proposal!.Id}/votes/{memberId}");
+        var response = await _client.GetAsync($"/proposals/{proposal.Id}/votes/{memberId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1811,7 +1811,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
 
         // Act
-        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks/{webhook.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1833,7 +1833,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(memberToken);
 
         // Act
-        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+        var response = await _client.GetAsync($"/organizations/{orgId}/webhooks/{webhook.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1854,7 +1854,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var updateRequest = new Application.WebhookEndpoints.UpdateWebhookEndpointRequest("https://example.com/webhook-updated", "updated-secret-at-least-16-chars", new List<string> { "proposal.updated" });
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/webhooks/{webhook.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -1878,7 +1878,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var updateRequest = new Application.WebhookEndpoints.UpdateWebhookEndpointRequest("https://example.com/webhook-updated", "updated-secret-at-least-16-chars", new List<string> { "proposal.updated" });
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"/organizations/{orgId}/webhooks/{webhook.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -1897,7 +1897,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         var webhook = await createResponse.Content.ReadFromJsonAsync<Application.WebhookEndpoints.WebhookEndpointDto>();
 
         // Act
-        var response = await _client.DeleteAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+        var response = await _client.DeleteAsync($"/organizations/{orgId}/webhooks/{webhook.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -1919,7 +1919,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
         _client.AddAuthorizationHeader(memberToken);
 
         // Act
-        var response = await _client.DeleteAsync($"/organizations/{orgId}/webhooks/{webhook!.Id}");
+        var response = await _client.DeleteAsync($"/organizations/{orgId}/webhooks/{webhook.Id}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
