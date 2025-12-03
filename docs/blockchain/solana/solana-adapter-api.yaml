@@ -1,0 +1,1102 @@
+openapi: 3.0.3
+info:
+  title: Solana Blockchain Adapter API
+  version: 1.0.0
+  description: |
+    API specification for the Solana blockchain adapter container.
+    
+    This adapter provides blockchain functionality for FanEngagement organizations
+    that have selected Solana as their blockchain platform. It handles:
+    - Organization account creation (Program Derived Addresses)
+    - SPL token minting for ShareTypes  
+    - Token issuance to members
+    - Proposal creation and voting operations
+    - Result commitment for verifiability
+    
+    ## Architecture
+    
+    The adapter runs as an independent Docker container and communicates with:
+    - **FanEngagement Backend**: Receives requests via this REST API
+    - **Solana Network**: Submits transactions via RPC endpoint
+    
+    ## Security
+    
+    All endpoints except `/health` and `/metrics` require API key authentication
+    via the `X-API-Key` header.
+    
+    ## Transaction Flow
+    
+    1. Backend sends request to adapter endpoint
+    2. Adapter builds and signs Solana transaction
+    3. Transaction submitted to Solana RPC endpoint
+    4. Adapter waits for confirmation (finalized commitment level)
+    5. Response returned with transaction signature and status
+    
+    ## Solana-Specific Concepts
+    
+    - **Transaction Signature**: Base58-encoded signature (~88 characters)
+    - **Program Derived Address (PDA)**: Deterministic account address derived from seeds
+    - **SPL Token**: Solana Program Library token standard for fungible tokens
+    - **Mint Address**: Public key of token mint account
+    - **Associated Token Account (ATA)**: User's account for holding specific token
+    
+  contact:
+    name: FanEngagement Platform Team
+    email: platform@fanengagement.io
+  license:
+    name: Proprietary
+    
+servers:
+  - url: http://localhost:3001
+    description: Local development
+  - url: https://solana-adapter-dev.fanengagement.io
+    description: Development environment
+  - url: https://solana-adapter.fanengagement.io
+    description: Production environment
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Organizations
+    description: Organization account management on Solana
+  - name: ShareTypes
+    description: SPL token minting for ShareTypes
+  - name: Issuances
+    description: Token minting and distribution to members
+  - name: Proposals
+    description: On-chain proposal creation and management
+  - name: Voting
+    description: Vote recording on Solana blockchain
+  - name: Results
+    description: Proposal result commitment
+  - name: Transactions
+    description: Transaction status queries
+  - name: Health
+    description: Health checks and monitoring
+
+paths:
+  /v1/adapter/organizations:
+    post:
+      tags:
+        - Organizations
+      summary: Create organization on Solana
+      description: |
+        Creates a Program Derived Address (PDA) for an organization on the Solana blockchain.
+        
+        The PDA is deterministically derived from the organization's UUID, ensuring
+        the same organization ID always produces the same on-chain address.
+        
+        ## Solana Implementation
+        
+        - **PDA Seeds**: `["organization", organization_uuid]`
+        - **Account Size**: ~500 bytes (stores org metadata)
+        - **Rent**: ~0.00437 SOL (rent-exempt deposit)
+        - **Authority**: Platform-controlled keypair
+        
+        ## Idempotency
+        
+        If the organization PDA already exists, the adapter returns the existing
+        account address without creating a duplicate.
+        
+      operationId: createOrganization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+            examples:
+              basic:
+                summary: Basic organization
+                value:
+                  organizationId: "123e4567-e89b-12d3-a456-426614174000"
+                  name: "Manchester United FC"
+                  description: "Official governance for Manchester United supporters"
+      responses:
+        '201':
+          description: Organization created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/adapter/share-types:
+    post:
+      tags:
+        - ShareTypes
+      summary: Create SPL token mint for ShareType
+      description: |
+        Creates an SPL token mint for a FanEngagement ShareType.
+        
+        Each ShareType becomes a distinct fungible token on Solana, with supply
+        controlled by the platform's mint authority.
+        
+        ## Token Program Selection
+        
+        - **Transferable shares**: SPL Token (original) for maximum ecosystem compatibility
+        - **Non-transferable shares**: Token-2022 with Non-Transferable extension
+        
+        ## Mint Configuration
+        
+        - **Decimals**: 0 (shares are whole units)
+        - **Mint Authority**: Platform-controlled keypair
+        - **Freeze Authority**: Platform-controlled keypair (for compliance)
+        - **Metadata**: Metaplex Token Metadata standard
+        
+        ## Solana Implementation
+        
+        - **PDA Seeds**: `["share_mint", organization_uuid, share_type_uuid]`
+        - **Rent**: ~0.00146 SOL for mint account
+        - **Metadata Storage**: IPFS (URI stored in metadata)
+        
+      operationId: createShareType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShareTypeRequest'
+            examples:
+              transferable:
+                summary: Transferable share type
+                value:
+                  shareTypeId: "456e7890-a12b-34c5-d678-901234567890"
+                  organizationId: "123e4567-e89b-12d3-a456-426614174000"
+                  name: "Season Ticket Holder Share"
+                  symbol: "MUFC-STH"
+                  votingWeight: 1.0
+                  maxSupply: 10000
+                  isTransferable: true
+      responses:
+        '201':
+          description: ShareType token mint created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateShareTypeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/adapter/share-issuances:
+    post:
+      tags:
+        - Issuances
+      summary: Issue shares to member (mint tokens)
+      description: |
+        Mints SPL tokens to a member's wallet, representing share issuance.
+        
+        ## Wallet Resolution
+        
+        The adapter supports multiple wallet models:
+        
+        1. **Custodial PDA Wallet (MVP)**: Adapter derives user wallet PDA from user UUID
+        2. **User-Linked Wallet**: Member's connected Solana wallet (Phantom, Solflare)
+        3. **Deferred Issuance**: Tokens held until member links wallet
+        
+        ## Associated Token Account (ATA)
+        
+        If the user doesn't have an ATA for this token mint, the adapter automatically
+        creates it. The ATA creation rent (~0.00204 SOL) is paid by the platform.
+        
+        ## Token Amount
+        
+        - **No Decimals**: Quantity is in whole units (e.g., 100 = 100 tokens)
+        - **MaxSupply Validation**: Adapter checks against on-chain max supply if set
+        
+      operationId: recordShareIssuance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordShareIssuanceRequest'
+            examples:
+              custodial:
+                summary: Issue to custodial wallet
+                value:
+                  issuanceId: "abc12345-6789-def0-1234-567890abcdef"
+                  shareTypeId: "456e7890-a12b-34c5-d678-901234567890"
+                  userId: "12345678-1234-5678-90ab-cdef01234567"
+                  quantity: 100
+      responses:
+        '200':
+          description: Shares issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordShareIssuanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/adapter/proposals:
+    post:
+      tags:
+        - Proposals
+      summary: Create proposal on Solana
+      description: |
+        Creates an on-chain proposal account for governance voting.
+        
+        ## Voting Model Support
+        
+        The adapter supports multiple voting models:
+        
+        - **Full On-Chain**: All votes recorded as blockchain transactions
+        - **Hybrid**: Off-chain votes with on-chain result commitment
+        - **Commitment Only**: Only final results hash stored on-chain (MVP)
+        
+        For the MVP (commitment only), this endpoint creates a minimal proposal
+        account that will later receive the results hash.
+        
+        ## Proposal Account Structure
+        
+        - **PDA Seeds**: `["proposal", organization_pda, proposal_uuid]`
+        - **Size**: ~807 bytes
+        - **Rent**: ~0.00651 SOL
+        - **Fields**: UUID, status, timestamps, quorum, results hash (initially empty)
+        
+        ## Eligible Voting Power
+        
+        The `eligibleVotingPower` field captures a snapshot of total voting power
+        at proposal creation time. This ensures consistent quorum calculations
+        even if shares are issued/revoked during voting.
+        
+      operationId: createProposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProposalRequest'
+            examples:
+              standard:
+                summary: Standard proposal
+                value:
+                  proposalId: "abcd1234-5678-90ab-cdef-012345678901"
+                  organizationId: "123e4567-e89b-12d3-a456-426614174000"
+                  title: "Approve New Stadium Design"
+                  startAt: "2024-12-10T00:00:00Z"
+                  endAt: "2024-12-17T00:00:00Z"
+                  eligibleVotingPower: 5000
+                  eligibleShareTypeIds:
+                    - "456e7890-a12b-34c5-d678-901234567890"
+      responses:
+        '201':
+          description: Proposal created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProposalResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/adapter/votes:
+    post:
+      tags:
+        - Voting
+      summary: Record vote on Solana
+      description: |
+        Records a member's vote on the Solana blockchain.
+        
+        ## Voting Models
+        
+        **MVP (Off-Chain Voting)**: This endpoint is optional. Votes are stored
+        in PostgreSQL, and only the final results hash is committed on-chain via
+        `/v1/adapter/proposal-results`.
+        
+        **Future (On-Chain Voting)**: For high-stakes proposals, this endpoint
+        creates a Vote Record PDA on Solana.
+        
+        ## Vote Record PDA
+        
+        - **PDA Seeds**: `["vote", proposal_pda, voter_pubkey]`
+        - **Size**: ~200 bytes
+        - **Rent**: ~0.00228 SOL (recoverable if vote record closed later)
+        - **Uniqueness**: One vote record per voter per proposal
+        
+        ## Double-Vote Prevention
+        
+        The adapter checks if a vote record PDA already exists for this voter
+        and proposal. If it does, the transaction fails with a duplicate vote error.
+        
+      operationId: recordVote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordVoteRequest'
+            examples:
+              standard_vote:
+                summary: Member casts vote
+                value:
+                  voteId: "01234567-89ab-cdef-0123-456789abcdef"
+                  proposalId: "abcd1234-5678-90ab-cdef-012345678901"
+                  userId: "12345678-1234-5678-90ab-cdef01234567"
+                  optionId: "option-a"
+                  votingPower: 100
+      responses:
+        '200':
+          description: Vote recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordVoteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate vote (user already voted on this proposal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/adapter/proposal-results:
+    post:
+      tags:
+        - Results
+      summary: Commit proposal results to Solana
+      description: |
+        Commits the final results of a proposal to the Solana blockchain.
+        
+        This is the **primary mechanism** for the MVP voting model. Individual
+        votes are stored off-chain (PostgreSQL), and this endpoint commits a
+        cryptographic hash of the results on-chain for verifiability.
+        
+        ## Results Hash
+        
+        The results hash is a SHA-256 hash of:
+        - Proposal ID
+        - Winning option ID
+        - Vote tallies per option
+        - Total votes cast
+        - Quorum status
+        - Timestamp
+        
+        This hash serves as a tamper-proof commitment. Anyone can verify the
+        results by:
+        1. Obtaining the full vote data from the platform
+        2. Computing the hash using the same algorithm
+        3. Comparing against the on-chain commitment
+        
+      operationId: commitProposalResults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitProposalResultsRequest'
+            examples:
+              successful_proposal:
+                summary: Proposal passed with quorum
+                value:
+                  proposalId: "abcd1234-5678-90ab-cdef-012345678901"
+                  resultsHash: "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+                  winningOptionId: "option-a"
+                  totalVotesCast: 3500
+                  quorumMet: true
+      responses:
+        '200':
+          description: Results committed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommitProposalResultsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Results already committed (cannot update)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/adapter/transactions/{txId}:
+    get:
+      tags:
+        - Transactions
+      summary: Query transaction status
+      description: |
+        Retrieves the current status of a Solana transaction.
+        
+        ## Transaction Lifecycle
+        
+        Solana transactions go through multiple confirmation stages:
+        
+        1. **Pending**: Transaction submitted but not yet processed
+        2. **Confirmed**: Transaction included in a block (1+ confirmations)
+        3. **Finalized**: Transaction finalized (32+ confirmations, recommended)
+        4. **Failed**: Transaction failed or rejected
+        
+      operationId: getTransactionStatus
+      security: []
+      parameters:
+        - name: txId
+          in: path
+          required: true
+          description: Solana transaction signature (base58-encoded)
+          schema:
+            type: string
+            example: "5J8nyJoP8RQPq7WzBwvgVJZ8r5rKmF8nZ6W8eE8q..."
+      responses:
+        '200':
+          description: Transaction status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStatus'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /v1/adapter/health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the Solana adapter.
+        
+        This endpoint is used by:
+        - Kubernetes liveness probes
+        - Kubernetes readiness probes
+        - Monitoring systems (Prometheus, Datadog, etc.)
+        - Circuit breaker health checks
+        
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Adapter is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Adapter is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /v1/adapter/metrics:
+    get:
+      tags:
+        - Health
+      summary: Prometheus metrics endpoint
+      description: |
+        Returns Prometheus-compatible metrics for monitoring.
+        
+        ## Metrics Exposed
+        
+        **Transaction Metrics**:
+        - `solana_transactions_total{status,operation}`: Total transactions by status and operation type
+        - `solana_transaction_duration_seconds{operation}`: Transaction duration histogram
+        
+        **RPC Metrics**:
+        - `solana_rpc_requests_total{status}`: Total RPC requests by status
+        - `solana_rpc_errors_total{error_type}`: Total RPC errors by type
+        
+      operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key for authenticating requests to the Solana adapter.
+
+  schemas:
+    CreateOrganizationRequest:
+      type: object
+      required:
+        - organizationId
+        - name
+      properties:
+        organizationId:
+          type: string
+          format: uuid
+          description: FanEngagement organization UUID (used to derive PDA)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Organization name (stored in on-chain metadata)
+          example: "Manchester United FC"
+        description:
+          type: string
+          maxLength: 500
+          description: Organization description (optional)
+          example: "Official governance for Manchester United supporters"
+
+    CreateOrganizationResponse:
+      type: object
+      required:
+        - transactionSignature
+        - accountAddress
+        - status
+        - timestamp
+      properties:
+        transactionSignature:
+          type: string
+          description: Solana transaction signature (base58-encoded)
+          example: "5J8nyJoP8RQPq7WzBwvgVJZ8r5rKmF8nZ..."
+        accountAddress:
+          type: string
+          description: Solana account address of organization PDA
+          example: "7xKVqrwPQ8mB9r8q8r8q8r8q8r8q..."
+        status:
+          type: string
+          enum: [confirmed, finalized]
+          description: Transaction confirmation status
+          example: "confirmed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of transaction confirmation
+          example: "2024-12-03T16:05:00Z"
+
+    CreateShareTypeRequest:
+      type: object
+      required:
+        - shareTypeId
+        - organizationId
+        - name
+        - symbol
+        - votingWeight
+        - isTransferable
+      properties:
+        shareTypeId:
+          type: string
+          format: uuid
+          description: FanEngagement ShareType UUID
+          example: "456e7890-a12b-34c5-d678-901234567890"
+        organizationId:
+          type: string
+          format: uuid
+          description: Parent organization UUID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: ShareType name (stored in token metadata)
+          example: "Season Ticket Holder Share"
+        symbol:
+          type: string
+          minLength: 1
+          maxLength: 10
+          pattern: '^[A-Z0-9-]+$'
+          description: Token symbol (uppercase alphanumeric with hyphens)
+          example: "MUFC-STH"
+        votingWeight:
+          type: number
+          format: double
+          minimum: 0
+          description: Voting weight per token (0 = non-voting)
+          example: 1.0
+        maxSupply:
+          type: integer
+          format: int64
+          minimum: 0
+          nullable: true
+          description: Maximum token supply (null = unlimited)
+          example: 10000
+        isTransferable:
+          type: boolean
+          description: Whether tokens can be transferred between users
+          example: true
+
+    CreateShareTypeResponse:
+      type: object
+      required:
+        - transactionSignature
+        - mintAddress
+        - status
+        - timestamp
+      properties:
+        transactionSignature:
+          type: string
+          description: Solana transaction signature
+          example: "3K7mPQnY5rZ8w8q8r8q8r8q8r8q8r8q8r..."
+        mintAddress:
+          type: string
+          description: SPL token mint address (PDA)
+          example: "9aRtWxY8q8r8q8r8q8r8q8r8q8r8q8r..."
+        status:
+          type: string
+          enum: [confirmed, finalized]
+          description: Transaction confirmation status
+          example: "confirmed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2024-12-03T16:06:00Z"
+
+    RecordShareIssuanceRequest:
+      type: object
+      required:
+        - issuanceId
+        - shareTypeId
+        - userId
+        - quantity
+      properties:
+        issuanceId:
+          type: string
+          format: uuid
+          description: FanEngagement ShareIssuance UUID
+          example: "abc12345-6789-def0-1234-567890abcdef"
+        shareTypeId:
+          type: string
+          format: uuid
+          description: ShareType UUID (identifies token mint)
+          example: "456e7890-a12b-34c5-d678-901234567890"
+        userId:
+          type: string
+          format: uuid
+          description: User UUID (used to derive custodial wallet PDA)
+          example: "12345678-1234-5678-90ab-cdef01234567"
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Number of tokens to mint (whole units)
+          example: 100
+        walletAddress:
+          type: string
+          nullable: true
+          description: Optional Solana wallet address (if user linked wallet)
+          example: "8xYz9AbcDefGhiJklMnoPqrStuvWxyz..."
+
+    RecordShareIssuanceResponse:
+      type: object
+      required:
+        - transactionSignature
+        - tokenAccountAddress
+        - status
+        - timestamp
+      properties:
+        transactionSignature:
+          type: string
+          description: Solana transaction signature
+          example: "4M9pQrW8x8q8r8q8r8q8r8q8r8q8r8q8r..."
+        tokenAccountAddress:
+          type: string
+          description: Associated Token Account (ATA) address
+          example: "6bStXy8q8r8q8r8q8r8q8r8q8r8q8r8q..."
+        status:
+          type: string
+          enum: [confirmed, finalized]
+          description: Transaction confirmation status
+          example: "confirmed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2024-12-03T16:07:00Z"
+
+    CreateProposalRequest:
+      type: object
+      required:
+        - proposalId
+        - organizationId
+        - title
+        - startAt
+        - endAt
+        - eligibleVotingPower
+        - eligibleShareTypeIds
+      properties:
+        proposalId:
+          type: string
+          format: uuid
+          description: FanEngagement Proposal UUID
+          example: "abcd1234-5678-90ab-cdef-012345678901"
+        organizationId:
+          type: string
+          format: uuid
+          description: Parent organization UUID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Proposal title (stored on-chain)
+          example: "Approve New Stadium Design"
+        startAt:
+          type: string
+          format: date-time
+          description: Voting start timestamp (ISO 8601)
+          example: "2024-12-10T00:00:00Z"
+        endAt:
+          type: string
+          format: date-time
+          description: Voting end timestamp (ISO 8601)
+          example: "2024-12-17T00:00:00Z"
+        eligibleVotingPower:
+          type: number
+          format: double
+          minimum: 0
+          description: Total voting power eligible (snapshot)
+          example: 5000
+        eligibleShareTypeIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          description: List of ShareType UUIDs eligible to vote
+          example:
+            - "456e7890-a12b-34c5-d678-901234567890"
+
+    CreateProposalResponse:
+      type: object
+      required:
+        - transactionSignature
+        - proposalAccountAddress
+        - status
+        - timestamp
+      properties:
+        transactionSignature:
+          type: string
+          description: Solana transaction signature
+          example: "7P2xMnO9w8q8r8q8r8q8r8q8r8q8r8q8r..."
+        proposalAccountAddress:
+          type: string
+          description: Solana account address of proposal PDA
+          example: "5cLwRv8q8r8q8r8q8r8q8r8q8r8q8r8q..."
+        status:
+          type: string
+          enum: [confirmed, finalized]
+          description: Transaction confirmation status
+          example: "confirmed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2024-12-03T16:08:00Z"
+
+    RecordVoteRequest:
+      type: object
+      required:
+        - voteId
+        - proposalId
+        - userId
+        - optionId
+        - votingPower
+      properties:
+        voteId:
+          type: string
+          format: uuid
+          description: FanEngagement Vote UUID
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+        proposalId:
+          type: string
+          format: uuid
+          description: Proposal UUID being voted on
+          example: "abcd1234-5678-90ab-cdef-012345678901"
+        userId:
+          type: string
+          format: uuid
+          description: User UUID casting the vote
+          example: "12345678-1234-5678-90ab-cdef01234567"
+        optionId:
+          type: string
+          description: Option ID selected by voter
+          example: "option-a"
+        votingPower:
+          type: number
+          format: double
+          minimum: 0
+          description: Voting power of this vote (calculated off-chain)
+          example: 100
+
+    RecordVoteResponse:
+      type: object
+      required:
+        - transactionSignature
+        - status
+        - timestamp
+      properties:
+        transactionSignature:
+          type: string
+          description: Solana transaction signature
+          example: "8Q3yNpP0x8q8r8q8r8q8r8q8r8q8r8q8r..."
+        status:
+          type: string
+          enum: [confirmed, finalized]
+          description: Transaction confirmation status
+          example: "confirmed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2024-12-03T16:09:00Z"
+
+    CommitProposalResultsRequest:
+      type: object
+      required:
+        - proposalId
+        - resultsHash
+        - totalVotesCast
+        - quorumMet
+      properties:
+        proposalId:
+          type: string
+          format: uuid
+          description: Proposal UUID to commit results for
+          example: "abcd1234-5678-90ab-cdef-012345678901"
+        resultsHash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: SHA-256 hash of proposal results (64 hex chars)
+          example: "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+        winningOptionId:
+          type: string
+          nullable: true
+          description: ID of winning option (null if no quorum)
+          example: "option-a"
+        totalVotesCast:
+          type: number
+          format: double
+          minimum: 0
+          description: Total voting power cast
+          example: 3500
+        quorumMet:
+          type: boolean
+          description: Whether quorum requirement was met
+          example: true
+
+    CommitProposalResultsResponse:
+      type: object
+      required:
+        - transactionSignature
+        - status
+        - timestamp
+      properties:
+        transactionSignature:
+          type: string
+          description: Solana transaction signature
+          example: "9R4zOpQ1y8q8r8q8r8q8r8q8r8q8r8q8r..."
+        status:
+          type: string
+          enum: [confirmed, finalized]
+          description: Transaction confirmation status
+          example: "confirmed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+          example: "2024-12-17T00:01:00Z"
+
+    TransactionStatus:
+      type: object
+      required:
+        - transactionId
+        - status
+        - timestamp
+      properties:
+        transactionId:
+          type: string
+          description: Solana transaction signature
+          example: "5J8nyJoP8RQPq7WzBwvgVJZ8r5rKmF8nZ..."
+        status:
+          type: string
+          enum: [pending, confirmed, finalized, failed]
+          description: Transaction status
+          example: "finalized"
+        confirmations:
+          type: integer
+          format: int32
+          minimum: 0
+          nullable: true
+          description: Number of confirmations (null if pending/failed)
+          example: 32
+        blockNumber:
+          type: integer
+          format: int64
+          nullable: true
+          description: Block number (null if pending/failed)
+          example: 123456789
+        blockTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Block timestamp (null if pending/failed)
+          example: "2024-12-03T16:05:30Z"
+        timestamp:
+          type: string
+          format: date-time
+          description: Query timestamp (ISO 8601)
+          example: "2024-12-03T16:12:00Z"
+        error:
+          type: string
+          nullable: true
+          description: Error message if transaction failed
+          example: "Insufficient funds for transaction fee"
+        explorerUrl:
+          type: string
+          format: uri
+          description: Link to transaction on Solana Explorer
+          example: "https://solscan.io/tx/5J8nyJoP8RQP...?cluster=devnet"
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - blockchain
+        - network
+        - checks
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall health status
+          example: "healthy"
+        blockchain:
+          type: string
+          enum: [solana]
+          description: Blockchain type
+          example: "solana"
+        network:
+          type: string
+          enum: [devnet, testnet, mainnet-beta]
+          description: Solana network
+          example: "devnet"
+        checks:
+          type: object
+          required:
+            - rpc
+            - keypair
+          properties:
+            rpc:
+              type: boolean
+              description: RPC connection check passed
+              example: true
+            keypair:
+              type: boolean
+              description: Signing keypair loaded successfully
+              example: true
+            lastBlockFetch:
+              type: boolean
+              description: Able to fetch latest block
+              example: true
+        lastBlockNumber:
+          type: integer
+          format: int64
+          nullable: true
+          description: Latest block number (null if unavailable)
+          example: 123456789
+        rpcEndpoint:
+          type: string
+          format: uri
+          description: Solana RPC endpoint URL
+          example: "https://api.devnet.solana.com"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of health check
+          example: "2024-12-03T16:12:00Z"
+        error:
+          type: string
+          nullable: true
+          description: Error message if unhealthy
+          example: "Failed to connect to Solana RPC endpoint"
+
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI identifying the problem type
+          example: "https://fanengagement.io/errors/invalid-request"
+        title:
+          type: string
+          description: Short human-readable summary
+          example: "Invalid Request"
+        status:
+          type: integer
+          format: int32
+          description: HTTP status code
+          example: 400
+        detail:
+          type: string
+          description: Human-readable explanation
+          example: "Field 'organizationId' is required"
+        instance:
+          type: string
+          description: URI identifying the specific occurrence
+          example: "/v1/adapter/organizations"
+        transactionSignature:
+          type: string
+          nullable: true
+          description: Solana transaction signature (if applicable)
+          example: "5J8nyJoP8RQPq7WzBwvgVJZ8r5rKmF..."
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    ServiceUnavailable:
+      description: Service unavailable - Solana RPC endpoint is down
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
