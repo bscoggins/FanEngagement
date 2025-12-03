@@ -14,6 +14,7 @@ FanEngagement is a multi-tenant fan governance platform. Organizations (teams, c
   - Team/club/entity.
   - Configures its own governance rules and share types.
   - **Branding**: Organizations can customize their visual identity with branding fields (see Branding section below).
+  - **Blockchain Integration**: Organizations can optionally select a blockchain (Solana, Polygon, or None) for governance transparency. See [Blockchain Adapter Platform](#blockchain-adapter-platform) section below.
 
 - **OrganizationMembership**
   - Links a User to an Organization with a role:
@@ -1672,3 +1673,78 @@ popd
 
 - Locally: Playwright runs headed by default to aid debugging.
 - In containers/CI: `CI=1` forces headless, one worker, and retry-friendly defaults; no X server is required.
+
+## Blockchain Adapter Platform
+
+FanEngagement supports optional blockchain integration for governance transparency and verifiability. Organizations can select their preferred blockchain (Solana, Polygon, or None) to record governance events on-chain while maintaining all functionality in the PostgreSQL database.
+
+### Architecture Overview
+
+The blockchain adapter platform uses a **modular, containerized architecture** that isolates blockchain-specific logic from the main application:
+
+- **Isolation:** Each blockchain adapter runs in its own Docker container with independent lifecycle
+- **Consistency:** All adapters implement the same OpenAPI contract for uniform backend integration
+- **Flexibility:** Organizations select blockchain via database configuration; backend routes requests to appropriate adapter
+- **Resilience:** Adapter failures handled gracefully; main application remains operational
+- **Extensibility:** New blockchains added by implementing adapter contract and deploying container
+
+### Key Components
+
+| Component | Responsibility |
+|-----------|----------------|
+| **Organization.BlockchainType** | Enum field storing organization's blockchain selection (`None`, `Solana`, `Polygon`) |
+| **Organization.BlockchainConfig** | JSON field storing adapter URL, network, and configuration |
+| **IBlockchainAdapterFactory** | Routes blockchain operations to appropriate adapter based on organization configuration |
+| **Adapter Containers** | Isolated Docker containers implementing blockchain operations (Solana, Polygon, etc.) |
+| **Null Adapter** | No-op implementation for organizations without blockchain integration |
+
+### Supported Blockchains
+
+1. **Solana** - High throughput, low-cost transactions, SPL token standard for shares
+2. **Polygon** - Ethereum-compatible L2, ERC-20 tokens, lower gas fees than Ethereum
+3. **None** - Off-chain only (default for backward compatibility)
+
+### Blockchain Operations
+
+When an organization has blockchain integration enabled, the platform records key governance events on-chain:
+
+- **Organization Creation:** On-chain organization representation
+- **Share Type Creation:** Token mint creation (SPL token for Solana, ERC-20 for Polygon)
+- **Share Issuance:** Token minting to user addresses
+- **Proposal Lifecycle:** Proposal open, close, finalize events with content hashes
+- **Vote Recording:** Individual votes or aggregated vote results (based on privacy requirements)
+- **Results Commitment:** Proposal results hash committed on-chain for verification
+
+### Security Model
+
+- **Private Keys:** Stored in adapter containers (not in main backend); never transmitted via API
+- **Authentication:** Adapters require API key or JWT for all operations
+- **Key Management:** Production uses cloud KMS (AWS KMS, Azure Key Vault); development uses environment variables
+- **Network Security:** Adapters communicate with backend on private network (Docker network or Kubernetes cluster network)
+
+### Failure Handling
+
+The platform uses Polly resilience policies:
+
+- **Retry:** 3 retries with exponential backoff for transient failures
+- **Timeout:** 30-second default timeout for blockchain operations
+- **Circuit Breaker:** Opens after 5 failures; prevents cascading failures
+
+When blockchain operations fail, governance continues in the database with graceful error messages to users.
+
+### Deployment Models
+
+- **Development:** Docker Compose with all adapters running locally
+- **Production:** Kubernetes with independent Deployments for each adapter, horizontal scaling, health checks
+
+### Documentation
+
+For comprehensive details on the blockchain adapter platform architecture, including:
+- Container architecture and design principles
+- OpenAPI contract specification with endpoint definitions
+- Adapter routing and discovery strategy
+- Monitoring, logging, and observability
+- Testing strategy and contract validation
+- Deployment configurations (Docker Compose, Kubernetes)
+
+See: **[Blockchain Adapter Platform Architecture](./blockchain/adapter-platform-architecture.md)**
