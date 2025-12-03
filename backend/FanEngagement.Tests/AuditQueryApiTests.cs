@@ -81,7 +81,7 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
     public async Task OrganizationAuditEvents_FilterByActionType_ReturnsOnlyMatching()
     {
         // Arrange
-        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         var client = _factory.CreateClient();
         client.AddAuthorizationHeader(adminToken);
 
@@ -264,7 +264,7 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
     {
         // Arrange: Create regular user (non-admin)
         var client = _factory.CreateClient();
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
         client.AddAuthorizationHeader(token);
 
         // Act: Try to access admin audit events endpoint
@@ -280,7 +280,7 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
         // Arrange: Create two users
         var client = _factory.CreateClient();
         var (user1, token1) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
-        var (user2, token2) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
+        var (user2, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(client);
 
         // Create audit events for both users
         using (var scope = _factory.Services.CreateScope())
@@ -506,6 +506,69 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(1, result.TotalCount);
         Assert.Equal(AuditOutcome.Failure, result.Items[0].Outcome);
         Assert.Equal("Test failure", result.Items[0].FailureReason);
+    }
+
+    [Fact]
+    public async Task OrganizationAuditEvents_OrgAdmin_CannotQueryOtherOrgsEvents()
+    {
+        // Arrange: Create GlobalAdmin to set up two orgs
+        var (_, globalAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var globalAdminClient = _factory.CreateClient();
+        globalAdminClient.AddAuthorizationHeader(globalAdminToken);
+
+        // Create two organizations as GlobalAdmin
+        var org1 = await CreateOrganization(globalAdminClient);
+        var org2 = await CreateOrganization(globalAdminClient);
+
+        // Create a regular user to make OrgAdmin of org1
+        var regularClient = _factory.CreateClient();
+        var (orgAdmin, orgAdminToken) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(regularClient);
+        
+        // Make the user an OrgAdmin of org1 using the API
+        globalAdminClient.AddAuthorizationHeader(globalAdminToken);
+        var membershipRequest = new CreateMembershipRequest
+        {
+            UserId = orgAdmin.Id,
+            Role = OrganizationRole.OrgAdmin
+        };
+        await globalAdminClient.PostAsJsonAsync($"/organizations/{org1.Id}/memberships", membershipRequest);
+
+        // Create audit events in both organizations
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
+            
+            await auditService.LogSyncAsync(new AuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = DateTimeOffset.UtcNow,
+                ActionType = AuditActionType.Created,
+                ResourceType = AuditResourceType.Proposal,
+                ResourceId = Guid.NewGuid(),
+                OrganizationId = org1.Id,
+                ActorUserId = orgAdmin.Id,
+                Outcome = AuditOutcome.Success
+            });
+
+            await auditService.LogSyncAsync(new AuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = DateTimeOffset.UtcNow,
+                ActionType = AuditActionType.Created,
+                ResourceType = AuditResourceType.Proposal,
+                ResourceId = Guid.NewGuid(),
+                OrganizationId = org2.Id,
+                ActorUserId = Guid.NewGuid(),
+                Outcome = AuditOutcome.Success
+            });
+        }
+
+        // Act: OrgAdmin tries to access org2's audit events
+        regularClient.AddAuthorizationHeader(orgAdminToken);
+        var response = await regularClient.GetAsync($"/organizations/{org2.Id}/audit-events");
+
+        // Assert: Should be forbidden (403)
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task<Organization> CreateOrganization(HttpClient client)

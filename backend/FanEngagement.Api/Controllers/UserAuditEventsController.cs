@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Validators;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,22 +28,23 @@ public class UserAuditEventsController(IAuditService auditService) : ControllerB
     /// <param name="outcome">Filter by outcome</param>
     /// <param name="organizationId">Filter by organization ID</param>
     /// <param name="page">Page number (default: 1)</param>
-    /// <param name="pageSize">Page size (default: 50, max: 100)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paginated list of privacy-filtered audit events</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<AuditEventUserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PagedResult<AuditEventUserDto>>> GetMyAuditEvents(
         [FromQuery] string? actionType,
         [FromQuery] string? resourceType,
         [FromQuery] Guid? resourceId,
-        [FromQuery] DateTime? dateFrom,
-        [FromQuery] DateTime? dateTo,
+        [FromQuery] DateTimeOffset? dateFrom,
+        [FromQuery] DateTimeOffset? dateTo,
         [FromQuery] string? outcome,
         [FromQuery] Guid? organizationId,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] int page = PaginationValidators.DefaultPage,
+        [FromQuery] int pageSize = PaginationValidators.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
         // Get current user ID from claims
@@ -52,6 +54,13 @@ public class UserAuditEventsController(IAuditService auditService) : ControllerB
             return Unauthorized();
         }
 
+        // Validate pagination parameters
+        var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
+        if (validationError != null)
+        {
+            return validationError;
+        }
+
         // Build query
         var query = new AuditQuery
         {
@@ -59,11 +68,11 @@ public class UserAuditEventsController(IAuditService auditService) : ControllerB
             ActionTypes = EnumParsingHelper.ParseEnumList<AuditActionType>(actionType),
             ResourceTypes = EnumParsingHelper.ParseEnumList<AuditResourceType>(resourceType),
             ResourceId = resourceId,
-            FromDate = dateFrom.HasValue ? new DateTimeOffset(dateFrom.Value, TimeSpan.Zero) : null,
-            ToDate = dateTo.HasValue ? new DateTimeOffset(dateTo.Value, TimeSpan.Zero) : null,
+            FromDate = dateFrom,
+            ToDate = dateTo,
             Outcome = EnumParsingHelper.ParseEnum<AuditOutcome>(outcome),
             Page = page,
-            PageSize = Math.Min(pageSize, 100)
+            PageSize = pageSize
         };
 
         var result = await auditService.QueryUserEventsAsync(userId, query, cancellationToken);

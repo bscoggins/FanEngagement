@@ -1,6 +1,7 @@
 using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Validators;
 using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +12,14 @@ namespace FanEngagement.Api.Controllers;
 /// Controller for querying audit events within a specific organization.
 /// </summary>
 [ApiController]
-[Route("organizations/{orgId:guid}/audit-events")]
+[Route("organizations/{organizationId:guid}/audit-events")]
 [Authorize(Policy = "OrgAdmin")]
 public class OrganizationAuditEventsController(IAuditService auditService) : ControllerBase
 {
     /// <summary>
     /// Query audit events for a specific organization.
     /// </summary>
-    /// <param name="orgId">Organization ID</param>
+    /// <param name="organizationId">Organization ID</param>
     /// <param name="actionType">Filter by action types (comma-separated)</param>
     /// <param name="resourceType">Filter by resource types (comma-separated)</param>
     /// <param name="resourceId">Filter by specific resource ID</param>
@@ -27,38 +28,46 @@ public class OrganizationAuditEventsController(IAuditService auditService) : Con
     /// <param name="dateTo">Filter events until this date (ISO 8601)</param>
     /// <param name="outcome">Filter by outcome</param>
     /// <param name="page">Page number (default: 1)</param>
-    /// <param name="pageSize">Page size (default: 50, max: 100)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paginated list of audit events</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<AuditEventDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<PagedResult<AuditEventDto>>> GetAuditEvents(
-        Guid orgId,
+        Guid organizationId,
         [FromQuery] string? actionType,
         [FromQuery] string? resourceType,
         [FromQuery] Guid? resourceId,
         [FromQuery] Guid? actorUserId,
-        [FromQuery] DateTime? dateFrom,
-        [FromQuery] DateTime? dateTo,
+        [FromQuery] DateTimeOffset? dateFrom,
+        [FromQuery] DateTimeOffset? dateTo,
         [FromQuery] string? outcome,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] int page = PaginationValidators.DefaultPage,
+        [FromQuery] int pageSize = PaginationValidators.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
+        // Validate pagination parameters
+        var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
+        if (validationError != null)
+        {
+            return validationError;
+        }
+
         // Build query
         var query = new AuditQuery
         {
-            OrganizationId = orgId,
+            OrganizationId = organizationId,
             ActionTypes = EnumParsingHelper.ParseEnumList<AuditActionType>(actionType),
             ResourceTypes = EnumParsingHelper.ParseEnumList<AuditResourceType>(resourceType),
             ResourceId = resourceId,
             ActorUserId = actorUserId,
-            FromDate = dateFrom.HasValue ? new DateTimeOffset(dateFrom.Value, TimeSpan.Zero) : null,
-            ToDate = dateTo.HasValue ? new DateTimeOffset(dateTo.Value, TimeSpan.Zero) : null,
+            FromDate = dateFrom,
+            ToDate = dateTo,
             Outcome = EnumParsingHelper.ParseEnum<AuditOutcome>(outcome),
             Page = page,
-            PageSize = Math.Min(pageSize, 100)
+            PageSize = pageSize
         };
 
         var result = await auditService.QueryAsync(query, cancellationToken);

@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Validators;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,7 @@ public class AuditService(
         CancellationToken cancellationToken = default)
     {
         // Validate and constrain page size
-        var pageSize = Math.Min(Math.Max(query.PageSize, 1), 100);
+        var pageSize = Math.Min(Math.Max(query.PageSize, 1), PaginationValidators.MaxPageSize);
         var page = Math.Max(query.Page, 1);
 
         // Start with base query and apply filters
@@ -165,7 +166,7 @@ public class AuditService(
         CancellationToken cancellationToken = default)
     {
         // Validate and constrain page size
-        var pageSize = Math.Min(Math.Max(query.PageSize, 1), 100);
+        var pageSize = Math.Min(Math.Max(query.PageSize, 1), PaginationValidators.MaxPageSize);
         var page = Math.Max(query.Page, 1);
 
         // Start with base query - filter by actor user ID
