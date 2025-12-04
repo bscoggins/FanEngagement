@@ -81,6 +81,7 @@ body:
         - docs-agent (documentation only)
         - test-agent (tests only)
         - lint-agent (formatting / safe refactors)
+        - frontend-agent (UI/UX and frontend polish)
         - product-owner-agent (idea refinement, no code)
     validations:
       required: true
