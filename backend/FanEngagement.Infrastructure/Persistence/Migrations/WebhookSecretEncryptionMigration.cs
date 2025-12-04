@@ -1,8 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
+using FanEngagement.Application.Encryption;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Persistence.Migrations;
@@ -29,13 +27,6 @@ public static class WebhookSecretEncryptionMigration
             return;
         }
 
-        var key = Convert.FromBase64String(keyString);
-        if (key.Length != 32)
-        {
-            logger.LogError("Encryption key must be 32 bytes (256 bits). Skipping webhook secret encryption migration.");
-            return;
-        }
-
         // Find webhooks that need encryption
         var webhooks = await dbContext.WebhookEndpoints
             .Where(w => w.EncryptedSecret.StartsWith("NEEDS_ENCRYPTION:"))
@@ -49,6 +40,11 @@ public static class WebhookSecretEncryptionMigration
 
         logger.LogInformation("Encrypting {Count} webhook secrets...", webhooks.Count);
 
+        // Create an encryption service instance for the migration
+        var encryptionService = new Services.AesEncryptionService(
+            configuration,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Services.AesEncryptionService>.Instance);
+
         foreach (var webhook in webhooks)
         {
             try
@@ -56,8 +52,8 @@ public static class WebhookSecretEncryptionMigration
                 // Extract the plaintext secret
                 var plaintext = webhook.EncryptedSecret.Substring("NEEDS_ENCRYPTION:".Length);
                 
-                // Encrypt it
-                var encrypted = EncryptSecret(plaintext, key);
+                // Encrypt it using the encryption service
+                var encrypted = encryptionService.Encrypt(plaintext);
                 
                 // Update the webhook
                 webhook.EncryptedSecret = encrypted;
@@ -73,32 +69,5 @@ public static class WebhookSecretEncryptionMigration
 
         await dbContext.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Successfully encrypted {Count} webhook secrets.", webhooks.Count);
-    }
-
-    private static string EncryptSecret(string plaintext, byte[] key)
-    {
-        const int NonceSize = 12;
-        const int TagSize = 16;
-
-        var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
-        
-        // Generate random nonce
-        var nonce = new byte[NonceSize];
-        RandomNumberGenerator.Fill(nonce);
-        
-        // Allocate space for ciphertext and tag
-        var ciphertext = new byte[plaintextBytes.Length];
-        var tag = new byte[TagSize];
-        
-        using var aesGcm = new AesGcm(key, TagSize);
-        aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
-        
-        // Combine: nonce + ciphertext + tag
-        var result = new byte[NonceSize + ciphertext.Length + TagSize];
-        Buffer.BlockCopy(nonce, 0, result, 0, NonceSize);
-        Buffer.BlockCopy(ciphertext, 0, result, NonceSize, ciphertext.Length);
-        Buffer.BlockCopy(tag, 0, result, NonceSize + ciphertext.Length, TagSize);
-        
-        return Convert.ToBase64String(result);
     }
 }
