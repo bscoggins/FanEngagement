@@ -17,9 +17,11 @@ public static class WebhookSecretEncryptionMigration
     public static async Task EncryptExistingSecretsAsync(
         FanEngagementDbContext dbContext,
         IConfiguration configuration,
-        ILogger logger,
+        ILoggerFactory loggerFactory,
         CancellationToken cancellationToken = default)
     {
+        var logger = loggerFactory.CreateLogger("FanEngagement.Infrastructure.Persistence.Migrations.WebhookSecretEncryptionMigration");
+        
         var keyString = configuration["Encryption:Key"];
         if (string.IsNullOrWhiteSpace(keyString))
         {
@@ -40,12 +42,8 @@ public static class WebhookSecretEncryptionMigration
 
         logger.LogInformation("Encrypting {Count} webhook secrets...", webhooks.Count);
 
-        // Create an encryption service instance for the migration
-        // Use a child logger for better log categorization
-        var loggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
-        var encryptionLogger = logger as ILogger<Services.AesEncryptionService> 
-            ?? loggerFactory.CreateLogger<Services.AesEncryptionService>();
-        
+        // Create an encryption service instance for the migration with proper logger
+        var encryptionLogger = loggerFactory.CreateLogger<Services.AesEncryptionService>();
         var encryptionService = new Services.AesEncryptionService(
             configuration,
             encryptionLogger);

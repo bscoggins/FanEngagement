@@ -266,6 +266,7 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
 
     if (dbContext.Database.IsRelational())
     {
@@ -276,7 +277,7 @@ using (var scope = app.Services.CreateScope())
             
             // Encrypt existing plaintext webhook secrets if needed
             await FanEngagement.Infrastructure.Persistence.Migrations.WebhookSecretEncryptionMigration
-                .EncryptExistingSecretsAsync(dbContext, configuration, logger);
+                .EncryptExistingSecretsAsync(dbContext, configuration, loggerFactory);
         }
         catch (Exception ex)
         {
