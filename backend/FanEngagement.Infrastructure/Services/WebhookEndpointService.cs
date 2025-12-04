@@ -1,5 +1,6 @@
 using System.Net;
 using FanEngagement.Application.Audit;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Application.WebhookEndpoints;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -12,6 +13,7 @@ namespace FanEngagement.Infrastructure.Services;
 public class WebhookEndpointService(
     FanEngagementDbContext dbContext,
     IAuditService auditService,
+    IEncryptionService encryptionService,
     ILogger<WebhookEndpointService> logger) : IWebhookEndpointService
 {
     public async Task<WebhookEndpointDto> CreateAsync(
@@ -49,15 +51,15 @@ public class WebhookEndpointService(
             throw new ArgumentException("At least one subscribed event type is required.", nameof(request.SubscribedEvents));
         }
 
-        // NOTE: Webhook secrets are stored in plain text in the database.
-        // If the database is compromised, attackers would have access to all webhook secrets.
-        // Consider implementing encryption at rest for sensitive data in production environments.
+        // Encrypt the secret before storing
+        var encryptedSecret = encryptionService.Encrypt(request.Secret);
+
         var webhookEndpoint = new WebhookEndpoint
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,
             Url = request.Url,
-            Secret = request.Secret,
+            EncryptedSecret = encryptedSecret,
             SubscribedEvents = string.Join(",", request.SubscribedEvents),
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
@@ -161,10 +163,23 @@ public class WebhookEndpointService(
         var changedFields = new List<string>();
         if (webhook.Url != request.Url) changedFields.Add("Url");
         if (webhook.SubscribedEvents != string.Join(",", request.SubscribedEvents)) changedFields.Add("SubscribedEvents");
-        if (webhook.Secret != request.Secret) changedFields.Add("Secret");
-
+        
+        // Check if the secret changed by comparing plaintexts
+        // Note: We must decrypt to detect actual changes because GCM uses random nonces,
+        // meaning the same plaintext produces different ciphertext each time. This is necessary
+        // for accurate audit tracking - we only log "Secret" as changed if it truly differs.
+        // The performance cost of one decryption per update is acceptable for audit accuracy.
+        var currentPlainSecret = encryptionService.Decrypt(webhook.EncryptedSecret);
+        var secretChanged = currentPlainSecret != request.Secret;
+        
+        if (secretChanged)
+        {
+            changedFields.Add("Secret");
+        }
+        
+        // Always re-encrypt to ensure fresh nonce
+        webhook.EncryptedSecret = encryptionService.Encrypt(request.Secret);
         webhook.Url = request.Url;
-        webhook.Secret = request.Secret;
         webhook.SubscribedEvents = string.Join(",", request.SubscribedEvents);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -263,10 +278,10 @@ public class WebhookEndpointService(
             .Select(e => e.Trim())
             .ToList();
 
-        // Create a masked version of the secret for display purposes
-        var maskedSecret = webhook.Secret.Length > 6
-            ? $"{webhook.Secret.Substring(0, 3)}***{webhook.Secret.Substring(webhook.Secret.Length - 3)}"
-            : "***";
+        // Note: Secret is stored encrypted in the database.
+        // We return a masked version for security.
+        // The actual decryption only happens during webhook delivery.
+        var maskedSecret = "***masked***";
 
         return new WebhookEndpointDto(
             webhook.Id,

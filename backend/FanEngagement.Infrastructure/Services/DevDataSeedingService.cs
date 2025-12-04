@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FanEngagement.Application.Authentication;
 using FanEngagement.Application.DevDataSeeding;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
@@ -13,6 +14,7 @@ public class DevDataSeedingService : IDevDataSeedingService
 {
     private readonly FanEngagementDbContext _dbContext;
     private readonly IAuthService _authService;
+    private readonly IEncryptionService _encryptionService;
     private readonly ILogger<DevDataSeedingService> _logger;
 
     private static readonly IReadOnlyList<SeedScenarioInfo> AvailableScenarios = new List<SeedScenarioInfo>
@@ -25,10 +27,12 @@ public class DevDataSeedingService : IDevDataSeedingService
     public DevDataSeedingService(
         FanEngagementDbContext dbContext,
         IAuthService authService,
+        IEncryptionService encryptionService,
         ILogger<DevDataSeedingService> logger)
     {
         _dbContext = dbContext;
         _authService = authService;
+        _encryptionService = encryptionService;
         _logger = logger;
     }
 
@@ -1056,7 +1060,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                     Id = Guid.NewGuid(),
                     OrganizationId = techOrg.Id,
                     Url = spec.Url,
-                    Secret = Guid.NewGuid().ToString("N"),
+                    EncryptedSecret = _encryptionService.Encrypt(Guid.NewGuid().ToString("N")),
                     SubscribedEvents = spec.SubscribedEvents,
                     IsActive = true,
                     CreatedAt = DateTimeOffset.UtcNow

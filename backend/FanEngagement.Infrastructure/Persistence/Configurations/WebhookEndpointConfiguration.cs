@@ -12,7 +12,7 @@ public class WebhookEndpointConfiguration : IEntityTypeConfiguration<WebhookEndp
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Url).IsRequired().HasMaxLength(1000);
-        builder.Property(x => x.Secret).IsRequired().HasMaxLength(512);
+        builder.Property(x => x.EncryptedSecret).IsRequired().HasMaxLength(1000);
         builder.Property(x => x.SubscribedEvents).IsRequired().HasMaxLength(1000);
         builder.Property(x => x.IsActive).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
