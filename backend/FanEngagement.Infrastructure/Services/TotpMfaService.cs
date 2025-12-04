@@ -89,9 +89,30 @@ public class TotpMfaService(ILogger<TotpMfaService> logger) : IMfaService
             
             var hashedCodeList = hashedBackupCodes.Split(',', StringSplitOptions.RemoveEmptyEntries);
             var inputHash = HashSingleBackupCode(code);
+            var inputHashBytes = Convert.FromBase64String(inputHash);
             
-            // Check if the hashed code exists in the list
-            return hashedCodeList.Contains(inputHash);
+            // Constant-time comparison to prevent timing attacks
+            bool found = false;
+            foreach (var storedHash in hashedCodeList)
+            {
+                try
+                {
+                    var storedHashBytes = Convert.FromBase64String(storedHash);
+                    if (storedHashBytes.Length == inputHashBytes.Length &&
+                        CryptographicOperations.FixedTimeEquals(storedHashBytes, inputHashBytes))
+                    {
+                        found = true;
+                        // Don't break - continue checking all codes to maintain constant time
+                    }
+                }
+                catch
+                {
+                    // Invalid base64, skip this hash
+                    continue;
+                }
+            }
+            
+            return found;
         }
         catch (Exception ex)
         {
@@ -116,6 +137,9 @@ public class TotpMfaService(ILogger<TotpMfaService> logger) : IMfaService
     
     private static string HashSingleBackupCode(string code)
     {
+        // Normalize code before hashing to ensure consistency
+        code = code.Replace(" ", "").Replace("-", "").Trim();
+        
         // Use SHA256 for hashing backup codes
         var bytes = System.Text.Encoding.UTF8.GetBytes(code);
         var hash = SHA256.HashData(bytes);

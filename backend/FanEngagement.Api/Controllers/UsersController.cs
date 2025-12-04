@@ -1,9 +1,12 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Mfa;
 using FanEngagement.Application.Users;
 using FanEngagement.Application.Validators;
 using FanEngagement.Api.Helpers;
+using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +22,8 @@ public class UsersController(
     IUserService userService, 
     IMembershipService membershipService,
     IMfaService mfaService,
+    IEncryptionService encryptionService,
+    IAuditService auditService,
     FanEngagementDbContext dbContext) : ControllerBase
 {
     [HttpPost]
@@ -165,6 +170,25 @@ public class UsersController(
         // Generate MFA setup
         var setupResult = mfaService.GenerateSetup(userId, user.Email);
 
+        // Audit MFA setup initiation
+        try
+        {
+            var auditEvent = new AuditEventBuilder()
+                .WithActor(userId, user.DisplayName)
+                .WithAction(AuditActionType.Updated)
+                .WithResource(AuditResourceType.User, userId, user.Email)
+                .WithDetails(new { Action = "MFA_SETUP_INITIATED" })
+                .AsSuccess()
+                .Build();
+            
+            await auditService.LogAsync(auditEvent, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation
+            Console.WriteLine($"Failed to log MFA setup audit: {ex.Message}");
+        }
+
         return Ok(setupResult);
     }
 
@@ -194,12 +218,34 @@ public class UsersController(
         var backupCodes = mfaService.GenerateBackupCodes();
         var hashedBackupCodes = mfaService.HashBackupCodes(backupCodes);
 
+        // Encrypt the MFA secret before storing
+        var encryptedSecret = encryptionService.Encrypt(request.SecretKey);
+
         // Enable MFA for the user
         user.MfaEnabled = true;
-        user.MfaSecret = request.SecretKey;
+        user.MfaSecret = encryptedSecret;
         user.MfaBackupCodesHash = hashedBackupCodes;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit MFA enable
+        try
+        {
+            var auditEvent = new AuditEventBuilder()
+                .WithActor(userId, user.DisplayName)
+                .WithAction(AuditActionType.Updated)
+                .WithResource(AuditResourceType.User, userId, user.Email)
+                .WithDetails(new { Action = "MFA_ENABLED" })
+                .AsSuccess()
+                .Build();
+            
+            await auditService.LogAsync(auditEvent, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation
+            Console.WriteLine($"Failed to log MFA enable audit: {ex.Message}");
+        }
 
         return Ok(new { message = "MFA enabled successfully", backupCodes });
     }
@@ -225,8 +271,11 @@ public class UsersController(
             return BadRequest(new { message = "MFA is not enabled for this account." });
         }
 
+        // Decrypt the MFA secret before validation
+        var decryptedSecret = encryptionService.Decrypt(user.MfaSecret);
+        
         // Validate either TOTP or backup code
-        bool isValid = mfaService.ValidateTotp(user.MfaSecret, request.Code);
+        bool isValid = mfaService.ValidateTotp(decryptedSecret, request.Code);
         
         if (!isValid && !string.IsNullOrWhiteSpace(user.MfaBackupCodesHash))
         {
@@ -244,6 +293,25 @@ public class UsersController(
         user.MfaBackupCodesHash = null;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit MFA disable
+        try
+        {
+            var auditEvent = new AuditEventBuilder()
+                .WithActor(userId, user.DisplayName)
+                .WithAction(AuditActionType.Updated)
+                .WithResource(AuditResourceType.User, userId, user.Email)
+                .WithDetails(new { Action = "MFA_DISABLED" })
+                .AsSuccess()
+                .Build();
+            
+            await auditService.LogAsync(auditEvent, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation
+            Console.WriteLine($"Failed to log MFA disable audit: {ex.Message}");
+        }
 
         return Ok(new { message = "MFA disabled successfully" });
     }

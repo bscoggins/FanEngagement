@@ -48,7 +48,7 @@ public class MfaTests : IClassFixture<TestWebApplicationFactory>
     public async Task MfaEnable_EnablesMfa_WithValidTotpCode()
     {
         // Arrange
-        var (token, userId) = await CreateAdminUserAndLoginAsync();
+        var (token, _) = await CreateAdminUserAndLoginAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Setup MFA
@@ -235,7 +235,7 @@ public class MfaTests : IClassFixture<TestWebApplicationFactory>
         // Arrange - Create admin user with MFA enabled
         var password = "TestPassword123!";
         var email = $"admin-{Guid.NewGuid()}@example.com";
-        var (secretKey, backupCodes) = await CreateAdminWithMfaAndGetBackupCodesAsync(email, password);
+        var (_, backupCodes) = await CreateAdminWithMfaAndGetBackupCodesAsync(email, password);
 
         // Login (will require MFA)
         _client.DefaultRequestHeaders.Authorization = null;

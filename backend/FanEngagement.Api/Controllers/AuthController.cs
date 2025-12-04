@@ -35,7 +35,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 
     [HttpPost("mfa/validate")]
     [AllowAnonymous]
-    [EnableRateLimiting("Login")]
+    [EnableRateLimiting("MfaValidate")]
     public async Task<ActionResult<LoginResponse>> ValidateMfa([FromBody] MfaValidateRequest request, CancellationToken cancellationToken)
     {
         // Extract client context for audit logging

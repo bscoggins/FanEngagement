@@ -147,9 +147,24 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
+    // Per-IP rate limiter for MFA validation: 5 attempts per 5 minutes per IP
+    // Stricter than login to prevent brute-force of 6-digit TOTP codes
+    options.AddPolicy("MfaValidate", httpContext =>
+    {
+        // Partition by IP address so each IP has their own rate limit
+        var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(ipAddress, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = builder.Configuration.GetValue("RateLimiting:MfaValidate:PermitLimit", 5),
+            Window = TimeSpan.FromMinutes(builder.Configuration.GetValue("RateLimiting:MfaValidate:WindowMinutes", 5)),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
+
     // Configure custom rejection response with Retry-After header
     // NOTE: This OnRejected handler applies globally to ALL rate limiting policies
-    // (Login, Registration, and AuditExportPerUser). All rejected requests will
+    // (Login, Registration, MfaValidate, and AuditExportPerUser). All rejected requests will
     // receive the same ProblemDetails format. If different policies need different
     // rejection messages in the future, this handler would need to check which
     // policy was triggered (e.g., via context metadata).

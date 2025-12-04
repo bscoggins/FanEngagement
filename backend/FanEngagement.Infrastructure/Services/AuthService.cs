@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Application.Mfa;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
@@ -19,7 +20,8 @@ public class AuthService(
     IConfiguration configuration,
     ILogger<AuthService> logger,
     IAuditService auditService,
-    IMfaService mfaService) : IAuthService
+    IMfaService mfaService,
+    IEncryptionService encryptionService) : IAuthService
 {
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, AuthenticationAuditContext? auditContext = null, CancellationToken cancellationToken = default)
@@ -86,8 +88,21 @@ public class AuthService(
             return null;
         }
 
+        // Decrypt the MFA secret before validation
+        string decryptedSecret;
+        try
+        {
+            decryptedSecret = encryptionService.Decrypt(user.MfaSecret);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to decrypt MFA secret for user {UserId}", userId);
+            await LogFailedMfaAsync(userId, "MFA decryption failed", auditContext, cancellationToken);
+            return null;
+        }
+
         // Try to validate as TOTP code first
-        bool isValid = mfaService.ValidateTotp(user.MfaSecret, code);
+        bool isValid = mfaService.ValidateTotp(decryptedSecret, code);
 
         // If TOTP validation fails, try backup codes
         if (!isValid && !string.IsNullOrWhiteSpace(user.MfaBackupCodesHash))
