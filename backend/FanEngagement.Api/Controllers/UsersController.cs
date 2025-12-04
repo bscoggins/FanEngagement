@@ -5,6 +5,7 @@ using FanEngagement.Application.Validators;
 using FanEngagement.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FanEngagement.Api.Controllers;
 
@@ -15,6 +16,7 @@ public class UsersController(IUserService userService, IMembershipService member
 {
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting("Registration")]
     public async Task<ActionResult> Create([FromBody] CreateUserRequest request, CancellationToken cancellationToken)
     {
         var user = await userService.CreateAsync(request, cancellationToken);

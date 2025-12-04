@@ -1,70 +1,30 @@
 using FanEngagement.Api;
-using FanEngagement.Infrastructure.BackgroundServices;
-using FanEngagement.Infrastructure.HealthChecks;
-using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 
 namespace FanEngagement.Tests;
 
-public class TestWebApplicationFactory : WebApplicationFactory<Program>
+/// <summary>
+/// Test factory for standard integration tests.
+/// Uses very high rate limits (1000) to prevent rate limiting from interfering with tests.
+/// </summary>
+public class TestWebApplicationFactory : TestWebApplicationFactoryBase
 {
-    private readonly string _databaseName = $"TestDb_{Guid.NewGuid()}";
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    protected override void ConfigureTestSpecificSettings(IWebHostBuilder builder)
     {
-        builder.ConfigureServices(services =>
+        // Configure test-specific settings (higher rate limits for tests)
+        builder.ConfigureAppConfiguration((context, config) =>
         {
-            // Remove background services that access database
-            var webhookServiceDescriptor = services.FirstOrDefault(d => 
-                d.ServiceType == typeof(IHostedService) && 
-                d.ImplementationType == typeof(WebhookDeliveryBackgroundService));
-            if (webhookServiceDescriptor != null)
+            config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                services.Remove(webhookServiceDescriptor);
-            }
-
-            var lifecycleServiceDescriptor = services.FirstOrDefault(d => 
-                d.ServiceType == typeof(IHostedService) && 
-                d.ImplementationType == typeof(ProposalLifecycleBackgroundService));
-            if (lifecycleServiceDescriptor != null)
-            {
-                services.Remove(lifecycleServiceDescriptor);
-            }
-
-            // Remove the existing DbContext registration
-            services.RemoveAll<DbContextOptions<FanEngagementDbContext>>();
-            services.RemoveAll<FanEngagementDbContext>();
-
-            // Add in-memory database for testing - use a shared database name per factory instance
-            services.AddDbContext<FanEngagementDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(_databaseName);
+                // Set very high rate limits for tests to avoid interference between tests
+                ["RateLimiting:Login:PermitLimit"] = "1000",
+                ["RateLimiting:Login:WindowMinutes"] = "1",
+                ["RateLimiting:Registration:PermitLimit"] = "1000",
+                ["RateLimiting:Registration:WindowHours"] = "1",
+                ["RateLimiting:AuditExport:PermitLimit"] = "1000",
+                ["RateLimiting:AuditExport:WindowHours"] = "1"
             });
-
-            // Remove PostgreSQL health check by reconfiguring health check options
-            // This is more robust than trying to remove service descriptors by namespace
-            services.Configure<HealthCheckServiceOptions>(options =>
-            {
-                // Remove the "postgresql" health check registration that requires real DB connection
-                var postgresCheck = options.Registrations.FirstOrDefault(r => r.Name == "postgresql");
-                if (postgresCheck != null)
-                {
-                    options.Registrations.Remove(postgresCheck);
-                }
-            });
-
-            // Build the service provider and ensure database is created
-            var serviceProvider = services.BuildServiceProvider();
-            using var scope = serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-            db.Database.EnsureCreated();
         });
     }
 }

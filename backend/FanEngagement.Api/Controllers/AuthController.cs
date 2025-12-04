@@ -2,6 +2,7 @@ using FanEngagement.Api.Helpers;
 using FanEngagement.Application.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FanEngagement.Api.Controllers;
 
@@ -11,6 +12,7 @@ public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("Login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         // Extract client context for audit logging

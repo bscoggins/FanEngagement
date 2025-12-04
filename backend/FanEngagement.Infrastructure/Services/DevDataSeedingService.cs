@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FanEngagement.Application.Authentication;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Domain.Entities;
@@ -47,6 +48,8 @@ public class DevDataSeedingService : IDevDataSeedingService
             SeedScenario.WebhookFailures => await SeedWebhookFailuresAsync(cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(scenario), scenario, "Unknown seed scenario")
         };
+
+        await SeedSampleAuditEventsAsync(cancellationToken);
 
         result.Scenario = scenario.ToString();
         return result;
@@ -573,6 +576,234 @@ public class DevDataSeedingService : IDevDataSeedingService
             result.OrganizationsCreated, result.UsersCreated, result.MembershipsCreated, result.ShareTypesCreated, result.ShareIssuancesCreated, result.ProposalsCreated, result.VotesCreated);
 
         return result;
+    }
+
+    private async Task SeedSampleAuditEventsAsync(CancellationToken cancellationToken)
+    {
+        var orgIdsWithEvents = await _dbContext.AuditEvents
+            .Where(a => a.OrganizationId != null)
+            .Select(a => a.OrganizationId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var organizationsNeedingEvents = await _dbContext.Organizations
+            .Where(o => !orgIdsWithEvents.Contains(o.Id))
+            .ToListAsync(cancellationToken);
+
+        if (organizationsNeedingEvents.Count == 0)
+        {
+            _logger.LogDebug("Skipping audit event seeding because all organizations already have audit history.");
+            return;
+        }
+
+        var targetOrgIds = organizationsNeedingEvents.Select(o => o.Id).ToList();
+
+        var memberships = await _dbContext.OrganizationMemberships
+            .Include(m => m.User)
+            .Where(m => targetOrgIds.Contains(m.OrganizationId))
+            .ToListAsync(cancellationToken);
+
+        var shareTypes = await _dbContext.ShareTypes
+            .Where(st => targetOrgIds.Contains(st.OrganizationId))
+            .ToListAsync(cancellationToken);
+
+        var proposals = await _dbContext.Proposals
+            .Where(p => targetOrgIds.Contains(p.OrganizationId))
+            .OrderBy(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var eventsToInsert = new List<AuditEvent>();
+
+        foreach (var organization in organizationsNeedingEvents)
+        {
+            var adminMembership = memberships
+                .Where(m => m.OrganizationId == organization.Id && m.Role == OrganizationRole.OrgAdmin)
+                .OrderBy(m => m.CreatedAt)
+                .FirstOrDefault();
+
+            if (adminMembership == null)
+            {
+                _logger.LogWarning("Skipping audit event seeding for org {OrganizationId} because no OrgAdmin membership exists.", organization.Id);
+                continue;
+            }
+
+            var actorDisplayName = adminMembership.User?.DisplayName ?? adminMembership.User?.Email ?? "Org Admin";
+            var actorUserId = adminMembership.UserId;
+            var correlationId = Guid.NewGuid().ToString("N");
+            var baseTimestamp = DateTimeOffset.UtcNow.AddMinutes(-45);
+
+            eventsToInsert.Add(new AuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = baseTimestamp,
+                ActorUserId = actorUserId,
+                ActorDisplayName = actorDisplayName,
+                ActorIpAddress = "10.0.0.5",
+                ActionType = AuditActionType.Created,
+                Outcome = AuditOutcome.Success,
+                ResourceType = AuditResourceType.Organization,
+                ResourceId = organization.Id,
+                ResourceName = organization.Name,
+                OrganizationId = organization.Id,
+                OrganizationName = organization.Name,
+                Details = JsonSerializer.Serialize(new
+                {
+                    organization.Name,
+                    organization.Description
+                }),
+                CorrelationId = correlationId
+            });
+
+            eventsToInsert.Add(new AuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = baseTimestamp.AddMinutes(5),
+                ActorUserId = actorUserId,
+                ActorDisplayName = actorDisplayName,
+                ActorIpAddress = "10.0.0.5",
+                ActionType = AuditActionType.RoleChanged,
+                Outcome = AuditOutcome.Success,
+                ResourceType = AuditResourceType.Membership,
+                ResourceId = adminMembership.Id,
+                ResourceName = actorDisplayName,
+                OrganizationId = organization.Id,
+                OrganizationName = organization.Name,
+                Details = JsonSerializer.Serialize(new
+                {
+                    role = adminMembership.Role.ToString(),
+                    grantedBy = actorDisplayName
+                }),
+                CorrelationId = correlationId
+            });
+
+            var shareType = shareTypes.FirstOrDefault(st => st.OrganizationId == organization.Id);
+            if (shareType != null)
+            {
+                eventsToInsert.Add(new AuditEvent
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = baseTimestamp.AddMinutes(10),
+                    ActorUserId = actorUserId,
+                    ActorDisplayName = actorDisplayName,
+                    ActorIpAddress = "10.0.0.5",
+                    ActionType = AuditActionType.Created,
+                    Outcome = AuditOutcome.Success,
+                    ResourceType = AuditResourceType.ShareType,
+                    ResourceId = shareType.Id,
+                    ResourceName = shareType.Name,
+                    OrganizationId = organization.Id,
+                    OrganizationName = organization.Name,
+                    Details = JsonSerializer.Serialize(new
+                    {
+                        shareType.Name,
+                        shareType.Symbol,
+                        shareType.VotingWeight
+                    }),
+                    CorrelationId = correlationId
+                });
+            }
+
+            var proposalForCreate = proposals.FirstOrDefault(p => p.OrganizationId == organization.Id);
+            if (proposalForCreate != null)
+            {
+                eventsToInsert.Add(new AuditEvent
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = baseTimestamp.AddMinutes(15),
+                    ActorUserId = actorUserId,
+                    ActorDisplayName = actorDisplayName,
+                    ActorIpAddress = "10.0.0.5",
+                    ActionType = AuditActionType.Created,
+                    Outcome = AuditOutcome.Success,
+                    ResourceType = AuditResourceType.Proposal,
+                    ResourceId = proposalForCreate.Id,
+                    ResourceName = proposalForCreate.Title,
+                    OrganizationId = organization.Id,
+                    OrganizationName = organization.Name,
+                    Details = JsonSerializer.Serialize(new
+                    {
+                        proposalForCreate.Title,
+                        proposalForCreate.Status,
+                        proposalForCreate.StartAt,
+                        proposalForCreate.EndAt
+                    }),
+                    CorrelationId = correlationId
+                });
+            }
+
+            var proposalForStatus = proposals
+                .Where(p => p.OrganizationId == organization.Id)
+                .OrderByDescending(p => p.CreatedAt)
+                .FirstOrDefault();
+
+            if (proposalForStatus != null)
+            {
+                eventsToInsert.Add(new AuditEvent
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = baseTimestamp.AddMinutes(20),
+                    ActorUserId = actorUserId,
+                    ActorDisplayName = actorDisplayName,
+                    ActorIpAddress = "10.0.0.5",
+                    ActionType = AuditActionType.StatusChanged,
+                    Outcome = AuditOutcome.Success,
+                    ResourceType = AuditResourceType.Proposal,
+                    ResourceId = proposalForStatus.Id,
+                    ResourceName = proposalForStatus.Title,
+                    OrganizationId = organization.Id,
+                    OrganizationName = organization.Name,
+                    Details = JsonSerializer.Serialize(new
+                    {
+                        proposalId = proposalForStatus.Id,
+                        newStatus = proposalForStatus.Status.ToString()
+                    }),
+                    CorrelationId = correlationId
+                });
+
+                eventsToInsert.Add(new AuditEvent
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = baseTimestamp.AddMinutes(25),
+                    ActorUserId = actorUserId,
+                    ActorDisplayName = actorDisplayName,
+                    ActorIpAddress = "10.0.0.5",
+                    ActionType = AuditActionType.AuthorizationDenied,
+                    Outcome = AuditOutcome.Denied,
+                    FailureReason = "Member attempted to close proposal without sufficient privileges.",
+                    ResourceType = AuditResourceType.Proposal,
+                    ResourceId = proposalForStatus.Id,
+                    ResourceName = proposalForStatus.Title,
+                    OrganizationId = organization.Id,
+                    OrganizationName = organization.Name,
+                    Details = JsonSerializer.Serialize(new
+                    {
+                        attemptedAction = "CloseProposal",
+                        proposalId = proposalForStatus.Id
+                    }),
+                    CorrelationId = correlationId
+                });
+            }
+        }
+
+        if (eventsToInsert.Count == 0)
+        {
+            return;
+        }
+
+        _dbContext.AuditEvents.AddRange(eventsToInsert);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var orgsSeeded = eventsToInsert
+            .Select(e => e.OrganizationId)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .Count();
+
+        _logger.LogInformation(
+            "Seeded {EventCount} sample audit events across {OrganizationCount} organizations to unblock audit log UI flows.",
+            eventsToInsert.Count,
+            orgsSeeded);
     }
 
     private async Task SeedVotesAsync(Guid organizationId, string proposalTitle, (Guid UserId, string OptionText, decimal VotingPower)[] voteSpecs, DevDataSeedingResult result, CancellationToken cancellationToken)
