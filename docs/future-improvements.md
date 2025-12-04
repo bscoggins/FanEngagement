@@ -74,6 +74,31 @@ Update outdated security documentation to accurately reflect the current secure 
 - **Status:** Proposed (pending human review)
 - **Note:** Authorization infrastructure and endpoint policies are already implemented
 
+### Frontend User Experience & Navigation Overhaul (Epic E-008)
+
+Comprehensive redesign of frontend UX focusing on navigation, design system, accessibility, micro-interactions, and responsive polish across all user roles.
+
+**Problem:** Stakeholder feedback reveals navigation inconsistencies, outdated visual design, accessibility gaps, and poor mobile experience leading to user confusion and reduced engagement.
+
+- **Epic:** E-008 in `docs/product/backlog.md`
+- **Theme:** T1/T2 – Member Engagement & OrgAdmin Efficiency
+- **Key Deliverables:**
+  - Navigation redesign with clear active states, breadcrumbs, org switcher improvements
+  - Comprehensive design system with CSS tokens (colors, typography, spacing, shadows)
+  - Component library refresh (Button, Badge, Card, Table, Form, Toast, Modal, Dropdown, Tooltip)
+  - WCAG 2.1 AA accessibility compliance (ARIA, keyboard nav, color contrast)
+  - Micro-interactions with skeleton screens, toast animations, hover transitions
+  - Responsive design for mobile, tablet, and desktop breakpoints
+- **Value Proposition:**
+  - 40% improvement in navigation discoverability
+  - 60% reduction in "can't find feature" support tickets
+  - 25% increase in proposal voting completion rate
+  - WCAG 2.1 AA compliance achieved
+  - Improved developer velocity with design system
+- **Priority:** Next
+- **Status:** Proposed (pending human review)
+- **Note:** Pure UI/UX improvements; no backend API changes; all work delegated to frontend agent
+
 ### Multi-Factor Authentication (MFA) Support
 
 Add optional MFA support for platform administrators and organization admins to strengthen account security for privileged users. Consider TOTP-based authentication (Google Authenticator, Authy) as the initial implementation.
