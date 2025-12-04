@@ -41,9 +41,14 @@ public static class WebhookSecretEncryptionMigration
         logger.LogInformation("Encrypting {Count} webhook secrets...", webhooks.Count);
 
         // Create an encryption service instance for the migration
+        // Use a child logger for better log categorization
+        var loggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+        var encryptionLogger = logger as ILogger<Services.AesEncryptionService> 
+            ?? loggerFactory.CreateLogger<Services.AesEncryptionService>();
+        
         var encryptionService = new Services.AesEncryptionService(
             configuration,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<Services.AesEncryptionService>.Instance);
+            encryptionLogger);
 
         foreach (var webhook in webhooks)
         {

@@ -165,8 +165,10 @@ public class WebhookEndpointService(
         if (webhook.SubscribedEvents != string.Join(",", request.SubscribedEvents)) changedFields.Add("SubscribedEvents");
         
         // Check if the secret changed by comparing plaintexts
-        // Note: We decrypt only to detect actual changes for audit purposes.
-        // The secret is always re-encrypted (with a new random nonce) even if unchanged.
+        // Note: We must decrypt to detect actual changes because GCM uses random nonces,
+        // meaning the same plaintext produces different ciphertext each time. This is necessary
+        // for accurate audit tracking - we only log "Secret" as changed if it truly differs.
+        // The performance cost of one decryption per update is acceptable for audit accuracy.
         var currentPlainSecret = encryptionService.Decrypt(webhook.EncryptedSecret);
         var secretChanged = currentPlainSecret != request.Secret;
         

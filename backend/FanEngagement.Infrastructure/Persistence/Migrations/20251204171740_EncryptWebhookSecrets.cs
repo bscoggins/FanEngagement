@@ -50,6 +50,10 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // WARNING: This rollback will only recover secrets that were never encrypted (still have NEEDS_ENCRYPTION: prefix).
+            // Any secrets that were properly encrypted will be lost during rollback, as decryption requires the encryption key
+            // which is not available in the migration context.
+            
             // Rollback: Add Secret column back
             migrationBuilder.AddColumn<string>(
                 name: "Secret",
