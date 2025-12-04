@@ -234,10 +234,13 @@ Available metrics:
 
 ### Docker
 
-Build and run the Docker image:
+Build TypeScript locally first, then build Docker image:
 
 ```bash
-# Build image
+# Build TypeScript
+npm run build
+
+# Build Docker image
 docker build -t fanengagement/solana-adapter:latest .
 
 # Run container

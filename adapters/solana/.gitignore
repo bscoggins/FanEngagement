@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Build output
 dist/
@@ -32,6 +31,7 @@ coverage/
 # Keypairs (NEVER commit)
 *.json
 !package.json
+!package-lock.json
 !tsconfig.json
 !jest.config.json
 
