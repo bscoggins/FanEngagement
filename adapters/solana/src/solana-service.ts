@@ -140,12 +140,19 @@ export class SolanaService {
 
       // Get the transaction signature from recent transactions
       // Note: createMint doesn't return signature, so we need to query it
-      const signatures = await this.connection.getSignaturesForAddress(
-        mintAddress,
-        { limit: 1 }
-      );
+      // Retry fetching the signature to handle RPC propagation delays
+      const signatures = await this.retryWithBackoff(async () => {
+        const sigs = await this.connection.getSignaturesForAddress(
+          mintAddress,
+          { limit: 1 }
+        );
+        if (!sigs || sigs.length === 0) {
+          throw new Error('Signature not yet available');
+        }
+        return sigs;
+      }, 'get_mint_signature');
 
-      const signature = signatures[0]?.signature || 'unknown';
+      const signature = signatures[0].signature;
 
       transactionsTotal.inc({ operation, status: 'success' });
       transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);

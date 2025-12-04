@@ -27,11 +27,14 @@ services:
       - NODE_ENV=development
       - PORT=3001
       - LOG_LEVEL=debug
-      - SOLANA_NETWORK=devnet
+      - SOLANA_NETWORK=localnet
       - SOLANA_RPC_URL=http://solana-test-validator:8899
       - SOLANA_COMMITMENT=confirmed
       - SOLANA_CONFIRM_TIMEOUT=30000
-      - SOLANA_PRIVATE_KEY=${SOLANA_PRIVATE_KEY:-[]}
+      # IMPORTANT: You must provide a valid Solana keypair for SOLANA_PRIVATE_KEY.
+      # Generate one with: solana-keygen new --outfile keypair.json
+      # Then set: SOLANA_PRIVATE_KEY=$(cat keypair.json)
+      - SOLANA_PRIVATE_KEY=${SOLANA_PRIVATE_KEY}
       - API_KEY=${API_KEY:-dev-api-key-change-in-production}
       - REQUIRE_AUTH=true
       - RETRY_MAX_ATTEMPTS=4

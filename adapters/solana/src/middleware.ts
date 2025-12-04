@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { config } from './config.js';
 import { errors } from './errors.js';
 import { logger } from './logger.js';
@@ -35,11 +36,20 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return;
   }
 
-  if (providedKey !== config.authentication.apiKey) {
-    logger.warn('Invalid API key', {
-      path: req.path,
-      ip: req.ip,
-    });
+  // Use constant-time comparison to prevent timing attacks
+  const providedKeyBuffer = Buffer.from(providedKey);
+  const expectedKeyBuffer = Buffer.from(config.authentication.apiKey);
+
+  // Ensure both buffers are same length to prevent length-based timing attacks
+  if (providedKeyBuffer.length !== expectedKeyBuffer.length) {
+    logger.warn('Invalid API key', { path: req.path, ip: req.ip });
+    const error = errors.unauthorized('Invalid API key');
+    res.status(error.statusCode).json(error.toProblemDetails(req.path));
+    return;
+  }
+
+  if (!crypto.timingSafeEqual(providedKeyBuffer, expectedKeyBuffer)) {
+    logger.warn('Invalid API key', { path: req.path, ip: req.ip });
     const error = errors.unauthorized('Invalid API key');
     res.status(error.statusCode).json(error.toProblemDetails(req.path));
     return;

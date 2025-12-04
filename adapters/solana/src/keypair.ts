@@ -7,7 +7,7 @@ export function loadKeypair(): Keypair {
   try {
     // Option 1: Load from file (Docker secret mounted)
     if (config.keypair.path) {
-      logger.info('Loading keypair from file', { path: config.keypair.path });
+      logger.info('Loading keypair from file', { filename: config.keypair.path.split('/').pop() });
       const keypairData = fs.readFileSync(config.keypair.path, 'utf-8');
       const secretKey = JSON.parse(keypairData);
       return Keypair.fromSecretKey(Uint8Array.from(secretKey));
