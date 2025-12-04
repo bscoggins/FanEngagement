@@ -67,6 +67,7 @@ describe('HomePage', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin',
+      mfaRequired: false,
     }));
 
     renderHomePage();
@@ -86,6 +87,7 @@ describe('HomePage', () => {
       email: 'orgadmin@example.com',
       displayName: 'OrgAdmin User',
       role: 'User',
+      mfaRequired: false,
     }));
 
     const mockMemberships = [
@@ -117,6 +119,7 @@ describe('HomePage', () => {
       email: 'member@example.com',
       displayName: 'Regular Member',
       role: 'User',
+      mfaRequired: false,
     }));
 
     vi.mocked(membershipsApi.getByUserId).mockResolvedValueOnce([]);
@@ -138,6 +141,7 @@ describe('HomePage', () => {
       email: 'member@example.com',
       displayName: 'Regular Member',
       role: 'User',
+      mfaRequired: false,
     }));
 
     // Delay the API response
@@ -162,6 +166,7 @@ describe('HomePage', () => {
       email: 'member@example.com',
       displayName: 'Regular Member',
       role: 'User',
+      mfaRequired: false,
     }));
 
     vi.mocked(membershipsApi.getByUserId).mockRejectedValueOnce(new Error('Network error'));

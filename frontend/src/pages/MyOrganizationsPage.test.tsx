@@ -14,6 +14,7 @@ const renderWithAuth = (userId: string) => {
     email: 'user@example.com',
     displayName: 'Test User',
     role: 'User',
+      mfaRequired: false,
   };
   
   localStorage.setItem('authToken', mockUser.token);

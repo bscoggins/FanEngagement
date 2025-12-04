@@ -42,6 +42,7 @@ describe('useRoleBasedNavigation', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin' as const,
+      mfaRequired: false,
     };
 
     const { result } = renderHook(() => useRoleBasedNavigation(), { wrapper });
@@ -59,6 +60,7 @@ describe('useRoleBasedNavigation', () => {
       email: 'orgadmin@example.com',
       displayName: 'OrgAdmin User',
       role: 'User' as const,
+      mfaRequired: false,
     };
 
     const mockMemberships = [
@@ -90,6 +92,7 @@ describe('useRoleBasedNavigation', () => {
       email: 'member@example.com',
       displayName: 'Regular Member',
       role: 'User' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(membershipsApi.getByUserId).mockResolvedValueOnce([]);
@@ -110,6 +113,7 @@ describe('useRoleBasedNavigation', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin' as const,
+      mfaRequired: false,
     };
 
     const { result } = renderHook(() => useRoleBasedNavigation(), { wrapper });
@@ -126,6 +130,7 @@ describe('useRoleBasedNavigation', () => {
       email: 'member@example.com',
       displayName: 'Regular Member',
       role: 'User' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(membershipsApi.getByUserId).mockRejectedValueOnce(new Error('Network error'));

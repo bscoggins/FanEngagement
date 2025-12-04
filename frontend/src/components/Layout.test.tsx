@@ -327,6 +327,7 @@ describe('Layout', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User',
+      mfaRequired: false,
       }));
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
       vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mockMemberships);
@@ -394,6 +395,7 @@ describe('Layout', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User',
+      mfaRequired: false,
       }));
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
       vi.mocked(membershipsApi.getMyOrganizations).mockResolvedValue(mockMemberships);
@@ -543,6 +545,7 @@ describe('Layout', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User',
+      mfaRequired: false,
       }));
 
       // Mock memberships API responses

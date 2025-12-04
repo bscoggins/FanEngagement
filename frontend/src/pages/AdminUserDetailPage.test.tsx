@@ -35,6 +35,7 @@ describe('AdminUserDetailPage', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin',
+      mfaRequired: false,
     }));
   });
 
@@ -176,6 +177,7 @@ describe('AdminUserDetailPage', () => {
       email: 'updated@example.com',
       displayName: 'Updated User',
       role: 'Admin',
+      mfaRequired: false,
     });
   });
 

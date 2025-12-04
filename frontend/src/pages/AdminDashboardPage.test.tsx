@@ -37,11 +37,14 @@ describe('AdminDashboardPage', () => {
 
   it('renders admin dashboard heading', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -69,11 +72,14 @@ describe('AdminDashboardPage', () => {
 
   it('displays welcome message', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -101,11 +107,14 @@ describe('AdminDashboardPage', () => {
 
   it('displays links to admin sections for GlobalAdmin', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -140,11 +149,14 @@ describe('AdminDashboardPage', () => {
 
   it('has correct navigation links for GlobalAdmin', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -179,11 +191,14 @@ describe('AdminDashboardPage', () => {
 
   it('shows organization list for OrgAdmins', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -229,11 +244,14 @@ describe('AdminDashboardPage', () => {
 
   it('shows no access message for non-admin users', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -262,11 +280,14 @@ describe('AdminDashboardPage', () => {
 
   it('redirects to member dashboard when active org is member-only', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -317,11 +338,14 @@ describe('AdminDashboardPage', () => {
 
   it('does not redirect when memberships are still loading', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
+      mfaRequired: false,
+      token: 'token' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
