@@ -1,4 +1,5 @@
 using FanEngagement.Api;
+using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Users;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.BackgroundServices;
@@ -20,7 +21,8 @@ namespace FanEngagement.Tests;
 /// </summary>
 public abstract class TestWebApplicationFactoryBase : WebApplicationFactory<Program>
 {
-    private readonly string _databaseName = $"TestDb_{Guid.NewGuid()}";
+    private const string TestDatabaseNamePrefix = "TestDb_";
+    private readonly string _databaseName = $"{TestDatabaseNamePrefix}{Guid.NewGuid()}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -96,9 +98,18 @@ public abstract class TestWebApplicationFactoryBase : WebApplicationFactory<Prog
     /// </summary>
     public async Task<User> CreateTestUserDirectlyAsync(CreateUserRequest request)
     {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+        if (string.IsNullOrEmpty(request.Email))
+            throw new ArgumentException("Email is required", nameof(request));
+        if (string.IsNullOrEmpty(request.DisplayName))
+            throw new ArgumentException("DisplayName is required", nameof(request));
+        if (string.IsNullOrEmpty(request.Password))
+            throw new ArgumentException("Password is required", nameof(request));
+
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
-        var authService = scope.ServiceProvider.GetRequiredService<Application.Authentication.IAuthService>();
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         
         var user = new User
         {
