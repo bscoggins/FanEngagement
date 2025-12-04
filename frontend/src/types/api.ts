@@ -9,6 +9,31 @@ export interface LoginResponse {
   email: string;
   displayName: string;
   role: 'User' | 'Admin';
+  mfaRequired: boolean;
+}
+
+export interface MfaValidateRequest {
+  userId: string;
+  code: string;
+}
+
+export interface MfaSetupResult {
+  secretKey: string;
+  qrCodeUri: string;
+  backupCodes: string[];
+}
+
+export interface MfaEnableRequest {
+  secretKey: string;
+  totpCode: string;
+}
+
+export interface MfaDisableRequest {
+  code: string;
+}
+
+export interface MfaStatusResponse {
+  mfaEnabled: boolean;
 }
 
 // Pagination types

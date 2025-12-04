@@ -5,6 +5,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { MfaSettings } from '../components/MfaSettings';
 import type { UserProfile } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
@@ -252,6 +253,9 @@ export const MyAccountPage: React.FC = () => {
           </div>
         </form>
       )}
+
+      {/* MFA Settings - Only for Admin users */}
+      {isAdmin && <MfaSettings />}
     </div>
   );
 };
