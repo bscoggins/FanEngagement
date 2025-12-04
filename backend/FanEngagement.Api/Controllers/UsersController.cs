@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Api.Controllers;
 
@@ -24,6 +25,7 @@ public class UsersController(
     IMfaService mfaService,
     IEncryptionService encryptionService,
     IAuditService auditService,
+    ILogger<UsersController> logger,
     FanEngagementDbContext dbContext) : ControllerBase
 {
     [HttpPost]
@@ -186,7 +188,7 @@ public class UsersController(
         catch (Exception ex)
         {
             // Log but don't fail the operation
-            Console.WriteLine($"Failed to log MFA setup audit: {ex.Message}");
+            logger.LogWarning(ex, "Failed to log MFA setup audit");
         }
 
         return Ok(setupResult);
@@ -244,7 +246,7 @@ public class UsersController(
         catch (Exception ex)
         {
             // Log but don't fail the operation
-            Console.WriteLine($"Failed to log MFA enable audit: {ex.Message}");
+            logger.LogWarning(ex, "Failed to log MFA enable audit");
         }
 
         return Ok(new { message = "MFA enabled successfully", backupCodes });
@@ -310,7 +312,7 @@ public class UsersController(
         catch (Exception ex)
         {
             // Log but don't fail the operation
-            Console.WriteLine($"Failed to log MFA disable audit: {ex.Message}");
+            logger.LogWarning(ex, "Failed to log MFA disable audit");
         }
 
         return Ok(new { message = "MFA disabled successfully" });

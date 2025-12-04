@@ -105,7 +105,7 @@ public class TotpMfaService(ILogger<TotpMfaService> logger) : IMfaService
                         // Don't break - continue checking all codes to maintain constant time
                     }
                 }
-                catch
+                catch (FormatException)
                 {
                     // Invalid base64, skip this hash
                     continue;
