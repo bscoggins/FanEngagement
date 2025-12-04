@@ -25,8 +25,7 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
     [Fact]
     public async Task Login_EnforcesRateLimit_Returns429WhenLimitExceeded()
     {
-        // Arrange: Create a test user with unique email
-        var client = _factory.CreateClient();
+        // Arrange: Create a test user directly in the database to avoid consuming registration rate limit
         var password = "TestPassword123!";
         var uniqueEmail = $"ratelimit-test-{Guid.NewGuid()}@example.com";
         var createRequest = new CreateUserRequest
@@ -36,8 +35,9 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
             Password = password
         };
         
-        await client.PostAsJsonAsync("/users", createRequest);
+        await _factory.CreateTestUserDirectlyAsync(createRequest);
 
+        var client = _factory.CreateClient();
         var loginRequest = new LoginRequest
         {
             Email = uniqueEmail,
@@ -91,7 +91,6 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
         var client = _factory.CreateClient();
 
         // Act: Create users until we hit rate limit
-        var responses = new List<(int attemptNumber, HttpStatusCode status)>();
         HttpResponseMessage? rateLimitedResponse = null;
         int createdCount = 0;
         
@@ -106,7 +105,6 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
             };
             
             var response = await client.PostAsJsonAsync("/users", createRequest);
-            responses.Add((i + 1, response.StatusCode));
             _output.WriteLine($"Attempt {i + 1}: Status = {response.StatusCode}");
             
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
@@ -140,8 +138,7 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
     [Fact]
     public async Task RateLimiting_ReturnsProperProblemDetails_WithStandardFields()
     {
-        // Arrange: Create a test user with unique email
-        var client = _factory.CreateClient();
+        // Arrange: Create a test user directly in the database to avoid consuming registration rate limit
         var password = "TestPassword123!";
         var uniqueEmail = $"problemdetails-test-{Guid.NewGuid()}@example.com";
         var createRequest = new CreateUserRequest
@@ -151,8 +148,9 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
             Password = password
         };
         
-        await client.PostAsJsonAsync("/users", createRequest);
+        await _factory.CreateTestUserDirectlyAsync(createRequest);
 
+        var client = _factory.CreateClient();
         var loginRequest = new LoginRequest
         {
             Email = uniqueEmail,
@@ -199,8 +197,7 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
         // this test simply verifies the behavior by checking that rate limiting works
         // regardless of whether credentials are valid or not
         
-        // Arrange: Create a test user with unique email
-        var client = _factory.CreateClient();
+        // Arrange: Create a test user directly in the database to avoid consuming registration rate limit
         var password = "TestPassword123!";
         var uniqueEmail = $"valid-login-test-{Guid.NewGuid()}@example.com";
         var createRequest = new CreateUserRequest
@@ -210,8 +207,9 @@ public class RateLimitingTests : IClassFixture<RateLimitingTestWebApplicationFac
             Password = password
         };
         
-        await client.PostAsJsonAsync("/users", createRequest);
+        await _factory.CreateTestUserDirectlyAsync(createRequest);
 
+        var client = _factory.CreateClient();
         var loginRequest = new LoginRequest
         {
             Email = uniqueEmail,

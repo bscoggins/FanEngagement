@@ -148,6 +148,11 @@ builder.Services.AddRateLimiter(options =>
     });
 
     // Configure custom rejection response with Retry-After header
+    // NOTE: This OnRejected handler applies globally to ALL rate limiting policies
+    // (Login, Registration, and AuditExportPerUser). All rejected requests will
+    // receive the same ProblemDetails format. If different policies need different
+    // rejection messages in the future, this handler would need to check which
+    // policy was triggered (e.g., via context metadata).
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
