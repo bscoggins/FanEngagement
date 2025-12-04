@@ -1,0 +1,108 @@
+name: "Coding Task"
+description: "Create a structured development task for the Copilot coding or specialist agents."
+title: "[Dev] "
+labels:
+  - development
+  - copilot
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- markdownlint-disable-next-line MD018 -->
+        #github-pull-request_copilot-coding-agent
+
+        Use this form to capture feature, refactor, or bug work for the Copilot coding agent.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Provide a crisp, one-sentence description of the desired change.
+      placeholder: Add OrgAdmin webhook error counts to dashboard header
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Primary Scope
+      description: Where will most of the work happen?
+      options:
+        - Backend (Api/Application/Domain/Infrastructure)
+        - Frontend (Vite app)
+        - Full Stack
+        - Docs-only
+        - DevOps / Tooling
+        - Other / Unclear
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Bullet the functional requirements and any data/UX expectations.
+      placeholder: |
+        - Follow Api -> Application -> Domain layering
+        - Include pagination + filtering options
+        - Respect OrgAdmin authorization only
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Provide verifiable checks (one per line). Keep `[ ]` syntax for clarity.
+      placeholder: |
+        - [ ] DTO + validator updated
+        - [ ] `dotnet test` + `npm test` pass
+        - [ ] Empty state defined
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints & Guardrails
+      description: Note boundaries (no new deps, no schema change, rollout plan, auth limits, etc.).
+      placeholder: |
+        - No DB migrations
+        - Avoid touching `ShareIssuancesService`
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical Notes / References
+      description: Link helpful code, docs, or prior tickets.
+      placeholder: backend/FanEngagement.Api/Controllers/ProposalsController.cs
+  - type: dropdown
+    id: desired_agent
+    attributes:
+      label: Desired Agent
+      description: Pick the primary agent for this task.
+      options:
+        - Default coding agent
+        - docs-agent (documentation only)
+        - test-agent (tests only)
+        - lint-agent (formatting / safe refactors)
+        - frontend-agent (UI/UX and frontend polish)
+        - product-owner-agent (idea refinement, no code)
+    validations:
+      required: true
+  - type: textarea
+    id: allowed_files
+    attributes:
+      label: Files Allowed To Change
+      description: Enumerate folders/files that may be edited. Leave blank for repo-wide access.
+      placeholder: |
+        Allowed:
+        - backend/FanEngagement.Api/**
+        Optional:
+        - docs/**
+  - type: checkboxes
+    id: completion
+    attributes:
+      label: Completion Checklist
+      description: Confirm what the PR must cover before submission.
+      options:
+        - label: Summary of all file changes
+        - label: Build & test commands shared (`dotnet build`, `dotnet test`, `npm test`)
+        - label: Risks or migrations noted
+        - label: Architecture + authorization adherence confirmed
+        - label: Additional reviewer notes provided

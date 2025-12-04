@@ -1,0 +1,69 @@
+name: "Product Owner Agent Request"
+description: "Ask the product-owner-agent to refine ideas, write epics, or groom backlog items."
+title: "[PO] "
+labels:
+  - Product Owner
+  - copilot
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- markdownlint-disable-next-line MD018 -->
+        #github-pull-request_copilot-coding-agent
+
+        This agent does not touch production code; it only produces product artifacts.
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Describe the question or outcome you expect (epics, stories, backlog triage, etc.).
+      placeholder: Propose epics that increase member engagement on /me/home
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Current Context
+      description: Share datasets, docs, known pain points, KPIs, or recent feedback.
+      placeholder: |
+        - Relevant docs: docs/architecture.md#memberships
+        - Pain point: onboarding drop-off at step 2
+  - type: checkboxes
+    id: output
+    attributes:
+      label: Required Output
+      description: Select all deliverables you need from the agent.
+      options:
+        - label: New epics + stories in docs/product/
+        - label: Update docs/future-improvements.md
+        - label: Backlog grooming recommendations
+        - label: Issue comment summary only (no file changes)
+    validations:
+      required: true
+  - type: textarea
+    id: allowed_files
+    attributes:
+      label: Files Allowed To Change
+      description: If file updates are expected, list the exact paths (for example, docs/product/backlog.md).
+      placeholder: |
+        Allowed:
+        - docs/product/backlog.md
+        - docs/future-improvements.md
+        New files: docs/product/
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Mention guardrails (no new core features, target persona, time horizon, etc.).
+      placeholder: |
+        - Focus on OrgAdmin persona only
+        - No database changes implied
+  - type: textarea
+    id: success
+    attributes:
+      label: Acceptance Criteria / Success Signals
+      description: Define what a satisfying answer looks like so reviewers can approve it quickly.
+      placeholder: |
+        - Each epic lists problem, value, KPIs, and next steps
+        - Stories include acceptance criteria

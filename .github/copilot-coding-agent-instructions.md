@@ -117,7 +117,7 @@ Body:
 
 ## 4. Specialized Agents
 
-Three custom agents exist. Their detailed role definitions live in:
+Four custom agents exist. Their detailed role definitions live in:
 
 - agent.md
 - .github/agents/*.agent.md
@@ -136,6 +136,12 @@ Three custom agents exist. Their detailed role definitions live in:
 
 - Applies formatting, cleanup, and safe refactors.
 - Must not change behavior.
+
+### 4.4 frontend-agent
+
+- Expert in React/Vite UI implementation, visual systems, and accessibility.
+- Handles layout refinements, theming, motion, and UX polish across the frontend only.
+- Must respect design tokens, performance budgets, and responsive breakpoints.
 
 All specialized agents must obey the Global Rules.
 

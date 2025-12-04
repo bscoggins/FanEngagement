@@ -1,0 +1,82 @@
+name: "Test Agent Task"
+description: "Ask the test-agent to add or improve automated tests."
+title: "[Tests] "
+labels:
+  - testing
+  - copilot
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- markdownlint-disable-next-line MD018 -->
+        #github-pull-request_copilot-coding-agent
+
+        The test-agent focuses on test files, fixtures, mocks, and CI stability improvements.
+  - type: input
+    id: test_summary
+    attributes:
+      label: Test Objective
+      description: Summarize what needs to be validated.
+      placeholder: Increase coverage on Membership invitations API happy/edge paths
+    validations:
+      required: true
+  - type: dropdown
+    id: test_scope
+    attributes:
+      label: Scope
+      description: Choose the dominant layer these tests target.
+      options:
+        - Backend unit
+        - Backend integration
+        - Frontend unit
+        - Frontend e2e / Playwright
+        - API contract / schema validation
+        - Load or performance
+        - Mixed / unsure
+    validations:
+      required: true
+  - type: textarea
+    id: changed_areas
+    attributes:
+      label: Code Under Test
+      description: Point to recent changes, services, components, or routes that require coverage.
+      placeholder: backend/FanEngagement.Application/Proposals/ProposalService.cs
+    validations:
+      required: true
+  - type: textarea
+    id: gaps
+    attributes:
+      label: Existing Coverage Gaps or Bugs
+      description: Describe failing scenarios, flaky tests, or untested behaviors.
+      placeholder: |
+        - Flaky: Playwright `navigation.spec.ts` step 4
+        - Missing: Unauthorized path for `/api/proposals/{id}`
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Provide pass/fail checks, metrics (e.g., coverage %) or regression cases.
+      placeholder: |
+        - [ ] `dotnet test` passes with new integration suite
+        - [ ] Failing spec reproduced then fixed
+    validations:
+      required: true
+  - type: checkboxes
+    id: outputs
+    attributes:
+      label: Required Outputs
+      options:
+        - label: New or updated unit tests
+        - label: New integration/e2e tests
+        - label: Test data builders or fixtures
+        - label: CI configuration or scripts
+        - label: Test plan summary comment
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup / Tooling Notes
+      description: Mention environment variables, seed data, or commands (e.g., `npm run test:e2e`).
+      placeholder: |
+        - Requires `scripts/run-e2e.sh`
+        - Needs seeded Org + Member accounts

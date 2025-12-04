@@ -1,0 +1,145 @@
+name: "Frontend Experience Agent Task"
+description: "Engage the frontend expert agent for UI/UX enhancements and beautification."
+title: "[FE] "
+labels:
+  - frontend
+  - design
+  - copilot
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- markdownlint-disable-next-line MD018 -->
+        #github-pull-request_copilot-coding-agent
+
+        This agent focuses on high-quality UI, UX, and front-end polish (layout, motion, accessibility).
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One-line headline describing the goal.
+      placeholder: Refresh OrgAdmin proposal list header with better hierarchy and filters
+    validations:
+      required: true
+  - type: checkboxes
+    id: surfaces
+    attributes:
+      label: Surfaces To Touch
+      description: Select all areas that apply.
+      options:
+        - label: Navigation / shell
+        - label: Page layout / sections
+        - label: Components (tables, cards, forms)
+        - label: Animations / motion
+        - label: Theme / tokens (colors, typography)
+        - label: Other (detail below)
+  - type: textarea
+    id: context
+    attributes:
+      label: User Problem & Context
+      description: Explain the UX problem, pain points, relevant analytics, or feedback.
+      placeholder: |
+        - Member dashboard feels cluttered; support tickets cite "can't find wallet status"
+        - Heatmap: most users ignore right column promo
+    validations:
+      required: true
+  - type: textarea
+    id: desired_outcome
+    attributes:
+      label: Desired Outcome
+      description: Describe what success looks like (business or UX impact, KPIs, storytelling).
+      placeholder: |
+        - Increase proposal visibility and quick actions
+        - Reduce form completion time to < 45s
+    validations:
+      required: true
+  - type: dropdown
+    id: style_direction
+    attributes:
+      label: Style Direction
+      description: Choose the primary design direction.
+      options:
+        - Data-dense / dashboard
+        - Minimalist / calm
+        - Expressive / bold
+        - Need agent recommendation
+  - type: textarea
+    id: inspiration
+    attributes:
+      label: Inspiration / References
+      description: Link existing screens, design systems, Dribbble/Behance references, or competitor shots.
+      placeholder: |
+        - https://example.com/dribbble-shot
+        - Use pattern from /me/organizations hero
+  - type: checkboxes
+    id: responsibilities
+    attributes:
+      label: Main Responsibilities
+      description: Clarify what the agent must deliver.
+      options:
+        - label: New components or refactors (React + Tailwind/Vite stack)
+        - label: Motion / micro-interactions
+        - label: Accessibility review + fixes
+        - label: Responsive layout overhaul
+        - label: Design tokens / theming adjustments
+  - type: textarea
+    id: functionality
+    attributes:
+      label: Functional Requirements
+      description: Capture data flows, API hooks, state management, or error handling expectations.
+      placeholder: |
+        - Integrate hooks/useProposals with optimistic updates
+        - Show toast on save + highlight saved row
+    validations:
+      required: true
+  - type: textarea
+    id: guardrails
+    attributes:
+      label: Guardrails / Constraints
+      description: Mention performance limits, bundle size, timelines, accessibility targets, or things to avoid.
+      placeholder: |
+        - Keep initial load under 200kb
+        - Must meet WCAG 2.1 AA contrast
+  - type: textarea
+    id: brand_tokens
+    attributes:
+      label: Brand & Tokens
+      description: List color tokens, typography, spacing, or iconography rules to respect.
+      placeholder: |
+        - Primary: `--brand-cobalt`
+        - Typography: Favor `Space Grotesk` for headings
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Provide verifiable checks (use `[ ]` syntax if helpful) for responsiveness, accessibility, testing, etc.
+      placeholder: |
+        - [ ] Works on 1280px desktop + 375px mobile
+        - [ ] Keyboard focus order documented
+        - [ ] Storybook stories updated
+    validations:
+      required: true
+  - type: textarea
+    id: allowed_files
+    attributes:
+      label: Files Allowed To Change
+      description: Call out specific folders (`frontend/src/components/...`, `frontend/public/...`). Leave blank for full frontend access.
+  - type: checkboxes
+    id: deliverables
+    attributes:
+      label: Required Deliverables
+      options:
+        - label: Updated UI components/pages
+        - label: Storybook stories or visual docs
+        - label: Design reference (screenshots, GIFs)
+        - label: Playwright/visual tests adjustments
+        - label: README or docs update
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing & Review Notes
+      description: Mention commands (`npm run test`, `npm run preview`), stakeholders, or sign-off expectations.
+      placeholder: |
+        - Run `npm run test -- navigation.spec.ts`
+        - Notify #team-design for async review
