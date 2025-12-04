@@ -11,6 +11,7 @@ import {
 import { handleError } from './errors.js';
 import { getMetricsRegistry } from './metrics.js';
 import { healthStatus } from './metrics.js';
+import { config } from './config.js';
 
 export function createRoutes(solanaService: SolanaService): Router {
   const router = Router();
@@ -168,7 +169,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         confirmations: result.confirmations,
         blockNumber: result.blockNumber,
         timestamp: result.timestamp ? new Date(result.timestamp * 1000).toISOString() : undefined,
-        explorerUrl: `https://explorer.solana.com/tx/${txId}?cluster=${process.env.SOLANA_NETWORK || 'devnet'}`,
+        explorerUrl: `https://explorer.solana.com/tx/${txId}?cluster=${config.solana.network}`,
       });
     } catch (error) {
       handleError(error, req, res);

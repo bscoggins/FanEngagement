@@ -35,7 +35,10 @@ export class SolanaService {
       confirmTransactionInitialTimeout: config.solana.confirmTimeout,
     });
     this.keypair = keypair;
-    // Using a placeholder program ID - in production, deploy actual Solana program
+    
+    // TODO: Replace with actual deployed Solana program ID
+    // Using system program as placeholder for development
+    // In production, deploy custom program and update this ID
     this.programId = new PublicKey('11111111111111111111111111111111');
     
     logger.info('SolanaService initialized', {
@@ -43,6 +46,7 @@ export class SolanaService {
       rpcUrl: config.solana.rpcUrl,
       commitment: config.solana.commitment,
       publicKey: this.keypair.publicKey.toBase58(),
+      programId: this.programId.toBase58(),
     });
   }
 
