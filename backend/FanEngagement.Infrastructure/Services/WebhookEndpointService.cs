@@ -164,16 +164,19 @@ public class WebhookEndpointService(
         if (webhook.Url != request.Url) changedFields.Add("Url");
         if (webhook.SubscribedEvents != string.Join(",", request.SubscribedEvents)) changedFields.Add("SubscribedEvents");
         
-        // Always re-encrypt the secret when updating
-        // Note: Since we don't expose the plaintext secret, users must provide it on every update.
-        // We track it as changed if the encrypted value differs (which it will due to random nonce).
-        var newEncryptedSecret = encryptionService.Encrypt(request.Secret);
-        if (webhook.EncryptedSecret != newEncryptedSecret)
+        // Check if the secret changed by comparing plaintexts
+        // Note: We decrypt only to detect actual changes for audit purposes.
+        // The secret is always re-encrypted (with a new random nonce) even if unchanged.
+        var currentPlainSecret = encryptionService.Decrypt(webhook.EncryptedSecret);
+        var secretChanged = currentPlainSecret != request.Secret;
+        
+        if (secretChanged)
         {
             changedFields.Add("Secret");
-            webhook.EncryptedSecret = newEncryptedSecret;
         }
-
+        
+        // Always re-encrypt to ensure fresh nonce
+        webhook.EncryptedSecret = encryptionService.Encrypt(request.Secret);
         webhook.Url = request.Url;
         webhook.SubscribedEvents = string.Join(",", request.SubscribedEvents);
 
