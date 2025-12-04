@@ -14,27 +14,19 @@ using Microsoft.Extensions.Options;
 
 namespace FanEngagement.Tests;
 
-public class TestWebApplicationFactory : WebApplicationFactory<Program>
+/// <summary>
+/// Test factory specifically for rate limiting tests.
+/// Uses the default (lower) rate limits to properly test rate limiting behavior.
+/// </summary>
+public class RateLimitingTestWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"TestDb_{Guid.NewGuid()}";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Configure test-specific settings (higher rate limits for tests)
-        builder.ConfigureAppConfiguration((context, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                // Set very high rate limits for tests to avoid interference between tests
-                ["RateLimiting:Login:PermitLimit"] = "1000",
-                ["RateLimiting:Login:WindowMinutes"] = "1",
-                ["RateLimiting:Registration:PermitLimit"] = "1000",
-                ["RateLimiting:Registration:WindowHours"] = "1",
-                ["RateLimiting:AuditExport:PermitLimit"] = "1000",
-                ["RateLimiting:AuditExport:WindowHours"] = "1"
-            });
-        });
-
+        // Use default rate limits for rate limiting tests (not overridden)
+        // This allows us to test actual rate limiting behavior
+        
         builder.ConfigureServices(services =>
         {
             // Remove background services that access database
@@ -65,7 +57,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             });
 
             // Remove PostgreSQL health check by reconfiguring health check options
-            // This is more robust than trying to remove service descriptors by namespace
             services.Configure<HealthCheckServiceOptions>(options =>
             {
                 // Remove the "postgresql" health check registration that requires real DB connection
