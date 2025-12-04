@@ -1,4 +1,6 @@
 using FanEngagement.Api;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace FanEngagement.Tests;
 
@@ -9,5 +11,21 @@ namespace FanEngagement.Tests;
 /// </summary>
 public class RateLimitingTestWebApplicationFactory : TestWebApplicationFactoryBase
 {
-    // No additional configuration needed - uses default rate limits from appsettings.json
+    protected override void ConfigureTestSpecificSettings(IWebHostBuilder builder)
+    {
+        // Configure actual rate limits for testing (low values to verify rate limiting works)
+        builder.ConfigureAppConfiguration((context, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                // Set actual rate limits from requirements to test rate limiting behavior
+                ["RateLimiting:Login:PermitLimit"] = "5",
+                ["RateLimiting:Login:WindowMinutes"] = "1",
+                ["RateLimiting:Registration:PermitLimit"] = "10",
+                ["RateLimiting:Registration:WindowHours"] = "1",
+                ["RateLimiting:AuditExport:PermitLimit"] = "5",
+                ["RateLimiting:AuditExport:WindowHours"] = "1"
+            });
+        });
+    }
 }
