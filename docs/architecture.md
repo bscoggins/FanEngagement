@@ -903,6 +903,643 @@ For proposal routes, the `ProposalMemberHandler` and `ProposalManagerHandler` ex
 - **Implementation**: Consistent policy-based authorization using `[Authorize(Policy = "...")]` attributes on controllers and actions
 - **Global Admin Bypass**: Authorization handlers check for Admin role and automatically succeed for Global Admins
 
+## JWT Security Model
+
+FanEngagement uses JSON Web Tokens (JWT) for stateless authentication across all API endpoints. This section documents the JWT security implementation, token lifecycle, and security best practices.
+
+### Authentication Architecture
+
+**Implementation Location:**
+- **JWT Configuration**: `backend/FanEngagement.Api/Program.cs` (lines 175-213)
+- **Token Generation**: `backend/FanEngagement.Infrastructure/Services/AuthService.cs` (lines 117-143)
+- **Password Hashing**: `backend/FanEngagement.Infrastructure/Services/AuthService.cs` (lines 58-115)
+
+**Authentication Flow:**
+1. User submits credentials via `POST /users/login` endpoint
+2. `AuthService` validates credentials against database (PBKDF2-SHA256 hashed passwords)
+3. If valid, generates JWT token with user claims
+4. Client includes token in `Authorization: Bearer {token}` header for subsequent requests
+5. ASP.NET Core JWT middleware validates token on each request
+6. Authorization policies enforce access control based on token claims
+
+### Token Configuration
+
+**JWT Validation Parameters** (`Program.cs`, lines 202-212):
+```csharp
+options.TokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuer = true,                    // Verify token issuer
+    ValidateAudience = true,                  // Verify token audience
+    ValidateLifetime = true,                  // Check token expiration
+    ValidateIssuerSigningKey = true,          // Verify signature
+    ValidIssuer = jwtIssuer,                  // "FanEngagement"
+    ValidAudience = jwtAudience,              // "FanEngagement"
+    IssuerSigningKey = new SymmetricSecurityKey(...),  // HMAC-SHA256 signing key
+    RoleClaimType = ClaimTypes.Role           // Map role claims for authorization
+};
+```
+
+**Configuration Sources:**
+- **Production**: Environment variables or Azure Key Vault (recommended)
+- **Development**: `appsettings.Development.json` (contains development-only key)
+- **Required Settings**:
+  - `Jwt:Issuer` - Token issuer (e.g., "FanEngagement")
+  - `Jwt:Audience` - Token audience (e.g., "FanEngagement")
+  - `Jwt:SigningKey` - Secret key for HMAC-SHA256 signing (minimum 32 characters recommended)
+
+### Token Structure
+
+**JWT Claims** (`AuthService.cs`, lines 126-132):
+```csharp
+var claims = new[]
+{
+    new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),    // Subject (User ID)
+    new Claim(JwtRegisteredClaimNames.Email, email),              // Email address
+    new Claim(ClaimTypes.Role, role),                             // Global role (User/Admin)
+    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())  // Unique token ID
+};
+```
+
+**Token Properties:**
+- **Algorithm**: HMAC-SHA256 (HS256) symmetric signing
+- **Issuer**: Configured via `Jwt:Issuer` (default: "FanEngagement")
+- **Audience**: Configured via `Jwt:Audience` (default: "FanEngagement")
+- **Subject (sub)**: User's unique identifier (GUID)
+- **Email**: User's email address
+- **Role**: User's global role (`User` or `Admin`)
+- **Token ID (jti)**: Unique identifier per token for tracking/revocation
+- **Expiration (exp)**: UTC timestamp when token expires
+
+### Token Expiration Policy
+
+**Current Configuration** (`AuthService.cs`, line 138):
+```csharp
+expires: DateTime.UtcNow.AddHours(24)
+```
+
+**Current Policy:**
+- **Expiration Time**: 24 hours from token generation
+- **Rationale**: Balances user convenience (reduces re-authentication) with security
+- **Use Case**: Development and low-risk environments
+
+**Recommended Production Policy:**
+
+| Environment | Expiration | Rationale |
+|------------|------------|-----------|
+| **Production (Recommended)** | 15-60 minutes | Limits exposure window if token is compromised |
+| **Production with Refresh Tokens** | 5-15 minutes | Very short-lived access tokens with automatic refresh |
+| **Development** | 24 hours (current) | Reduces friction during development |
+| **High-Security** | 5-15 minutes | For sensitive operations or high-value organizations |
+
+**Why Short-Lived Tokens Are More Secure:**
+- **Reduced Attack Window**: Stolen tokens become invalid quickly
+- **Limits Replay Attacks**: Compromised tokens have minimal useful lifetime
+- **Forces Re-Authentication**: Ensures users are still authorized to access resources
+- **Supports Role Changes**: User role/permission changes take effect sooner
+- **Session Control**: Provides implicit session timeout behavior
+
+**Configuring Token Expiration:**
+
+To change the token expiration time, update the `expires` parameter in `AuthService.GenerateJwtToken()`:
+
+```csharp
+// For 1 hour expiration (recommended production)
+expires: DateTime.UtcNow.AddHours(1)
+
+// For 15 minutes expiration (high-security)
+expires: DateTime.UtcNow.AddMinutes(15)
+```
+
+**Note:** Changing token expiration requires application restart. Consider making this configurable via `appsettings.json`:
+
+```json
+"Jwt": {
+  "Issuer": "FanEngagement",
+  "Audience": "FanEngagement",
+  "SigningKey": "...",
+  "ExpirationMinutes": 60
+}
+```
+
+### Refresh Token Strategy
+
+**Current Implementation Status:** ❌ **Not Implemented**
+
+FanEngagement currently does **not** implement refresh tokens. When an access token expires, users must re-authenticate with their email and password.
+
+**Recommendation: Implement Refresh Tokens for Production**
+
+Refresh tokens provide a better user experience and security posture by allowing short-lived access tokens without frequent password re-entry.
+
+**Recommended Refresh Token Architecture:**
+
+1. **Dual-Token System**:
+   - **Access Token**: Short-lived (5-15 minutes), used for API authentication
+   - **Refresh Token**: Longer-lived (7-30 days), used only to obtain new access tokens
+
+2. **Refresh Token Properties**:
+   - **Secure Storage**: Store refresh tokens in database with user ID, expiration, and revocation status
+   - **Rotation**: Generate new refresh token on each refresh request (invalidates old token)
+   - **Single Use**: Each refresh token can only be used once
+   - **Device Tracking**: Associate refresh tokens with device/session for auditing
+
+3. **Implementation Steps**:
+
+   a. **Database Schema**:
+   ```csharp
+   public class RefreshToken
+   {
+       public Guid Id { get; set; }
+       public Guid UserId { get; set; }
+       public string TokenHash { get; set; }  // SHA-256 hash of token
+       public DateTime ExpiresAt { get; set; }
+       public DateTime CreatedAt { get; set; }
+       public DateTime? RevokedAt { get; set; }
+       public string? DeviceInfo { get; set; }
+       public string? IpAddress { get; set; }
+   }
+   ```
+
+   b. **New Endpoint**: `POST /auth/refresh`
+   ```json
+   {
+     "refreshToken": "..."
+   }
+   ```
+   Returns new access token + new refresh token (rotation)
+
+   c. **Token Rotation Logic**:
+   - Validate refresh token (exists, not expired, not revoked)
+   - Generate new access token
+   - Generate new refresh token
+   - Revoke old refresh token
+   - Return both tokens to client
+
+   d. **Client Storage**:
+   - **Access Token**: Memory only (short-lived, acceptable risk)
+   - **Refresh Token**: HttpOnly secure cookie or secure storage (e.g., iOS Keychain, Android KeyStore)
+
+**Benefits of Refresh Tokens:**
+- ✅ Shorter access token lifetime (improved security)
+- ✅ Better user experience (no repeated password entry)
+- ✅ Granular revocation (can revoke specific sessions)
+- ✅ Device tracking and management
+- ✅ Supports "remember me" functionality securely
+
+**Security Considerations:**
+- ⚠️ Refresh tokens are high-value targets - protect with secure storage and transmission
+- ⚠️ Implement rate limiting on refresh endpoint to prevent abuse
+- ⚠️ Consider IP address binding or device fingerprinting
+- ⚠️ Implement anomaly detection (e.g., geographic location changes)
+
+### Token Revocation Strategy
+
+**Current Implementation Status:** ⚠️ **Limited - Expiration Only**
+
+FanEngagement currently relies on **token expiration** as the primary revocation mechanism. There is no active token blacklist or revocation system.
+
+**How Token Invalidation Works Today:**
+
+1. **Token Expiration** (Primary Mechanism):
+   - Tokens automatically become invalid after 24 hours
+   - ASP.NET Core JWT middleware checks `exp` claim on every request
+   - Expired tokens return `401 Unauthorized`
+
+2. **Password Change** (Indirect):
+   - Changing password does NOT immediately invalidate existing tokens
+   - Old tokens remain valid until expiration
+   - Users must wait for natural token expiration
+
+3. **Role Change** (Indirect):
+   - Changing user's global role does NOT immediately invalidate tokens
+   - Old tokens with outdated role claims remain valid until expiration
+   - Authorization handlers query database for organization roles, so those changes take effect immediately
+
+**Limitations of Current Approach:**
+- ❌ Cannot revoke compromised tokens before expiration
+- ❌ No "logout" functionality that invalidates token server-side
+- ❌ No way to revoke all tokens for a user in emergency
+- ❌ User role changes in token claims don't take effect until token expires
+
+**Token Revocation Strategies for Production**
+
+For production environments, especially those handling sensitive data or high-value transactions, consider implementing one or more of the following revocation strategies:
+
+#### Strategy 1: Token Blacklist (Immediate Revocation)
+
+**Concept**: Maintain a cache of revoked token IDs (JTI claims) that are checked on every request.
+
+**Implementation:**
+```csharp
+// In-memory cache or distributed cache (Redis)
+public class TokenBlacklistService
+{
+    private readonly IDistributedCache _cache;
+    
+    public async Task RevokeTokenAsync(string jti, DateTime expiration)
+    {
+        // Store JTI until token would naturally expire
+        var ttl = expiration - DateTime.UtcNow;
+        await _cache.SetStringAsync($"revoked:{jti}", "1", 
+            new DistributedCacheEntryOptions { AbsoluteExpiration = expiration });
+    }
+    
+    public async Task<bool> IsTokenRevokedAsync(string jti)
+    {
+        return await _cache.GetStringAsync($"revoked:{jti}") != null;
+    }
+}
+```
+
+**Middleware Integration:**
+```csharp
+// In JWT middleware configuration
+options.Events = new JwtBearerEvents
+{
+    OnTokenValidated = async context =>
+    {
+        var jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        if (jti != null)
+        {
+            var blacklist = context.HttpContext.RequestServices
+                .GetRequiredService<TokenBlacklistService>();
+            if (await blacklist.IsTokenRevokedAsync(jti))
+            {
+                context.Fail("Token has been revoked");
+            }
+        }
+    }
+};
+```
+
+**Pros:**
+- ✅ Immediate revocation capability
+- ✅ Works with existing JWT implementation
+- ✅ Supports emergency revocation scenarios
+
+**Cons:**
+- ❌ Requires distributed cache (Redis) for multi-instance deployments
+- ❌ Adds latency to every authenticated request
+- ❌ Cache becomes unavailable = all requests fail
+
+**Best For:** High-security environments where immediate revocation is critical.
+
+#### Strategy 2: Shorter Token Lifetime + Refresh Tokens (Recommended)
+
+**Concept**: Combine very short access token lifetime (5-15 minutes) with refresh tokens stored in database.
+
+**Implementation:**
+- Access tokens expire quickly (limited revocation need)
+- Refresh tokens stored in database can be revoked immediately
+- Next refresh request will fail for revoked refresh token
+- Maximum revocation delay = access token lifetime (5-15 minutes)
+
+**Pros:**
+- ✅ No blacklist cache needed
+- ✅ Refresh tokens can be revoked in database
+- ✅ Minimal performance impact
+- ✅ Graceful degradation (database outage doesn't block existing tokens)
+
+**Cons:**
+- ❌ Not immediate (up to 15 minute delay)
+- ❌ Requires implementing refresh token system
+
+**Best For:** Most production environments - balances security, performance, and complexity.
+
+#### Strategy 3: Signing Key Rotation (Nuclear Option)
+
+**Concept**: Change the JWT signing key to invalidate ALL tokens platform-wide.
+
+**Implementation:**
+```csharp
+// Change Jwt:SigningKey in configuration
+// All existing tokens become invalid immediately
+// All users must re-authenticate
+```
+
+**Pros:**
+- ✅ Extremely simple implementation
+- ✅ Invalidates all tokens instantly
+- ✅ No infrastructure requirements
+
+**Cons:**
+- ❌ Affects ALL users (platform-wide logout)
+- ❌ Disruptive to user experience
+- ❌ Not granular (cannot target specific users/sessions)
+
+**Best For:** Emergency security incidents affecting entire platform (e.g., signing key compromise).
+
+#### Strategy 4: Token Versioning
+
+**Concept**: Add a version number to tokens and increment on user password change, role change, or manual revocation.
+
+**Implementation:**
+```csharp
+// Add token version to database
+public class User
+{
+    // ... existing properties ...
+    public int TokenVersion { get; set; } = 0;
+}
+
+// Include in JWT claims
+new Claim("token_version", user.TokenVersion.ToString())
+
+// Validate on each request
+options.Events = new JwtBearerEvents
+{
+    OnTokenValidated = async context =>
+    {
+        var tokenVersion = int.Parse(context.Principal?
+            .FindFirst("token_version")?.Value ?? "0");
+        var userId = context.Principal?
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        var dbContext = context.HttpContext.RequestServices
+            .GetRequiredService<FanEngagementDbContext>();
+        var user = await dbContext.Users.FindAsync(Guid.Parse(userId));
+        
+        if (user.TokenVersion != tokenVersion)
+        {
+            context.Fail("Token version mismatch");
+        }
+    }
+};
+```
+
+**Pros:**
+- ✅ Granular per-user revocation
+- ✅ Automatic on password/role change
+- ✅ No external cache needed
+
+**Cons:**
+- ❌ Database query on every request
+- ❌ Doesn't work for specific session revocation (all user's tokens invalidated)
+
+**Best For:** Automatic revocation on password/role changes without implementing full refresh token system.
+
+### Security Incident Response
+
+**Token Compromise Response Checklist:**
+
+If a JWT token or signing key is compromised, follow these steps:
+
+#### Level 1: Single Token Compromise (Suspected or Confirmed)
+
+1. **Immediate Actions** (if blacklist implemented):
+   - [ ] Add token's JTI to blacklist via admin endpoint
+   - [ ] Verify token is rejected on next API call
+   - [ ] Monitor for continued use of revoked token
+
+2. **Immediate Actions** (without blacklist):
+   - [ ] Force user password reset
+   - [ ] Increment user's token version (if implemented)
+   - [ ] Contact user about potential compromise
+
+3. **Investigation**:
+   - [ ] Review audit logs for suspicious activity using token
+   - [ ] Identify scope of access (which organizations, what data)
+   - [ ] Check for data exfiltration or unauthorized changes
+
+4. **Communication**:
+   - [ ] Notify affected user
+   - [ ] Document incident in security log
+   - [ ] Assess need for broader notification
+
+#### Level 2: Multiple Token Compromise or User Account Compromise
+
+1. **Immediate Actions**:
+   - [ ] Disable user account (set `IsActive = false` if implemented)
+   - [ ] Revoke all user's refresh tokens (if implemented)
+   - [ ] Increment user's token version or add all JTIs to blacklist
+
+2. **Investigation**:
+   - [ ] Review all actions taken by compromised account
+   - [ ] Check for unauthorized membership additions
+   - [ ] Review proposal/vote activity
+   - [ ] Check webhook endpoint modifications
+
+3. **Recovery**:
+   - [ ] Work with user to secure their account
+   - [ ] Reset password with strong requirements
+   - [ ] Enable MFA if available
+   - [ ] Review and revert unauthorized changes
+
+#### Level 3: Signing Key Compromise (Critical)
+
+1. **Immediate Actions** (Emergency Response):
+   - [ ] **URGENT**: Rotate JWT signing key immediately
+   - [ ] All users will be logged out platform-wide
+   - [ ] Deploy new signing key to all instances
+   - [ ] Verify old tokens are rejected
+
+2. **Communication**:
+   - [ ] Send platform-wide notification about security maintenance
+   - [ ] Explain need for re-authentication
+   - [ ] Provide security guidance (check for unusual activity)
+
+3. **Investigation**:
+   - [ ] Determine how signing key was compromised
+   - [ ] Review all activities during compromise window
+   - [ ] Assess potential for forged tokens
+   - [ ] Check for unauthorized admin access
+
+4. **Prevention**:
+   - [ ] Review key storage practices
+   - [ ] Implement secret rotation procedures
+   - [ ] Migrate to Azure Key Vault or similar HSM
+   - [ ] Update security documentation
+   - [ ] Conduct post-mortem
+
+### Security Best Practices
+
+**Token Transmission Security:**
+
+1. **HTTPS Only** (Enforced):
+   - All API endpoints must use HTTPS in production
+   - JWT tokens should never be transmitted over unencrypted HTTP
+   - Configure HSTS (HTTP Strict Transport Security) headers
+   - Recommendation: Use reverse proxy (nginx) to enforce HTTPS redirect
+
+2. **CORS Configuration** (`Program.cs`, lines 80-101):
+   - Configured to allow specific frontend origins only
+   - Default development origins: `http://localhost:3000`, `http://localhost:5173`
+   - Production: Set `Cors:AllowedOrigins` environment variable to production frontend URL
+   - Never use `AllowAnyOrigin()` in production
+
+**Token Storage (Client-Side):**
+
+1. **Browser Storage Options**:
+   
+   | Storage Type | Security | Persistence | Recommendation |
+   |--------------|----------|-------------|----------------|
+   | **Memory Only** | ✅ Best (XSS-resistant) | ❌ Lost on page reload | For short-lived tokens (5-15 min) |
+   | **SessionStorage** | ⚠️ XSS-vulnerable | ✅ Persists in tab | Acceptable for session-only |
+   | **LocalStorage** | ⚠️ XSS-vulnerable | ✅ Persists across tabs | **NOT RECOMMENDED** |
+   | **HttpOnly Cookie** | ✅ XSS-resistant | ✅ Automatic | ✅ **RECOMMENDED** (requires CSRF protection) |
+
+2. **Current Frontend Implementation**:
+   - FanEngagement frontend stores tokens in memory (React state)
+   - ⚠️ Tokens are lost on page reload, requiring re-authentication
+   - ⚠️ No persistent session across tabs/windows
+
+3. **Recommended Improvements**:
+   - **Option A**: Use HttpOnly secure cookies for token storage
+     - Set token in `Set-Cookie` header from `/users/login` endpoint
+     - Browser automatically sends cookie with each request
+     - Requires CSRF token protection
+   
+   - **Option B**: Implement refresh tokens with short access token lifetime
+     - Store refresh token in HttpOnly cookie
+     - Store access token in memory only
+     - Automatically refresh when access token expires
+
+**Password Security:**
+
+1. **Current Implementation** (`AuthService.cs`, lines 58-115):
+   - **Algorithm**: PBKDF2-SHA256 (industry standard)
+   - **Iterations**: 100,000 (adequate for current threats)
+   - **Salt**: 16 bytes random (unique per password)
+   - **Hash**: 32 bytes output
+   - **Storage**: Base64-encoded `salt + hash`
+
+2. **Password Requirements**:
+   - **Current**: Minimum 8 characters (validated in `CreateUserRequestValidator`)
+   - **Recommended Production**: 
+     - Minimum 12 characters
+     - Require uppercase, lowercase, number, special character
+     - Check against common password lists (e.g., Have I Been Pwned API)
+     - Prevent password reuse (store hash history)
+
+**Rate Limiting** (Already Implemented):
+
+1. **Login Endpoint** (`Program.cs`, lines 123-134):
+   - **Limit**: 5 attempts per minute per IP address
+   - **Policy**: "Login"
+   - **Configuration**: `RateLimiting:Login:PermitLimit` and `RateLimiting:Login:WindowMinutes`
+   - **Response**: 429 Too Many Requests with Retry-After header
+   - **Purpose**: Prevents brute force attacks
+
+2. **Registration Endpoint** (`Program.cs`, lines 137-148):
+   - **Limit**: 10 attempts per hour per IP address
+   - **Policy**: "Registration"
+   - **Purpose**: Prevents account enumeration and spam
+
+**Audit Logging** (Already Implemented):
+
+- All authentication attempts (success and failure) are logged via `AuditService`
+- Failed logins use generic error message ("Invalid credentials") to prevent user enumeration
+- Includes IP address and user agent when available
+- See `AuthService.LogSuccessfulLoginAsync()` and `LogFailedLoginAsync()` methods
+
+**Signing Key Management:**
+
+1. **Development** (`appsettings.Development.json`):
+   - Contains placeholder signing key
+   - ⚠️ **NEVER** use development key in production
+
+2. **Production Recommendations**:
+   - **Key Length**: Minimum 32 characters (256 bits for HMAC-SHA256)
+   - **Key Generation**: Use cryptographically secure random generator
+   - **Key Storage**: 
+     - ✅ **RECOMMENDED**: Azure Key Vault, AWS Secrets Manager, or HashiCorp Vault
+     - ✅ Acceptable: Environment variable (ensure proper secrets management)
+     - ❌ **NEVER**: Commit to source control
+     - ❌ **NEVER**: Store in appsettings.json (except empty placeholder)
+   
+3. **Key Rotation**:
+   - Establish key rotation schedule (e.g., every 90 days)
+   - Plan for zero-downtime rotation (requires dual-key validation during transition)
+   - Document rotation procedure
+
+**Additional Security Headers:**
+
+Recommended security headers to add to responses (can be configured in middleware):
+
+```csharp
+// In middleware or Program.cs
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+    await next();
+});
+```
+
+### Monitoring and Alerting
+
+**Metrics to Monitor:**
+
+1. **Authentication Metrics**:
+   - Login success rate
+   - Login failure rate (spike indicates brute force attack)
+   - Failed login attempts per IP (detect distributed attacks)
+   - Token validation failure rate
+
+2. **Token Health**:
+   - Token expiration time distribution
+   - Average token lifetime before reuse
+   - Rate of 401 Unauthorized responses (users with expired tokens)
+
+3. **Security Events**:
+   - Rate limit violations
+   - Repeated failed login attempts from same IP
+   - Unusual geographic login patterns
+   - Multiple concurrent sessions per user
+
+**Alerting Recommendations:**
+
+- Alert on >100 failed login attempts per minute (brute force)
+- Alert on >50 rate limit violations per hour (DoS attempt)
+- Alert on admin account login from new IP address
+- Alert on signing key configuration errors (app startup)
+
+### Future Enhancements
+
+1. **Multi-Factor Authentication (MFA)**:
+   - Add TOTP-based MFA (Google Authenticator, Authy)
+   - Require MFA for Global Admin accounts
+   - Optional MFA for regular users
+   - SMS-based MFA as alternative
+
+2. **Refresh Token System** (See detailed recommendation above):
+   - Implement dual-token architecture
+   - Reduce access token lifetime to 5-15 minutes
+   - Add refresh token rotation
+   - Add device management UI
+
+3. **Token Revocation** (See strategies above):
+   - Implement token blacklist with Redis
+   - Add "Logout All Sessions" functionality
+   - Add device/session management UI
+   - Implement token versioning
+
+4. **Enhanced Password Security**:
+   - Increase minimum length to 12+ characters
+   - Require complexity (uppercase, lowercase, number, symbol)
+   - Integrate with Have I Been Pwned API
+   - Implement password history (prevent reuse)
+
+5. **Hardware Security Keys**:
+   - Add WebAuthn/FIDO2 support
+   - Allow hardware keys as MFA method
+   - Support passwordless authentication
+
+6. **Anomaly Detection**:
+   - Track typical user login locations
+   - Alert on logins from unusual countries
+   - Detect impossible travel (login from two distant locations in short time)
+   - Machine learning-based anomaly detection
+
+7. **Session Management UI**:
+   - Show active sessions to users
+   - Allow users to view login history
+   - Allow users to revoke specific sessions
+   - Show device/browser information for each session
+
 ## Organization Onboarding
 
 FanEngagement implements a streamlined organization onboarding process where organizations can be created through the API, with automatic role assignment for the creator.
