@@ -1,0 +1,89 @@
+name: "Docs Agent Task"
+description: "Request high-quality documentation updates from the docs-agent."
+title: "[Docs] "
+labels:
+  - documentation
+  - copilot
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- markdownlint-disable-next-line MD018 -->
+        #github-pull-request_copilot-coding-agent
+
+        The docs-agent focuses on Markdown, diagrams, and doc-only artifacts.
+  - type: input
+    id: doc_summary
+    attributes:
+      label: Documentation Summary
+      description: Give a headline for the doc change.
+      placeholder: Document audit export rate limiting and throttling UX
+    validations:
+      required: true
+  - type: checkboxes
+    id: doc_scope
+    attributes:
+      label: Doc Scope
+      description: Select all documentation types that apply.
+      options:
+        - label: README or getting-started guide
+        - label: Architecture or ADR updates
+        - label: API reference / contract docs
+        - label: Tutorials or how-to guides
+        - label: Release notes / changelog
+        - label: Other (explain below)
+  - type: textarea
+    id: target_files
+    attributes:
+      label: Target Files / Locations
+      description: List existing files to update or folders for new docs.
+      placeholder: |
+        - docs/audit/export-rate-limiting.md
+        - docs/product/
+    validations:
+      required: true
+  - type: textarea
+    id: source_material
+    attributes:
+      label: Context & Source Material
+      description: Link specs, Slack threads, dashboards, or PRs the agent should reference.
+      placeholder: |
+        - RFC: docs/architecture.md#rate-limits
+        - Metrics dashboard link
+  - type: dropdown
+    id: doc_style
+    attributes:
+      label: Preferred Style
+      description: Helps the agent pick tone/format.
+      options:
+        - Narrative / concept overview
+        - Task-based / step-by-step
+        - Reference / tables-heavy
+        - Mixed (let the agent choose)
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Spell out must-have sections, diagrams, callouts, or glossary items.
+      placeholder: |
+        - Include prerequisites + validation steps
+        - Add sequence diagram for event flow
+    validations:
+      required: true
+  - type: checkboxes
+    id: output_requirements
+    attributes:
+      label: Output Requirements
+      options:
+        - label: Use tables for parameter lists
+        - label: Include code samples
+        - label: Provide before/after summary in PR description
+        - label: Update docs/README.md index
+        - label: Add diagrams (Mermaid acceptable)
+  - type: textarea
+    id: review
+    attributes:
+      label: Reviewers or Stakeholders
+      description: Call out people, teams, or channels that should review the doc update.
+      placeholder: #team-product, #team-architecture

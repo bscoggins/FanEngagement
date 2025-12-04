@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security Report
+    url: https://github.com/bscoggins/FanEngagement/security/policy
+    about: Please disclose security vulnerabilities privately.
+  - name: Questions & Support
+    url: https://github.com/bscoggins/FanEngagement/discussions
+    about: Start a discussion for general Q&A or product feedback.
