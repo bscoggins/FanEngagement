@@ -50,7 +50,7 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-002   | T2    | Streamline OrgAdmin Proposal Management | Drafting | Now      | Brent |                           |
 | E-003   | T3    | Enhance Governance Results Transparency | Backlog  | Later    | TBD   |                           |
 | E-004   | T5    | Blockchain Integration Initiative (Solana): Discovery → MVP Definition → Implementation Planning | Superseded | Next | TBD | **SUPERSEDED by E-007** - Original direct Solana integration approach; archived stories in docs/product/archive/E-004-*.md |
-| E-005   | T3    | Implement Thorough Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
+| E-005   | T3    | Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
 | E-006   | T3    | Security Documentation Update and Enhancements | Proposed | Now      | TBD   | Update outdated auth docs; verify test coverage; optional security enhancements |
 | E-007   | T5    | Blockchain Adapter Platform — Dockerized API for Multi-Chain Support | Proposed | Next | TBD | Modular multi-chain architecture with isolated Docker containers for Solana, Polygon, and future blockchains |
 | E-008   | T1/T2 | Frontend User Experience & Navigation Overhaul | Proposed | Next | TBD | Comprehensive UI/UX improvement: navigation redesign, design system, accessibility, micro-interactions, responsive polish |
@@ -2180,13 +2180,13 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 - Active state indicators and keyboard shortcuts
 - Navigation documentation for developers
 
-##### Workstream B: Design System & Tokens (Priority: Now)
+##### Workstream B: Design System & Tokens (Priority: Now, except E-008-15 which is Later)
 **Goal**: Establish a comprehensive design system with reusable tokens and components.
 
 **Key Deliverables:**
 - CSS custom properties for colors, typography, spacing, shadows, radii
 - Token documentation with usage guidelines
-- Dark mode foundation (optional)
+- Dark mode foundation (optional, deferred to later)
 - Design system documentation site or README
 
 ##### Workstream C: Component Library Refresh (Priority: Next)
@@ -2234,7 +2234,7 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 - **Frontend Agent**: Primary implementer for all stories in this epic
 - **Existing API Endpoints**: No backend changes; use existing APIs
 - **Stakeholder Approval**: Design direction and token choices require product owner sign-off
-- **Accessibility Audit Tool**: Need axe DevTools or pa11y for automated testing
+- **Accessibility Audit Tool**: Need axe DevTools browser extension or axe-core library (via @axe-core/playwright) for automated testing
 
 #### Risks
 
@@ -2458,7 +2458,7 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
   - Focus ring color
 - [ ] Dark mode tokens (optional, use `prefers-color-scheme` or class toggle)
 - [ ] Documentation with color swatches and usage guidelines
-- [ ] All hardcoded colors replaced with tokens across codebase
+- [ ] All hardcoded colors in component files replaced with tokens (migration tracked separately for page files)
 
 **Notes for Implementation:**
 - Example: `--color-primary-600`, `--color-success-500`, `--color-neutral-200`
@@ -2504,8 +2504,9 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 **Acceptance Criteria:**
 
 - [ ] Spacing tokens defined for:
-  - Base unit (e.g., 4px or 8px)
+  - Base unit (4px)
   - Scale: 0, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64
+  - Note: Scale is intentionally constrained to common multiples of the base unit. For intermediate values (e.g., 14 = 3.5rem), use existing tokens in combination or choose the nearest value.
 - [ ] Tokens used for: padding, margin, gap
 - [ ] Documentation with spacing scale visualization
 - [ ] All magic numbers replaced with spacing tokens
@@ -2868,7 +2869,7 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 - [ ] Tested with screen reader (NVDA, JAWS, or VoiceOver)
 
 **Notes for Implementation:**
-- Audit all pages with axe DevTools
+- Audit all pages with axe DevTools browser extension (for manual testing) or axe-core library (for automated testing)
 - Use semantic HTML where possible (reduce need for ARIA)
 - Live regions: Use for toasts, loading states, error messages
 
@@ -2910,7 +2911,7 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 - [ ] Text contrast meets WCAG 2.1 AA: 4.5:1 for normal text, 3:1 for large text (18px+ or 14px+ bold)
 - [ ] UI element contrast meets WCAG 2.1 AA: 3:1 for borders, icons, focus rings
 - [ ] Color is not the only indicator of state (use icons, labels, or patterns)
-- [ ] Tested with color contrast checker (WebAIM Contrast Checker or axe DevTools)
+- [ ] Tested with color contrast checker (WebAIM Contrast Checker or axe DevTools browser extension)
 - [ ] All color token combinations documented with contrast ratios
 
 **Notes for Implementation:**
@@ -3003,7 +3004,7 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 
 **Notes for Implementation:**
 - Based on WCAG 2.1 Level AA
-- Include tools: axe DevTools, WAVE, Lighthouse
+- Include tools: axe DevTools browser extension, axe-core library, WAVE, Lighthouse
 
 ---
 
@@ -3293,13 +3294,14 @@ The epic is divided into 6 major workstreams, each with its own set of stories:
 
 **Sprint Planning Suggestions:**
 
-- **Sprint 1**: Stories E-008-01 to E-008-05 (Navigation core), E-008-09 to E-008-12 (Design tokens)
-- **Sprint 2**: Stories E-008-06 to E-008-08 (Navigation polish), E-008-26 to E-008-29 (Accessibility core)
-- **Sprint 3**: Stories E-008-16 to E-008-20 (Core components), E-008-30 to E-008-32 (Accessibility polish)
-- **Sprint 4**: Stories E-008-21 to E-008-25 (Advanced components, Storybook)
-- **Sprint 5**: Stories E-008-33 to E-008-38 (Micro-interactions), E-008-39 to E-008-43 (Responsive)
+- **Sprint 1** (5 stories): E-008-01 to E-008-05 (Navigation core)
+- **Sprint 2** (7 stories): E-008-09 to E-008-12 (Design tokens), E-008-26 to E-008-28 (Accessibility core)
+- **Sprint 3** (8 stories): E-008-06 to E-008-08 (Navigation polish), E-008-16 to E-008-20 (Core components)
+- **Sprint 4** (7 stories): E-008-21 to E-008-25 (Advanced components), E-008-29 to E-008-30 (Accessibility polish)
+- **Sprint 5** (9 stories): E-008-31 to E-008-32 (Accessibility docs/testing), E-008-33 to E-008-38 (Micro-interactions), E-008-39
+- **Sprint 6** (9 stories): E-008-40 to E-008-45 (Responsive), E-008-13 to E-008-15 (Design system polish)
 
-**Dependencies Chart:**
+**Dependencies Chart (Primary Dependency Paths Only):**
 
 ```
 E-008-09 to E-008-13 (Design Tokens)
@@ -3312,6 +3314,8 @@ E-008-26 to E-008-29 (Accessibility foundation)
 E-008-39 to E-008-43 (Responsive foundation)
     └── E-008-44 to E-008-45 (Responsive testing and media)
 ```
+
+**Note:** This chart shows primary dependency paths. Individual stories may have additional dependencies (e.g., E-008-34 depends on E-008-21 for Toast animations).
 
 **Risk Register:**
 
@@ -3328,7 +3332,7 @@ E-008-39 to E-008-43 (Responsive foundation)
 
 - **Navigation Discoverability**: User testing task completion rate increases by 40%
 - **Support Ticket Reduction**: "Can't find X" tickets decrease by 60% post-launch
-- **Accessibility Compliance**: 0 critical axe-core violations; manual audit passes WCAG 2.1 AA
+- **Accessibility Compliance**: 0 critical violations from axe-core automated testing; manual audit passes WCAG 2.1 AA
 - **Performance**: LCP <2s, CLS <0.1, FID <100ms maintained or improved
 - **User Satisfaction**: Post-deployment NPS score increases by 15+ points
 - **Developer Velocity**: Component reuse increases; new feature development time decreases

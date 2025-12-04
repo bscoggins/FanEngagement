@@ -2,7 +2,7 @@
 
 **Epic:** E-008 – Frontend User Experience & Navigation Overhaul  
 **Stories:** E-008-33 through E-008-38  
-**Priority:** Next  
+**Priority:** Mixed (E-008-33 to E-008-35: Next; E-008-36 to E-008-38: Later)  
 **Status:** Proposed
 
 ---

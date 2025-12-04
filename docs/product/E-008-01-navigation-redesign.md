@@ -289,12 +289,12 @@ Redesign navigation across all user roles (Member, OrgAdmin, PlatformAdmin) with
 
 ## Required Deliverables
 
-- [x] Updated UI components/pages (AdminLayout, PlatformAdminLayout, Layout, OrganizationSelector)
-- [x] New Breadcrumb, MobileNav, SkipLink components
+- [ ] Updated UI components/pages (AdminLayout, PlatformAdminLayout, Layout, OrganizationSelector)
+- [ ] New Breadcrumb, MobileNav, SkipLink components
 - [ ] Storybook stories for new components (optional but recommended)
-- [x] Design reference (screenshots or GIFs showing before/after)
+- [ ] Design reference (screenshots or GIFs showing before/after)
 - [ ] Playwright/visual tests adjusted for new navigation structure
-- [x] Documentation update (`docs/frontend/navigation.md`)
+- [ ] Documentation update (`docs/frontend/navigation.md`)
 
 ---
 

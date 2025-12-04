@@ -76,7 +76,7 @@ Establish a comprehensive design system with CSS custom properties (tokens) for 
 - **Alpha Colors**: Transparent overlays for shadows and overlays
 
 **Typography Strategy:**
-- **Font Stack**: System font stack (faster, native feel)
+- **Font Stack**: System font stack (native OS fonts for faster loading and consistent native feel, e.g., -apple-system, Segoe UI, Roboto)
 - **Type Scale**: Modular scale based on 1.25 ratio
 - **Font Weights**: 400 (regular), 500 (medium), 600 (semibold), 700 (bold)
 - **Line Heights**: Tight (1.2), Normal (1.5), Relaxed (1.75)
@@ -380,12 +380,12 @@ Establish a comprehensive design system with CSS custom properties (tokens) for 
 
 ## Required Deliverables
 
-- [x] CSS custom properties (tokens) defined in `index.css` or `tokens.css`
-- [x] All hardcoded values replaced with tokens across codebase
+- [ ] CSS custom properties (tokens) defined in `index.css` or `tokens.css`
+- [ ] All hardcoded values replaced with tokens across codebase
 - [ ] Storybook stories showing token usage (optional but recommended)
-- [x] Design reference (Figma library or style guide document)
+- [ ] Design reference (Figma library or style guide document)
 - [ ] Playwright/visual tests for token migration (compare before/after screenshots)
-- [x] Documentation (`docs/frontend/design-system.md`)
+- [ ] Documentation (`docs/frontend/design-system.md`)
 
 ---
 

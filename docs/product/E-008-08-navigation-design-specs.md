@@ -24,7 +24,9 @@
 - Frontend agent implements based on specs
 - Iterative review and refinement
 
-## Deliverables
+## Deliverables (Designer-focused task)
 
 - Figma/Sketch files or high-fidelity mockups
 - Design specification document
+
+**Note:** This story uses "Deliverables" instead of "Files to Change" because it's a design task rather than code implementation.

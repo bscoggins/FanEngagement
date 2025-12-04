@@ -22,7 +22,9 @@
 - Designer task (frontend agent may assist with token extraction)
 - Ensure Figma tokens sync with CSS tokens
 
-## Deliverables
+## Deliverables (Designer-focused task)
 
 - Figma library file
 - Token mapping documentation
+
+**Note:** This story uses "Deliverables" instead of "Files to Change" because it's a design task rather than code implementation.

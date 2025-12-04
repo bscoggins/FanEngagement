@@ -15,7 +15,7 @@
 - [ ] Heading styles (h1-h6) use tokens
 - [ ] Body text, labels, captions use tokens
 - [ ] Documentation with type scale examples
-- [ ] All hardcoded font sizes/weights replaced with tokens
+- [ ] Core component typography migrated to use tokens (full codebase migration tracked separately)
 
 ## Implementation Notes
 
