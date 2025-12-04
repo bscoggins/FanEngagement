@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Metrics;
 using FanEngagement.Infrastructure.Persistence;
@@ -73,6 +74,7 @@ public class WebhookDeliveryBackgroundService(
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+        var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
         var metrics = scope.ServiceProvider.GetService<FanEngagementMetrics>();
 
         // Get pending events - Note: In production with multiple workers, consider using
@@ -96,7 +98,7 @@ public class WebhookDeliveryBackgroundService(
         {
             try
             {
-                await ProcessEventAsync(dbContext, outboundEvent, metrics, cancellationToken);
+                await ProcessEventAsync(dbContext, encryptionService, outboundEvent, metrics, cancellationToken);
                 // Save changes after each event to isolate failures
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -137,6 +139,7 @@ public class WebhookDeliveryBackgroundService(
 
     private async Task ProcessEventAsync(
         FanEngagementDbContext dbContext,
+        IEncryptionService encryptionService,
         Domain.Entities.OutboundEvent outboundEvent,
         FanEngagementMetrics? metrics,
         CancellationToken cancellationToken)
@@ -176,6 +179,7 @@ public class WebhookDeliveryBackgroundService(
             {
                 var result = await DeliverToEndpointAsync(
                     httpClient,
+                    encryptionService,
                     endpoint,
                     outboundEvent,
                     cancellationToken);
@@ -271,14 +275,18 @@ public class WebhookDeliveryBackgroundService(
 
     private async Task<DeliveryResult> DeliverToEndpointAsync(
         HttpClient httpClient,
+        IEncryptionService encryptionService,
         Domain.Entities.WebhookEndpoint endpoint,
         Domain.Entities.OutboundEvent outboundEvent,
         CancellationToken cancellationToken)
     {
         try
         {
+            // Decrypt the secret for HMAC signature generation
+            var decryptedSecret = encryptionService.Decrypt(endpoint.EncryptedSecret);
+            
             // Create HMAC signature
-            var signature = GenerateHmacSignature(outboundEvent.Payload, endpoint.Secret);
+            var signature = GenerateHmacSignature(outboundEvent.Payload, decryptedSecret);
 
             // Prepare request
             using var request = new HttpRequestMessage(HttpMethod.Post, endpoint.Url)

@@ -13,8 +13,8 @@ public class WebhookEndpoint
     public string Url { get; set; } = default!;
     
     [Required]
-    [MaxLength(500)]
-    public string Secret { get; set; } = default!;
+    [MaxLength(1000)]
+    public string EncryptedSecret { get; set; } = default!;
     
     [Required]
     public string SubscribedEvents { get; set; } = default!;

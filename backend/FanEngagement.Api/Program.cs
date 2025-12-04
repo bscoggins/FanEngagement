@@ -265,6 +265,7 @@ using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
     if (dbContext.Database.IsRelational())
     {
@@ -272,6 +273,10 @@ using (var scope = app.Services.CreateScope())
         {
             dbContext.Database.Migrate();
             logger.LogInformation("Database migrations applied successfully.");
+            
+            // Encrypt existing plaintext webhook secrets if needed
+            await FanEngagement.Infrastructure.Persistence.Migrations.WebhookSecretEncryptionMigration
+                .EncryptExistingSecretsAsync(dbContext, configuration, logger);
         }
         catch (Exception ex)
         {

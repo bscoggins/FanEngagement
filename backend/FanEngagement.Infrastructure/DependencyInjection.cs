@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
 using FanEngagement.Application.DevDataSeeding;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.OutboundEvents;
@@ -46,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IOutboundEventService, OutboundEventService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
+        services.AddSingleton<IEncryptionService, AesEncryptionService>();
 
         // Configure audit services
         services.Configure<AuditOptions>(
