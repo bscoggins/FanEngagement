@@ -53,6 +53,7 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-005   | T3    | Implement Thorough Audit Logging Across the Application | Proposed | Next | TBD | Comprehensive audit trail for governance, security, compliance; PO agent comprehensive epic |
 | E-006   | T3    | Security Documentation Update and Enhancements | Proposed | Now      | TBD   | Update outdated auth docs; verify test coverage; optional security enhancements |
 | E-007   | T5    | Blockchain Adapter Platform — Dockerized API for Multi-Chain Support | Proposed | Next | TBD | Modular multi-chain architecture with isolated Docker containers for Solana, Polygon, and future blockchains |
+| E-008   | T1/T2 | Frontend User Experience & Navigation Overhaul | Proposed | Next | TBD | Comprehensive UI/UX improvement: navigation redesign, design system, accessibility, micro-interactions, responsive polish |
 
 **Status values (for the PO agent to use):**
 
@@ -2032,6 +2033,1305 @@ This epic **supersedes** the original E-004 (Blockchain Integration Initiative -
 - Archived E-004 stories (in `/docs/product/archive/E-004-*.md`) are marked as superseded
 - E-004 insights inform E-007 Solana adapter implementation
 - Organizations will not be migrated; E-007 starts fresh with new architecture
+
+---
+
+### E-008 – Frontend User Experience & Navigation Overhaul (Theme: T1/T2, Status: Proposed)
+
+#### Problem Statement
+
+Recent stakeholder feedback and usability analysis have revealed significant friction in the FanEngagement frontend user experience:
+
+**Navigation Inconsistencies:**
+- Users struggle to find key features when switching between dashboard, admin, and profile flows
+- Organization switcher behavior confuses users with mixed roles (OrgAdmin in one org, Member in another)
+- Deep links fail to restore proper navigation context
+- Breadcrumb trails are absent in deeply nested admin pages
+
+**Visual Design Issues:**
+- Outdated look-and-feel doesn't reflect modern governance platform expectations
+- Inconsistent spacing, typography, and color usage across pages
+- Poor visual hierarchy makes it difficult to identify primary actions
+- Admin panels feel cluttered with too much information density
+
+**Accessibility Gaps:**
+- Screen reader support is incomplete or broken in several flows
+- Keyboard navigation is inconsistent (missing focus indicators, improper tab order)
+- Color contrast issues fail WCAG 2.1 AA standards in multiple components
+- ARIA roles and labels are missing or incorrect
+
+**Lack of Polish:**
+- No micro-interactions or meaningful feedback for user actions
+- State changes (loading, success, error) lack visual transitions
+- Forms feel static without progressive disclosure or validation hints
+- Page transitions are jarring without animation
+
+**Responsive Design Deficiencies:**
+- Mobile experience is poor with overlapping elements and tiny tap targets
+- Tablet layouts don't adapt gracefully between mobile and desktop breakpoints
+- Tables overflow without horizontal scroll or responsive alternatives
+
+#### Motivation
+
+FanEngagement is competing in a space where user experience directly impacts engagement metrics. A beautiful, accessible, intuitive interface:
+
+- **Increases Member Participation**: Easier navigation → more proposal votes → higher quorum rates
+- **Reduces Support Load**: Clear visual hierarchy → fewer "where is X?" tickets
+- **Improves Satisfaction Scores**: Modern design → positive brand perception
+- **Enables Future Growth**: Accessible platform → larger addressable market
+- **Supports Multi-Org Workflows**: Better navigation → seamless org-switching experience
+
+#### Target Users / Roles
+
+**Primary:**
+- **Members**: Need intuitive discovery of proposals, voting flows, and org dashboards
+- **OrgAdmins**: Need efficient admin tools with clear information architecture
+- **PlatformAdmins**: Need powerful, data-dense interfaces without sacrificing usability
+
+**Secondary:**
+- **Screen Reader Users**: Must be able to navigate and operate all features via assistive tech
+- **Keyboard-Only Users**: Must be able to complete all workflows without mouse
+- **Mobile Users**: Need optimized experience on phones and tablets
+
+#### Success Signals
+
+**Quantitative:**
+- Navigation discoverability score increases by 40% (user testing metric)
+- Support tickets about "can't find feature X" decrease by 60%
+- Proposal voting completion rate increases by 25%
+- Page load performance remains under budget (<200KB initial, <2s LCP)
+- WCAG 2.1 AA compliance achieved across all pages (automated + manual audit)
+
+**Qualitative:**
+- Positive user feedback in post-deployment surveys
+- Design team satisfaction with component library and tokens
+- Engineering team reports improved frontend development velocity
+
+#### Vision & Goals
+
+**Strategic Intent:**
+
+Transform FanEngagement from a functional but dated governance platform into a modern, delightful user experience that competes with best-in-class SaaS applications.
+
+**Core Goals:**
+
+1. **Navigation That Just Works**: Users should never be lost or confused about where they are or how to get where they're going
+2. **Visual Excellence**: Every page should feel polished, professional, and purpose-built for governance
+3. **Accessibility First**: All users, regardless of ability, should have equal access to platform features
+4. **Delightful Interactions**: State changes and user actions should feel responsive, smooth, and meaningful
+5. **Responsive Everywhere**: Exceptional experience across desktop, tablet, and mobile devices
+6. **Design System Foundation**: Reusable, documented components and tokens for long-term maintainability
+
+#### Scope
+
+**In Scope:**
+- Navigation architecture redesign for all user personas
+- Design system with tokens (colors, typography, spacing, shadows, radii)
+- Component library overhaul (forms, tables, cards, buttons, badges)
+- Accessibility remediation (ARIA, keyboard nav, color contrast, focus management)
+- Micro-interactions and motion design for key flows
+- Responsive layout improvements across all pages
+- Frontend documentation and Storybook updates
+
+**Out of Scope:**
+- Backend API changes (use existing endpoints)
+- New features or functionality (pure UI/UX improvements)
+- E2E workflow changes (maintain existing user journeys)
+- Performance optimization beyond frontend assets (backend out of scope)
+
+#### User Personas
+
+##### Persona 1: Sarah the Multi-Org Member
+- **Role**: Member in 3 organizations (voting power in all)
+- **Pain Points**: Gets lost switching between orgs; misses proposal deadlines
+- **Needs**: Clear org switcher, unified proposal inbox, mobile-friendly voting
+
+##### Persona 2: James the OrgAdmin
+- **Role**: OrgAdmin for 1 large org (500+ members)
+- **Pain Points**: Admin panel feels cluttered; hard to find specific member or proposal
+- **Needs**: Clear data hierarchy, powerful search/filters, efficient workflows
+
+##### Persona 3: Maria the Platform Admin
+- **Role**: GlobalAdmin managing entire platform
+- **Pain Points**: Too much context-switching between admin views; missing at-a-glance metrics
+- **Needs**: Dashboard with key metrics, quick access to users/orgs, audit logs
+
+##### Persona 4: Alex the Screen Reader User
+- **Role**: Member with visual impairment using JAWS
+- **Pain Points**: Many pages lack landmarks, buttons have no labels, forms are confusing
+- **Needs**: Proper ARIA, logical heading structure, descriptive labels, skip links
+
+##### Persona 5: Taylor the Mobile Member
+- **Role**: Member accessing platform primarily on phone
+- **Pain Points**: Tiny tap targets, overlapping text, horizontal scrolling
+- **Needs**: Touch-optimized UI, readable text without zoom, thumb-friendly navigation
+
+#### Epic Workstreams
+
+The epic is divided into 6 major workstreams, each with its own set of stories:
+
+##### Workstream A: Navigation Redesign (Priority: Now)
+**Goal**: Create consistent, role-aware navigation that adapts to user context.
+
+**Key Deliverables:**
+- Updated `navConfig.ts` with improved organization
+- Enhanced org switcher with role badges and better UX
+- Breadcrumb component for deep pages
+- Active state indicators and keyboard shortcuts
+- Navigation documentation for developers
+
+##### Workstream B: Design System & Tokens (Priority: Now)
+**Goal**: Establish a comprehensive design system with reusable tokens and components.
+
+**Key Deliverables:**
+- CSS custom properties for colors, typography, spacing, shadows, radii
+- Token documentation with usage guidelines
+- Dark mode foundation (optional)
+- Design system documentation site or README
+
+##### Workstream C: Component Library Refresh (Priority: Next)
+**Goal**: Redesign core components with consistent styling and better UX.
+
+**Key Deliverables:**
+- Updated Button, Badge, Card, Table, Form components
+- Enhanced LoadingSpinner, ErrorMessage, EmptyState
+- New components: Toast, Modal, Dropdown, Tooltip
+- Storybook stories for all components
+- Component API documentation
+
+##### Workstream D: Accessibility Remediation (Priority: Now)
+**Goal**: Achieve WCAG 2.1 AA compliance across all pages.
+
+**Key Deliverables:**
+- ARIA roles, labels, and live regions
+- Keyboard navigation with visible focus indicators
+- Color contrast fixes (4.5:1 for text, 3:1 for UI elements)
+- Skip links and landmark regions
+- Accessibility testing documentation
+
+##### Workstream E: Micro-Interactions & Polish (Priority: Next)
+**Goal**: Add delightful transitions and feedback to key user actions.
+
+**Key Deliverables:**
+- Loading states with skeleton screens
+- Success/error animations and toasts
+- Hover/focus/active state transitions
+- Page transition animations
+- Optimistic UI updates for async actions
+
+##### Workstream F: Responsive Design (Priority: Next)
+**Goal**: Optimize layouts for mobile, tablet, and desktop breakpoints.
+
+**Key Deliverables:**
+- Mobile-first CSS with responsive breakpoints
+- Touch-optimized tap targets (44px minimum)
+- Responsive tables (horizontal scroll or card layout)
+- Mobile navigation (hamburger menu or bottom tabs)
+- Responsive testing documentation
+
+#### Dependencies
+
+- **Frontend Agent**: Primary implementer for all stories in this epic
+- **Existing API Endpoints**: No backend changes; use existing APIs
+- **Stakeholder Approval**: Design direction and token choices require product owner sign-off
+- **Accessibility Audit Tool**: Need axe DevTools or pa11y for automated testing
+
+#### Risks
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Scope creep (adding new features) | High | Medium | Strict adherence to UI/UX improvements only; defer feature requests |
+| Design system adoption lag | Medium | Medium | Comprehensive documentation; examples; team training |
+| Accessibility testing gaps | High | Low | Automated + manual testing; external audit |
+| Performance regression from animations | Medium | Low | Performance budget enforcement; lazy loading; CSS transform usage |
+| Breaking existing E2E tests | High | Medium | Update tests incrementally; maintain test-ids; CI checks |
+| Mobile testing coverage | Medium | Medium | Device lab or BrowserStack; responsive design QA checklist |
+
+#### Open Questions
+
+1. **Design Direction**: Should we pursue data-dense/dashboard, minimalist/calm, or expressive/bold? Recommendation: Minimalist with expressive accents for key actions.
+2. **Dark Mode**: Should we implement dark mode in this epic or defer? Recommendation: Foundation (tokens) now, implementation later.
+3. **Animation Library**: Should we use Framer Motion, React Spring, or CSS-only? Recommendation: CSS-only for MVP, library for complex animations later.
+4. **Mobile Navigation Pattern**: Hamburger menu, bottom tabs, or hybrid? Recommendation: Hamburger menu for consistency with desktop.
+5. **Storybook Deployment**: Should we deploy Storybook publicly or keep internal? Recommendation: Internal for now, public later.
+
+#### Stories
+
+##### Workstream A: Navigation Redesign (Stories E-008-01 through E-008-08)
+
+###### Story E-008-01
+
+> As a **member**, I want **clear visual indicators of my current location in the app**, so that **I never feel lost or confused about where I am**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Active nav items have distinct visual treatment (bold text, colored underline, or background)
+- [ ] Breadcrumbs appear on nested admin pages (e.g., Admin > Organizations > Org Name > Proposals)
+- [ ] Page titles match navigation labels for consistency
+- [ ] URL structure reflects page hierarchy
+- [ ] Works across all breakpoints (mobile, tablet, desktop)
+
+**Notes for Implementation:**
+- Update `AdminLayout.tsx` and `PlatformAdminLayout.tsx`
+- Use React Router's `useLocation` and `useMatches` for active state
+- Consider: Breadcrumb component with automatic generation from route config
+
+---
+
+###### Story E-008-02
+
+> As a **multi-org user**, I want **an improved organization switcher with role badges**, so that **I can easily switch between my organizations and understand my role in each**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Org switcher shows organization name with role badge (e.g., "Org Name (Admin)" or "Org Name (Member)")
+- [ ] Current org is visually highlighted in dropdown
+- [ ] Switching orgs updates nav items and redirects to appropriate dashboard
+- [ ] Keyboard accessible (arrow keys, Enter to select, Escape to close)
+- [ ] Tooltip shows full org name if truncated
+- [ ] Works on mobile (touch-friendly tap target)
+
+**Notes for Implementation:**
+- Update `OrganizationSelector.tsx`
+- Use design system tokens for colors, spacing, and typography
+- Consider: Search/filter for users with many orgs
+
+---
+
+###### Story E-008-03
+
+> As an **OrgAdmin**, I want **consistent navigation across all org admin pages**, so that **I can easily move between admin tools without losing context**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Org admin sub-nav appears consistently in sidebar on all org-scoped pages
+- [ ] Sub-nav items: Overview, Memberships, Share Types, Proposals, Webhook Events, Audit Log
+- [ ] Active sub-nav item is visually distinct
+- [ ] Sub-nav collapses on mobile (accordion or hamburger)
+- [ ] Keyboard shortcuts documented (optional: Ctrl+1 for Overview, Ctrl+2 for Memberships, etc.)
+
+**Notes for Implementation:**
+- Leverage existing `navConfig.ts` with scope: 'org'
+- Ensure `AdminLayout.tsx` renders sub-nav for all org-scoped routes
+- Add skip link to main content
+
+---
+
+###### Story E-008-04
+
+> As a **keyboard-only user**, I want **visible focus indicators and logical tab order**, so that **I can navigate the app efficiently without a mouse**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] All interactive elements (links, buttons, inputs) have visible focus ring (2px solid, high contrast color)
+- [ ] Focus ring uses design system token (e.g., `--focus-ring-color`)
+- [ ] Tab order follows logical reading order (top to bottom, left to right)
+- [ ] Skip link to main content appears on Tab press
+- [ ] Modal dialogs trap focus (Tab cycles within modal)
+- [ ] Dropdown menus navigable with arrow keys
+
+**Notes for Implementation:**
+- Add global CSS for `:focus-visible` with design token
+- Test with keyboard only (no mouse)
+- Use `focus-trap-react` or similar for modals
+
+---
+
+###### Story E-008-05
+
+> As a **developer**, I want **comprehensive navigation configuration documentation**, so that **I can add new pages and nav items confidently**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Documentation in `/docs/frontend/navigation.md` or README
+- [ ] Explains `navConfig.ts` structure (NavItem, scope, roles, order)
+- [ ] Provides examples for adding global, org, and user-scoped items
+- [ ] Documents route guards (AdminRoute, OrgAdminRoute, ProtectedRoute)
+- [ ] Includes troubleshooting section (common issues and fixes)
+
+**Notes for Implementation:**
+- Leverage existing `.github/copilot-coding-agent-instructions.md` navigation docs
+- Add diagrams or flowcharts if helpful
+
+---
+
+###### Story E-008-06
+
+> As a **member**, I want **mobile-friendly navigation**, so that **I can access all features comfortably on my phone**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Hamburger menu icon on mobile (< 768px breakpoint)
+- [ ] Tapping hamburger opens full-screen or slide-out nav drawer
+- [ ] Nav items have 44px minimum tap target size
+- [ ] Closing nav (tap outside, Escape key, or close button) works smoothly
+- [ ] Org switcher accessible from mobile nav
+- [ ] Active route highlighted in mobile nav
+
+**Notes for Implementation:**
+- Update `Layout.tsx` and `AdminLayout.tsx` with mobile nav component
+- Consider: Bottom tab bar as alternative navigation pattern
+- Test on real devices (iOS Safari, Chrome Android)
+
+---
+
+###### Story E-008-07
+
+> As a **PlatformAdmin**, I want **quick access to frequently used admin tools**, so that **I can perform common tasks efficiently**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Platform admin dashboard includes quick action cards (e.g., "Create Organization", "View Audit Log")
+- [ ] Global search in header (search users, orgs, proposals)
+- [ ] Keyboard shortcut overlay (? key shows shortcuts)
+- [ ] Recent items list in dropdown (last 5 viewed orgs or users)
+
+**Notes for Implementation:**
+- Enhance `PlatformAdminDashboardPage.tsx`
+- Global search: debounced API call, instant results dropdown
+- Keyboard shortcuts: Use library like `react-hotkeys-hook`
+
+---
+
+###### Story E-008-08
+
+> As a **designer**, I want **navigation design specifications and mockups**, so that **implementation matches the intended UX**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Figma, Sketch, or high-fidelity mockups for all navigation states
+- [ ] Mockups include: desktop sidebar, mobile hamburger, org switcher, breadcrumbs
+- [ ] Specs document: spacing, colors, typography, shadows, animations
+- [ ] Hover, focus, active states documented
+- [ ] Mobile and desktop variants included
+- [ ] Delivered to frontend agent as reference
+
+**Notes for Implementation:**
+- Product owner or designer delivers mockups
+- Frontend agent implements based on specs
+- Iterative review and refinement
+
+---
+
+##### Workstream B: Design System & Tokens (Stories E-008-09 through E-008-15)
+
+###### Story E-008-09
+
+> As a **developer**, I want **CSS custom properties (tokens) for colors**, so that **I can build consistent, themeable interfaces**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Color tokens defined in `/src/index.css` or dedicated tokens file
+- [ ] Tokens include:
+  - Brand colors (primary, secondary, accent)
+  - Semantic colors (success, warning, error, info)
+  - Neutral colors (gray scale with 10 shades)
+  - Background colors (surface, canvas, elevated)
+  - Border colors (subtle, default, strong)
+  - Focus ring color
+- [ ] Dark mode tokens (optional, use `prefers-color-scheme` or class toggle)
+- [ ] Documentation with color swatches and usage guidelines
+- [ ] All hardcoded colors replaced with tokens across codebase
+
+**Notes for Implementation:**
+- Example: `--color-primary-600`, `--color-success-500`, `--color-neutral-200`
+- Use HSL for easier manipulation (hue, saturation, lightness)
+- Consider: Radix Colors or Tailwind color palette as reference
+
+---
+
+###### Story E-008-10
+
+> As a **developer**, I want **CSS custom properties for typography**, so that **text styles are consistent and scalable**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Typography tokens defined for:
+  - Font families (primary: sans-serif, secondary: serif, mono: monospace)
+  - Font sizes (xs, sm, base, lg, xl, 2xl, 3xl, 4xl)
+  - Font weights (light, normal, medium, semibold, bold)
+  - Line heights (tight, normal, relaxed)
+  - Letter spacing (tighter, normal, wider)
+- [ ] Heading styles (h1-h6) use tokens
+- [ ] Body text, labels, captions use tokens
+- [ ] Documentation with type scale examples
+- [ ] All hardcoded font sizes/weights replaced with tokens
+
+**Notes for Implementation:**
+- Example: `--font-size-lg`, `--font-weight-semibold`, `--line-height-normal`
+- Consider: Type scale based on modular scale (1.25 or 1.33 ratio)
+- Test: Ensure readability across breakpoints
+
+---
+
+###### Story E-008-11
+
+> As a **developer**, I want **CSS custom properties for spacing**, so that **layouts are consistent and rhythm is predictable**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Spacing tokens defined for:
+  - Base unit (e.g., 4px or 8px)
+  - Scale: 0, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64
+- [ ] Tokens used for: padding, margin, gap
+- [ ] Documentation with spacing scale visualization
+- [ ] All magic numbers replaced with spacing tokens
+
+**Notes for Implementation:**
+- Example: `--spacing-4` (16px), `--spacing-6` (24px)
+- Consider: Use rem units for accessibility (respects user font size preferences)
+- Apply consistently in components
+
+---
+
+###### Story E-008-12
+
+> As a **developer**, I want **CSS custom properties for shadows and radii**, so that **elevation and roundness are consistent**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Shadow tokens for elevation levels (xs, sm, md, lg, xl, 2xl)
+- [ ] Border radius tokens (none, sm, md, lg, xl, full)
+- [ ] Documentation with visual examples
+- [ ] All hardcoded shadows and radii replaced with tokens
+
+**Notes for Implementation:**
+- Example: `--shadow-lg`, `--radius-md`
+- Shadows: Use multiple layers for realistic depth
+- Consider: Tailwind or Material Design shadow scales as reference
+
+---
+
+###### Story E-008-13
+
+> As a **developer**, I want **comprehensive design token documentation**, so that **I can quickly find and apply the right tokens**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Documentation in `/docs/frontend/design-system.md` or `/docs/design-tokens.md`
+- [ ] Includes: color swatches, type scale, spacing scale, shadow examples, radius examples
+- [ ] Usage guidelines: when to use each token, anti-patterns
+- [ ] Code examples for common patterns (card with shadow, button with focus ring)
+- [ ] Link to Storybook or live token reference (if available)
+
+**Notes for Implementation:**
+- Consider: Automated token documentation from CSS variables
+- Use markdown tables or interactive HTML for token display
+
+---
+
+###### Story E-008-14
+
+> As a **designer**, I want **design system Figma library or style guide**, so that **I can design new features with consistent tokens**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Figma library with design tokens as styles
+- [ ] Components (buttons, cards, inputs) built with token styles
+- [ ] Color, text, and effect styles match CSS tokens
+- [ ] Documentation links Figma tokens to CSS tokens
+- [ ] Shared with design and frontend teams
+
+**Notes for Implementation:**
+- Designer task (frontend agent may assist with token extraction)
+- Ensure Figma tokens sync with CSS tokens (use Figma plugin if needed)
+
+---
+
+###### Story E-008-15
+
+> As a **developer**, I want **dark mode foundation (tokens only)**, so that **we can implement dark mode later without refactoring**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Color tokens defined for both light and dark themes
+- [ ] CSS uses `@media (prefers-color-scheme: dark)` or class toggle (`.dark`)
+- [ ] Dark mode tokens include: background, surface, text, borders
+- [ ] No full dark mode implementation (foundation only)
+- [ ] Documentation explains dark mode token structure
+
+**Notes for Implementation:**
+- Foundation only; actual dark mode implementation is separate epic
+- Example: `--color-background-light`, `--color-background-dark`
+- Test: Toggle between light/dark to verify tokens switch correctly
+
+---
+
+##### Workstream C: Component Library Refresh (Stories E-008-16 through E-008-25)
+
+###### Story E-008-16
+
+> As a **developer**, I want **redesigned Button component with variants and states**, so that **buttons are consistent and accessible**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Button variants: primary, secondary, outline, ghost, danger
+- [ ] Sizes: xs, sm, md, lg, xl
+- [ ] States: default, hover, focus, active, disabled, loading
+- [ ] Icon support (left, right, icon-only)
+- [ ] Accessible (ARIA labels, focus ring, keyboard activation)
+- [ ] Uses design system tokens
+- [ ] Storybook story with all variants and states
+- [ ] Replace all `<button>` elements with new Button component
+
+**Notes for Implementation:**
+- Use CSS modules or styled-components for scoped styles
+- Loading state: spinner icon + disabled state
+- Consider: Polymorphic component (renders as `<button>` or `<a>`)
+
+---
+
+###### Story E-008-17
+
+> As a **developer**, I want **redesigned Badge component**, so that **status indicators are clear and consistent**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Badge variants: default, success, warning, error, info, neutral
+- [ ] Sizes: sm, md, lg
+- [ ] Shapes: rounded, pill
+- [ ] Icon support (optional icon inside badge)
+- [ ] Uses design system tokens
+- [ ] Storybook story with all variants
+- [ ] Update `ProposalStatusBadge.tsx` to use new Badge
+
+**Notes for Implementation:**
+- Consider: Dot indicator for compact status display
+
+---
+
+###### Story E-008-18
+
+> As a **developer**, I want **redesigned Card component with elevation and hover states**, so that **cards feel interactive and polished**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Card variants: default, interactive (hover effect), bordered
+- [ ] Elevation levels using shadow tokens
+- [ ] Hover state: subtle scale or shadow increase
+- [ ] Padding options: compact, default, spacious
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+- [ ] Update pages to use new Card component
+
+**Notes for Implementation:**
+- Interactive cards: use `<button>` or `<a>` wrapper for semantics
+- Hover animation: CSS transform with transition
+
+---
+
+###### Story E-008-19
+
+> As a **developer**, I want **enhanced Table component with responsive layout**, so that **data tables work well on all screen sizes**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Desktop: Standard table with sticky header
+- [ ] Mobile: Horizontal scroll OR card layout (configurable)
+- [ ] Sortable columns (optional, icon indicates sort direction)
+- [ ] Row hover state with subtle background change
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+- [ ] Update admin pages (users, orgs, proposals) to use new Table
+
+**Notes for Implementation:**
+- Responsive: Use `overflow-x: auto` for horizontal scroll
+- Card layout: Transform rows into stacked cards on mobile
+- Consider: `react-table` or `@tanstack/table` for complex tables
+
+---
+
+###### Story E-008-20
+
+> As a **developer**, I want **enhanced Form components (Input, Select, Checkbox, Radio)**, so that **forms are accessible and user-friendly**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Input component: text, email, password, number, search
+- [ ] States: default, focus, error, disabled
+- [ ] Label, helper text, error message slots
+- [ ] Icon support (left, right)
+- [ ] Select component with custom styling (dropdown arrow, focus ring)
+- [ ] Checkbox and Radio with custom styles
+- [ ] Accessible (labels, ARIA, keyboard navigation)
+- [ ] Uses design system tokens
+- [ ] Storybook stories for all form components
+- [ ] Update all forms to use new components
+
+**Notes for Implementation:**
+- Use native HTML elements for accessibility
+- Custom styling: Overlay pseudo-elements on native controls
+- Error state: Red border, error icon, error message
+
+---
+
+###### Story E-008-21
+
+> As a **developer**, I want **Toast notification component**, so that **users receive non-blocking feedback for actions**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Toast variants: success, warning, error, info
+- [ ] Positions: top-right, top-left, bottom-right, bottom-left, top-center, bottom-center
+- [ ] Auto-dismiss with configurable timeout
+- [ ] Manual dismiss (close button)
+- [ ] Slide-in animation
+- [ ] Stacks multiple toasts vertically
+- [ ] Accessible (ARIA live region, focus management)
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+- [ ] Replace `NotificationContainer.tsx` or integrate with new Toast
+
+**Notes for Implementation:**
+- Use context API or library like `react-hot-toast` or `sonner`
+- Animation: CSS transform + opacity transition
+
+---
+
+###### Story E-008-22
+
+> As a **developer**, I want **Modal component**, so that **dialogs and confirmations are consistent and accessible**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Modal sizes: sm, md, lg, xl, full
+- [ ] Header, body, footer slots
+- [ ] Close on backdrop click (configurable)
+- [ ] Close on Escape key
+- [ ] Focus trap (tab cycles within modal)
+- [ ] Accessible (ARIA dialog, focus management, body scroll lock)
+- [ ] Slide-in or fade-in animation
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+- [ ] Update confirmation dialogs to use new Modal
+
+**Notes for Implementation:**
+- Use `react-modal` or build with `focus-trap-react`
+- Body scroll lock: Prevent background scrolling when modal is open
+
+---
+
+###### Story E-008-23
+
+> As a **developer**, I want **Dropdown component**, so that **menus and popovers are consistent and accessible**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Trigger: button or custom trigger element
+- [ ] Dropdown content: menu items, custom content
+- [ ] Positions: bottom-left, bottom-right, top-left, top-right, auto (flips on boundary)
+- [ ] Keyboard navigation (arrow keys, Enter, Escape)
+- [ ] Accessible (ARIA menu, focus management)
+- [ ] Animation: Fade + scale-in
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+- [ ] Update org switcher and user menu to use new Dropdown
+
+**Notes for Implementation:**
+- Use `@floating-ui/react` for positioning
+- Menu items: Support icons, dividers, disabled states
+
+---
+
+###### Story E-008-24
+
+> As a **developer**, I want **Tooltip component**, so that **helpful hints appear on hover or focus**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Trigger on hover and keyboard focus
+- [ ] Positions: top, bottom, left, right, auto
+- [ ] Delay before showing (configurable, default 300ms)
+- [ ] Fade-in animation
+- [ ] Accessible (ARIA describedby, keyboard dismissable)
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+- [ ] Add tooltips to icons and truncated text across app
+
+**Notes for Implementation:**
+- Use `@floating-ui/react` for positioning
+- Ensure tooltip doesn't block interactive elements
+
+---
+
+###### Story E-008-25
+
+> As a **developer**, I want **Storybook for all updated components**, so that **components are documented and testable in isolation**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Storybook installed and configured
+- [ ] Stories for all components: Button, Badge, Card, Table, Form components, Toast, Modal, Dropdown, Tooltip
+- [ ] Stories show all variants, sizes, and states
+- [ ] Interactive controls (Storybook Controls addon)
+- [ ] Accessibility testing with `@storybook/addon-a11y`
+- [ ] Deployed internally or locally runnable
+
+**Notes for Implementation:**
+- Use Storybook 7+ with Vite
+- Consider: Chromatic for visual regression testing
+
+---
+
+##### Workstream D: Accessibility Remediation (Stories E-008-26 through E-008-32)
+
+###### Story E-008-26
+
+> As a **screen reader user**, I want **proper ARIA roles, labels, and live regions**, so that **I can understand and operate the app with assistive technology**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] All interactive elements have ARIA labels or accessible names
+- [ ] Landmark roles: `<header>`, `<nav>`, `<main>`, `<aside>`, `<footer>`
+- [ ] Buttons without text have `aria-label` (e.g., icon-only buttons)
+- [ ] Form inputs have associated `<label>` elements or `aria-labelledby`
+- [ ] Dynamic content updates use ARIA live regions (`aria-live`, `aria-atomic`)
+- [ ] Complex widgets (modals, dropdowns, tabs) have correct ARIA attributes
+- [ ] Tested with screen reader (NVDA, JAWS, or VoiceOver)
+
+**Notes for Implementation:**
+- Audit all pages with axe DevTools
+- Use semantic HTML where possible (reduce need for ARIA)
+- Live regions: Use for toasts, loading states, error messages
+
+---
+
+###### Story E-008-27
+
+> As a **keyboard-only user**, I want **logical tab order and no keyboard traps**, so that **I can navigate the entire app efficiently**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Tab order follows visual order (top-to-bottom, left-to-right)
+- [ ] No keyboard traps (user can always escape with Tab, Shift+Tab, or Escape)
+- [ ] Skip link to main content at top of page
+- [ ] Focus visible on all interactive elements
+- [ ] Modals trap focus correctly (tab cycles within modal, Escape to close)
+- [ ] Dropdowns close on Escape
+- [ ] Tested by navigating entire app with keyboard only
+
+**Notes for Implementation:**
+- Use `tabindex="0"` for custom interactive elements
+- Never use `tabindex > 0` (causes unpredictable tab order)
+- Test: Unplug mouse and complete key workflows
+
+---
+
+###### Story E-008-28
+
+> As a **user with low vision**, I want **sufficient color contrast**, so that **I can read text and identify UI elements**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Text contrast meets WCAG 2.1 AA: 4.5:1 for normal text, 3:1 for large text (18px+ or 14px+ bold)
+- [ ] UI element contrast meets WCAG 2.1 AA: 3:1 for borders, icons, focus rings
+- [ ] Color is not the only indicator of state (use icons, labels, or patterns)
+- [ ] Tested with color contrast checker (WebAIM Contrast Checker or axe DevTools)
+- [ ] All color token combinations documented with contrast ratios
+
+**Notes for Implementation:**
+- Audit all text and UI elements for contrast
+- Adjust color tokens if necessary
+- Use high-contrast focus ring color
+
+---
+
+###### Story E-008-29
+
+> As a **user**, I want **accessible forms with clear error messages**, so that **I understand what went wrong and how to fix it**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] All form inputs have associated labels
+- [ ] Required fields indicated with asterisk and `aria-required="true"`
+- [ ] Error messages use `aria-invalid="true"` and `aria-describedby`
+- [ ] Error messages are specific (not just "Invalid input")
+- [ ] Error summary at top of form lists all errors
+- [ ] Focus moves to first error field on submit
+- [ ] Tested with screen reader
+
+**Notes for Implementation:**
+- Use form validation library with accessibility support (e.g., React Hook Form)
+- Error summary: Use ARIA live region
+
+---
+
+###### Story E-008-30
+
+> As a **mobile screen reader user**, I want **accessible mobile navigation**, so that **I can navigate the app on my phone with VoiceOver or TalkBack**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Hamburger menu button has accessible label ("Open menu" / "Close menu")
+- [ ] Mobile nav drawer has `role="navigation"` and `aria-label`
+- [ ] Nav items have accessible names
+- [ ] Opening/closing nav announces state change
+- [ ] Focus management: Focus moves to first nav item when opened, returns to trigger when closed
+- [ ] Tested with VoiceOver (iOS) and TalkBack (Android)
+
+**Notes for Implementation:**
+- Use `aria-expanded` on hamburger button
+- Focus trap in mobile nav drawer
+
+---
+
+###### Story E-008-31
+
+> As a **QA engineer**, I want **automated accessibility testing in CI**, so that **accessibility regressions are caught early**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Axe-core or pa11y integrated into CI pipeline
+- [ ] Tests run on all pages (or representative sample)
+- [ ] CI fails if critical accessibility issues detected
+- [ ] Test report generated and saved as artifact
+- [ ] Documentation for running tests locally
+
+**Notes for Implementation:**
+- Use `@axe-core/playwright` or `pa11y-ci`
+- Add to GitHub Actions workflow
+
+---
+
+###### Story E-008-32
+
+> As a **developer**, I want **accessibility documentation and checklist**, so that **I can build accessible features from the start**.
+
+**Status:** Proposed  
+**Priority:** Now  
+
+**Acceptance Criteria:**
+
+- [ ] Documentation in `/docs/frontend/accessibility.md`
+- [ ] Checklist for new features (ARIA, keyboard nav, contrast, screen reader testing)
+- [ ] Code examples for common patterns (accessible buttons, forms, modals)
+- [ ] Link to WCAG 2.1 guidelines and resources
+- [ ] Troubleshooting section for common issues
+
+**Notes for Implementation:**
+- Based on WCAG 2.1 Level AA
+- Include tools: axe DevTools, WAVE, Lighthouse
+
+---
+
+##### Workstream E: Micro-Interactions & Polish (Stories E-008-33 through E-008-38)
+
+###### Story E-008-33
+
+> As a **user**, I want **skeleton screens for loading states**, so that **the page feels responsive while data loads**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Skeleton component with animated gradient (pulse or shimmer)
+- [ ] Skeleton shapes: text lines, circles, rectangles
+- [ ] Applied to all async data loading (tables, cards, lists)
+- [ ] Uses design system tokens
+- [ ] Storybook story with examples
+
+**Notes for Implementation:**
+- CSS animation: `@keyframes` with `background-position` shift
+- Replace `LoadingSpinner` in some contexts
+
+---
+
+###### Story E-008-34
+
+> As a **user**, I want **success and error toasts with icons and animations**, so that **I receive clear feedback for my actions**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Toast variants: success (✓), warning (⚠), error (✗), info (i)
+- [ ] Slide-in animation from edge
+- [ ] Auto-dismiss after 5 seconds (configurable)
+- [ ] Progress bar showing time until dismiss
+- [ ] Toast stacks without overlapping
+- [ ] Uses design system tokens
+
+**Notes for Implementation:**
+- Build on Story E-008-21 (Toast component)
+- Animation: CSS `transform: translateX()`
+
+---
+
+###### Story E-008-35
+
+> As a **user**, I want **smooth hover and focus transitions on interactive elements**, so that **the app feels polished and responsive**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] All buttons, links, cards have hover state with transition
+- [ ] Transition duration: 150-200ms (fast but noticeable)
+- [ ] Transition properties: background-color, border-color, box-shadow, transform
+- [ ] Focus ring appears instantly (no transition)
+- [ ] Uses design system tokens
+- [ ] No janky or sluggish animations
+
+**Notes for Implementation:**
+- CSS: `transition: background-color 150ms ease, box-shadow 150ms ease;`
+- Avoid transitioning layout properties (width, height) for performance
+
+---
+
+###### Story E-008-36
+
+> As a **user**, I want **page transition animations**, so that **navigation feels smooth and intentional**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Fade-in or slide-in animation when navigating between pages
+- [ ] Duration: 200-300ms
+- [ ] Respects `prefers-reduced-motion` media query
+- [ ] No layout shift during animation
+- [ ] Tested across browsers
+
+**Notes for Implementation:**
+- Use React Router v6 transitions or Framer Motion
+- CSS: `@media (prefers-reduced-motion: reduce)` disables animations
+
+---
+
+###### Story E-008-37
+
+> As a **user**, I want **optimistic UI updates for async actions**, so that **the app feels instant and responsive**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Actions like voting, saving, deleting show immediate UI update
+- [ ] If action fails, revert UI and show error toast
+- [ ] Loading indicator (spinner or progress bar) for longer actions
+- [ ] Tested with slow network conditions (throttling)
+
+**Notes for Implementation:**
+- Use React state to update UI immediately, then confirm with API response
+- Example: Vote cast → option count increments → API call → success or revert
+
+---
+
+###### Story E-008-38
+
+> As a **designer**, I want **motion design guidelines**, so that **animations are consistent and purposeful**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Documentation in `/docs/frontend/motion-design.md`
+- [ ] Guidelines: when to animate, animation duration, easing curves
+- [ ] Easing tokens: `--ease-in`, `--ease-out`, `--ease-in-out`
+- [ ] Examples: button hover, modal open, toast slide, page transition
+- [ ] Accessibility: Respect `prefers-reduced-motion`
+
+**Notes for Implementation:**
+- Easing curves: Use CSS cubic-bezier or named values
+- Reference: Material Design motion guidelines
+
+---
+
+##### Workstream F: Responsive Design (Stories E-008-39 through E-008-45)
+
+###### Story E-008-39
+
+> As a **mobile user**, I want **mobile-optimized layouts with readable text**, so that **I don't need to zoom or scroll horizontally**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Mobile breakpoint: <768px (tablet: 768-1024px, desktop: >1024px)
+- [ ] Font sizes adjust for mobile (minimum 16px for body text to prevent zoom on iOS)
+- [ ] No horizontal overflow (width: 100%, max-width: 100%)
+- [ ] Images and videos scale to fit container
+- [ ] Tested on iPhone (375px, 390px, 428px) and Android (360px, 412px)
+
+**Notes for Implementation:**
+- Use `meta viewport` tag: `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+- CSS: Mobile-first approach (base styles for mobile, media queries for larger screens)
+
+---
+
+###### Story E-008-40
+
+> As a **mobile user**, I want **touch-friendly tap targets**, so that **I can easily tap buttons and links without mistakes**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] All interactive elements have minimum 44x44px tap target (WCAG 2.5.5 Level AAA)
+- [ ] Spacing between tap targets (8px minimum) to avoid mis-taps
+- [ ] Tested on real devices (not just browser emulation)
+- [ ] Applies to: buttons, links, nav items, form controls
+
+**Notes for Implementation:**
+- Use padding to increase tap target without changing visual size
+- CSS: `min-height: 44px; min-width: 44px;`
+
+---
+
+###### Story E-008-41
+
+> As a **mobile user**, I want **responsive tables that don't overflow**, so that **I can view data on small screens**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Tables use horizontal scroll on mobile (with scroll indicator)
+- [ ] OR: Tables transform to card layout on mobile (stacked, one card per row)
+- [ ] Sticky header (optional, for long tables)
+- [ ] Tested on mobile devices
+
+**Notes for Implementation:**
+- Horizontal scroll: `overflow-x: auto; -webkit-overflow-scrolling: touch;`
+- Card layout: Hide `<table>` on mobile, render as divs or cards
+- Consider: `react-table` responsive plugin
+
+---
+
+###### Story E-008-42
+
+> As a **tablet user**, I want **optimized layouts for tablet breakpoints**, so that **the app uses screen space efficiently on my iPad**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Tablet breakpoint: 768-1024px
+- [ ] Layouts adapt: sidebar collapses or remains, grid columns adjust
+- [ ] Tap targets remain 44x44px minimum
+- [ ] Tested on iPad (1024x768 landscape, 768x1024 portrait) and Android tablets
+
+**Notes for Implementation:**
+- CSS: `@media (min-width: 768px) and (max-width: 1024px) { ... }`
+- Consider: Hybrid navigation (sidebar on landscape, hamburger on portrait)
+
+---
+
+###### Story E-008-43
+
+> As a **developer**, I want **responsive design breakpoints and utilities**, so that **I can build responsive layouts consistently**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Breakpoint tokens defined: `--bp-sm`, `--bp-md`, `--bp-lg`, `--bp-xl`
+- [ ] Utility classes or mixins for responsive visibility (e.g., `hide-on-mobile`)
+- [ ] Grid system or flex utilities for responsive layouts
+- [ ] Documentation with examples
+- [ ] All pages updated to use responsive utilities
+
+**Notes for Implementation:**
+- Example: `--bp-md: 768px`, `--bp-lg: 1024px`
+- Consider: Use Tailwind CSS or custom utility classes
+
+---
+
+###### Story E-008-44
+
+> As a **QA engineer**, I want **responsive design testing checklist**, so that **I can verify layouts across breakpoints**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Checklist in `/docs/frontend/responsive-testing.md`
+- [ ] Device list: iPhone SE, iPhone 14 Pro, iPad, Android phones/tablets, desktop (1920x1080)
+- [ ] Test scenarios: navigation, forms, tables, modals, images
+- [ ] Tools: Browser DevTools, BrowserStack, or device lab
+
+**Notes for Implementation:**
+- Include: Portrait and landscape orientations
+- Test: Real devices > browser emulation (emulation misses touch issues)
+
+---
+
+###### Story E-008-45
+
+> As a **user**, I want **responsive images and media**, so that **pages load quickly and look sharp on my device**.
+
+**Status:** Proposed  
+**Priority:** Later  
+
+**Acceptance Criteria:**
+
+- [ ] Images use `srcset` and `sizes` attributes for responsive loading
+- [ ] Images use modern formats (WebP) with fallbacks
+- [ ] Lazy loading for images below the fold
+- [ ] Videos have playback controls and are mobile-friendly
+- [ ] Tested across devices and network conditions
+
+**Notes for Implementation:**
+- Use `<picture>` element for art direction
+- Lazy loading: `loading="lazy"` attribute or Intersection Observer
+- Consider: Image optimization service (Cloudflare Images, Imgix)
+
+---
+
+#### Additional Grooming Notes
+
+**Prioritization Guidance:**
+
+1. **Now (Sprint 1-2)**: Navigation redesign, design system foundation, accessibility remediation
+2. **Next (Sprint 3-4)**: Component library refresh, micro-interactions, responsive design
+3. **Later (Sprint 5+)**: Advanced animations, dark mode implementation, performance optimization
+
+**Sprint Planning Suggestions:**
+
+- **Sprint 1**: Stories E-008-01 to E-008-05 (Navigation core), E-008-09 to E-008-12 (Design tokens)
+- **Sprint 2**: Stories E-008-06 to E-008-08 (Navigation polish), E-008-26 to E-008-29 (Accessibility core)
+- **Sprint 3**: Stories E-008-16 to E-008-20 (Core components), E-008-30 to E-008-32 (Accessibility polish)
+- **Sprint 4**: Stories E-008-21 to E-008-25 (Advanced components, Storybook)
+- **Sprint 5**: Stories E-008-33 to E-008-38 (Micro-interactions), E-008-39 to E-008-43 (Responsive)
+
+**Dependencies Chart:**
+
+```
+E-008-09 to E-008-13 (Design Tokens)
+    └── E-008-16 to E-008-25 (Components use tokens)
+        └── E-008-01 to E-008-08 (Navigation uses components)
+
+E-008-26 to E-008-29 (Accessibility foundation)
+    └── E-008-30 to E-008-32 (Accessibility testing and docs)
+
+E-008-39 to E-008-43 (Responsive foundation)
+    └── E-008-44 to E-008-45 (Responsive testing and media)
+```
+
+**Risk Register:**
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Design direction requires multiple iterations | High | Medium | Early mockups and stakeholder feedback loops |
+| Accessibility gaps discovered late | High | Low | Automated testing in CI from Sprint 1 |
+| Component library adoption lag | Medium | Medium | Comprehensive documentation and examples |
+| Performance regression from animations | Medium | Low | Performance budget monitoring; CSS-only animations where possible |
+| Responsive design issues on real devices | High | Medium | Device testing lab; BrowserStack integration |
+| Breaking E2E tests during refactor | High | High | Incremental updates; maintain data-testid attributes; CI checks |
+
+**Success Metrics (How to Measure Success):**
+
+- **Navigation Discoverability**: User testing task completion rate increases by 40%
+- **Support Ticket Reduction**: "Can't find X" tickets decrease by 60% post-launch
+- **Accessibility Compliance**: 0 critical axe-core violations; manual audit passes WCAG 2.1 AA
+- **Performance**: LCP <2s, CLS <0.1, FID <100ms maintained or improved
+- **User Satisfaction**: Post-deployment NPS score increases by 15+ points
+- **Developer Velocity**: Component reuse increases; new feature development time decreases
 
 ---
 
