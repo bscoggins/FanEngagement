@@ -8,6 +8,13 @@ import { vi } from 'vitest';
 vi.mock('../api/authApi', () => ({
   authApi: {
     login: vi.fn(),
+      validateMfa: vi.fn(),
+  },
+  mfaApi: {
+    setup: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
+    getStatus: vi.fn(),
   },
 }));
 
@@ -37,6 +44,7 @@ describe('AuthContext', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -62,6 +70,7 @@ describe('AuthContext', () => {
       email: 'user@example.com',
       displayName: 'Regular User',
       role: 'User' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -87,6 +96,7 @@ describe('AuthContext', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -116,6 +126,7 @@ describe('AuthContext', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);

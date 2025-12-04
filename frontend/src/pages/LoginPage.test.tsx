@@ -12,6 +12,7 @@ import { membershipsApi } from '../api/membershipsApi';
 vi.mock('../api/authApi', () => ({
   authApi: {
     login: vi.fn(),
+      validateMfa: vi.fn(),
   },
 }));
 
@@ -69,6 +70,7 @@ describe('LoginPage', () => {
       email: 'test@example.com',
       displayName: 'Test User',
       role: 'User' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -101,6 +103,7 @@ describe('LoginPage', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin' as const,
+      mfaRequired: false,
     };
 
     vi.mocked(authApi.login).mockResolvedValueOnce(mockResponse);
@@ -128,6 +131,7 @@ describe('LoginPage', () => {
       email: 'orgadmin@example.com',
       displayName: 'OrgAdmin User',
       role: 'User' as const,
+      mfaRequired: false,
     };
 
     const mockMemberships = [
@@ -216,6 +220,7 @@ describe('LoginPage', () => {
       email: 'test@example.com',
       displayName: 'Test User',
       role: 'User',
+      mfaRequired: false,
     }));
     vi.mocked(membershipsApi.getByUserId).mockResolvedValueOnce([]);
 
@@ -236,6 +241,7 @@ describe('LoginPage', () => {
       email: 'admin@example.com',
       displayName: 'Admin User',
       role: 'Admin',
+      mfaRequired: false,
     }));
 
     renderLoginPage();
@@ -254,6 +260,7 @@ describe('LoginPage', () => {
         email: 'test@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+      mfaRequired: false,
       }), 100));
     });
 

@@ -21,6 +21,7 @@ describe('OrgAdminRoute', () => {
       isAuthenticated: false,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -53,11 +54,12 @@ describe('OrgAdminRoute', () => {
 
   it('should show loading when permissions are loading', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -89,11 +91,12 @@ describe('OrgAdminRoute', () => {
 
   it('should render children for GlobalAdmin', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token' },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -124,11 +127,12 @@ describe('OrgAdminRoute', () => {
 
   it('should render children for OrgAdmin of the specific organization', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -159,11 +163,12 @@ describe('OrgAdminRoute', () => {
 
   it('should redirect to home for non-OrgAdmin users', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
@@ -196,11 +201,12 @@ describe('OrgAdminRoute', () => {
 
   it('should redirect to home when orgId is missing from route', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token' },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
+      validateMfa: vi.fn(),
       logout: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({

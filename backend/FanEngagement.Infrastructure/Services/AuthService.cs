@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using System.Text;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
+using FanEngagement.Application.Encryption;
+using FanEngagement.Application.Mfa;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +19,9 @@ public class AuthService(
     FanEngagementDbContext dbContext,
     IConfiguration configuration,
     ILogger<AuthService> logger,
-    IAuditService auditService) : IAuthService
+    IAuditService auditService,
+    IMfaService mfaService,
+    IEncryptionService encryptionService) : IAuthService
 {
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, AuthenticationAuditContext? auditContext = null, CancellationToken cancellationToken = default)
@@ -40,6 +44,22 @@ public class AuthService(
             return null;
         }
 
+        // Check if MFA is enabled
+        if (user.MfaEnabled)
+        {
+            // Return a response indicating MFA is required
+            // Don't generate a full token yet - use a temporary marker
+            return new LoginResponse
+            {
+                Token = string.Empty, // No token until MFA is validated
+                UserId = user.Id,
+                Email = user.Email,
+                DisplayName = user.DisplayName,
+                Role = user.Role.ToString(),
+                MfaRequired = true
+            };
+        }
+
         var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString());
 
         // Audit successful login
@@ -51,7 +71,71 @@ public class AuthService(
             UserId = user.Id,
             Email = user.Email,
             DisplayName = user.DisplayName,
-            Role = user.Role.ToString()
+            Role = user.Role.ToString(),
+            MfaRequired = false
+        };
+    }
+
+    public async Task<LoginResponse?> ValidateMfaAsync(Guid userId, string code, AuthenticationAuditContext? auditContext = null, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        if (user == null || !user.MfaEnabled || string.IsNullOrWhiteSpace(user.MfaSecret))
+        {
+            await LogFailedMfaAsync(userId, "Invalid MFA configuration", auditContext, cancellationToken);
+            return null;
+        }
+
+        // Decrypt the MFA secret before validation
+        string decryptedSecret;
+        try
+        {
+            decryptedSecret = encryptionService.Decrypt(user.MfaSecret);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to decrypt MFA secret for user {UserId}", userId);
+            await LogFailedMfaAsync(userId, "MFA decryption failed", auditContext, cancellationToken);
+            return null;
+        }
+
+        // Try to validate as TOTP code first
+        bool isValid = mfaService.ValidateTotp(decryptedSecret, code);
+
+        // If TOTP validation fails, try backup codes
+        if (!isValid && !string.IsNullOrWhiteSpace(user.MfaBackupCodesHash))
+        {
+            isValid = mfaService.ValidateBackupCode(user.MfaBackupCodesHash, code);
+            
+            if (isValid)
+            {
+                // Remove the used backup code
+                await RemoveUsedBackupCodeAsync(userId, code, cancellationToken);
+            }
+        }
+
+        if (!isValid)
+        {
+            await LogFailedMfaAsync(userId, "Invalid MFA code", auditContext, cancellationToken);
+            return null;
+        }
+
+        // Generate full JWT token after successful MFA
+        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString());
+
+        // Audit successful MFA login
+        await LogSuccessfulLoginAsync(user, auditContext, cancellationToken);
+
+        return new LoginResponse
+        {
+            Token = token,
+            UserId = user.Id,
+            Email = user.Email,
+            DisplayName = user.DisplayName,
+            Role = user.Role.ToString(),
+            MfaRequired = false
         };
     }
 
@@ -221,5 +305,73 @@ public class AuthService(
             // Log but don't propagate audit failures
             logger.LogError(ex, "Failed to log failed login audit event for email {Email}", attemptedEmail);
         }
+    }
+
+    /// <summary>
+    /// Logs a failed MFA validation audit event.
+    /// </summary>
+    private async Task LogFailedMfaAsync(
+        Guid userId,
+        string reason,
+        AuthenticationAuditContext? auditContext,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var builder = new AuditEventBuilder()
+                .WithAction(AuditActionType.Authenticated)
+                .WithResource(AuditResourceType.User, userId, "MFA")
+                .AsFailure(reason);
+
+            if (auditContext?.IpAddress != null)
+                builder.WithIpAddress(auditContext.IpAddress);
+
+            if (auditContext?.UserAgent != null)
+            {
+                builder.WithDetails(new { UserAgent = auditContext.UserAgent });
+            }
+
+            await auditService.LogAsync(builder, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to log failed MFA audit event for user {UserId}", userId);
+        }
+    }
+
+    /// <summary>
+    /// Removes a used backup code from the user's stored backup codes.
+    /// </summary>
+    private async Task RemoveUsedBackupCodeAsync(Guid userId, string usedCode, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            if (user == null || string.IsNullOrWhiteSpace(user.MfaBackupCodesHash))
+            {
+                return;
+            }
+
+            var hashedCodes = user.MfaBackupCodesHash.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var usedCodeHash = HashBackupCode(usedCode);
+            
+            hashedCodes.Remove(usedCodeHash);
+            user.MfaBackupCodesHash = string.Join(",", hashedCodes);
+            
+            await dbContext.SaveChangesAsync(cancellationToken);
+            
+            logger.LogInformation("Backup code used and removed for user {UserId}. Remaining codes: {Count}", userId, hashedCodes.Count);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to remove used backup code for user {UserId}", userId);
+        }
+    }
+
+    private static string HashBackupCode(string code)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(code.Replace(" ", "").Replace("-", "").Trim());
+        var hash = System.Security.Cryptography.SHA256.HashData(bytes);
+        return Convert.ToBase64String(hash);
     }
 }

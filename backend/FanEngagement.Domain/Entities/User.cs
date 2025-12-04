@@ -11,6 +11,11 @@ public class User
     public UserRole Role { get; set; } = UserRole.User;
     public DateTimeOffset CreatedAt { get; set; }
 
+    // MFA Properties
+    public bool MfaEnabled { get; set; }
+    public string? MfaSecret { get; set; }
+    public string? MfaBackupCodesHash { get; set; }
+
     public ICollection<OrganizationMembership> Memberships { get; set; } = new List<OrganizationMembership>();
     public ICollection<ShareIssuance> ShareIssuances { get; set; } = new List<ShareIssuance>();
     public ICollection<ShareBalance> ShareBalances { get; set; } = new List<ShareBalance>();

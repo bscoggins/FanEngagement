@@ -36,6 +36,7 @@ describe('AdminOrganizationProposalsPage', () => {
           email: 'admin@test.com',
           displayName: 'Admin User',
           role: 'Admin',
+      mfaRequired: false,
           token: 'test-token'
         });
       }

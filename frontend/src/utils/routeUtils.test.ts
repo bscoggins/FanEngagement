@@ -9,6 +9,7 @@ describe('routeUtils', () => {
     email: 'test@example.com',
     displayName: 'Test User',
     role,
+    mfaRequired: false,
   });
 
   const createMembership = (role: 'OrgAdmin' | 'Member'): MembershipWithOrganizationDto => ({

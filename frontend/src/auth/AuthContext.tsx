@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { LoginRequest, LoginResponse } from '../types/api';
+import type { LoginRequest, LoginResponse, MfaValidateRequest } from '../types/api';
 import { authApi } from '../api/authApi';
 
 interface AuthContextType {
   user: LoginResponse | null;
   token: string | null;
-  login: (request: LoginRequest) => Promise<void>;
+  login: (request: LoginRequest) => Promise<LoginResponse>;
+  validateMfa: (request: MfaValidateRequest) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -41,13 +42,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return loadAuthFromStorage();
   });
 
-  const login = useCallback(async (request: LoginRequest) => {
+  const login = useCallback(async (request: LoginRequest): Promise<LoginResponse> => {
     const response = await authApi.login(request);
     
-    // Store token and user in state
-    setAuthState({ token: response.token, user: response });
+    // If MFA is not required, store auth data
+    if (!response.mfaRequired) {
+      setAuthState({ token: response.token, user: response });
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('authUser', JSON.stringify(response));
+    }
     
-    // Persist to localStorage
+    return response;
+  }, []);
+
+  const validateMfa = useCallback(async (request: MfaValidateRequest) => {
+    const response = await authApi.validateMfa(request);
+    
+    // Store token and user after successful MFA validation
+    setAuthState({ token: response.token, user: response });
     localStorage.setItem('authToken', response.token);
     localStorage.setItem('authUser', JSON.stringify(response));
   }, []);
@@ -62,6 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user: authState.user,
     token: authState.token,
     login,
+    validateMfa,
     logout,
     isAuthenticated: !!authState.token,
     isAdmin: authState.user?.role === 'Admin',

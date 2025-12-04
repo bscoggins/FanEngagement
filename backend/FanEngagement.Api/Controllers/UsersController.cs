@@ -1,18 +1,32 @@
+using FanEngagement.Application.Audit;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Encryption;
 using FanEngagement.Application.Memberships;
+using FanEngagement.Application.Mfa;
 using FanEngagement.Application.Users;
 using FanEngagement.Application.Validators;
 using FanEngagement.Api.Helpers;
+using FanEngagement.Domain.Enums;
+using FanEngagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Api.Controllers;
 
 [ApiController]
 [Route("users")]
 [Authorize]
-public class UsersController(IUserService userService, IMembershipService membershipService) : ControllerBase
+public class UsersController(
+    IUserService userService, 
+    IMembershipService membershipService,
+    IMfaService mfaService,
+    IEncryptionService encryptionService,
+    IAuditService auditService,
+    ILogger<UsersController> logger,
+    FanEngagementDbContext dbContext) : ControllerBase
 {
     [HttpPost]
     [AllowAnonymous]
@@ -137,5 +151,192 @@ public class UsersController(IUserService userService, IMembershipService member
             Message = "This endpoint is only accessible to administrators"
         };
         return Ok(stats);
+    }
+
+    [HttpPost("me/mfa/setup")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<MfaSetupResult>> SetupMfa(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        // Generate MFA setup
+        var setupResult = mfaService.GenerateSetup(userId, user.Email);
+
+        // Audit MFA setup initiation
+        try
+        {
+            var auditEvent = new AuditEventBuilder()
+                .WithActor(userId, user.DisplayName)
+                .WithAction(AuditActionType.Updated)
+                .WithResource(AuditResourceType.User, userId, user.Email)
+                .WithDetails(new { Action = "MFA_SETUP_INITIATED" })
+                .AsSuccess()
+                .Build();
+            
+            await auditService.LogAsync(auditEvent, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation
+            logger.LogWarning(ex, "Failed to log MFA setup audit");
+        }
+
+        return Ok(setupResult);
+    }
+
+    [HttpPost("me/mfa/enable")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> EnableMfa([FromBody] MfaEnableRequest request, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        // Validate the TOTP code before enabling
+        if (!mfaService.ValidateTotp(request.SecretKey, request.TotpCode))
+        {
+            return BadRequest(new { message = "Invalid TOTP code. Please verify the code from your authenticator app." });
+        }
+
+        // Generate and hash backup codes
+        var backupCodes = mfaService.GenerateBackupCodes();
+        var hashedBackupCodes = mfaService.HashBackupCodes(backupCodes);
+
+        // Encrypt the MFA secret before storing
+        var encryptedSecret = encryptionService.Encrypt(request.SecretKey);
+
+        // Enable MFA for the user
+        user.MfaEnabled = true;
+        user.MfaSecret = encryptedSecret;
+        user.MfaBackupCodesHash = hashedBackupCodes;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit MFA enable
+        try
+        {
+            var auditEvent = new AuditEventBuilder()
+                .WithActor(userId, user.DisplayName)
+                .WithAction(AuditActionType.Updated)
+                .WithResource(AuditResourceType.User, userId, user.Email)
+                .WithDetails(new { Action = "MFA_ENABLED" })
+                .AsSuccess()
+                .Build();
+            
+            await auditService.LogAsync(auditEvent, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation
+            logger.LogWarning(ex, "Failed to log MFA enable audit");
+        }
+
+        return Ok(new { message = "MFA enabled successfully", backupCodes });
+    }
+
+    [HttpPost("me/mfa/disable")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> DisableMfa([FromBody] MfaDisableRequest request, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (!user.MfaEnabled || string.IsNullOrWhiteSpace(user.MfaSecret))
+        {
+            return BadRequest(new { message = "MFA is not enabled for this account." });
+        }
+
+        // Decrypt the MFA secret before validation
+        var decryptedSecret = encryptionService.Decrypt(user.MfaSecret);
+        
+        // Validate either TOTP or backup code
+        bool isValid = mfaService.ValidateTotp(decryptedSecret, request.Code);
+        
+        if (!isValid && !string.IsNullOrWhiteSpace(user.MfaBackupCodesHash))
+        {
+            isValid = mfaService.ValidateBackupCode(user.MfaBackupCodesHash, request.Code);
+        }
+
+        if (!isValid)
+        {
+            return BadRequest(new { message = "Invalid code. Please provide a valid TOTP code or backup code." });
+        }
+
+        // Disable MFA
+        user.MfaEnabled = false;
+        user.MfaSecret = null;
+        user.MfaBackupCodesHash = null;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit MFA disable
+        try
+        {
+            var auditEvent = new AuditEventBuilder()
+                .WithActor(userId, user.DisplayName)
+                .WithAction(AuditActionType.Updated)
+                .WithResource(AuditResourceType.User, userId, user.Email)
+                .WithDetails(new { Action = "MFA_DISABLED" })
+                .AsSuccess()
+                .Build();
+            
+            await auditService.LogAsync(auditEvent, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation
+            logger.LogWarning(ex, "Failed to log MFA disable audit");
+        }
+
+        return Ok(new { message = "MFA disabled successfully" });
+    }
+
+    [HttpGet("me/mfa/status")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> GetMfaStatus(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var user = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new { mfaEnabled = user.MfaEnabled });
     }
 }

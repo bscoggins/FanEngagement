@@ -4,6 +4,7 @@ using FanEngagement.Application.Authentication;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Application.Encryption;
 using FanEngagement.Application.Memberships;
+using FanEngagement.Application.Mfa;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
+        services.AddScoped<IMfaService, TotpMfaService>();
 
         // Configure audit services
         services.Configure<AuditOptions>(
