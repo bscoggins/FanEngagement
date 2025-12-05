@@ -1,5 +1,6 @@
 using FanEngagement.Application.Organizations;
 using FluentValidation;
+using System.Text.Json;
 
 namespace FanEngagement.Application.Validators;
 
@@ -28,5 +29,28 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
         RuleFor(x => x.SecondaryColor)
             .MaximumLength(50).WithMessage("Secondary color must not exceed 50 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.SecondaryColor));
+
+        RuleFor(x => x.BlockchainConfig)
+            .Must(BeValidJson).WithMessage("Blockchain config must be valid JSON.")
+            .MaximumLength(5000).WithMessage("Blockchain config must not exceed 5000 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.BlockchainConfig));
+    }
+
+    private bool BeValidJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return true;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 }

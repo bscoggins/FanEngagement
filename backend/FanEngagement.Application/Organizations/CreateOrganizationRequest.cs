@@ -1,3 +1,5 @@
+using FanEngagement.Domain.Enums;
+
 namespace FanEngagement.Application.Organizations;
 
 public class CreateOrganizationRequest
@@ -7,4 +9,6 @@ public class CreateOrganizationRequest
     public string? LogoUrl { get; set; }
     public string? PrimaryColor { get; set; }
     public string? SecondaryColor { get; set; }
+    public BlockchainType? BlockchainType { get; set; }
+    public string? BlockchainConfig { get; set; }
 }

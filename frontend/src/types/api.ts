@@ -36,6 +36,9 @@ export interface MfaStatusResponse {
   mfaEnabled: boolean;
 }
 
+// Blockchain types
+export type BlockchainType = 'None' | 'Solana' | 'Polygon';
+
 // Pagination types
 export interface PagedResult<T> {
   items: T[];
@@ -85,6 +88,8 @@ export interface Organization {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  blockchainType?: BlockchainType;
+  blockchainConfig?: string;
 }
 
 export interface CreateOrganizationRequest {
@@ -93,6 +98,8 @@ export interface CreateOrganizationRequest {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  blockchainType?: BlockchainType;
+  blockchainConfig?: string;
 }
 
 export interface UpdateOrganizationRequest {
@@ -101,6 +108,8 @@ export interface UpdateOrganizationRequest {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  blockchainType?: BlockchainType;
+  blockchainConfig?: string;
 }
 
 export interface Membership {

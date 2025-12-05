@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using FanEngagement.Domain.Enums;
 
 namespace FanEngagement.Application.Organizations;
 
@@ -12,4 +13,6 @@ public class UpdateOrganizationRequest
     public string? LogoUrl { get; set; }
     public string? PrimaryColor { get; set; }
     public string? SecondaryColor { get; set; }
+    public BlockchainType? BlockchainType { get; set; }
+    public string? BlockchainConfig { get; set; }
 }

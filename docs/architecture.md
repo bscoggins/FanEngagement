@@ -2335,6 +2335,46 @@ The blockchain adapter platform uses a **modular, containerized architecture** t
 | **Adapter Containers** | Isolated Docker containers implementing blockchain operations (Solana, Polygon, etc.) |
 | **Null Adapter** | No-op implementation for organizations without blockchain integration |
 
+### Configuration and Selection
+
+Organizations configure their blockchain platform during creation or through organization settings:
+
+**Backend API:**
+- `POST /organizations` accepts optional `blockchainType` and `blockchainConfig` fields
+- `PUT /organizations/{id}` allows blockchain configuration updates with validation
+- Blockchain type cannot be changed after share types or proposals exist (immutability constraint)
+
+**Frontend UI:**
+- Organization settings page includes blockchain platform dropdown (None, Solana, Polygon)
+- Selection is disabled when shares or proposals have been created
+- Help text explains the immutability constraint
+
+**Database Schema:**
+```sql
+-- Organizations table includes blockchain configuration
+ALTER TABLE "Organizations"
+ADD COLUMN "BlockchainType" VARCHAR(50) DEFAULT 'None' NOT NULL,
+ADD COLUMN "BlockchainConfig" JSONB;
+
+-- Example BlockchainConfig JSON:
+{
+  "adapterUrl": "http://solana-adapter:3001",
+  "network": "devnet",
+  "apiKey": "secret-api-key"
+}
+```
+
+> **Security Note:**  
+> The `apiKey` field in the example above is for illustrative purposes only. In production environments, sensitive credentials should **never** be stored in plain text in the database. Use encryption at rest, secure vault services (e.g., Azure Key Vault, AWS Secrets Manager), or environment-based configuration to manage secrets. Ensure your application follows secure credential management best practices.
+
+**Adapter Factory Routing:**
+The `BlockchainAdapterFactory` loads the organization's `BlockchainType` and routes operations:
+- `BlockchainType.None` → `NullBlockchainAdapter` (no-op)
+- `BlockchainType.Solana` → `SolanaAdapterClient` (HTTP client to Solana adapter)
+- `BlockchainType.Polygon` → `PolygonAdapterClient` (HTTP client to Polygon adapter)
+
+HTTP clients are configured with base URLs from `appsettings.json` or organization-specific `BlockchainConfig`.
+
 ### Supported Blockchains
 
 1. **Solana** - High throughput, low-cost transactions, SPL token standard for shares
