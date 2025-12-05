@@ -24,7 +24,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     public async Task CreateOrganization_WithBlockchainType_CreatesOrgWithBlockchainConfig()
     {
         // Arrange
-        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var request = new CreateOrganizationRequest
@@ -56,7 +56,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     public async Task CreateOrganization_WithoutBlockchainType_DefaultsToNone()
     {
         // Arrange
-        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var request = new CreateOrganizationRequest
@@ -80,7 +80,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     public async Task UpdateOrganization_ChangeBlockchainType_Succeeds()
     {
         // Arrange
-        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         // Create organization without blockchain
@@ -115,7 +115,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     public async Task UpdateOrganization_ChangeBlockchainTypeWithExistingShares_ReturnsBadRequest()
     {
         // Arrange
-        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         // Create organization
@@ -157,7 +157,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     public async Task GetOrganization_ReturnsBlockchainConfiguration()
     {
         // Arrange
-        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
         _client.AddAuthorizationHeader(adminToken);
 
         var createRequest = new CreateOrganizationRequest

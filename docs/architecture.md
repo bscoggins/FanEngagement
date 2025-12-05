@@ -2364,6 +2364,9 @@ ADD COLUMN "BlockchainConfig" JSONB;
 }
 ```
 
+> **Security Note:**  
+> The `apiKey` field in the example above is for illustrative purposes only. In production environments, sensitive credentials should **never** be stored in plain text in the database. Use encryption at rest, secure vault services (e.g., Azure Key Vault, AWS Secrets Manager), or environment-based configuration to manage secrets. Ensure your application follows secure credential management best practices.
+
 **Adapter Factory Routing:**
 The `BlockchainAdapterFactory` loads the organization's `BlockchainType` and routes operations:
 - `BlockchainType.None` → `NullBlockchainAdapter` (no-op)

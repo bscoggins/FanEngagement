@@ -56,9 +56,9 @@ export const AdminOrganizationEditPage: React.FC = () => {
           ]);
           setHasExistingData(shareTypes.length > 0 || proposals.length > 0);
         } catch (error) {
-          // If we can't check, assume no existing data to allow editing
-          console.warn('Could not check for existing data:', error);
-          setHasExistingData(false);
+          // Fail-safe: if we can't check, assume existing data to prevent invalid changes
+          console.warn('Could not check for existing data, assuming data exists for safety:', error);
+          setHasExistingData(true);
         }
       } catch (err) {
         console.error('Failed to fetch organization:', err);
