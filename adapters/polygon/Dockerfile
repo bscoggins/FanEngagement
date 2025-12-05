@@ -39,7 +39,7 @@ RUN npm install --omit=dev
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create directory for secrets
+# Create directory for secrets with proper ownership
 RUN mkdir -p /secrets && chown node:node /secrets
 
 # Set environment variables
