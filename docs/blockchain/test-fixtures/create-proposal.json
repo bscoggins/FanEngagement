@@ -4,16 +4,16 @@
     "organizationId": "12345678-1234-1234-1234-123456789012",
     "title": "Adopt New Club Crest Design",
     "contentHash": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-    "startAt": "2024-12-10T00:00:00.000Z",
-    "endAt": "2024-12-17T23:59:59.999Z",
+    "startAt": "2025-01-10T00:00:00.000Z",
+    "endAt": "2025-01-17T23:59:59.999Z",
     "eligibleVotingPower": 85000
   },
   "expectedResponse": {
     "transactionId": "4xK9mP2nQ5rT8vW1yZ3aB6cD9eF2gH5jL8nM4pQ7rT",
     "proposalAddress": "FanGov1111111111111111111111111111111111111",
     "status": "confirmed",
-    "timestamp": "2024-12-05T19:05:00.000Z",
+    "timestamp": "2025-01-05T19:05:00.000Z",
     "explorerUrl": "https://explorer.solana.com/tx/4xK9mP2nQ5rT8vW1yZ3aB6cD9eF2gH5jL8nM4pQ7rT?cluster=devnet"
   },
-  "notes": "Proposal creation includes SHA-256 content hash for tamper-proof record. EligibleVotingPower represents total voting power at snapshot time."
+  "notes": "Proposal creation includes SHA-256 content hash for tamper-proof record. EligibleVotingPower represents total voting power at snapshot time. Dates are placeholder examples - adjust for actual tests."
 }

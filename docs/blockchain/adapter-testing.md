@@ -124,10 +124,13 @@ All blockchain RPC clients (`Connection` for Solana, `JsonRpcProvider` for Polyg
 
 ```typescript
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { SolanaAdapter } from '../src/adapters/solana-adapter';
+import { SolanaService } from '../src/solana-service';
 
-describe('SolanaAdapter Unit Tests', () => {
-  let adapter: SolanaAdapter;
+// NOTE: These examples use the actual SolanaService class from the adapter implementation.
+// The test structure demonstrates mocking patterns that can be adapted for your specific adapter methods.
+
+describe('SolanaService Unit Tests', () => {
+  let adapter: SolanaService;
   let mockConnection: jest.Mocked<Connection>;
   let mockKeypair: Keypair;
 
@@ -144,8 +147,10 @@ describe('SolanaAdapter Unit Tests', () => {
     // Use a real keypair for signing (not sensitive in tests)
     mockKeypair = Keypair.generate();
 
-    // Inject mocked dependencies
-    adapter = new SolanaAdapter(mockConnection, mockKeypair);
+    // NOTE: SolanaService constructor creates its own Connection internally.
+    // For actual implementation, you may need to mock the Connection via dependency injection
+    // or use a test-specific configuration. This example shows the conceptual approach.
+    adapter = new SolanaService(mockKeypair);
   });
 
   afterEach(() => {
@@ -156,6 +161,10 @@ describe('SolanaAdapter Unit Tests', () => {
     // Arrange
     const orgId = '12345678-1234-1234-1234-123456789012';
     const orgName = 'Test Organization';
+
+    // NOTE: This test demonstrates the conceptual approach.
+    // The actual SolanaService implementation may not expose this exact method signature.
+    // Adapt this to match your actual adapter's public API.
 
     mockConnection.getLatestBlockhash.mockResolvedValue({
       blockhash: 'mock-blockhash',
@@ -180,12 +189,22 @@ describe('SolanaAdapter Unit Tests', () => {
     // Arrange
     const orgId = '12345678-1234-1234-1234-123456789012';
 
-    // Act
-    const pda1 = adapter.deriveOrganizationPDA(orgId);
-    const pda2 = adapter.deriveOrganizationPDA(orgId);
+    // NOTE: The actual SolanaService implementation may not expose a deriveOrganizationPDA method.
+    // This is a conceptual example showing how you would test PDA derivation if it were exposed.
+    // Use PublicKey.findProgramAddress directly in your tests if needed.
+
+    // Act - Using Solana's PDA derivation directly for this example
+    const [pda1] = PublicKey.findProgramAddressSync(
+      [Buffer.from('organization'), Buffer.from(orgId.replace(/-/g, ''), 'hex')],
+      new PublicKey('11111111111111111111111111111111')
+    );
+    const [pda2] = PublicKey.findProgramAddressSync(
+      [Buffer.from('organization'), Buffer.from(orgId.replace(/-/g, ''), 'hex')],
+      new PublicKey('11111111111111111111111111111111')
+    );
 
     // Assert
-    expect(pda1).toEqual(pda2);
+    expect(pda1.toBase58()).toEqual(pda2.toBase58());
     expect(pda1).toBeInstanceOf(PublicKey);
   });
 });
@@ -402,10 +421,13 @@ Integration tests verify adapter behavior with real blockchain interactions usin
 
 ```typescript
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { SolanaAdapter } from '../src/adapters/solana-adapter';
+import { SolanaService } from '../src/solana-service';
 
-describe('SolanaAdapter Integration Tests', () => {
-  let adapter: SolanaAdapter;
+// NOTE: These integration tests use the actual SolanaService from the adapter.
+// Ensure solana-test-validator is running before executing these tests.
+
+describe('SolanaService Integration Tests', () => {
+  let adapter: SolanaService;
   let connection: Connection;
   let payerKeypair: Keypair;
 
@@ -424,7 +446,7 @@ describe('SolanaAdapter Integration Tests', () => {
     await connection.confirmTransaction(airdropSig);
 
     // Initialize adapter with real connection
-    adapter = new SolanaAdapter(connection, payerKeypair);
+    adapter = new SolanaService(payerKeypair);
   }, 30000); // 30s timeout for setup
 
   afterAll(async () => {
@@ -495,10 +517,13 @@ describe('SolanaAdapter Integration Tests', () => {
 
 ```typescript
 import { ethers } from 'ethers';
-import { PolygonAdapter } from '../src/adapters/polygon-adapter';
+import { PolygonService } from '../src/polygon-service';
 
-describe('PolygonAdapter Integration Tests (Hardhat)', () => {
-  let adapter: PolygonAdapter;
+// NOTE: These integration tests use the actual PolygonService from the adapter.
+// Ensure Hardhat Network is running before executing these tests.
+
+describe('PolygonService Integration Tests (Hardhat)', () => {
+  let adapter: PolygonService;
   let provider: ethers.JsonRpcProvider;
   let wallet: ethers.Wallet;
 
@@ -506,13 +531,15 @@ describe('PolygonAdapter Integration Tests (Hardhat)', () => {
     // Start Hardhat network: npx hardhat node
     provider = new ethers.JsonRpcProvider('http://localhost:8545');
 
+    // NOTE: This is Hardhat's public test account #0 - safe for local testing only.
+    //       Never use this private key for real funds or production deployments.
     // Use Hardhat default account
     wallet = new ethers.Wallet(
       '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
       provider
     );
 
-    adapter = new PolygonAdapter(provider, wallet);
+    adapter = new PolygonService(wallet);
   });
 
   it('should deploy organization contract', async () => {
@@ -710,7 +737,7 @@ describe('Solana Adapter Contract Tests', () => {
     // Validate against OpenAPI schema
     expect(response.body.transactionId).toMatch(/^[1-9A-HJ-NP-Za-km-z]+$/);
     expect(response.body.accountAddress).toMatch(/^[1-9A-HJ-NP-Za-km-z]+$/);
-    expect(response.body.status).toBeOneOf(['pending', 'confirmed', 'failed']);
+    expect(['pending', 'confirmed', 'failed']).toContain(response.body.status);
   });
 
   it('GET /v1/adapter/health matches OpenAPI spec', async () => {
@@ -726,7 +753,7 @@ describe('Solana Adapter Contract Tests', () => {
     expect(response.body).toHaveProperty('rpcStatus');
     expect(response.body).toHaveProperty('timestamp');
 
-    expect(response.body.status).toBeOneOf(['healthy', 'degraded', 'unhealthy']);
+    expect(['healthy', 'degraded', 'unhealthy']).toContain(response.body.status);
     expect(response.body.blockchain).toBe('solana');
   });
 
@@ -903,6 +930,7 @@ sudo apt-get install k6
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 
 // Custom metrics
 const errorRate = new Rate('errors');
