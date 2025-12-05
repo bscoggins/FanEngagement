@@ -1,4 +1,31 @@
-# Production image
+# Multi-stage build for Polygon adapter
+
+# Stage 1: Builder
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies
+RUN npm install
+
+# Copy source code
+COPY tsconfig.json ./
+COPY jest.config.json ./
+COPY src ./src
+COPY tests ./tests
+
+# Build TypeScript
+RUN npm run build
+
+# Stage 2: Test (for CI)
+FROM builder AS test
+# Run only unit tests (integration tests require external services)
+RUN npm test -- --testPathIgnorePatterns=integration
+
+# Stage 3: Production
 FROM node:20-alpine
 
 WORKDIR /app
@@ -7,13 +34,12 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev && \
-    npm cache clean --force
+RUN npm install --omit=dev
 
-# Copy built application (build locally first with: npm run build)
-COPY dist ./dist
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
 
-# Create directory for secrets
+# Create directory for secrets with proper ownership
 RUN mkdir -p /secrets && chown node:node /secrets
 
 # Set environment variables
