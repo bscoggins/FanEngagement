@@ -8,6 +8,8 @@ This software is proprietary and confidential. Unauthorized use, copying, modifi
 distribution, or public performance is strictly prohibited without explicit written 
 permission from the copyright holder.
 
+For permission requests, contact: bscoggins@users.noreply.github.com
+
 This is an interim licensing stance. See the [LICENSE](LICENSE) file for complete terms.
 
 ---
