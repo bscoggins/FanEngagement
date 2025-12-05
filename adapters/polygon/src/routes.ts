@@ -171,10 +171,17 @@ export function createRoutes(polygonService: PolygonService): Router {
 
       const result = await polygonService.getTransactionStatus(txId);
 
-      const explorerUrl =
-        config.polygon.network === 'mumbai'
-          ? `https://mumbai.polygonscan.com/tx/${txId}`
-          : `https://polygonscan.com/tx/${txId}`;
+      // Determine block explorer URL based on network
+      let explorerUrl: string;
+      if (config.polygon.blockExplorerUrl) {
+        explorerUrl = `${config.polygon.blockExplorerUrl}/tx/${txId}`;
+      } else if (config.polygon.network === 'amoy') {
+        explorerUrl = `https://amoy.polygonscan.com/tx/${txId}`;
+      } else if (config.polygon.network === 'mumbai') {
+        explorerUrl = `https://mumbai.polygonscan.com/tx/${txId}`;
+      } else {
+        explorerUrl = `https://polygonscan.com/tx/${txId}`;
+      }
 
       res.status(200).json({
         transactionHash: result.transactionId,

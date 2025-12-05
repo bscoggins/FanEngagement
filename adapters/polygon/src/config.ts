@@ -16,6 +16,7 @@ export interface Config {
     privateKey?: string;
     privateKeyPath?: string;
     governanceContractAddress?: string;
+    blockExplorerUrl?: string;
   };
   auth: {
     apiKey: string;
@@ -39,13 +40,14 @@ export const config: Config = {
     logLevel: process.env.LOG_LEVEL || 'info',
   },
   polygon: {
-    network: process.env.POLYGON_NETWORK || 'mumbai',
-    rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-mumbai.maticvigil.com',
+    network: process.env.POLYGON_NETWORK || 'amoy',
+    rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology',
     confirmations: parseInt(process.env.POLYGON_CONFIRMATIONS || '6', 10),
     txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
     privateKey: process.env.POLYGON_PRIVATE_KEY,
     privateKeyPath: process.env.POLYGON_PRIVATE_KEY_PATH,
     governanceContractAddress: process.env.GOVERNANCE_CONTRACT_ADDRESS,
+    blockExplorerUrl: process.env.BLOCK_EXPLORER_URL,
   },
   auth: {
     apiKey: process.env.API_KEY || '',
@@ -79,8 +81,8 @@ export function validateConfig(): void {
     errors.push('POLYGON_RPC_URL is required');
   }
 
-  if (!config.polygon.network || !['mumbai', 'polygon'].includes(config.polygon.network)) {
-    errors.push('POLYGON_NETWORK must be either "mumbai" or "polygon"');
+  if (!config.polygon.network || !['mumbai', 'amoy', 'polygon'].includes(config.polygon.network)) {
+    errors.push('POLYGON_NETWORK must be one of: mumbai (deprecated), amoy, polygon');
   }
 
   if (config.polygon.confirmations < 0) {

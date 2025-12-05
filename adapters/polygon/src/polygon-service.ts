@@ -24,31 +24,15 @@ import {
 } from './metrics.js';
 import { RpcError, TransactionError } from './errors.js';
 
-// Simple ERC-20 contract ABI (standard functions we need)
-// Kept for reference, may be used in future implementations
-// const ERC20_ABI = [
-//   'constructor(string name, string symbol, uint8 decimals, uint256 maxSupply)',
-//   'function name() view returns (string)',
-//   'function symbol() view returns (string)',
-//   'function decimals() view returns (uint8)',
-//   'function totalSupply() view returns (uint256)',
-//   'function balanceOf(address account) view returns (uint256)',
-//   'function mint(address to, uint256 amount) returns (bool)',
-//   'function transfer(address to, uint256 amount) returns (bool)',
-// ];
-
-// Simple ERC-20 bytecode (minimal implementation with minting capability)
-// This is a simplified version for demonstration. In production, use a proper compiled contract.
-// Kept for reference, may be used in future implementations
-// const ERC20_BYTECODE =
-//   '0x60806040523480156200001157600080fd5b5060405162000f0038038062000f008339810160408190526200003491620001a1565b8351849084906200004d90600390602085019062000028565b5080516200006390600490602084019062000028565b5050600580546001600160a01b0319163317905550600655506200024f915050565b8280546200009690620002125762000284565b90600052602060002090601f016020900481019282620000ba576000855562000105565b82601f10620000d557805160ff191683800117855562000105565b8280016001018555821562000105579182015b8281111562000105578251825591602001919060010190620000e8565b506200011392915062000117565b5090565b5b8082111562000113576000815560010162000118565b634e487b7160e01b600052604160045260246000fd5b600082601f8301126200015657600080fd5b81516001600160401b03808211156200017357620001736200012e565b604051601f8301601f19908116603f011681019082821181831017156200019e576200019e6200012e565b81604052838152602092508683858801011115620001bb57600080fd5b600091505b83821015620001df5785820183015181830184015290820190620001c0565b83821115620001f15760008385830101525b9695505050505050565b6000602082840312156200020e57600080fd5b5051919050565b600181811c908216806200022757607f821691505b602082108114156200024957634e487b7160e01b600052602260045260246000fd5b50919050565b610ca1806200025f6000396000f3fe';
-
 // Simple Governance Registry contract ABI
 const GOVERNANCE_ABI = [
   'function commitProposalResults(bytes32 proposalId, bytes32 resultsHash) public',
   'function getProposalResults(bytes32 proposalId) view returns (bytes32)',
   'event ResultsCommitted(bytes32 indexed proposalId, bytes32 resultsHash)',
 ];
+
+// Constants
+const PROOF_OF_ISSUANCE_AMOUNT = '0.0001'; // MATIC sent as proof of issuance
 
 export class PolygonService {
   private provider: JsonRpcProvider;
@@ -247,7 +231,7 @@ export class PolygonService {
 
       const tx = await this.wallet.sendTransaction({
         to: recipientAddress,
-        value: parseUnits('0.0001', 'ether'), // Send tiny amount as proof of issuance
+        value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'), // Send tiny amount as proof of issuance
         data: ethers.hexlify(toUtf8Bytes(`ISSUANCE:${issuanceData}`)),
       });
 
@@ -430,10 +414,7 @@ export class PolygonService {
 
       // Use governance contract if available
       if (this.governanceContract) {
-        const proposalIdBytes32 = ethers.zeroPadValue(
-          ethers.hexlify(toUtf8Bytes(proposalId)),
-          32
-        );
+        const proposalIdBytes32 = keccak256(toUtf8Bytes(proposalId));
         const resultsHashBytes32 = '0x' + resultsHash;
 
         tx = await this.governanceContract.commitProposalResults(

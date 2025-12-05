@@ -9,7 +9,7 @@ export const createOrganizationSchema = z.object({
   organizationId: uuidSchema,
   name: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
-  network: z.enum(['mumbai', 'polygon']).optional(),
+  network: z.enum(['mumbai', 'amoy', 'polygon']).optional(),
 });
 
 export type CreateOrganizationRequest = z.infer<typeof createOrganizationSchema>;
