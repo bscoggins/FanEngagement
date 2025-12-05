@@ -78,17 +78,9 @@ export class PolygonService {
     try {
       logger.info('Creating organization on Polygon', { organizationId, name });
 
-      // Derive deterministic address using CREATE2-like approach (simplified)
-      // In production, use actual CREATE2 for deterministic deployment
-      const salt = keccak256(toUtf8Bytes(organizationId));
-      
-      logger.debug('Organization salt derived', {
-        organizationId,
-        salt,
-      });
-
       // For MVP, we'll just send a transaction with the org data in the transaction data
-      // In production, deploy an actual organization registry contract
+      // In production, deploy an actual organization registry contract using CREATE2
+      // for deterministic deployment based on organizationId
       const tx = await this.wallet.sendTransaction({
         to: this.wallet.address, // Send to self as placeholder
         value: 0,

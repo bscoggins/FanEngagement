@@ -12,8 +12,8 @@ services:
       - NODE_ENV=development
       - PORT=3002
       - LOG_LEVEL=debug
-      - POLYGON_NETWORK=mumbai
-      - POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com
+      - POLYGON_NETWORK=amoy
+      - POLYGON_RPC_URL=https://rpc-amoy.polygon.technology
       - POLYGON_CONFIRMATIONS=6
       - POLYGON_TX_TIMEOUT=120000
       # IMPORTANT: You must provide a valid Polygon private key.

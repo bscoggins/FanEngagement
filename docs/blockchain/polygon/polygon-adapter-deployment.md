@@ -158,8 +158,8 @@ LOG_LEVEL=debug
 NODE_ENV=development
 
 # Polygon
-POLYGON_NETWORK=mumbai
-POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com
+POLYGON_NETWORK=amoy
+POLYGON_RPC_URL=https://rpc-amoy.polygon.technology
 POLYGON_CONFIRMATIONS=6
 POLYGON_TX_TIMEOUT=120000
 
@@ -257,8 +257,8 @@ docker-compose down
 docker run -d \
   --name polygon-adapter \
   -p 3002:3002 \
-  -e POLYGON_NETWORK=mumbai \
-  -e POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com \
+  -e POLYGON_NETWORK=amoy \
+  -e POLYGON_RPC_URL=https://rpc-amoy.polygon.technology \
   -e POLYGON_PRIVATE_KEY=your_private_key_here \
   -e API_KEY=your_api_key_here \
   fanengagement-polygon-adapter:latest
@@ -491,7 +491,7 @@ kubectl apply -f polygon-adapter-service.yaml
 {
   "status": "healthy",
   "blockchain": "polygon",
-  "network": "mumbai",
+  "network": "amoy",
   "rpcStatus": "connected",
   "lastBlockNumber": 12345678,
   "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",

@@ -56,7 +56,8 @@ describe('Polygon Adapter Integration Tests', () => {
     expect(blockNumber).toBeGreaterThan(0);
 
     const network = await provider.getNetwork();
-    expect(network.chainId).toBe(80001n); // Mumbai testnet chain ID
+    const expectedChainIds = [80001n, 80002n]; // Mumbai or Amoy testnet chain IDs
+    expect(expectedChainIds).toContain(network.chainId);
   });
 
   test('should check wallet balance', async () => {

@@ -32,7 +32,7 @@ export function createRoutes(polygonService: PolygonService): Router {
         contractAddress: result.contractAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
-        network: data.network || config.polygon.network,
+        network: config.polygon.network,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

@@ -23,7 +23,7 @@ The Polygon adapter implements the FanEngagement blockchain adapter API specific
 - ✅ Health check at `/health`
 - ✅ RFC 7807 error responses
 - ✅ Docker containerization
-- ✅ Support for Mumbai testnet and Polygon mainnet
+- ✅ Support for Amoy testnet and Polygon mainnet
 - ✅ API key authentication
 - ✅ Comprehensive test coverage
 
