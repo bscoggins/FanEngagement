@@ -31,6 +31,8 @@ public class OrganizationService(FanEngagementDbContext dbContext, IAuditService
             LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl,
             PrimaryColor = string.IsNullOrWhiteSpace(request.PrimaryColor) ? null : request.PrimaryColor,
             SecondaryColor = string.IsNullOrWhiteSpace(request.SecondaryColor) ? null : request.SecondaryColor,
+            BlockchainType = request.BlockchainType ?? Domain.Enums.BlockchainType.None,
+            BlockchainConfig = string.IsNullOrWhiteSpace(request.BlockchainConfig) ? null : request.BlockchainConfig,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -144,12 +146,39 @@ public class OrganizationService(FanEngagementDbContext dbContext, IAuditService
         var originalLogoUrl = organization.LogoUrl;
         var originalPrimaryColor = organization.PrimaryColor;
         var originalSecondaryColor = organization.SecondaryColor;
+        var originalBlockchainType = organization.BlockchainType;
+        var originalBlockchainConfig = organization.BlockchainConfig;
+
+        // Validate blockchain type change
+        if (request.BlockchainType.HasValue && request.BlockchainType.Value != originalBlockchainType)
+        {
+            // Check if organization has any shares or proposals
+            var hasShareTypes = await dbContext.ShareTypes
+                .AnyAsync(st => st.OrganizationId == id, cancellationToken);
+            var hasProposals = await dbContext.Proposals
+                .AnyAsync(p => p.OrganizationId == id, cancellationToken);
+
+            if (hasShareTypes || hasProposals)
+            {
+                throw new InvalidOperationException("Cannot change blockchain type after shares or proposals have been created");
+            }
+        }
 
         organization.Name = request.Name;
         organization.Description = request.Description;
         organization.LogoUrl = string.IsNullOrWhiteSpace(request.LogoUrl) ? null : request.LogoUrl;
         organization.PrimaryColor = string.IsNullOrWhiteSpace(request.PrimaryColor) ? null : request.PrimaryColor;
         organization.SecondaryColor = string.IsNullOrWhiteSpace(request.SecondaryColor) ? null : request.SecondaryColor;
+        
+        if (request.BlockchainType.HasValue)
+        {
+            organization.BlockchainType = request.BlockchainType.Value;
+        }
+        
+        if (request.BlockchainConfig != null)
+        {
+            organization.BlockchainConfig = string.IsNullOrWhiteSpace(request.BlockchainConfig) ? null : request.BlockchainConfig;
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -194,6 +223,19 @@ public class OrganizationService(FanEngagementDbContext dbContext, IAuditService
             details["oldSecondaryColor"] = originalSecondaryColor ?? string.Empty;
             details["newSecondaryColor"] = organization.SecondaryColor ?? string.Empty;
             brandingChanged = true;
+        }
+
+        if (originalBlockchainType != organization.BlockchainType)
+        {
+            changedFields.Add("BlockchainType");
+            details["oldBlockchainType"] = originalBlockchainType.ToString();
+            details["newBlockchainType"] = organization.BlockchainType.ToString();
+        }
+
+        if (originalBlockchainConfig != organization.BlockchainConfig)
+        {
+            changedFields.Add("BlockchainConfig");
+            details["blockchainConfigChanged"] = true;
         }
 
         // Log audit event if any changes were made
