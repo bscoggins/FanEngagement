@@ -82,6 +82,42 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.unified-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.unified-mobile-menu-button {
+  display: none; /* Hidden on desktop, shown on mobile */
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.unified-mobile-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.unified-mobile-menu-button:focus {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: 2px;
+}
+
+.hamburger-icon {
+  display: block;
+  line-height: 1;
+}
+
 .unified-header-title {
   text-decoration: none;
   color: white;
@@ -158,6 +194,11 @@
   background-color: #555;
 }
 
+.unified-logout-button:focus {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: 2px;
+}
+
 .unified-container {
   display: flex;
   flex: 1;
@@ -182,21 +223,28 @@
 .unified-nav-link {
   color: #ddd;
   text-decoration: none;
-  padding: 0.75rem 1.5rem;
-  transition: background-color 0.2s, color 0.2s;
+  padding: var(--spacing-3, 0.75rem) 1.5rem;
+  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), border-left-color 0.15s var(--ease-out);
   border-left: 3px solid transparent;
+  font-weight: var(--font-weight-medium, 500);
 }
 
 .unified-nav-link:hover {
   background-color: #333;
   color: white;
-  border-left-color: #007bff;
+  border-left-color: var(--color-primary-600, #007bff);
 }
 
 .unified-nav-link.active {
   background-color: #333;
   color: white;
-  border-left-color: #007bff;
+  border-left-color: var(--color-primary-600, #007bff);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.unified-nav-link:focus-visible {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: -2px;
 }
 
 .unified-nav-divider {
@@ -274,45 +322,57 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
+  .unified-mobile-menu-button {
+    display: flex; /* Show hamburger menu on mobile */
+  }
+
+  .unified-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .unified-header {
+    padding: 1rem;
+  }
+
   .unified-container {
     flex-direction: column;
   }
 
   .unified-sidebar {
-    width: 100%;
-    min-height: auto;
+    display: none; /* Hide sidebar on mobile, use drawer instead */
   }
 
-  .unified-nav {
-    flex-direction: row;
+  .unified-main {
+    padding: 1rem;
+  }
+
+  .unified-header-org-selector {
     flex-wrap: wrap;
-    padding: 0.5rem;
   }
 
-  .unified-nav-link {
-    border-left: none;
-    border-bottom: 3px solid transparent;
-    padding: 0.5rem 1rem;
+  .unified-header-org-select {
+    min-width: 150px;
   }
+}
 
-  .unified-nav-link:hover,
+/* Animations - respect reduced motion */
+@media (prefers-reduced-motion: no-preference) {
   .unified-nav-link.active {
-    border-left-color: transparent;
-    border-bottom-color: #007bff;
+    animation: highlight-fade 0.3s var(--ease-out);
   }
 
-  .unified-nav-divider,
-  .unified-nav-divider-small {
-    width: 100%;
-    border-top: 1px solid #444;
-    margin: 0.5rem 0;
+  @keyframes highlight-fade {
+    from {
+      background-color: rgba(0, 123, 255, 0.3);
+    }
+    to {
+      background-color: #333;
+    }
   }
+}
 
-  .unified-nav-section-label {
-    display: none;
-  }
-
-  .unified-member-info {
-    display: none;
+@media (prefers-reduced-motion: reduce) {
+  .unified-nav-link {
+    transition: none;
   }
 }
