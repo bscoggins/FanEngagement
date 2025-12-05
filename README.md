@@ -1,5 +1,19 @@
 # FanEngagement – Runtime: .NET 9
 
+## ⚠️ License Notice
+
+**Copyright © 2025 Brent Scoggins. All Rights Reserved.**
+
+This software is proprietary and confidential. Unauthorized use, copying, modification, 
+distribution, or public performance is strictly prohibited without explicit written 
+permission from the copyright holder.
+
+For permission requests, contact: bscoggins@users.noreply.github.com
+
+This is an interim licensing stance. See the [LICENSE](LICENSE) file for complete terms.
+
+---
+
 ## Overview
 
 FanEngagement is a multi-tenant fan governance platform. Organizations issue share types to users for voting on proposals. The backend is a layered ASP.NET Core Web API using EF Core with PostgreSQL. The frontend is a React + TypeScript single-page application built with Vite.
