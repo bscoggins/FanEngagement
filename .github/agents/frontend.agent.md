@@ -1,4 +1,3 @@
-```chatagent
 ---
 name: frontend-agent
 description: Frontend experience specialist for UI/UX, motion, and accessibility polish.
@@ -63,5 +62,3 @@ When closing a task, ensure you have:
 - Verified responsiveness + accessibility
 - Documented the visual change (Storybook, screenshots, or GIFs) if non-trivial
 - Included testing instructions and any design-token notes in the PR summary
-
-```
