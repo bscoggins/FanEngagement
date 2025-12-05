@@ -147,9 +147,10 @@ describe('SolanaService Unit Tests', () => {
     // Use a real keypair for signing (not sensitive in tests)
     mockKeypair = Keypair.generate();
 
-    // NOTE: SolanaService constructor creates its own Connection internally.
-    // For actual implementation, you may need to mock the Connection via dependency injection
-    // or use a test-specific configuration. This example shows the conceptual approach.
+    // NOTE: The actual SolanaService constructor creates its own Connection internally.
+    // The mockConnection setup above demonstrates the mocking pattern, but to actually use it,
+    // you would need to refactor SolanaService to accept a Connection parameter
+    // or use dependency injection. These examples show the testing approach you should implement.
     adapter = new SolanaService(mockKeypair);
   });
 
@@ -445,7 +446,11 @@ describe('SolanaService Integration Tests', () => {
     );
     await connection.confirmTransaction(airdropSig);
 
-    // Initialize adapter with real connection
+    // Initialize adapter
+    // NOTE: SolanaService creates its own connection using environment variables.
+    // The `connection` variable above is used for test setup (airdrop) and verification.
+    // For actual integration tests, configure the service to use the test validator via
+    // environment variable: SOLANA_RPC_URL=http://localhost:8899
     adapter = new SolanaService(payerKeypair);
   }, 30000); // 30s timeout for setup
 
@@ -539,6 +544,10 @@ describe('PolygonService Integration Tests (Hardhat)', () => {
       provider
     );
 
+    // NOTE: PolygonService accepts a wallet which is already connected to the provider.
+    // The wallet.connect(provider) is already done above, so the service will use
+    // the test provider through the wallet. For actual tests, configure via
+    // environment variable: POLYGON_RPC_URL=http://localhost:8545
     adapter = new PolygonService(wallet);
   });
 
