@@ -216,6 +216,11 @@ describe('SolanaService Unit Tests', () => {
 **Test retry logic with exponential backoff:**
 
 ```typescript
+// NOTE: This example uses 'SolanaAdapter' as a conceptual class name to demonstrate
+// the testing approach for retry logic and error handling. In your actual implementation,
+// adapt these patterns to match your adapter's structure (e.g., SolanaService).
+// The testing principles shown here apply regardless of the specific class name.
+
 describe('SolanaAdapter Retry Logic', () => {
   let adapter: SolanaAdapter;
   let mockConnection: jest.Mocked<Connection>;
@@ -290,6 +295,11 @@ describe('SolanaAdapter Retry Logic', () => {
 ### 2.3 Testing Input Validation
 
 ```typescript
+// NOTE: This example uses 'SolanaAdapter' as a conceptual class name to demonstrate
+// the testing approach for input validation. In your actual implementation,
+// adapt these patterns to match your adapter's structure (e.g., SolanaService).
+// The testing principles shown here apply regardless of the specific class name.
+
 describe('SolanaAdapter Input Validation', () => {
   let adapter: SolanaAdapter;
 
