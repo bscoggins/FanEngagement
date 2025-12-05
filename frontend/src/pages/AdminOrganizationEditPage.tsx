@@ -14,12 +14,14 @@ export const AdminOrganizationEditPage: React.FC = () => {
     logoUrl: '',
     primaryColor: '',
     secondaryColor: '',
+    blockchainType: 'None',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
 
   useEffect(() => {
     const fetchOrganization = async () => {
@@ -41,7 +43,13 @@ export const AdminOrganizationEditPage: React.FC = () => {
           logoUrl: orgData.logoUrl || '',
           primaryColor: orgData.primaryColor || '',
           secondaryColor: orgData.secondaryColor || '',
+          blockchainType: orgData.blockchainType || 'None',
         });
+        
+        // Check if organization has existing data (shares or proposals)
+        // For now, we'll assume it doesn't have data unless we fetch this from an API
+        // In a real implementation, you'd check ShareTypes and Proposals endpoints
+        setHasExistingData(false);
       } catch (err) {
         console.error('Failed to fetch organization:', err);
         if (err && typeof err === 'object' && 'response' in err) {
@@ -62,7 +70,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
     fetchOrganization();
   }, [orgId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -88,6 +96,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
         logoUrl: updatedOrg.logoUrl || '',
         primaryColor: updatedOrg.primaryColor || '',
         secondaryColor: updatedOrg.secondaryColor || '',
+        blockchainType: updatedOrg.blockchainType || 'None',
       });
     } catch (err) {
       console.error('Failed to update organization:', err);
@@ -244,6 +253,44 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 fontFamily: 'inherit',
               }}
             />
+          </div>
+
+          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Blockchain Configuration</h3>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label htmlFor="blockchainType" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                Blockchain Platform
+              </label>
+              <select
+                id="blockchainType"
+                name="blockchainType"
+                value={formData.blockchainType || 'None'}
+                onChange={handleChange}
+                disabled={hasExistingData}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  backgroundColor: hasExistingData ? '#f5f5f5' : 'white',
+                  cursor: hasExistingData ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <option value="None">None (Off-chain only)</option>
+                <option value="Solana">Solana</option>
+                <option value="Polygon">Polygon</option>
+              </select>
+              {hasExistingData && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                  Blockchain type cannot be changed after shares or proposals are created.
+                </div>
+              )}
+              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                Select a blockchain platform for governance transparency. This setting determines where governance actions are recorded.
+              </div>
+            </div>
           </div>
 
           <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>

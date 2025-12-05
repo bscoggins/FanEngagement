@@ -85,6 +85,8 @@ export interface Organization {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  blockchainType?: 'None' | 'Solana' | 'Polygon';
+  blockchainConfig?: string;
 }
 
 export interface CreateOrganizationRequest {
@@ -93,6 +95,8 @@ export interface CreateOrganizationRequest {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  blockchainType?: 'None' | 'Solana' | 'Polygon';
+  blockchainConfig?: string;
 }
 
 export interface UpdateOrganizationRequest {
@@ -101,6 +105,8 @@ export interface UpdateOrganizationRequest {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  blockchainType?: 'None' | 'Solana' | 'Polygon';
+  blockchainConfig?: string;
 }
 
 export interface Membership {

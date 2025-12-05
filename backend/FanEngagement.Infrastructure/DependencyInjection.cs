@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
+using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Application.Encryption;
 using FanEngagement.Application.Memberships;
@@ -14,6 +15,7 @@ using FanEngagement.Application.Users;
 using FanEngagement.Application.WebhookEndpoints;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Infrastructure.BackgroundServices;
+using FanEngagement.Infrastructure.Blockchain;
 using FanEngagement.Infrastructure.Configuration;
 using FanEngagement.Infrastructure.HealthChecks;
 using FanEngagement.Infrastructure.Metrics;
@@ -50,6 +52,28 @@ public static class DependencyInjection
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
         services.AddScoped<IMfaService, TotpMfaService>();
+
+        // Configure blockchain adapters
+        services.AddScoped<IBlockchainAdapterFactory, BlockchainAdapterFactory>();
+        
+        // Configure named HTTP clients for blockchain adapters
+        services.AddHttpClient("SolanaAdapter", client =>
+        {
+            var baseUrl = configuration["BlockchainAdapters:Solana:BaseUrl"];
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+            {
+                client.BaseAddress = new Uri(baseUrl);
+            }
+        });
+        
+        services.AddHttpClient("PolygonAdapter", client =>
+        {
+            var baseUrl = configuration["BlockchainAdapters:Polygon:BaseUrl"];
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+            {
+                client.BaseAddress = new Uri(baseUrl);
+            }
+        });
 
         // Configure audit services
         services.Configure<AuditOptions>(
