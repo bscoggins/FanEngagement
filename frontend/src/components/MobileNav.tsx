@@ -120,6 +120,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                     to={item.path}
                     className={`mobile-nav-link ${item.isActive ? 'active' : ''}`}
                     onClick={onClose}
+                    aria-current={item.isActive ? 'page' : undefined}
                   >
                     {item.label}
                   </Link>
@@ -141,6 +142,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                       to={item.path}
                       className={`mobile-nav-link ${item.isActive ? 'active' : ''}`}
                       onClick={onClose}
+                      aria-current={item.isActive ? 'page' : undefined}
                     >
                       {item.label}
                     </Link>

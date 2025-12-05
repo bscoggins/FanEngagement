@@ -12,7 +12,7 @@
 
 .org-selector-label {
   font-size: var(--font-size-sm, 0.875rem);
-  color: #666;
+  color: var(--color-neutral-600, #666);
   font-weight: var(--font-weight-medium, 500);
   white-space: nowrap;
 }
