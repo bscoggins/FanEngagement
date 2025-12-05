@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  polygon-adapter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: polygon-adapter
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - LOG_LEVEL=debug
+      - POLYGON_NETWORK=mumbai
+      - POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com
+      - POLYGON_CONFIRMATIONS=6
+      - POLYGON_TX_TIMEOUT=120000
+      # IMPORTANT: You must provide a valid Polygon private key.
+      # Generate one with: openssl rand -hex 32
+      # Or use an existing wallet's private key (without 0x prefix)
+      - POLYGON_PRIVATE_KEY=${POLYGON_PRIVATE_KEY}
+      - API_KEY=${API_KEY:-dev-api-key-change-in-production}
+      - REQUIRE_AUTH=true
+      - RETRY_MAX_ATTEMPTS=4
+      - RETRY_BASE_DELAY_MS=1000
+      # Optional: Set if you have a deployed governance contract
+      # - GOVERNANCE_CONTRACT_ADDRESS=${GOVERNANCE_CONTRACT_ADDRESS}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/v1/adapter/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - polygon-adapter-network
+
+networks:
+  polygon-adapter-network:
+    driver: bridge
