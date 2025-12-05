@@ -48,7 +48,7 @@ jobs:
           docker images solana-adapter:test
       
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'solana-adapter:test'
           format: 'sarif'
@@ -63,7 +63,7 @@ jobs:
           sarif_file: 'trivy-solana-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'solana-adapter:test'
           format: 'table'
@@ -71,17 +71,17 @@ jobs:
           exit-code: '1'
       
       - name: Test health endpoint
-        # TODO: Enable once test Solana keypairs are available in GitHub Secrets
-        # The adapter requires a valid Solana keypair to start
+        # TODO: Enable once test Solana keypairs are available in GitHub Secrets.
+        # The adapter requires a valid Solana keypair to start.
+        # Before enabling, add SOLANA_TEST_PRIVATE_KEY to repository secrets.
         if: false
         run: |
-          # Generate a temporary test keypair for health check validation
-          # NOTE: This is a dummy test key with no real value, used only for CI testing
+          # Run health check validation using test key from GitHub Secrets
           docker run -d --name adapter-test \
             -p 3001:3001 \
             -e NODE_ENV=production \
             -e SOLANA_RPC_URL=https://api.devnet.solana.com \
-            -e SOLANA_PRIVATE_KEY='[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64]' \
+            -e SOLANA_PRIVATE_KEY='${{ secrets.SOLANA_TEST_PRIVATE_KEY }}' \
             solana-adapter:test
           
           # Wait for container to be ready
@@ -134,11 +134,11 @@ jobs:
           context: ./adapters/solana
           file: ./adapters/solana/Dockerfile
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-solana-adapter:latest
-            ${{ env.IMAGE_PREFIX }}-solana-adapter:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          target: production
 
   build-polygon-adapter:
     runs-on: ubuntu-latest
@@ -171,7 +171,7 @@ jobs:
           docker images polygon-adapter:test
       
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'polygon-adapter:test'
           format: 'sarif'
@@ -186,7 +186,7 @@ jobs:
           sarif_file: 'trivy-polygon-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'polygon-adapter:test'
           format: 'table'
@@ -194,17 +194,17 @@ jobs:
           exit-code: '1'
       
       - name: Test health endpoint
-        # TODO: Enable once test Polygon private keys are available in GitHub Secrets
+        # TODO: Enable once test Polygon private keys are available in GitHub Secrets.
+        # Before enabling, add POLYGON_TEST_PRIVATE_KEY to repository GitHub Secrets.
         # The adapter requires a valid private key to start
         if: false
         run: |
           # Start container with test private key for health check validation
-          # NOTE: This is a dummy test key with no real value, used only for CI testing
           docker run -d --name adapter-test \
             -p 3002:3002 \
             -e NODE_ENV=production \
             -e POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com \
-            -e POLYGON_PRIVATE_KEY='0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' \
+            -e POLYGON_PRIVATE_KEY='${{ secrets.POLYGON_TEST_PRIVATE_KEY }}' \
             polygon-adapter:test
           
           # Wait for container to be ready
@@ -257,8 +257,8 @@ jobs:
           context: ./adapters/polygon
           file: ./adapters/polygon/Dockerfile
           push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-polygon-adapter:latest
-            ${{ env.IMAGE_PREFIX }}-polygon-adapter:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          target: production

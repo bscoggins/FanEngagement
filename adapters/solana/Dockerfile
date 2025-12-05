@@ -9,8 +9,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies
-# Note: Temporarily disable strict-ssl to work around self-signed cert issues in some CI environments
-# This is re-enabled immediately after install for security
+# Note: Temporarily disable strict-ssl to work around self-signed cert issues in some CI environments.
+# This is a workaround for known GitHub Actions runner certificate issues. In production environments,
+# configure NODE_EXTRA_CA_CERTS or add your CA to the system trust store instead of disabling SSL.
+# Strict-ssl is re-enabled immediately after install for security.
 RUN npm config set strict-ssl false && \
     npm install && \
     npm config set strict-ssl true
@@ -38,8 +40,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-# Note: Temporarily disable strict-ssl to work around self-signed cert issues in some CI environments
-# This is re-enabled immediately after install for security
+# Note: Temporarily disable strict-ssl to work around self-signed cert issues in some CI environments.
+# This is a workaround for known GitHub Actions runner certificate issues. In production environments,
+# configure NODE_EXTRA_CA_CERTS or add your CA to the system trust store instead of disabling SSL.
+# Strict-ssl is re-enabled immediately after install for security.
 RUN npm config set strict-ssl false && \
     npm install --omit=dev && \
     npm config set strict-ssl true
@@ -47,8 +51,8 @@ RUN npm config set strict-ssl false && \
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create directory for secrets
-RUN mkdir -p /secrets
+# Create directory for secrets with proper ownership
+RUN mkdir -p /secrets && chown node:node /secrets
 
 # Set environment variables
 ENV NODE_ENV=production \

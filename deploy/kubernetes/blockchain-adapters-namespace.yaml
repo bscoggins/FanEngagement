@@ -4,4 +4,4 @@ metadata:
   name: fanengagement
   labels:
     name: fanengagement
-    environment: production
+    environment: development

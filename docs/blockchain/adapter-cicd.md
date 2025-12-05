@@ -63,7 +63,14 @@ FROM node:20-alpine AS builder
 # Build TypeScript → JavaScript
 ```
 
-**Stage 2: Production**
+**Stage 2: Test**
+```dockerfile
+FROM builder AS test
+# Run unit tests
+# Fails build if tests fail
+```
+
+**Stage 3: Production**
 ```dockerfile
 FROM node:20-alpine
 # Install only production dependencies
@@ -116,24 +123,24 @@ Security scan results are available in:
 
 ### Unit Tests
 
-Unit tests run inside the Docker container:
+Unit tests run automatically during the Docker build in the test stage:
 ```bash
-docker run --rm \
-  -e NODE_ENV=test \
-  <adapter-image>:test \
-  sh -c "npm ci && npm test"
+# Tests are executed during the build process
+docker build --target test -t solana-adapter:test ./adapters/solana
 ```
 
-This ensures tests run in the same environment as production.
+This ensures tests run in the same environment as production and fail the build if tests fail.
 
 ### Health Check Testing
 
 After building, the pipeline:
 1. Starts the container with production settings
-2. Waits for startup (10 seconds)
+2. Waits for startup (15 seconds)
 3. Makes HTTP requests to `/v1/adapter/health`
 4. Retries up to 10 times with 3-second intervals
 5. Fails the build if health check doesn't respond
+
+**Note:** Health check tests are currently disabled pending test credentials.
 
 ## Docker Build Optimization
 
@@ -153,9 +160,9 @@ Benefits:
 ### .dockerignore Files
 
 Both adapters have `.dockerignore` files to exclude:
-- Source files (`src/`, `tests/`)
-- Development dependencies
-- Documentation
+- Build artifacts (node_modules, coverage)
+- Development dependencies (handled by build stages)
+- Documentation (*.md files)
 - Git metadata
 - IDE configurations
 
