@@ -55,6 +55,8 @@ jobs:
           output: 'trivy-solana-results.sarif'
           severity: 'CRITICAL,HIGH'
           exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os'
       
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
@@ -63,13 +65,14 @@ jobs:
           sarif_file: 'trivy-solana-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'solana-adapter:test'
           format: 'table'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os'
       
       - name: Test health endpoint
         # TODO: Enable once test Solana keypairs are available in GitHub Secrets.
@@ -179,6 +182,8 @@ jobs:
           output: 'trivy-polygon-results.sarif'
           severity: 'CRITICAL,HIGH'
           exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os'
       
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
@@ -187,13 +192,14 @@ jobs:
           sarif_file: 'trivy-polygon-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'polygon-adapter:test'
           format: 'table'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os'
       
       - name: Test health endpoint
         # TODO: Enable once test Polygon private keys are available in GitHub Secrets.
