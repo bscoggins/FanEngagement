@@ -45,7 +45,7 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
 
         try
         {
-            JsonDocument.Parse(json);
+            using var doc = JsonDocument.Parse(json);
             return true;
         }
         catch (JsonException)
