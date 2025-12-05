@@ -1,0 +1,99 @@
+/**
+ * OrganizationSelector component styles
+ * Enhanced with better accessibility and visual feedback
+ */
+
+.org-selector-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  position: relative;
+}
+
+.org-selector-label {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: #666;
+  font-weight: var(--font-weight-medium, 500);
+  white-space: nowrap;
+}
+
+.org-selector-select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: var(--font-size-sm, 0.875rem);
+  background-color: white;
+  cursor: pointer;
+  min-width: 200px;
+  transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+.org-selector-select:hover {
+  border-color: var(--color-primary-600, #007bff);
+}
+
+.org-selector-select:focus {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: 2px;
+  border-color: var(--color-primary-600, #007bff);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Role badge styling */
+.org-selector-badge {
+  padding: 0.25rem 0.75rem;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  white-space: nowrap;
+  transition: transform 0.15s var(--ease-out);
+}
+
+.org-selector-badge.admin {
+  background-color: var(--color-primary-600, #007bff);
+}
+
+.org-selector-badge.member {
+  background-color: #6c757d;
+}
+
+/* Screen reader only announcement */
+.org-selector-announcement {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Animation for badge when org switches */
+@media (prefers-reduced-motion: no-preference) {
+  .org-selector-badge {
+    animation: badge-appear 0.2s var(--ease-out);
+  }
+
+  @keyframes badge-appear {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .org-selector-container {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .org-selector-select {
+    min-width: 150px;
+    flex: 1;
+  }
+}
