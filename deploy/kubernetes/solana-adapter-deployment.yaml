@@ -1,0 +1,101 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solana-adapter
+  namespace: fanengagement
+  labels:
+    app: solana-adapter
+    component: blockchain-adapter
+    blockchain: solana
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: solana-adapter
+  template:
+    metadata:
+      labels:
+        app: solana-adapter
+        component: blockchain-adapter
+        blockchain: solana
+    spec:
+      containers:
+      - name: solana-adapter
+        image: ghcr.io/bscoggins/fanengagement-solana-adapter:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 3001
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3001"
+        - name: SOLANA_RPC_URL
+          value: "https://api.devnet.solana.com"
+        - name: LOG_LEVEL
+          value: "info"
+        # Uncomment and configure secrets as needed
+        # - name: SOLANA_PRIVATE_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: blockchain-adapters
+        #       key: solana-private-key
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /v1/adapter/health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /v1/adapter/health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: solana-adapter
+  namespace: fanengagement
+  labels:
+    app: solana-adapter
+    component: blockchain-adapter
+    blockchain: solana
+spec:
+  type: ClusterIP
+  selector:
+    app: solana-adapter
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  sessionAffinity: None

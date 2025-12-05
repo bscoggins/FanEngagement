@@ -1,4 +1,26 @@
-# Production image
+# Multi-stage build for Solana adapter
+
+# Stage 1: Builder
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (disable strict SSL for CI environments)
+RUN npm config set strict-ssl false && \
+    npm install && \
+    npm config set strict-ssl true
+
+# Copy source code
+COPY tsconfig.json ./
+COPY src ./src
+
+# Build TypeScript
+RUN npm run build
+
+# Stage 2: Production
 FROM node:20-alpine
 
 WORKDIR /app
@@ -7,11 +29,12 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev && \
-    npm cache clean --force
+RUN npm config set strict-ssl false && \
+    npm install --omit=dev && \
+    npm config set strict-ssl true
 
-# Copy built application (build locally first with: npm run build)
-COPY dist ./dist
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
 
 # Create directory for secrets
 RUN mkdir -p /secrets
