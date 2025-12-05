@@ -2,6 +2,36 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Color tokens */
+  --color-primary-600: #007bff;
+  --color-primary-700: #0056b3;
+  --color-neutral-400: #999;
+  --color-neutral-600: #666;
+  --color-neutral-700: #333;
+  --color-background-elevated: #2a2a2a;
+  --focus-ring-color: #0056b3;
+  
+  /* Typography tokens */
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  
+  /* Spacing tokens */
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  
+  /* Shadow tokens */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  /* Animation tokens */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -13,4 +43,16 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Global focus ring styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Remove default focus styles when not using keyboard */
+*:focus:not(:focus-visible) {
+  outline: none;
 }

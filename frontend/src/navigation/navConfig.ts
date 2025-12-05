@@ -35,6 +35,14 @@ export interface NavItem {
    * Order for display within the navigation (lower = higher priority)
    */
   order: number;
+  /**
+   * Parent item ID for breadcrumb hierarchy (optional)
+   */
+  parentId?: string;
+  /**
+   * Icon name for visual enhancement (optional)
+   */
+  icon?: string;
 }
 
 /**
