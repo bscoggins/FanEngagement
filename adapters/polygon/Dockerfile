@@ -14,7 +14,7 @@ RUN npm ci --omit=dev && \
 COPY dist ./dist
 
 # Create directory for secrets
-RUN mkdir -p /secrets
+RUN mkdir -p /secrets && chown node:node /secrets
 
 # Set environment variables
 ENV NODE_ENV=production \

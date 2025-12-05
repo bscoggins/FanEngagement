@@ -5,7 +5,7 @@ import { ethers, Wallet, JsonRpcProvider } from 'ethers';
  * Integration tests for Polygon adapter
  * 
  * These tests require:
- * 1. A valid Polygon Mumbai testnet RPC URL
+ * 1. A valid Polygon testnet RPC URL (Amoy or Mumbai)
  * 2. A wallet with test MATIC (get from https://faucet.polygon.technology/)
  * 3. Environment variables set:
  *    - POLYGON_RPC_URL
@@ -14,7 +14,7 @@ import { ethers, Wallet, JsonRpcProvider } from 'ethers';
  * To run: npm run test:integration
  */
 
-const RPC_URL = process.env.POLYGON_RPC_URL || 'https://rpc-mumbai.maticvigil.com';
+const RPC_URL = process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology';
 const PRIVATE_KEY = process.env.POLYGON_PRIVATE_KEY;
 
 describe('Polygon Adapter Integration Tests', () => {

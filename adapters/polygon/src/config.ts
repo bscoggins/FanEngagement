@@ -12,7 +12,7 @@ export interface Config {
     network: string;
     rpcUrl: string;
     confirmations: number;
-    txTimeout: number;
+    txTimeout: number; // Reserved for future use: transaction timeout in milliseconds
     privateKey?: string;
     privateKeyPath?: string;
     governanceContractAddress?: string;
@@ -27,6 +27,7 @@ export interface Config {
     baseDelayMs: number;
   };
   gas: {
+    // Reserved for future use: gas price configuration
     limitMultiplier: number;
     maxFeePerGasGwei?: number;
     maxPriorityFeePerGasGwei?: number;

@@ -68,7 +68,8 @@ This document provides comprehensive deployment and operational guidance for the
 ┌──────────────────────────────────────────────────────────────────┐
 │                       Polygon Network                             │
 │                                                                   │
-│  Mumbai Testnet:   https://rpc-mumbai.maticvigil.com            │
+│  Amoy Testnet:     https://rpc-amoy.polygon.technology           │
+│  Mumbai Testnet:   https://rpc-mumbai.maticvigil.com (deprecated)│
 │  Polygon Mainnet:  https://polygon-rpc.com                       │
 └──────────────────────────────────────────────────────────────────┘
 ```

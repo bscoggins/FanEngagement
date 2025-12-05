@@ -1,17 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
+import { timingSafeEqual } from 'crypto';
 import { config } from './config.js';
 import { logger } from './logger.js';
 import { AuthenticationError } from './errors.js';
-
-// Extend Express Request type to include userId
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Express {
-    interface Request {
-      userId?: string;
-    }
-  }
-}
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   // Skip auth for health and metrics endpoints
@@ -30,7 +21,11 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
     return next(new AuthenticationError('API key required', 'Provide X-Adapter-API-Key header'));
   }
 
-  if (apiKey !== config.auth.apiKey) {
+  // Use constant-time comparison to prevent timing attacks
+  const expectedKey = Buffer.from(config.auth.apiKey);
+  const providedKey = Buffer.from(apiKey);
+
+  if (expectedKey.length !== providedKey.length || !timingSafeEqual(expectedKey, providedKey)) {
     return next(new AuthenticationError('Invalid API key', 'The provided API key is invalid'));
   }
 

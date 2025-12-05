@@ -50,7 +50,7 @@ The Polygon adapter implements the FanEngagement blockchain adapter API specific
            ▼
 ┌─────────────────────┐
 │ Polygon Network     │
-│ (Mumbai/Mainnet)    │
+│ (Amoy/Mumbai/Mainnet)│
 └─────────────────────┘
 ```
 
@@ -184,11 +184,11 @@ npm test
 ### Integration Tests
 
 Requires:
-1. Mumbai testnet RPC URL
+1. Polygon testnet RPC URL (Amoy recommended, Mumbai deprecated)
 2. Wallet with test MATIC
 
 ```bash
-export POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com
+export POLYGON_RPC_URL=https://rpc-amoy.polygon.technology
 export POLYGON_PRIVATE_KEY=your_private_key_here
 npm run test:integration
 ```
