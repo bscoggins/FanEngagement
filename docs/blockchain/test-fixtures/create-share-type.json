@@ -1,0 +1,23 @@
+{
+  "request": {
+    "shareTypeId": "87654321-4321-4321-4321-210987654321",
+    "organizationId": "12345678-1234-1234-1234-123456789012",
+    "name": "Season Ticket Holder",
+    "symbol": "MUSTH",
+    "decimals": 0,
+    "maxSupply": 100000,
+    "metadata": {
+      "description": "Voting power for season ticket holders",
+      "votingWeight": 100,
+      "imageUrl": "https://example.com/season-ticket.png"
+    }
+  },
+  "expectedResponse": {
+    "transactionId": "3hY8wQxRpTvGmNkDfJ2sL5pWnK9vXzE4rM6cB7aH8uT",
+    "mintAddress": "So11111111111111111111111111111111111111112",
+    "status": "confirmed",
+    "timestamp": "2024-12-05T19:01:30.456Z",
+    "explorerUrl": "https://explorer.solana.com/tx/3hY8wQxRpTvGmNkDfJ2sL5pWnK9vXzE4rM6cB7aH8uT?cluster=devnet"
+  },
+  "notes": "Share type creation mints a new SPL token on Solana. Decimals=0 for non-fungible governance shares."
+}

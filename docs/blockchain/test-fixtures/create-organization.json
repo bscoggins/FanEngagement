@@ -1,0 +1,22 @@
+{
+  "request": {
+    "organizationId": "12345678-1234-1234-1234-123456789012",
+    "name": "Manchester United FC",
+    "description": "Official fan governance platform for Manchester United supporters",
+    "metadata": {
+      "logoUrl": "https://example.com/mu-logo.png",
+      "colors": {
+        "primary": "#DA291C",
+        "secondary": "#FFE500"
+      }
+    }
+  },
+  "expectedResponse": {
+    "transactionId": "5j7s9KfGpnVCwmAjWBfnN4mKR8sT3pQwX9HvLyE2dNkM",
+    "accountAddress": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+    "status": "confirmed",
+    "timestamp": "2024-12-05T19:00:00.123Z",
+    "explorerUrl": "https://explorer.solana.com/tx/5j7s9KfGpnVCwmAjWBfnN4mKR8sT3pQwX9HvLyE2dNkM?cluster=devnet"
+  },
+  "notes": "Organization creation creates a PDA (Program Derived Address) on Solana that stores the organization metadata on-chain."
+}

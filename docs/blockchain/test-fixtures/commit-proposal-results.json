@@ -1,0 +1,17 @@
+{
+  "request": {
+    "proposalId": "98765432-8765-8765-8765-876543210987",
+    "resultsHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "winningOptionId": "option-1",
+    "totalVotesCast": 67500,
+    "quorumMet": true,
+    "closedAt": "2024-12-17T23:59:59.999Z"
+  },
+  "expectedResponse": {
+    "transactionId": "8wX3yZ6aB2cD5eF9gH1jK4mN7pQ9rT2vW5xY8zA3bC",
+    "status": "confirmed",
+    "timestamp": "2024-12-18T00:00:05.123Z",
+    "explorerUrl": "https://explorer.solana.com/tx/8wX3yZ6aB2cD5eF9gH1jK4mN7pQ9rT2vW5xY8zA3bC?cluster=devnet"
+  },
+  "notes": "Proposal results are committed on-chain with a SHA-256 hash for auditability. This creates an immutable record of the final outcome."
+}
