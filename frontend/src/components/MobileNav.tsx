@@ -39,15 +39,23 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      // Prevent body scroll when drawer is open
-      document.body.style.overflow = 'hidden';
+      return () => document.removeEventListener('keydown', handleEscape);
     }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
-    };
   }, [isOpen, onClose]);
+
+  // Manage body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      // Store original overflow value
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      
+      // Restore on cleanup
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;

@@ -8,11 +8,25 @@ export const OrganizationSelector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const announcementTimeoutRef = useRef<number>();
+  const blurTimeoutRef = useRef<number>();
 
   // Don't show selector if user doesn't have multiple orgs
   if (!hasMultipleOrgs) {
     return null;
   }
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (announcementTimeoutRef.current) {
+        clearTimeout(announcementTimeoutRef.current);
+      }
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOrgChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const orgId = e.target.value;
@@ -27,7 +41,12 @@ export const OrganizationSelector: React.FC = () => {
       // Announce change for screen readers
       const roleText = membership.role === 'OrgAdmin' ? 'Admin' : 'Member';
       setAnnouncement(`Switched to ${membership.organizationName} as ${roleText}`);
-      setTimeout(() => setAnnouncement(''), 1000);
+      
+      // Clear previous timeout if any
+      if (announcementTimeoutRef.current) {
+        clearTimeout(announcementTimeoutRef.current);
+      }
+      announcementTimeoutRef.current = window.setTimeout(() => setAnnouncement(''), 1000);
     }
   };
 
@@ -53,6 +72,14 @@ export const OrganizationSelector: React.FC = () => {
     }
   };
 
+  const handleBlur = () => {
+    // Clear previous timeout if any
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+    blurTimeoutRef.current = window.setTimeout(() => setIsOpen(false), 200);
+  };
+
   return (
     <div className="org-selector-container" ref={dropdownRef}>
       <label
@@ -70,7 +97,7 @@ export const OrganizationSelector: React.FC = () => {
         aria-label="Select organization"
         aria-expanded={isOpen}
         onFocus={() => setIsOpen(true)}
-        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+        onBlur={handleBlur}
       >
         {memberships.map((membership: MembershipWithOrganizationDto) => (
           <option key={membership.organizationId} value={membership.organizationId}>
