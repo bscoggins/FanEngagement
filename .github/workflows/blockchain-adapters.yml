@@ -80,13 +80,16 @@ jobs:
         # Before enabling, add SOLANA_TEST_PRIVATE_KEY to repository secrets.
         if: false
         run: |
+          # Build production image for health check testing
+          docker build --target production -t solana-adapter:prod ./adapters/solana
+          
           # Run health check validation using test key from GitHub Secrets
           docker run -d --name adapter-test \
             -p 3001:3001 \
             -e NODE_ENV=production \
             -e SOLANA_RPC_URL=https://api.devnet.solana.com \
             -e SOLANA_PRIVATE_KEY='${{ secrets.SOLANA_TEST_PRIVATE_KEY }}' \
-            solana-adapter:test
+            solana-adapter:prod
           
           # Wait for container to be ready
           echo "Waiting for container to be ready..."
@@ -207,13 +210,16 @@ jobs:
         # The adapter requires a valid private key to start
         if: false
         run: |
+          # Build production image for health check testing
+          docker build --target production -t polygon-adapter:prod ./adapters/polygon
+          
           # Start container with test private key for health check validation
           docker run -d --name adapter-test \
             -p 3002:3002 \
             -e NODE_ENV=production \
             -e POLYGON_RPC_URL=https://rpc-mumbai.maticvigil.com \
             -e POLYGON_PRIVATE_KEY='${{ secrets.POLYGON_TEST_PRIVATE_KEY }}' \
-            polygon-adapter:test
+            polygon-adapter:prod
           
           # Wait for container to be ready
           echo "Waiting for container to be ready..."

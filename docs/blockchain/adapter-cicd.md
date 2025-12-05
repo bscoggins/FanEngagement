@@ -94,7 +94,7 @@ Images are tagged with multiple identifiers:
 **Examples:**
 ```
 ghcr.io/bscoggins/fanengagement-solana-adapter:latest
-ghcr.io/bscoggins/fanengagement-solana-adapter:a1b2c3d4
+ghcr.io/bscoggins/fanengagement-solana-adapter:main-a1b2c3d4
 ghcr.io/bscoggins/fanengagement-solana-adapter:v1.0.0
 ```
 
@@ -110,8 +110,9 @@ The pipeline uses [Aqua Security Trivy](https://github.com/aquasecurity/trivy) f
    - Uploads to GitHub Security tab (always runs)
 
 2. **Build Failure on Vulnerabilities**
-   - Fails the build if CRITICAL or HIGH vulnerabilities found
-   - Prevents insecure images from being published
+   - Fails the build if fixable CRITICAL or HIGH OS vulnerabilities are found
+   - Library vulnerabilities and unfixable issues are reported but do not block the build
+   - Prevents images with fixable CRITICAL or HIGH OS vulnerabilities from being published
 
 ### Viewing Security Results
 
@@ -263,6 +264,7 @@ Security features in the deployments:
 - Run as non-root user (UID 1000)
 - No privilege escalation
 - Drop all Linux capabilities
+- Read-only root filesystem with writable /tmp volume
 - Security context constraints
 
 ## Monitoring and Logging
