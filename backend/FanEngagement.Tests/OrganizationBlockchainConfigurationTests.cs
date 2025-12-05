@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FanEngagement.Application.Organizations;
+using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using Xunit.Abstractions;
@@ -180,5 +181,91 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
         Assert.NotNull(organization);
         Assert.Equal(BlockchainType.Solana, organization!.BlockchainType);
         Assert.Equal(createRequest.BlockchainConfig, organization.BlockchainConfig);
+    }
+
+    [Fact]
+    public async Task UpdateOrganization_ChangeFromSolanaToNoneWithExistingShares_ReturnsBadRequest()
+    {
+        // Arrange
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create organization with Solana blockchain
+        var createRequest = new CreateOrganizationRequest
+        {
+            Name = $"Test Org {Guid.NewGuid()}",
+            Description = "Test Organization",
+            BlockchainType = BlockchainType.Solana,
+            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001\"}"
+        };
+        var createResponse = await _client.PostAsJsonAsync("/organizations", createRequest);
+        var organization = await createResponse.Content.ReadFromJsonAsync<Organization>();
+        Assert.NotNull(organization);
+
+        // Create a share type for the organization
+        var shareTypeRequest = new
+        {
+            name = "Test Share",
+            symbol = "TST",
+            votingWeight = 1.0,
+            isTransferable = true
+        };
+        var shareTypeResponse = await _client.PostAsJsonAsync($"/organizations/{organization!.Id}/share-types", shareTypeRequest);
+        Assert.Equal(HttpStatusCode.Created, shareTypeResponse.StatusCode);
+
+        // Act - Try to change from Solana to None after share type exists
+        var updateRequest = new UpdateOrganizationRequest
+        {
+            Name = organization.Name,
+            Description = organization.Description,
+            BlockchainType = BlockchainType.None
+        };
+        var updateResponse = await _client.PutAsJsonAsync($"/organizations/{organization.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateOrganization_ChangeBlockchainTypeWithExistingProposals_ReturnsBadRequest()
+    {
+        // Arrange
+        var (adminUserId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        // Create organization
+        var createRequest = new CreateOrganizationRequest
+        {
+            Name = $"Test Org {Guid.NewGuid()}",
+            Description = "Test Organization",
+            BlockchainType = BlockchainType.None
+        };
+        var createResponse = await _client.PostAsJsonAsync("/organizations", createRequest);
+        var organization = await createResponse.Content.ReadFromJsonAsync<Organization>();
+        Assert.NotNull(organization);
+
+        // Create a proposal for the organization (no shares needed)
+        var proposalRequest = new CreateProposalRequest
+        {
+            Title = "Test Proposal",
+            Description = "Test proposal description",
+            CreatedByUserId = adminUserId,
+            StartAt = DateTimeOffset.UtcNow.AddDays(1),
+            EndAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+        var proposalResponse = await _client.PostAsJsonAsync($"/organizations/{organization!.Id}/proposals", proposalRequest);
+        Assert.Equal(HttpStatusCode.Created, proposalResponse.StatusCode);
+
+        // Act - Try to update blockchain type after proposal exists
+        var updateRequest = new UpdateOrganizationRequest
+        {
+            Name = organization.Name,
+            Description = organization.Description,
+            BlockchainType = BlockchainType.Solana
+        };
+        var updateResponse = await _client.PutAsJsonAsync($"/organizations/{organization.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
     }
 }

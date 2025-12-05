@@ -175,11 +175,8 @@ public class OrganizationService(FanEngagementDbContext dbContext, IAuditService
             organization.BlockchainType = request.BlockchainType.Value;
         }
         
-        // Update blockchain config - treat null and empty as "clear the value"
-        if (request.BlockchainConfig != null)
-        {
-            organization.BlockchainConfig = string.IsNullOrWhiteSpace(request.BlockchainConfig) ? null : request.BlockchainConfig;
-        }
+        // Update blockchain config - consistent with other fields
+        organization.BlockchainConfig = string.IsNullOrWhiteSpace(request.BlockchainConfig) ? null : request.BlockchainConfig;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
