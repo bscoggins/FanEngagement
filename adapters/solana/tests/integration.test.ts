@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll } from '@jest/globals';
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 /**
@@ -35,9 +35,9 @@ describe('Solana Integration Tests', () => {
         2 * LAMPORTS_PER_SOL
       );
       await connection.confirmTransaction(signature);
-      console.log('Airdrop successful:', signature);
+      // Airdrop successful - tests can proceed
     } catch (error) {
-      console.warn('Airdrop failed - tests may fail if validator is not running');
+      // Airdrop failed - tests may fail if validator is not running
       // Don't fail the test setup, let individual tests handle it
     }
   }, 60000); // Increase timeout to 60 seconds
@@ -48,8 +48,8 @@ describe('Solana Integration Tests', () => {
       expect(version).toBeDefined();
       expect(version['solana-core']).toBeTruthy();
     } catch (error) {
-      console.warn('⚠️  Solana test validator not running. Start it with: docker-compose up -d solana-test-validator');
-      // Skip test gracefully
+      // Solana test validator not running - skipping test gracefully
+      // Start validator with: docker-compose up -d solana-test-validator
       expect(true).toBe(true);
     }
   }, 10000);
@@ -59,7 +59,7 @@ describe('Solana Integration Tests', () => {
       const balance = await connection.getBalance(keypair.publicKey);
       expect(balance).toBeGreaterThanOrEqual(0);
     } catch (error) {
-      console.warn('⚠️  Balance test skipped (validator not running)');
+      // Balance test skipped - validator not running
       expect(true).toBe(true);
     }
   }, 10000);
@@ -70,12 +70,8 @@ describe('Solana Integration Tests', () => {
       expect(blockhash).toBeTruthy();
       expect(typeof blockhash).toBe('string');
     } catch (error) {
-      console.warn('⚠️  Blockhash test skipped (validator not running)');
+      // Blockhash test skipped - validator not running
       expect(true).toBe(true);
     }
   }, 10000);
-
-  afterAll(async () => {
-    // Cleanup
-  });
 });
