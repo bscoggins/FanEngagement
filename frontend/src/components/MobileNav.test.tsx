@@ -151,4 +151,18 @@ describe('MobileNav', () => {
     expect(screen.getByText('Home')).toBeTruthy();
     expect(screen.getByText('Users')).toBeTruthy();
   });
+
+  it('closes drawer when Escape key is pressed', () => {
+    const onClose = vi.fn();
+    
+    renderMobileNav({
+      isOpen: true,
+      onClose,
+      items: [],
+    });
+    
+    fireEvent.keyDown(document, { key: 'Escape' });
+    
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

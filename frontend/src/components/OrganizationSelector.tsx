@@ -11,11 +11,6 @@ export const OrganizationSelector: React.FC = () => {
   const announcementTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
 
-  // Don't show selector if user doesn't have multiple orgs
-  if (!hasMultipleOrgs) {
-    return null;
-  }
-
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
@@ -80,6 +75,11 @@ export const OrganizationSelector: React.FC = () => {
     blurTimeoutRef.current = window.setTimeout(() => setIsOpen(false), 200);
   };
 
+  // Don't show selector if user doesn't have multiple orgs
+  if (!hasMultipleOrgs) {
+    return null;
+  }
+
   return (
     <div className="org-selector-container" ref={dropdownRef}>
       <label
@@ -94,8 +94,6 @@ export const OrganizationSelector: React.FC = () => {
         onChange={handleOrgChange}
         onKeyDown={handleKeyDown}
         className="org-selector-select"
-        aria-label="Select organization"
-        aria-expanded={isOpen}
         onFocus={() => setIsOpen(true)}
         onBlur={handleBlur}
       >
@@ -108,7 +106,6 @@ export const OrganizationSelector: React.FC = () => {
       {activeOrg && (
         <span
           className={`org-selector-badge ${activeOrg.role === 'OrgAdmin' ? 'admin' : 'member'}`}
-          aria-label={`Current role: ${activeOrg.role === 'OrgAdmin' ? 'Organization Admin' : 'Member'}`}
         >
           {activeOrg.role === 'OrgAdmin' ? 'Org Admin' : 'Member'}
         </span>

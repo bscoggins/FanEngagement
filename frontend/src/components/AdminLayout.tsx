@@ -148,13 +148,13 @@ export const AdminLayout: React.FC = () => {
           </div>
           <div className="admin-header-right">
             {isGlobalAdmin() && (
-              <span className="admin-badge" aria-label="Platform Administrator">
+              <span className="admin-badge">
                 Platform Admin
               </span>
             )}
             {/* Org Admin badge - shown when user is org admin for active org */}
             {!isGlobalAdmin() && activeOrgIsAdmin && (
-              <span className="admin-badge" data-testid="org-admin-badge" aria-label="Organization Administrator">
+              <span className="admin-badge" data-testid="org-admin-badge">
                 Org Admin
               </span>
             )}
@@ -173,7 +173,6 @@ export const AdminLayout: React.FC = () => {
                   value={activeOrg?.id || ''}
                   onChange={handleOrgChange}
                   className="admin-header-org-select"
-                  aria-label="Select organization"
                 >
                   {orgMemberships.map((membership) => (
                     <option key={membership.organizationId} value={membership.organizationId}>
@@ -212,7 +211,7 @@ export const AdminLayout: React.FC = () => {
               {activeOrg && activeOrgIsAdmin && orgNavItems.length > 0 && (
                 <>
                   <div className="admin-nav-divider" role="separator" />
-                  <div className="admin-nav-section-label" aria-label="Organization administration">
+                  <div className="admin-nav-section-label">
                     Administration
                   </div>
                   {orgNavItems.map(item => (

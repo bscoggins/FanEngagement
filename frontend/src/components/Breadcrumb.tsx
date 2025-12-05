@@ -27,7 +27,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
           const isLast = index === items.length - 1;
           
           return (
-            <li key={`${item.label}-${index}`} className="breadcrumb-item">
+            <li key={item.path ? `${item.path}-${index}` : `item-${index}`} className="breadcrumb-item">
               {item.path && !isLast ? (
                 <Link to={item.path} className="breadcrumb-link">
                   {item.label}

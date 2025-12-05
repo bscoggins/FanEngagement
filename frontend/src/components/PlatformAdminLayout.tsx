@@ -107,7 +107,7 @@ export const PlatformAdminLayout: React.FC = () => {
             <h1>FanEngagement Platform Admin</h1>
           </div>
           <div className="admin-header-right">
-            <span className="admin-badge" aria-label="Platform Administrator">
+            <span className="admin-badge">
               Platform Admin
             </span>
             <button 
@@ -139,7 +139,7 @@ export const PlatformAdminLayout: React.FC = () => {
               {orgNavItems.length > 0 && (
                 <>
                   <div className="admin-nav-divider" role="separator" />
-                  <div className="admin-nav-section-label" aria-label="Organization administration">
+                  <div className="admin-nav-section-label">
                     {activeOrg?.name || 'Organization'}
                   </div>
                   {orgNavItems.map(item => (
