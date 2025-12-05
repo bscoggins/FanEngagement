@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './MobileNav.css';
 
@@ -29,6 +29,27 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   items,
   sections 
 }) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+
+  // Handle focus management when drawer opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Store the currently focused element to restore focus later
+      previouslyFocusedElement.current = document.activeElement as HTMLElement;
+      
+      // Focus the close button when drawer opens
+      setTimeout(() => {
+        closeButtonRef.current?.focus();
+      }, 100);
+    } else {
+      // Restore focus to the element that opened the drawer
+      if (previouslyFocusedElement.current) {
+        previouslyFocusedElement.current.focus();
+      }
+    }
+  }, [isOpen]);
+
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -72,6 +93,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       
       {/* Drawer */}
       <nav 
+        id="mobile-nav-drawer"
         className="mobile-nav-drawer"
         aria-label="Mobile navigation"
         role="navigation"
@@ -79,6 +101,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         <div className="mobile-nav-header">
           <h2 className="mobile-nav-title">Menu</h2>
           <button
+            ref={closeButtonRef}
             className="mobile-nav-close"
             onClick={onClose}
             aria-label="Close navigation"

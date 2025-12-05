@@ -89,9 +89,9 @@ export const AdminLayout: React.FC = () => {
   };
 
   // Helper to check if a nav item is active
-  const isNavItemActive = (path: string) => {
+  const isNavItemActive = useCallback((path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
+  }, [location.pathname]);
 
   // Check if active org has admin role
   const activeOrgIsAdmin = activeOrg && isOrgAdminForOrg(activeOrg.id);
@@ -111,7 +111,7 @@ export const AdminLayout: React.FC = () => {
     });
 
     return items;
-  }, [globalNavItems, location.pathname]);
+  }, [globalNavItems, isNavItemActive]);
 
   const mobileNavSections = useMemo(() => {
     if (!activeOrg || !activeOrgIsAdmin || orgNavItems.length === 0) {
@@ -127,7 +127,7 @@ export const AdminLayout: React.FC = () => {
         isActive: isNavItemActive(item.resolvedPath),
       })),
     }];
-  }, [activeOrg, activeOrgIsAdmin, orgNavItems, location.pathname]);
+  }, [activeOrg, activeOrgIsAdmin, orgNavItems, isNavItemActive]);
 
   return (
     <>
@@ -141,6 +141,7 @@ export const AdminLayout: React.FC = () => {
               onClick={() => setIsMobileNavOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={isMobileNavOpen}
+              aria-controls="mobile-nav-drawer"
             >
               <span className="hamburger-icon" aria-hidden="true">☰</span>
             </button>

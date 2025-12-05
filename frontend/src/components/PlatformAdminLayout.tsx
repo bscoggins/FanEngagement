@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useCallback, useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -59,9 +59,9 @@ export const PlatformAdminLayout: React.FC = () => {
   };
 
   // Helper to check if a nav item is active
-  const isNavItemActive = (path: string) => {
+  const isNavItemActive = useCallback((path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
+  }, [location.pathname]);
 
   // Prepare mobile nav items
   const mobileNavItems: MobileNavItem[] = useMemo(() => {
@@ -71,7 +71,7 @@ export const PlatformAdminLayout: React.FC = () => {
       path: item.resolvedPath,
       isActive: isNavItemActive(item.resolvedPath),
     }));
-  }, [globalNavItems, location.pathname]);
+  }, [globalNavItems, isNavItemActive]);
 
   const mobileNavSections = useMemo(() => {
     if (orgNavItems.length === 0) {
@@ -87,7 +87,7 @@ export const PlatformAdminLayout: React.FC = () => {
         isActive: isNavItemActive(item.resolvedPath),
       })),
     }];
-  }, [orgNavItems, activeOrg?.name, location.pathname]);
+  }, [orgNavItems, activeOrg?.name, isNavItemActive]);
 
   return (
     <>
@@ -101,6 +101,7 @@ export const PlatformAdminLayout: React.FC = () => {
               onClick={() => setIsMobileNavOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={isMobileNavOpen}
+              aria-controls="mobile-nav-drawer"
             >
               <span className="hamburger-icon" aria-hidden="true">☰</span>
             </button>

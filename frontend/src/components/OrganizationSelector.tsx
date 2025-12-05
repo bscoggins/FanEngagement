@@ -5,20 +5,14 @@ import './OrganizationSelector.css';
 
 export const OrganizationSelector: React.FC = () => {
   const { activeOrg, setActiveOrg, memberships, hasMultipleOrgs } = useActiveOrganization();
-  const [isOpen, setIsOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const announcementTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const blurTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (announcementTimeoutRef.current !== null) {
         window.clearTimeout(announcementTimeoutRef.current);
-      }
-      if (blurTimeoutRef.current !== null) {
-        window.clearTimeout(blurTimeoutRef.current);
       }
     };
   }, []);
@@ -45,43 +39,13 @@ export const OrganizationSelector: React.FC = () => {
     }
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen]);
-
-  // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLSelectElement>) => {
-    if (e.key === 'Escape') {
-      setIsOpen(false);
-      e.currentTarget.blur();
-    }
-  };
-
-  const handleBlur = () => {
-    // Clear previous timeout if any
-    if (blurTimeoutRef.current !== null) {
-      window.clearTimeout(blurTimeoutRef.current);
-    }
-    blurTimeoutRef.current = window.setTimeout(() => setIsOpen(false), 200);
-  };
-
   // Don't show selector if user doesn't have multiple orgs
   if (!hasMultipleOrgs) {
     return null;
   }
 
   return (
-    <div className="org-selector-container" ref={dropdownRef}>
+    <div className="org-selector-container">
       <label
         htmlFor="org-selector"
         className="org-selector-label"
@@ -92,10 +56,7 @@ export const OrganizationSelector: React.FC = () => {
         id="org-selector"
         value={activeOrg?.id || ''}
         onChange={handleOrgChange}
-        onKeyDown={handleKeyDown}
         className="org-selector-select"
-        onFocus={() => setIsOpen(true)}
-        onBlur={handleBlur}
       >
         {memberships.map((membership: MembershipWithOrganizationDto) => (
           <option key={membership.organizationId} value={membership.organizationId}>
