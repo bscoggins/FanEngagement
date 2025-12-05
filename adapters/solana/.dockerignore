@@ -41,6 +41,5 @@ docker-compose.yml
 .DS_Store
 Thumbs.db
 
-# Config files not needed in production (keep tsconfig.json for build stage)
-jest.config.json
+# Config files not needed in production (keep tsconfig.json and jest.config.json for build/test stages)
 eslint.config.js

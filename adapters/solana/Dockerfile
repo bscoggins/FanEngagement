@@ -8,19 +8,28 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (disable strict SSL for CI environments)
+# Install all dependencies
+# Note: Temporarily disable strict-ssl to work around self-signed cert issues in some CI environments
+# This is re-enabled immediately after install for security
 RUN npm config set strict-ssl false && \
     npm install && \
     npm config set strict-ssl true
 
 # Copy source code
 COPY tsconfig.json ./
+COPY jest.config.json ./
 COPY src ./src
+COPY tests ./tests
 
 # Build TypeScript
 RUN npm run build
 
-# Stage 2: Production
+# Stage 2: Test (for CI)
+FROM builder AS test
+# Run only unit tests (integration tests require external services)
+RUN npm test -- --testPathIgnorePatterns=integration
+
+# Stage 3: Production
 FROM node:20-alpine
 
 WORKDIR /app
@@ -29,6 +38,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
+# Note: Temporarily disable strict-ssl to work around self-signed cert issues in some CI environments
+# This is re-enabled immediately after install for security
 RUN npm config set strict-ssl false && \
     npm install --omit=dev && \
     npm config set strict-ssl true
