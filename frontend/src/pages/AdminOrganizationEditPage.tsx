@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
+import { shareTypesApi } from '../api/shareTypesApi';
+import { proposalsApi } from '../api/proposalsApi';
 import type { UpdateOrganizationRequest, Organization } from '../types/api';
 
 export const AdminOrganizationEditPage: React.FC = () => {
@@ -47,9 +49,17 @@ export const AdminOrganizationEditPage: React.FC = () => {
         });
         
         // Check if organization has existing data (shares or proposals)
-        // For now, we'll assume it doesn't have data unless we fetch this from an API
-        // In a real implementation, you'd check ShareTypes and Proposals endpoints
-        setHasExistingData(false);
+        try {
+          const [shareTypes, proposals] = await Promise.all([
+            shareTypesApi.getByOrganization(orgId),
+            proposalsApi.getByOrganization(orgId)
+          ]);
+          setHasExistingData(shareTypes.length > 0 || proposals.length > 0);
+        } catch (error) {
+          // If we can't check, assume no existing data to allow editing
+          console.warn('Could not check for existing data:', error);
+          setHasExistingData(false);
+        }
       } catch (err) {
         console.error('Failed to fetch organization:', err);
         if (err && typeof err === 'object' && 'response' in err) {
