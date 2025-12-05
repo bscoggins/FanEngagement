@@ -1,0 +1,64 @@
+/**
+ * Breadcrumb component styles
+ * Provides visual hierarchy for navigation
+ */
+.breadcrumb {
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: var(--spacing-2, 0.5rem);
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.breadcrumb-link {
+  color: var(--color-neutral-600, #666);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.breadcrumb-link:hover {
+  color: var(--color-primary-600, #007bff);
+  text-decoration: underline;
+}
+
+.breadcrumb-link:focus {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.breadcrumb-current {
+  color: var(--color-neutral-700, #333);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.breadcrumb-separator {
+  color: var(--color-neutral-400, #999);
+  user-select: none;
+}
+
+/* Responsive - hide breadcrumbs on very small screens */
+@media (max-width: 480px) {
+  .breadcrumb {
+    font-size: 0.8rem;
+  }
+  
+  /* Only show last 2 items on very small screens */
+  .breadcrumb-item:not(:nth-last-child(-n+2)) {
+    display: none;
+  }
+}
