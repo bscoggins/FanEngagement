@@ -14,8 +14,6 @@ yarn-error.log*
 
 # Documentation
 *.md
-VERIFICATION.md
-README.md
 
 # IDE
 .vscode/
