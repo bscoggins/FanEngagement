@@ -80,11 +80,6 @@
 .org-selector-button-arrow {
   font-size: 0.7rem;
   color: var(--color-neutral-600, #666);
-  transition: transform 0.2s var(--ease-out);
-}
-
-.org-selector-button[aria-expanded="true"] .org-selector-button-arrow {
-  transform: rotate(180deg);
 }
 
 /* Dropdown menu */

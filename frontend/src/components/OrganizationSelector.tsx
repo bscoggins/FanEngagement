@@ -1,7 +1,9 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import type { MembershipWithOrganizationDto } from '../types/api';
 import './OrganizationSelector.css';
+
+const TRUNCATE_THRESHOLD = 30;
 
 export const OrganizationSelector: React.FC = () => {
   const { activeOrg, setActiveOrg, memberships, hasMultipleOrgs } = useActiveOrganization();
@@ -9,13 +11,15 @@ export const OrganizationSelector: React.FC = () => {
   const [announcement, setAnnouncement] = useState('');
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
   
-  // Initialize focused index based on active org
-  const [focusedIndex, setFocusedIndex] = useState(() => {
-    if (activeOrg) {
+  // Compute the initial focused index based on active org
+  const initialFocusedIndex = useMemo(() => {
+    if (activeOrg && memberships.length > 0) {
       return memberships.findIndex(m => m.organizationId === activeOrg.id);
     }
     return -1;
-  });
+  }, [activeOrg, memberships]);
+  
+  const [focusedIndex, setFocusedIndex] = useState(initialFocusedIndex);
   
   const announcementTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -30,6 +34,11 @@ export const OrganizationSelector: React.FC = () => {
       }
     };
   }, []);
+
+  // Update focused index when initial value changes (e.g., when active org or memberships change)
+  useEffect(() => {
+    setFocusedIndex(initialFocusedIndex);
+  }, [initialFocusedIndex]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -96,7 +105,10 @@ export const OrganizationSelector: React.FC = () => {
       case 'Escape':
         e.preventDefault();
         setIsOpen(false);
-        buttonRef.current?.focus();
+        // Use setTimeout to ensure DOM is stable before focusing
+        setTimeout(() => {
+          buttonRef.current?.focus();
+        }, 0);
         break;
       case ' ':
         e.preventDefault();
@@ -171,7 +183,7 @@ export const OrganizationSelector: React.FC = () => {
           {memberships.map((membership: MembershipWithOrganizationDto, index: number) => {
             const isActive = activeOrg?.id === membership.organizationId;
             const isFocused = index === focusedIndex;
-            const isTruncated = membership.organizationName.length > 30;
+            const isTruncated = membership.organizationName.length > TRUNCATE_THRESHOLD;
             
             return (
               <li
