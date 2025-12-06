@@ -23,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Handle focus management when modal opens/closes
   useEffect(() => {
@@ -31,7 +32,7 @@ export const Modal: React.FC<ModalProps> = ({
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
 
       // Focus the close button when modal opens
-      setTimeout(() => {
+      focusTimeoutRef.current = setTimeout(() => {
         closeButtonRef.current?.focus();
       }, 100);
     } else {
@@ -40,6 +41,12 @@ export const Modal: React.FC<ModalProps> = ({
         previouslyFocusedElement.current.focus();
       }
     }
+
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
+      }
+    };
   }, [isOpen]);
 
   // Close on Escape key
