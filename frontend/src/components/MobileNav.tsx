@@ -100,7 +100,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       const firstElement = focusableArray[0];
       const lastElement = focusableArray[focusableArray.length - 1];
 
-      // Trap focus within modal
+      // Trap focus within drawer
       if (e.shiftKey) {
         // Shift + Tab
         if (document.activeElement === firstElement) {
