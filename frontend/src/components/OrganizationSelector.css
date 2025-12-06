@@ -216,7 +216,9 @@
     animation: none;
   }
   
-  .org-selector-button-arrow {
+  .org-selector-button,
+  .org-selector-button-arrow,
+  .org-selector-option {
     transition: none;
   }
 }

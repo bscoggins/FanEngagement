@@ -22,6 +22,7 @@ export const OrganizationSelector: React.FC = () => {
   const [focusedIndex, setFocusedIndex] = useState(initialFocusedIndex);
   
   const announcementTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const escapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -31,6 +32,9 @@ export const OrganizationSelector: React.FC = () => {
     return () => {
       if (announcementTimeoutRef.current !== null) {
         window.clearTimeout(announcementTimeoutRef.current);
+      }
+      if (escapeTimeoutRef.current !== null) {
+        clearTimeout(escapeTimeoutRef.current);
       }
     };
   }, []);
@@ -45,7 +49,7 @@ export const OrganizationSelector: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        setFocusedIndex(-1);
+        setFocusedIndex(initialFocusedIndex);
       }
     };
 
@@ -53,7 +57,7 @@ export const OrganizationSelector: React.FC = () => {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isOpen]);
+  }, [isOpen, initialFocusedIndex]);
 
   const handleOrgSelect = useCallback((membership: MembershipWithOrganizationDto) => {
     setActiveOrg({
@@ -82,6 +86,7 @@ export const OrganizationSelector: React.FC = () => {
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
+          setFocusedIndex(initialFocusedIndex >= 0 ? initialFocusedIndex : 0);
         } else {
           setFocusedIndex(prev => (prev + 1) % memberships.length);
         }
@@ -90,6 +95,7 @@ export const OrganizationSelector: React.FC = () => {
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
+          setFocusedIndex(initialFocusedIndex >= 0 ? initialFocusedIndex : memberships.length - 1);
         } else {
           setFocusedIndex(prev => (prev - 1 + memberships.length) % memberships.length);
         }
@@ -106,7 +112,7 @@ export const OrganizationSelector: React.FC = () => {
         e.preventDefault();
         setIsOpen(false);
         // Use setTimeout to ensure DOM is stable before focusing
-        setTimeout(() => {
+        escapeTimeoutRef.current = setTimeout(() => {
           buttonRef.current?.focus();
         }, 0);
         break;
@@ -116,20 +122,22 @@ export const OrganizationSelector: React.FC = () => {
           setIsOpen(true);
         } else if (focusedIndex >= 0) {
           handleOrgSelect(memberships[focusedIndex]);
+        } else {
+          setIsOpen(false);
         }
         break;
       case 'Tab':
         setIsOpen(false);
         break;
     }
-  }, [isOpen, focusedIndex, memberships, handleOrgSelect]);
+  }, [isOpen, focusedIndex, memberships, handleOrgSelect, initialFocusedIndex]);
 
   // Scroll focused item into view
   useEffect(() => {
     if (isOpen && focusedIndex >= 0 && listRef.current) {
       const focusedElement = listRef.current.children[focusedIndex] as HTMLElement;
       if (focusedElement && focusedElement.scrollIntoView) {
-        focusedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        focusedElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
       }
     }
   }, [focusedIndex, isOpen]);
@@ -149,12 +157,14 @@ export const OrganizationSelector: React.FC = () => {
       </span>
       <button
         ref={buttonRef}
+        type="button"
         className="org-selector-button"
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-labelledby="org-selector-label org-selector-button"
+        aria-activedescendant={isOpen && focusedIndex >= 0 ? `org-option-${memberships[focusedIndex].organizationId}` : undefined}
         id="org-selector-button"
         data-testid="org-selector-button"
       >
@@ -188,6 +198,7 @@ export const OrganizationSelector: React.FC = () => {
             return (
               <li
                 key={membership.organizationId}
+                id={`org-option-${membership.organizationId}`}
                 className={`org-selector-option ${isActive ? 'active' : ''} ${isFocused ? 'focused' : ''}`}
                 role="option"
                 aria-selected={isActive}

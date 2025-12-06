@@ -356,4 +356,115 @@ describe('OrganizationSelector', () => {
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
     expect(options[1]).toHaveAttribute('aria-selected', 'false');
   });
+
+  it('closes dropdown when clicking outside', () => {
+    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
+      activeOrg: {
+        id: 'org-1',
+        name: 'Organization One',
+        role: 'OrgAdmin',
+      },
+      setActiveOrg: mockSetActiveOrg,
+      memberships: mockMemberships,
+      hasMultipleOrgs: true,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
+    });
+
+    render(<OrganizationSelector />);
+
+    const button = screen.getByTestId('org-selector-button');
+    
+    // Open dropdown
+    fireEvent.click(button);
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    
+    // Click outside the dropdown
+    fireEvent.mouseDown(document.body);
+    
+    // Dropdown should close
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('org-selector-dropdown')).not.toBeInTheDocument();
+  });
+
+  it('shows tooltip for truncated organization names', () => {
+    const longOrgMemberships: MembershipWithOrganizationDto[] = [
+      {
+        id: 'membership-1',
+        organizationId: 'org-1',
+        organizationName: 'Organization One',
+        userId: 'user-1',
+        role: 'OrgAdmin',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'membership-2',
+        organizationId: 'org-2',
+        organizationName: 'This is a Very Long Organization Name That Exceeds Thirty Characters',
+        userId: 'user-1',
+        role: 'Member',
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
+      activeOrg: {
+        id: 'org-1',
+        name: 'Organization One',
+        role: 'OrgAdmin',
+      },
+      setActiveOrg: mockSetActiveOrg,
+      memberships: longOrgMemberships,
+      hasMultipleOrgs: true,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
+    });
+
+    render(<OrganizationSelector />);
+
+    const button = screen.getByTestId('org-selector-button');
+    fireEvent.click(button);
+
+    const longOrgOption = screen.getByTestId('org-option-org-2');
+    
+    // Hover over the option with long name
+    fireEvent.mouseEnter(longOrgOption);
+    
+    // Tooltip should appear
+    const tooltip = screen.getByRole('tooltip');
+    expect(tooltip).toBeInTheDocument();
+    expect(tooltip).toHaveTextContent('This is a Very Long Organization Name That Exceeds Thirty Characters');
+    
+    // Mouse leave should hide tooltip
+    fireEvent.mouseLeave(longOrgOption);
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('does not show tooltip for short organization names', () => {
+    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
+      activeOrg: {
+        id: 'org-1',
+        name: 'Organization One',
+        role: 'OrgAdmin',
+      },
+      setActiveOrg: mockSetActiveOrg,
+      memberships: mockMemberships,
+      hasMultipleOrgs: true,
+      isLoading: false,
+      refreshMemberships: vi.fn(),
+    });
+
+    render(<OrganizationSelector />);
+
+    const button = screen.getByTestId('org-selector-button');
+    fireEvent.click(button);
+
+    const shortOrgOption = screen.getByTestId('org-option-org-1');
+    
+    // Hover over the option with short name
+    fireEvent.mouseEnter(shortOrgOption);
+    
+    // Tooltip should not appear
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
 });
