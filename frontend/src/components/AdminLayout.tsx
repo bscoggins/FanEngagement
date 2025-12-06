@@ -16,7 +16,7 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const keyboardHelpTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const keyboardHelpTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
