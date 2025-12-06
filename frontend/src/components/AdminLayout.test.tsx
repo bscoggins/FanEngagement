@@ -484,4 +484,181 @@ describe('AdminLayout', () => {
       });
     });
   });
+
+  describe('Keyboard shortcuts for org admin navigation', () => {
+    it('navigates to org overview with Ctrl+1', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Overview')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+1 keypress
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to memberships with Ctrl+2', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Memberships')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+2 keypress
+      const event = new KeyboardEvent('keydown', { 
+        key: '2', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(screen.getByText('Memberships Content')).toBeInTheDocument();
+      });
+    });
+
+    it('shows keyboard help toast when shortcut is used', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Overview')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+1 keypress
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Check for keyboard help toast
+      await waitFor(() => {
+        expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
+      });
+    });
+
+    it('does not handle shortcuts when no active org', async () => {
+      renderAdminLayout('/admin', {
+        role: 'Admin',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      });
+
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Should not show keyboard help (no org selected)
+      expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
+    });
+
+    it('displays keyboard shortcut hints on org nav items', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        // Check that keyboard shortcuts are displayed (e.g., Ctrl1, Ctrl2, etc.)
+        const overviewLink = screen.getByTestId('org-nav-orgOverview');
+        expect(overviewLink).toBeInTheDocument();
+        expect(overviewLink).toHaveTextContent(/Ctrl1|⌘1/);
+        
+        const membershipsLink = screen.getByTestId('org-nav-manageMemberships');
+        expect(membershipsLink).toHaveTextContent(/Ctrl2|⌘2/);
+      });
+    });
+  });
 });

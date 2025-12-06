@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -15,6 +15,8 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const keyboardHelpTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
@@ -96,6 +98,46 @@ export const AdminLayout: React.FC = () => {
   // Check if active org has admin role
   const activeOrgIsAdmin = activeOrg && isOrgAdminForOrg(activeOrg.id);
 
+  // Keyboard shortcuts for org admin navigation (Ctrl+1 through Ctrl+6)
+  useEffect(() => {
+    const handleKeyboardShortcut = (e: KeyboardEvent) => {
+      // Only handle shortcuts when user has OrgAdmin role for active org
+      if (!activeOrg || !activeOrgIsAdmin || orgNavItems.length === 0) {
+        return;
+      }
+
+      // Check for Ctrl key (Cmd on Mac) + number keys 1-6
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+      
+      if (modifierKey && e.key >= '1' && e.key <= '6') {
+        const index = parseInt(e.key, 10) - 1;
+        
+        if (index < orgNavItems.length) {
+          e.preventDefault();
+          navigate(orgNavItems[index].resolvedPath);
+          
+          // Show brief keyboard help notification
+          setShowKeyboardHelp(true);
+          if (keyboardHelpTimeoutRef.current) {
+            clearTimeout(keyboardHelpTimeoutRef.current);
+          }
+          keyboardHelpTimeoutRef.current = setTimeout(() => {
+            setShowKeyboardHelp(false);
+          }, 2000);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcut);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcut);
+      if (keyboardHelpTimeoutRef.current) {
+        clearTimeout(keyboardHelpTimeoutRef.current);
+      }
+    };
+  }, [activeOrg, activeOrgIsAdmin, orgNavItems, navigate]);
+
   // Prepare mobile nav items
   const mobileNavItems: MobileNavItem[] = useMemo(() => {
     const items: MobileNavItem[] = [];
@@ -132,6 +174,21 @@ export const AdminLayout: React.FC = () => {
   return (
     <>
       <SkipLink href="#main-content">Skip to main content</SkipLink>
+      
+      {/* Keyboard shortcut help notification */}
+      {showKeyboardHelp && activeOrg && activeOrgIsAdmin && (
+        <div 
+          className="keyboard-help-toast" 
+          role="status" 
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <p className="keyboard-help-title">Keyboard Shortcuts</p>
+          <p className="keyboard-help-hint">
+            Use {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? 'Cmd' : 'Ctrl'}+1–6 to navigate org admin pages
+          </p>
+        </div>
+      )}
       
       <div className="admin-layout">
         <header className="admin-header" role="banner">
@@ -215,7 +272,7 @@ export const AdminLayout: React.FC = () => {
                   <div className="admin-nav-section-label">
                     Administration
                   </div>
-                  {orgNavItems.map(item => (
+                  {orgNavItems.map((item, index) => (
                     <Link
                       key={item.id}
                       to={item.resolvedPath}
@@ -223,7 +280,12 @@ export const AdminLayout: React.FC = () => {
                       data-testid={`org-nav-${item.id}`}
                       aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
                     >
-                      {item.label}
+                      <span className="admin-nav-link-text">{item.label}</span>
+                      {index < 6 && (
+                        <span className="admin-nav-shortcut" aria-label={`Keyboard shortcut: ${navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? 'Cmd' : 'Ctrl'}+${index + 1}`}>
+                          {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? '⌘' : 'Ctrl'}{index + 1}
+                        </span>
+                      )}
                     </Link>
                   ))}
                 </>
