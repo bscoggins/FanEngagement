@@ -180,8 +180,9 @@ describe('SolanaService Unit Tests', () => {
     const result = await adapter.createOrganization(orgId, orgName);
 
     // Assert
-    expect(result.transactionId).toBe('sig123');
-    expect(result.status).toBe('confirmed');
+    // NOTE: Service layer returns transactionSignature and accountAddress.
+    expect(result.transactionSignature).toBe('sig123');
+    expect(result.accountAddress).toBeDefined();
     expect(mockConnection.sendTransaction).toHaveBeenCalledTimes(1);
     expect(mockConnection.confirmTransaction).toHaveBeenCalledWith('sig123');
   });
@@ -527,9 +528,10 @@ describe('SolanaService Integration Tests', () => {
     );
 
     // Assert
+    // NOTE: Service layer returns transactionSignature and accountAddress for each result.
     results.forEach((result, index) => {
-      expect(result.transactionId).toBeDefined();
-      expect(result.status).toBe('confirmed');
+      expect(result.transactionSignature).toBeDefined();
+      expect(result.accountAddress).toBeDefined();
     });
   }, 60000); // 60s timeout for multiple transactions
 });
@@ -579,12 +581,13 @@ describe('PolygonService Integration Tests (Hardhat)', () => {
     const result = await adapter.createOrganization(orgId, orgName);
 
     // Assert
-    expect(result.transactionId).toMatch(/^0x[0-9a-fA-F]{64}$/); // Ethereum tx hash
-    expect(result.accountAddress).toMatch(/^0x[0-9a-fA-F]{40}$/); // Contract address
-    expect(result.status).toBe('confirmed');
+    // NOTE: PolygonService returns transactionHash, contractAddress, and gasUsed.
+    // The HTTP API layer may add additional fields like status.
+    expect(result.transactionHash).toMatch(/^0x[0-9a-fA-F]{64}$/); // Ethereum tx hash
+    expect(result.contractAddress).toMatch(/^0x[0-9a-fA-F]{40}$/); // Contract address
 
     // Verify contract deployed
-    const code = await provider.getCode(result.accountAddress);
+    const code = await provider.getCode(result.contractAddress);
     expect(code).not.toBe('0x'); // Contract has code
   }, 30000);
 
@@ -604,11 +607,12 @@ describe('PolygonService Integration Tests (Hardhat)', () => {
     );
 
     // Assert
-    expect(result.mintAddress).toMatch(/^0x[0-9a-fA-F]{40}$/);
+    // NOTE: PolygonService returns tokenAddress (not mintAddress).
+    expect(result.tokenAddress).toMatch(/^0x[0-9a-fA-F]{40}$/);
 
     // Verify token contract
     const tokenContract = new ethers.Contract(
-      result.mintAddress,
+      result.tokenAddress,
       ['function name() view returns (string)', 'function symbol() view returns (string)'],
       provider
     );
@@ -1590,8 +1594,8 @@ jobs:
 
       - name: Setup k6
         run: |
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          curl -fsSL https://dl.k6.io/key.gpg | sudo tee /usr/share/keyrings/k6-archive-keyring.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
           sudo apt-get update
           sudo apt-get install k6
 
