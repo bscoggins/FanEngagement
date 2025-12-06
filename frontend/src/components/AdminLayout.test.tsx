@@ -660,5 +660,57 @@ describe('AdminLayout', () => {
         expect(membershipsLink).toHaveTextContent(/Ctrl2|⌘2/);
       });
     });
+
+    it('navigates with Cmd+1 on Mac', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      // Mock Mac platform
+      const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform');
+      Object.defineProperty(navigator, 'platform', {
+        value: 'MacIntel',
+        configurable: true,
+      });
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Overview')).toBeInTheDocument();
+      });
+
+      // Simulate Cmd+1 keypress on Mac
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        metaKey: true,  // Use metaKey for Mac
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
+      });
+      
+      // Restore original platform
+      if (originalPlatform) {
+        Object.defineProperty(navigator, 'platform', originalPlatform);
+      }
+    });
   });
 });

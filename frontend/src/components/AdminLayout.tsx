@@ -16,11 +16,20 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const keyboardHelpTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const keyboardHelpTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | undefined>(undefined);
 
   // Platform detection for keyboard shortcuts
   const isMac = useMemo(() => {
-    return navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    // Prefer userAgentData if available, then platform, then userAgent as fallback
+    const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+    if (nav.userAgentData?.platform) {
+      return nav.userAgentData.platform.toUpperCase().includes('MAC');
+    }
+    if (navigator.platform) {
+      return navigator.platform.toUpperCase().includes('MAC');
+    }
+    // Fallback to userAgent regex for Mac/iOS devices
+    return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   }, []);
   const modifierKeyLabel = isMac ? '⌘' : 'Ctrl';
   const modifierKeyName = isMac ? 'Cmd' : 'Ctrl';
@@ -116,7 +125,7 @@ export const AdminLayout: React.FC = () => {
       // Check for modifier key + number keys 1-6
       const modifierKey = isMac ? e.metaKey : e.ctrlKey;
       
-      if (modifierKey && e.key >= '1' && e.key <= '6') {
+      if (modifierKey && !e.altKey && !e.shiftKey && e.key >= '1' && e.key <= '6') {
         const index = parseInt(e.key, 10) - 1;
         
         if (index < orgNavItems.length) {
@@ -126,9 +135,9 @@ export const AdminLayout: React.FC = () => {
           // Show brief keyboard help notification
           setShowKeyboardHelp(true);
           if (keyboardHelpTimeoutRef.current) {
-            clearTimeout(keyboardHelpTimeoutRef.current);
+            window.clearTimeout(keyboardHelpTimeoutRef.current);
           }
-          keyboardHelpTimeoutRef.current = setTimeout(() => {
+          keyboardHelpTimeoutRef.current = window.setTimeout(() => {
             setShowKeyboardHelp(false);
           }, 2000);
         }
@@ -139,10 +148,10 @@ export const AdminLayout: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyboardShortcut);
       if (keyboardHelpTimeoutRef.current) {
-        clearTimeout(keyboardHelpTimeoutRef.current);
+        window.clearTimeout(keyboardHelpTimeoutRef.current);
       }
     };
-  }, [activeOrg, activeOrgIsAdmin, orgNavItems, navigate]);
+  }, [activeOrg, activeOrgIsAdmin, orgNavItems, navigate, isMac]);
 
   // Prepare mobile nav items
   const mobileNavItems: MobileNavItem[] = useMemo(() => {
