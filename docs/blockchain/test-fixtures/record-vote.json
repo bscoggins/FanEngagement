@@ -1,0 +1,19 @@
+{
+  "request": {
+    "voteId": "abcdef12-3456-7890-abcd-ef1234567890",
+    "proposalId": "98765432-8765-8765-8765-876543210987",
+    "userId": "11111111-2222-3333-4444-555555555555",
+    "optionId": "option-1",
+    "votingPower": 100,
+    "voterAddress": "7xLk1qWz9eN2pYmBfRj8hVtKcX5wD3mS4gP9nQ6vE8r",
+    "timestamp": "2024-12-05T19:15:00.789Z"
+  },
+  "expectedResponse": {
+    "transactionId": "2dF7gH9jK4mN5pQ8rT3vX6wY9zA1bC2eD3fE4gF5hG",
+    "status": "confirmed",
+    "blockHeight": 256789012,
+    "timestamp": "2024-12-05T19:15:01.234Z",
+    "explorerUrl": "https://explorer.solana.com/tx/2dF7gH9jK4mN5pQ8rT3vX6wY9zA1bC2eD3fE4gF5hG?cluster=devnet"
+  },
+  "notes": "Vote recording creates an immutable on-chain record. VotingPower is calculated based on share holdings at snapshot time."
+}
