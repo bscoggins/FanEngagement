@@ -477,12 +477,13 @@ describe('SolanaService Integration Tests', () => {
     const result = await adapter.createOrganization(orgId, orgName);
 
     // Assert
-    expect(result.transactionId).toMatch(/^[1-9A-HJ-NP-Za-km-z]{87,88}$/); // Base58 signature
+    // NOTE: The service layer returns transactionSignature and accountAddress.
+    // The HTTP API layer (routes.ts) wraps this with additional fields like status.
+    expect(result.transactionSignature).toMatch(/^[1-9A-HJ-NP-Za-km-z]{87,88}$/); // Base58 signature
     expect(result.accountAddress).toBeDefined();
-    expect(result.status).toBe('confirmed');
 
     // Verify transaction on-chain
-    const tx = await connection.getTransaction(result.transactionId, {
+    const tx = await connection.getTransaction(result.transactionSignature, {
       commitment: 'confirmed',
     });
     expect(tx).not.toBeNull();
@@ -495,7 +496,15 @@ describe('SolanaService Integration Tests', () => {
     await adapter.createOrganization(orgId, 'Test Org for Retrieval');
 
     // Act
-    const pda = adapter.deriveOrganizationPDA(orgId);
+    // NOTE: SolanaService does not expose a public PDA derivation method (findOrganizationPDA is private).
+    // Derive the organization PDA directly using PublicKey.findProgramAddress().
+    // Use the same seeds and program ID as the service implementation.
+    const orgIdBuffer = Buffer.from(orgId.replace(/-/g, ''), 'hex');
+    const programId = new PublicKey('11111111111111111111111111111111'); // Replace with actual program ID
+    const [pda] = await PublicKey.findProgramAddress(
+      [Buffer.from('organization'), orgIdBuffer],
+      programId
+    );
     const accountInfo = await connection.getAccountInfo(pda);
 
     // Assert
