@@ -484,4 +484,357 @@ describe('AdminLayout', () => {
       });
     });
   });
+
+  describe('Keyboard shortcuts for org admin navigation', () => {
+    it('navigates to org overview with Ctrl+1', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Overview')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+1 keypress
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to memberships with Ctrl+2', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Memberships')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+2 keypress
+      const event = new KeyboardEvent('keydown', { 
+        key: '2', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(screen.getByText('Memberships Content')).toBeInTheDocument();
+      });
+    });
+
+    it('shows keyboard help toast when shortcut is used', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Overview')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+1 keypress
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Check for keyboard help toast
+      await waitFor(() => {
+        expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
+      });
+    });
+
+    it('does not handle shortcuts when no active org', async () => {
+      renderAdminLayout('/admin', {
+        role: 'Admin',
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      });
+
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Should not show keyboard help (no org selected)
+      expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
+    });
+
+    it('displays keyboard shortcut hints on org nav items', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        // Check that keyboard shortcuts are displayed (e.g., Ctrl1, Ctrl2, etc.)
+        const overviewLink = screen.getByTestId('org-nav-orgOverview');
+        expect(overviewLink).toBeInTheDocument();
+        expect(overviewLink).toHaveTextContent(/Ctrl1|⌘1/);
+        
+        const membershipsLink = screen.getByTestId('org-nav-manageMemberships');
+        expect(membershipsLink).toHaveTextContent(/Ctrl2|⌘2/);
+      });
+    });
+
+    it('navigates with Cmd+1 on Mac', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      // Mock Mac platform
+      const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform');
+      Object.defineProperty(navigator, 'platform', {
+        value: 'MacIntel',
+        configurable: true,
+      });
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Overview')).toBeInTheDocument();
+      });
+
+      // Simulate Cmd+1 keypress on Mac
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        metaKey: true,  // Use metaKey for Mac
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      await waitFor(() => {
+        expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
+      });
+      
+      // Restore original platform
+      if (originalPlatform) {
+        Object.defineProperty(navigator, 'platform', originalPlatform);
+      }
+    });
+
+    it('ignores shortcuts when Alt key is pressed', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+Alt+1 keypress (should be ignored)
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        altKey: true,  // Alt key should prevent shortcut
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Should remain on dashboard, not navigate
+      expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
+      expect(screen.queryByText('Org Edit Content')).not.toBeInTheDocument();
+    });
+
+    it('ignores shortcuts when Shift key is pressed', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+Shift+1 keypress (should be ignored)
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        shiftKey: true,  // Shift key should prevent shortcut
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Should remain on dashboard, not navigate
+      expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
+      expect(screen.queryByText('Org Edit Content')).not.toBeInTheDocument();
+    });
+
+    it('ignores shortcuts when both Alt and Shift keys are pressed', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Test Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      
+      localStorage.setItem('activeOrganization', JSON.stringify({
+        id: 'org-1',
+        name: 'Test Org',
+        role: 'OrgAdmin',
+      }));
+      
+      renderAdminLayout('/admin', {
+        role: 'User',
+        mockMemberships,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      });
+
+      // Simulate Ctrl+Alt+Shift+1 keypress (should be ignored)
+      const event = new KeyboardEvent('keydown', { 
+        key: '1', 
+        ctrlKey: true,
+        altKey: true,
+        shiftKey: true,  // Multiple modifiers should prevent shortcut
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+
+      // Should remain on dashboard, not navigate
+      expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
+      expect(screen.queryByText('Org Edit Content')).not.toBeInTheDocument();
+    });
+  });
 });
