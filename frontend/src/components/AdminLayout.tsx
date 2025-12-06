@@ -18,6 +18,13 @@ export const AdminLayout: React.FC = () => {
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const keyboardHelpTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // Platform detection for keyboard shortcuts
+  const isMac = useMemo(() => {
+    return navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  }, []);
+  const modifierKeyLabel = isMac ? '⌘' : 'Ctrl';
+  const modifierKeyName = isMac ? 'Cmd' : 'Ctrl';
+
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
     isAuthenticated: true,
@@ -106,8 +113,7 @@ export const AdminLayout: React.FC = () => {
         return;
       }
 
-      // Check for Ctrl key (Cmd on Mac) + number keys 1-6
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      // Check for modifier key + number keys 1-6
       const modifierKey = isMac ? e.metaKey : e.ctrlKey;
       
       if (modifierKey && e.key >= '1' && e.key <= '6') {
@@ -185,7 +191,7 @@ export const AdminLayout: React.FC = () => {
         >
           <p className="keyboard-help-title">Keyboard Shortcuts</p>
           <p className="keyboard-help-hint">
-            Use {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? 'Cmd' : 'Ctrl'}+1–6 to navigate org admin pages
+            Use {modifierKeyName}+1–6 to navigate org admin pages
           </p>
         </div>
       )}
@@ -282,8 +288,8 @@ export const AdminLayout: React.FC = () => {
                     >
                       <span className="admin-nav-link-text">{item.label}</span>
                       {index < 6 && (
-                        <span className="admin-nav-shortcut" aria-label={`Keyboard shortcut: ${navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? 'Cmd' : 'Ctrl'}+${index + 1}`}>
-                          {navigator.platform.toUpperCase().indexOf('MAC') >= 0 ? '⌘' : 'Ctrl'}{index + 1}
+                        <span className="admin-nav-shortcut" aria-label={`Keyboard shortcut: ${modifierKeyName}+${index + 1}`}>
+                          {modifierKeyLabel}{index + 1}
                         </span>
                       )}
                     </Link>
