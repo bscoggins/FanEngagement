@@ -214,6 +214,27 @@
   transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), border-left-color 0.15s var(--ease-out);
   border-left: 3px solid transparent;
   font-weight: var(--font-weight-medium, 500);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-nav-link-text {
+  flex: 1;
+}
+
+.admin-nav-shortcut {
+  font-size: 0.7rem;
+  color: #888;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  margin-left: 0.5rem;
 }
 
 .admin-nav-link:hover {
@@ -222,11 +243,22 @@
   border-left-color: var(--color-primary-600, #007bff);
 }
 
+.admin-nav-link:hover .admin-nav-shortcut {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #bbb;
+}
+
 .admin-nav-link.active {
   background-color: #333;
   color: white;
   border-left-color: var(--color-primary-600, #007bff);
   font-weight: var(--font-weight-semibold, 600);
+}
+
+.admin-nav-link.active .admin-nav-shortcut {
+  background-color: rgba(0, 123, 255, 0.2);
+  color: #6ea8fe;
+  border-color: rgba(0, 123, 255, 0.3);
 }
 
 .admin-nav-link:focus-visible {
@@ -310,5 +342,65 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-nav-link {
     transition: none;
+  }
+}
+
+/* Keyboard shortcut help toast */
+.keyboard-help-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: #1a1a1a;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md, 6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  border: 1px solid #444;
+  max-width: 300px;
+  animation: slideInUp 0.3s var(--ease-out);
+}
+
+.keyboard-help-title {
+  margin: 0 0 0.5rem 0;
+  font-weight: var(--font-weight-semibold, 600);
+  font-size: 0.875rem;
+  color: var(--color-primary-600, #007bff);
+}
+
+.keyboard-help-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keyboard-help-toast {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .keyboard-help-toast {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+  
+  .admin-nav-shortcut {
+    display: none; /* Hide keyboard shortcuts on mobile */
   }
 }
