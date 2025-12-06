@@ -1,0 +1,313 @@
+# Prometheus Alerting Rules for Blockchain Adapters
+#
+# This file defines alerting rules for monitoring blockchain adapters.
+# Deploy to Prometheus AlertManager to enable automated alerting.
+#
+# Usage:
+#   kubectl apply -f prometheus-alerts.yaml
+#
+# Or configure directly in Prometheus configuration:
+#   rule_files:
+#     - prometheus-alerts.yaml
+
+groups:
+  - name: blockchain_adapters_critical
+    interval: 30s
+    rules:
+      # Alert when adapter health check fails for more than 2 minutes
+      - alert: AdapterDown
+        expr: blockchain_adapter_health == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: blockchain-adapter
+        annotations:
+          summary: "Blockchain adapter {{ $labels.adapter }} is down"
+          description: |
+            Adapter {{ $labels.adapter }} has been unhealthy for more than 2 minutes.
+            Health check endpoint is returning unhealthy status.
+            
+            **Impact:** Blockchain operations for {{ $labels.adapter }} are unavailable.
+            
+            **Action Required:**
+            1. Check pod status: `kubectl get pods -n fanengagement | grep {{ $labels.adapter }}`
+            2. Check logs: `kubectl logs -n fanengagement deployment/{{ $labels.adapter }}-adapter --tail=100`
+            3. Follow runbook: docs/blockchain/adapter-operations.md#51-runbook-adapter-container-crashes
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#51-runbook-adapter-container-crashes"
+
+      # Alert when transaction error rate exceeds 5% for more than 5 minutes
+      - alert: HighTransactionErrorRate
+        expr: |
+          (
+            rate(blockchain_transactions_total{status="failed"}[5m]) 
+            / 
+            rate(blockchain_transactions_total[5m])
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: blockchain-adapter
+        annotations:
+          summary: "High error rate for {{ $labels.adapter }} adapter"
+          description: |
+            Transaction error rate for {{ $labels.adapter }} is {{ $value | humanizePercentage }}.
+            This exceeds the 5% critical threshold.
+            
+            **Impact:** Users experiencing failed blockchain operations.
+            
+            **Possible Causes:**
+            - RPC provider outage or rate limiting
+            - Network congestion
+            - Invalid transaction parameters
+            - Insufficient wallet funds
+            
+            **Action Required:**
+            1. Check RPC provider status
+            2. Review error logs: `kubectl logs -n fanengagement deployment/{{ $labels.adapter }}-adapter | grep failed`
+            3. Check wallet balance
+            4. Follow runbook: docs/blockchain/adapter-operations.md#53-runbook-high-transaction-error-rate
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#53-runbook-high-transaction-error-rate"
+
+  - name: blockchain_adapters_warning
+    interval: 30s
+    rules:
+      # Alert when P95 latency exceeds 3 seconds for more than 5 minutes
+      - alert: SlowTransactions
+        expr: |
+          histogram_quantile(0.95, rate(blockchain_transaction_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+          component: blockchain-adapter
+        annotations:
+          summary: "Slow transactions on {{ $labels.adapter }} adapter"
+          description: |
+            P95 transaction latency for {{ $labels.adapter }} is {{ $value }}s.
+            This exceeds the 3 second warning threshold.
+            
+            **Impact:** Users experiencing slow blockchain operations.
+            
+            **Possible Causes:**
+            - Blockchain network congestion
+            - Slow RPC provider
+            - High transaction volume
+            
+            **Action Required:**
+            1. Check network status: Solana (https://status.solana.com/) or Polygon (https://polygonscan.com/)
+            2. Monitor for escalation
+            3. Consider switching to premium RPC provider
+            4. Follow runbook: docs/blockchain/adapter-operations.md#54-runbook-blockchain-network-congestion
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#54-runbook-blockchain-network-congestion"
+
+      # Alert when RPC error rate exceeds 1% for more than 5 minutes
+      - alert: ElevatedRPCErrorRate
+        expr: |
+          (
+            rate(blockchain_rpc_errors_total[5m]) 
+            / 
+            rate(blockchain_transactions_total[5m])
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: blockchain-adapter
+        annotations:
+          summary: "Elevated RPC error rate for {{ $labels.adapter }} adapter"
+          description: |
+            RPC error rate for {{ $labels.adapter }} is {{ $value | humanizePercentage }}.
+            This exceeds the 1% warning threshold.
+            
+            **Impact:** Increased transaction failures likely.
+            
+            **Possible Causes:**
+            - RPC provider instability
+            - Rate limiting
+            - Network connectivity issues
+            
+            **Action Required:**
+            1. Check RPC provider status page
+            2. Monitor for escalation to critical threshold
+            3. Consider failover to backup RPC provider
+            4. Follow runbook: docs/blockchain/adapter-operations.md#52-runbook-blockchain-rpc-provider-outage
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#52-runbook-blockchain-rpc-provider-outage"
+
+      # Alert when pod is not ready for more than 3 minutes
+      - alert: PodNotReady
+        expr: |
+          kube_pod_status_ready{namespace="fanengagement", pod=~".*-adapter.*", condition="true"} == 0
+        for: 3m
+        labels:
+          severity: warning
+          component: blockchain-adapter
+        annotations:
+          summary: "Pod {{ $labels.pod }} is not ready"
+          description: |
+            Pod {{ $labels.pod }} has failed readiness checks for more than 3 minutes.
+            
+            **Impact:** Reduced adapter capacity, possible service degradation.
+            
+            **Action Required:**
+            1. Check pod events: `kubectl describe pod -n fanengagement {{ $labels.pod }}`
+            2. Check application logs: `kubectl logs -n fanengagement {{ $labels.pod }}`
+            3. Test health endpoint: `kubectl exec -n fanengagement {{ $labels.pod }} -- curl http://localhost:3001/v1/adapter/health`
+            4. Follow runbook: docs/blockchain/adapter-operations.md#56-runbook-pod-health-check-failures
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#56-runbook-pod-health-check-failures"
+
+      # Alert when memory usage exceeds 80% of limit
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_working_set_bytes{namespace="fanengagement", pod=~".*-adapter.*"}
+            / 
+            container_spec_memory_limit_bytes{namespace="fanengagement", pod=~".*-adapter.*"}
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: blockchain-adapter
+        annotations:
+          summary: "High memory usage on {{ $labels.pod }}"
+          description: |
+            Memory usage for {{ $labels.pod }} is {{ $value | humanizePercentage }} of limit.
+            Risk of OOMKill if memory usage continues to increase.
+            
+            **Impact:** Pod may be killed by Kubernetes OOMKiller.
+            
+            **Action Required:**
+            1. Monitor for OOMKill: `kubectl get pod -n fanengagement {{ $labels.pod }} -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason}'`
+            2. Review memory usage trends in Grafana
+            3. Consider vertical scaling if sustained: Increase memory limits
+            4. Check for memory leaks if usage is abnormal
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#91-common-issues"
+
+      # Alert when CPU usage exceeds 80% for more than 10 minutes
+      - alert: HighCPUUsage
+        expr: |
+          (
+            sum(rate(container_cpu_usage_seconds_total{namespace="fanengagement", pod=~".*-adapter.*"}[5m])) by (pod)
+            / 
+            sum(container_spec_cpu_quota{namespace="fanengagement", pod=~".*-adapter.*"} / container_spec_cpu_period{namespace="fanengagement", pod=~".*-adapter.*"}) by (pod)
+          ) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: blockchain-adapter
+        annotations:
+          summary: "High CPU usage on {{ $labels.pod }}"
+          description: |
+            CPU usage for {{ $labels.pod }} is {{ $value | humanizePercentage }} of limit.
+            Sustained high CPU may indicate need for scaling.
+            
+            **Impact:** Increased latency, potential throttling.
+            
+            **Action Required:**
+            1. Monitor request rate and latency
+            2. Consider horizontal scaling: Add more replicas
+            3. Check for inefficient code or loops
+            4. Review CPU usage trends in Grafana
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#6-scaling-strategy"
+
+      # Alert when deployment has fewer than minimum replicas
+      - alert: InsufficientReplicas
+        expr: |
+          kube_deployment_status_replicas_available{namespace="fanengagement", deployment=~".*-adapter"} < 2
+        for: 5m
+        labels:
+          severity: warning
+          component: blockchain-adapter
+        annotations:
+          summary: "Insufficient replicas for {{ $labels.deployment }}"
+          description: |
+            Deployment {{ $labels.deployment }} has {{ $value }} available replicas.
+            Minimum of 2 replicas required for high availability.
+            
+            **Impact:** Reduced availability, no failover capacity.
+            
+            **Action Required:**
+            1. Check deployment status: `kubectl get deployment -n fanengagement {{ $labels.deployment }}`
+            2. Check pod status: `kubectl get pods -n fanengagement -l app={{ $labels.deployment }}`
+            3. Check for recent scaling events
+            4. Ensure HPA is configured correctly
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#6-scaling-strategy"
+
+  - name: blockchain_adapters_info
+    interval: 30s
+    rules:
+      # Info alert for tracking adapter version deployments
+      - alert: AdapterVersionChanged
+        expr: |
+          changes(kube_deployment_status_observed_generation{namespace="fanengagement", deployment=~".*-adapter"}[5m]) > 0
+        labels:
+          severity: info
+          component: blockchain-adapter
+        annotations:
+          summary: "Adapter {{ $labels.deployment }} deployment changed"
+          description: |
+            Deployment {{ $labels.deployment }} has been updated.
+            Monitor for any issues following the deployment.
+            
+            **Action Required:**
+            1. Verify rollout status: `kubectl rollout status deployment/{{ $labels.deployment }} -n fanengagement`
+            2. Monitor metrics for anomalies
+            3. Check logs for errors
+            4. Verify health checks passing
+
+---
+# AlertManager Routing Configuration Example
+#
+# This section shows how to configure AlertManager to route alerts
+# to different receivers based on severity.
+#
+# Save to alertmanager-config.yaml and apply:
+#   kubectl create secret generic alertmanager-config \
+#     --from-file=alertmanager.yaml=alertmanager-config.yaml \
+#     -n monitoring
+
+# Example AlertManager configuration:
+# route:
+#   receiver: 'default'
+#   group_by: ['alertname', 'adapter']
+#   group_wait: 30s
+#   group_interval: 5m
+#   repeat_interval: 4h
+#   routes:
+#   - match:
+#       severity: critical
+#     receiver: pagerduty-critical
+#     continue: true
+#   - match:
+#       severity: warning
+#     receiver: slack-warnings
+#   - match:
+#       severity: info
+#     receiver: slack-info
+#
+# receivers:
+# - name: 'default'
+#   slack_configs:
+#   - api_url: '<slack-webhook-url>'
+#     channel: '#fanengagement-alerts'
+#     title: 'FanEngagement Alert'
+#     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+#     
+# - name: 'pagerduty-critical'
+#   pagerduty_configs:
+#   - service_key: '<pagerduty-integration-key>'
+#     severity: 'critical'
+#     description: '{{ .GroupLabels.alertname }}: {{ .Annotations.summary }}'
+#     
+# - name: 'slack-warnings'
+#   slack_configs:
+#   - api_url: '<slack-webhook-url>'
+#     channel: '#fanengagement-warnings'
+#     color: 'warning'
+#     title: '⚠️ Warning Alert'
+#     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+#
+# - name: 'slack-info'
+#   slack_configs:
+#   - api_url: '<slack-webhook-url>'
+#     channel: '#fanengagement-info'
+#     color: 'good'
+#     title: 'ℹ️ Info Alert'
+#     text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
