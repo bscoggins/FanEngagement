@@ -198,9 +198,60 @@ export const PlatformAdminDashboardPage: React.FC = () => {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem',
+          marginBottom: '2rem',
         }}
         data-testid="quick-actions-grid"
       >
+        {/* Create Organization */}
+        <Link
+          to="/admin/organizations/new"
+          style={{ textDecoration: 'none' }}
+          data-testid="create-organization-card"
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              padding: '1.5rem',
+              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+              cursor: 'pointer',
+              height: '100%',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{
+                fontSize: '2rem',
+                marginRight: '0.75rem',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#e3f2fd',
+                borderRadius: '8px',
+              }}>
+                🏢
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Create Organization</h3>
+            </div>
+            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
+              Set up a new organization with custom governance and share types.
+            </p>
+            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
+              Create new →
+            </div>
+          </div>
+        </Link>
+
         {/* Manage Users */}
         <Link
           to="/admin/users"
@@ -215,9 +266,10 @@ export const PlatformAdminDashboardPage: React.FC = () => {
               padding: '1.5rem',
               transition: 'box-shadow 0.2s ease, transform 0.2s ease',
               cursor: 'pointer',
+              height: '100%',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
@@ -226,13 +278,25 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>👥</span>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333' }}>Manage Users</h3>
+              <div style={{
+                fontSize: '2rem',
+                marginRight: '0.75rem',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f3e5f5',
+                borderRadius: '8px',
+              }}>
+                👥
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Manage Users</h3>
             </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
+            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
               View, create, and manage user accounts across the platform.
             </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500 }}>
+            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
               Go to Users →
             </div>
           </div>
@@ -252,9 +316,10 @@ export const PlatformAdminDashboardPage: React.FC = () => {
               padding: '1.5rem',
               transition: 'box-shadow 0.2s ease, transform 0.2s ease',
               cursor: 'pointer',
+              height: '100%',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
@@ -263,13 +328,25 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>🏢</span>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333' }}>Manage Organizations</h3>
+              <div style={{
+                fontSize: '2rem',
+                marginRight: '0.75rem',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#e8f5e9',
+                borderRadius: '8px',
+              }}>
+                🏢
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>View Organizations</h3>
             </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
-              Create and configure organizations and their settings.
+            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
+              Browse and configure all organizations and their settings.
             </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500 }}>
+            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
               Go to Organizations →
             </div>
           </div>
@@ -289,9 +366,10 @@ export const PlatformAdminDashboardPage: React.FC = () => {
               padding: '1.5rem',
               transition: 'box-shadow 0.2s ease, transform 0.2s ease',
               cursor: 'pointer',
+              height: '100%',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
               e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
@@ -300,13 +378,25 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>🛠️</span>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333' }}>Dev Tools</h3>
+              <div style={{
+                fontSize: '2rem',
+                marginRight: '0.75rem',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fff3e0',
+                borderRadius: '8px',
+              }}>
+                🛠️
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Dev Tools</h3>
             </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
+            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
               Development utilities for seeding data and testing.
             </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500 }}>
+            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
               Go to Dev Tools →
             </div>
           </div>

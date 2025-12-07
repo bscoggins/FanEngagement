@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -6,6 +6,9 @@ import { useActiveOrganization } from '../contexts/OrgContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
+import { GlobalSearch } from './GlobalSearch';
+import { RecentsDropdown } from './RecentsDropdown';
+import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import './PlatformAdminLayout.css';
 
 export const PlatformAdminLayout: React.FC = () => {
@@ -15,6 +18,8 @@ export const PlatformAdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isShortcutOverlayOpen, setIsShortcutOverlayOpen] = useState(false);
+  const searchInputRef = useRef<HTMLDivElement>(null);
 
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
@@ -41,6 +46,36 @@ export const PlatformAdminLayout: React.FC = () => {
   const homeRoute = useMemo(() => {
     return getDefaultHomeRoute(navContext);
   }, [navContext]);
+
+  // Keyboard shortcuts: ? for help overlay, Ctrl/Cmd+K for search focus
+  useEffect(() => {
+    const handleKeyboardShortcut = (e: KeyboardEvent) => {
+      // Open keyboard shortcuts overlay with ?
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        // Don't trigger if user is typing in an input
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
+        e.preventDefault();
+        setIsShortcutOverlayOpen(true);
+        return;
+      }
+
+      // Focus search with Ctrl+K or Cmd+K
+      const modifierKey = navigator.platform.toUpperCase().includes('MAC') ? e.metaKey : e.ctrlKey;
+      if (modifierKey && e.key === 'k' && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        const input = searchInputRef.current?.querySelector('input');
+        if (input) {
+          input.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcut);
+    return () => document.removeEventListener('keydown', handleKeyboardShortcut);
+  }, []);
 
   // Listen for auth:logout events from the API client
   useEffect(() => {
@@ -93,6 +128,12 @@ export const PlatformAdminLayout: React.FC = () => {
     <>
       <SkipLink href="#main-content">Skip to main content</SkipLink>
       
+      {/* Keyboard Shortcut Overlay */}
+      <KeyboardShortcutOverlay
+        isOpen={isShortcutOverlayOpen}
+        onClose={() => setIsShortcutOverlayOpen(false)}
+      />
+      
       <div className="admin-layout">
         <header className="admin-header" role="banner">
           <div className="admin-header-left">
@@ -107,7 +148,13 @@ export const PlatformAdminLayout: React.FC = () => {
             </button>
             <h1>FanEngagement Platform Admin</h1>
           </div>
+          <div className="admin-header-center">
+            <div ref={searchInputRef}>
+              <GlobalSearch />
+            </div>
+          </div>
           <div className="admin-header-right">
+            <RecentsDropdown />
             <span className="admin-badge">
               Platform Admin
             </span>
