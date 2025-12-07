@@ -52,10 +52,17 @@ body {
 *:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
-  border-radius: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
 }
 
 /* Remove default focus styles when not using keyboard */
 *:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *:focus-visible {
+    transition: none;
+  }
 }

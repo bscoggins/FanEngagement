@@ -30,7 +30,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   sections 
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
@@ -39,7 +41,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
       
       // Focus the close button when drawer opens
-      setTimeout(() => {
+      focusTimeoutRef.current = setTimeout(() => {
         closeButtonRef.current?.focus();
       }, 100);
     } else {
@@ -48,6 +50,12 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         previouslyFocusedElement.current.focus();
       }
     }
+
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
+      }
+    };
   }, [isOpen]);
 
   // Close on Escape key
@@ -78,6 +86,47 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     }
   }, [isOpen]);
 
+  // Focus trap: keep focus within the drawer
+  useEffect(() => {
+    if (!isOpen || !drawerRef.current) return;
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const drawer = drawerRef.current;
+      if (!drawer) return;
+
+      // Get all focusable elements within the drawer
+      const focusableElements = drawer.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      const focusableArray = Array.from(focusableElements);
+      
+      if (focusableArray.length === 0) return;
+
+      const firstElement = focusableArray[0];
+      const lastElement = focusableArray[focusableArray.length - 1];
+
+      // Trap focus within drawer
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    return () => document.removeEventListener('keydown', handleTab);
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
   }
@@ -93,6 +142,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       
       {/* Drawer */}
       <nav 
+        ref={drawerRef}
         id="mobile-nav-drawer"
         className="mobile-nav-drawer"
         aria-label="Mobile navigation"

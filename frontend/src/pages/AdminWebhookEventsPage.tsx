@@ -8,6 +8,7 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { Modal } from '../components/Modal';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
 const getStatusBadgeStyle = (status: OutboundEventStatus): React.CSSProperties => {
@@ -358,185 +359,142 @@ export const AdminWebhookEventsPage: React.FC = () => {
       )}
 
       {/* Detail Modal */}
-      {showDetailModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={handleCloseModal}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '2rem',
-              maxWidth: '700px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflow: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {isDetailLoading ? (
-              <LoadingSpinner message="Loading event details..." />
-            ) : selectedEvent ? (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                  <h2 style={{ margin: 0 }}>Event Details</h2>
-                  <button
-                    onClick={handleCloseModal}
-                    style={{
-                      padding: '0.5rem',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      fontSize: '1.5rem',
-                      cursor: 'pointer',
-                      lineHeight: 1,
-                    }}
-                    aria-label="Close modal"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                        Event Type
-                      </label>
-                      <div>{selectedEvent.eventType}</div>
-                    </div>
-                    <div>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                        Status
-                      </label>
-                      <span style={getStatusBadgeStyle(selectedEvent.status)}>{selectedEvent.status}</span>
-                    </div>
-                    <div>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                        Attempt Count
-                      </label>
-                      <div>{selectedEvent.attemptCount}</div>
-                    </div>
-                    <div>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                        Created At
-                      </label>
-                      <div>{formatDate(selectedEvent.createdAt)}</div>
-                    </div>
-                    <div>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                        Last Attempt
-                      </label>
-                      <div>{formatDate(selectedEvent.lastAttemptAt)}</div>
-                    </div>
-                    <div>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                        Event ID
-                      </label>
-                      <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>{selectedEvent.id}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedEvent.lastError && (
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                      Last Error
-                    </label>
-                    <div
-                      style={{
-                        padding: '1rem',
-                        backgroundColor: '#fee',
-                        border: '1px solid #fcc',
-                        borderRadius: '4px',
-                        color: '#c33',
-                        fontSize: '0.875rem',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {selectedEvent.lastError}
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                    Payload
+      <Modal
+        isOpen={showDetailModal}
+        onClose={handleCloseModal}
+        title="Event Details"
+      >
+        {isDetailLoading ? (
+          <LoadingSpinner message="Loading event details..." />
+        ) : selectedEvent ? (
+          <>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                    Event Type
                   </label>
-                  <pre
-                    style={{
-                      padding: '1rem',
-                      backgroundColor: '#f8f9fa',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '4px',
-                      fontSize: '0.875rem',
-                      overflow: 'auto',
-                      maxHeight: '200px',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {(() => {
-                      if (!selectedEvent.payload) {
-                        return '(No payload)';
-                      }
-                      try {
-                        return JSON.stringify(JSON.parse(selectedEvent.payload), null, 2);
-                      } catch {
-                        return selectedEvent.payload;
-                      }
-                    })()}
-                  </pre>
+                  <div>{selectedEvent.eventType}</div>
                 </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                    Status
+                  </label>
+                  <span style={getStatusBadgeStyle(selectedEvent.status)}>{selectedEvent.status}</span>
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                    Attempt Count
+                  </label>
+                  <div>{selectedEvent.attemptCount}</div>
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                    Created At
+                  </label>
+                  <div>{formatDate(selectedEvent.createdAt)}</div>
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                    Last Attempt
+                  </label>
+                  <div>{formatDate(selectedEvent.lastAttemptAt)}</div>
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                    Event ID
+                  </label>
+                  <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>{selectedEvent.id}</div>
+                </div>
+              </div>
+            </div>
 
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                  {selectedEvent.status === 'Failed' && (
-                    <button
-                      onClick={handleRetryFromModal}
-                      disabled={retryingEventId === selectedEvent.id}
-                      style={{
-                        padding: '0.75rem 1.5rem',
-                        backgroundColor: retryingEventId === selectedEvent.id ? '#ccc' : '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: retryingEventId === selectedEvent.id ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      {retryingEventId === selectedEvent.id ? 'Retrying...' : 'Retry Event'}
-                    </button>
-                  )}
-                  <button
-                    onClick={handleCloseModal}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: '#6c757d',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Close
-                  </button>
+            {selectedEvent.lastError && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
+                  Last Error
+                </label>
+                <div
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: '#fee',
+                    border: '1px solid #fcc',
+                    borderRadius: '4px',
+                    color: '#c33',
+                    fontSize: '0.875rem',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {selectedEvent.lastError}
                 </div>
-              </>
-            ) : null}
-          </div>
-        </div>
-      )}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
+                Payload
+              </label>
+              <pre
+                style={{
+                  padding: '1rem',
+                  backgroundColor: '#f8f9fa',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  overflow: 'auto',
+                  maxHeight: '200px',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {(() => {
+                  if (!selectedEvent.payload) {
+                    return '(No payload)';
+                  }
+                  try {
+                    return JSON.stringify(JSON.parse(selectedEvent.payload), null, 2);
+                  } catch {
+                    return selectedEvent.payload;
+                  }
+                })()}
+              </pre>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              {selectedEvent.status === 'Failed' && (
+                <button
+                  onClick={handleRetryFromModal}
+                  disabled={retryingEventId === selectedEvent.id}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: retryingEventId === selectedEvent.id ? '#ccc' : '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: retryingEventId === selectedEvent.id ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {retryingEventId === selectedEvent.id ? 'Retrying...' : 'Retry Event'}
+                </button>
+              )}
+              <button
+                onClick={handleCloseModal}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </>
+        ) : null}
+      </Modal>
     </div>
   );
 };
