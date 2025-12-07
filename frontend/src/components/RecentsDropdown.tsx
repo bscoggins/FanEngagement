@@ -65,7 +65,7 @@ export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className }) =
           aria-label="Recently viewed items"
         >
           {recents.length === 0 ? (
-            <div className="recents-dropdown-empty" role="menuitem">
+            <div className="recents-dropdown-empty" role="status">
               No recent items
             </div>
           ) : (

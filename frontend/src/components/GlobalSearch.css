@@ -140,6 +140,10 @@
   cursor: pointer;
   transition: background-color 0.15s var(--ease-out);
   gap: 0.75rem;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
 }
 
 .global-search-result:hover,

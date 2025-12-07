@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react';
+import { isMacPlatform } from '../utils/platformUtils';
 import './KeyboardShortcutOverlay.css';
 
 interface Shortcut {
@@ -22,16 +23,7 @@ export const KeyboardShortcutOverlay: React.FC<KeyboardShortcutOverlayProps> = (
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Platform detection for displaying correct modifier key
-  const isMac = useMemo(() => {
-    const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-    if (nav.userAgentData?.platform) {
-      return nav.userAgentData.platform.toUpperCase().includes('MAC');
-    }
-    if (navigator.platform) {
-      return navigator.platform.toUpperCase().includes('MAC');
-    }
-    return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
-  }, []);
+  const isMac = useMemo(() => isMacPlatform(), []);
 
   const modifierKey = isMac ? '⌘' : 'Ctrl';
 

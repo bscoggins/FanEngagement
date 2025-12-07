@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { QuickActionCard } from '../components/QuickActionCard';
 import { parseApiError } from '../utils/errorUtils';
 
 interface PlatformStats {
@@ -202,205 +202,45 @@ export const PlatformAdminDashboardPage: React.FC = () => {
         }}
         data-testid="quick-actions-grid"
       >
-        {/* Create Organization */}
-        <Link
+        <QuickActionCard
           to="/admin/organizations/new"
-          style={{ textDecoration: 'none' }}
-          data-testid="create-organization-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-              height: '100%',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                fontSize: '2rem',
-                marginRight: '0.75rem',
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#e3f2fd',
-                borderRadius: '8px',
-              }}>
-                ➕
-              </div>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Create Organization</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
-              Set up a new organization with custom governance and share types.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
-              Create new →
-            </div>
-          </div>
-        </Link>
-
-        {/* Manage Users */}
-        <Link
+          icon="➕"
+          iconBackground="#e3f2fd"
+          title="Create Organization"
+          description="Set up a new organization with custom governance and share types."
+          actionText="Create new"
+          testId="create-organization-card"
+        />
+        
+        <QuickActionCard
           to="/admin/users"
-          style={{ textDecoration: 'none' }}
-          data-testid="manage-users-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-              height: '100%',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                fontSize: '2rem',
-                marginRight: '0.75rem',
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f3e5f5',
-                borderRadius: '8px',
-              }}>
-                👥
-              </div>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Manage Users</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
-              View, create, and manage user accounts across the platform.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
-              Go to Users →
-            </div>
-          </div>
-        </Link>
-
-        {/* Manage Organizations */}
-        <Link
+          icon="👥"
+          iconBackground="#f3e5f5"
+          title="Manage Users"
+          description="View, create, and manage user accounts across the platform."
+          actionText="Go to Users"
+          testId="manage-users-card"
+        />
+        
+        <QuickActionCard
           to="/admin/organizations"
-          style={{ textDecoration: 'none' }}
-          data-testid="manage-organizations-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-              height: '100%',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                fontSize: '2rem',
-                marginRight: '0.75rem',
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#e8f5e9',
-                borderRadius: '8px',
-              }}>
-                🏢
-              </div>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>View Organizations</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
-              Browse and configure all organizations and their settings.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
-              Go to Organizations →
-            </div>
-          </div>
-        </Link>
-
-        {/* Dev Tools */}
-        <Link
+          icon="🏢"
+          iconBackground="#e8f5e9"
+          title="View Organizations"
+          description="Browse and configure all organizations and their settings."
+          actionText="Go to Organizations"
+          testId="manage-organizations-card"
+        />
+        
+        <QuickActionCard
           to="/admin/dev-tools"
-          style={{ textDecoration: 'none' }}
-          data-testid="dev-tools-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-              height: '100%',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                fontSize: '2rem',
-                marginRight: '0.75rem',
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#fff3e0',
-                borderRadius: '8px',
-              }}>
-                🛠️
-              </div>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Dev Tools</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
-              Development utilities for seeding data and testing.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500, fontSize: '0.875rem' }}>
-              Go to Dev Tools →
-            </div>
-          </div>
-        </Link>
+          icon="🛠️"
+          iconBackground="#fff3e0"
+          title="Dev Tools"
+          description="Development utilities for seeding data and testing."
+          actionText="Go to Dev Tools"
+          testId="dev-tools-card"
+        />
       </div>
 
       {/* Platform Admin Info */}

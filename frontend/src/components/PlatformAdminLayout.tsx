@@ -9,6 +9,7 @@ import { MobileNav, type MobileNavItem } from './MobileNav';
 import { GlobalSearch } from './GlobalSearch';
 import { RecentsDropdown } from './RecentsDropdown';
 import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
+import { isMacPlatform } from '../utils/platformUtils';
 import './PlatformAdminLayout.css';
 
 export const PlatformAdminLayout: React.FC = () => {
@@ -51,7 +52,8 @@ export const PlatformAdminLayout: React.FC = () => {
   useEffect(() => {
     const handleKeyboardShortcut = (e: KeyboardEvent) => {
       // Open keyboard shortcuts overlay with ?
-      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      // Note: On most keyboards, ? requires Shift+/, so we check for the ? character itself
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         // Don't trigger if user is typing in an input
         const target = e.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
@@ -62,14 +64,8 @@ export const PlatformAdminLayout: React.FC = () => {
         return;
       }
 
-      // Focus search with Ctrl+K or Cmd+K - use same detection as KeyboardShortcutOverlay
-      const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-      const isMac = nav.userAgentData?.platform
-        ? nav.userAgentData.platform.toUpperCase().includes('MAC')
-        : navigator.platform
-        ? navigator.platform.toUpperCase().includes('MAC')
-        : /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
-      
+      // Focus search with Ctrl+K or Cmd+K
+      const isMac = isMacPlatform();
       const modifierKey = isMac ? e.metaKey : e.ctrlKey;
       if (modifierKey && e.key === 'k' && !e.altKey && !e.shiftKey) {
         e.preventDefault();

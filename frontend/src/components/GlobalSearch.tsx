@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { organizationsApi } from '../api/organizationsApi';
@@ -34,11 +34,31 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
     }
   }, [autoFocus]);
 
-  // Compute flat list of all results for keyboard navigation
-  const allResults = [
+  // Memoize allResults to avoid unnecessary re-renders
+  const allResults = useMemo(() => [
     ...results.users.map(u => ({ type: 'user' as const, item: u })),
     ...results.organizations.map(o => ({ type: 'organization' as const, item: o })),
-  ];
+  ], [results.users, results.organizations]);
+
+  // Navigate to result and track in recents
+  const handleResultClick = useCallback((result: { type: 'user' | 'organization'; item: User | Organization }) => {
+    const { type, item } = result;
+
+    if (type === 'user') {
+      const user = item as User;
+      addRecent({ id: user.id, name: user.displayName, type: 'user' });
+      navigate(`/admin/users/${user.id}`);
+    } else if (type === 'organization') {
+      const org = item as Organization;
+      addRecent({ id: org.id, name: org.name, type: 'organization' });
+      navigate(`/admin/organizations/${org.id}/edit`);
+    }
+
+    setQuery('');
+    setIsOpen(false);
+    setSelectedIndex(-1);
+    onClose?.();
+  }, [navigate, onClose]);
 
   // Perform search
   const performSearch = useCallback(async (searchQuery: string) => {
@@ -90,7 +110,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
   }, [query, performSearch]);
 
   // Handle keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!isOpen || allResults.length === 0) {
       if (e.key === 'Escape') {
         setQuery('');
@@ -123,27 +143,11 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
         onClose?.();
         break;
     }
-  };
+  }, [isOpen, allResults, selectedIndex, onClose, handleResultClick]);
 
-  // Navigate to result and track in recents
-  const handleResultClick = (result: { type: 'user' | 'organization'; item: User | Organization }) => {
-    const { type, item } = result;
+  // Navigate to result and track in recents - Moved above handleKeyDown
+  // const handleResultClick = ...
 
-    if (type === 'user') {
-      const user = item as User;
-      addRecent({ id: user.id, name: user.displayName, type: 'user' });
-      navigate(`/admin/users/${user.id}`);
-    } else if (type === 'organization') {
-      const org = item as Organization;
-      addRecent({ id: org.id, name: org.name, type: 'organization' });
-      navigate(`/admin/organizations/${org.id}/edit`);
-    }
-
-    setQuery('');
-    setIsOpen(false);
-    setSelectedIndex(-1);
-    onClose?.();
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -221,23 +225,24 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           {!isSearching && results.users.length > 0 && (
             <div className="global-search-section">
               <div className="global-search-section-title">Users</div>
-              {results.users.map((user) => {
-                const globalIndex = allResults.findIndex(r => r.type === 'user' && r.item.id === user.id);
+              {results.users.map((user, index) => {
+                const globalIndex = index; // users come first in allResults
                 return (
-                  <div
+                  <button
                     key={user.id}
                     id={`search-result-${globalIndex}`}
                     className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
                     onClick={() => handleResultClick({ type: 'user', item: user })}
                     role="option"
                     aria-selected={selectedIndex === globalIndex}
+                    type="button"
                   >
                     <div className="global-search-result-icon">👤</div>
                     <div className="global-search-result-content">
                       <div className="global-search-result-title">{user.displayName}</div>
                       <div className="global-search-result-subtitle">{user.email}</div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -246,23 +251,24 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           {!isSearching && results.organizations.length > 0 && (
             <div className="global-search-section">
               <div className="global-search-section-title">Organizations</div>
-              {results.organizations.map((org) => {
-                const globalIndex = allResults.findIndex(r => r.type === 'organization' && r.item.id === org.id);
+              {results.organizations.map((org, index) => {
+                const globalIndex = results.users.length + index; // orgs come after users
                 return (
-                  <div
+                  <button
                     key={org.id}
                     id={`search-result-${globalIndex}`}
                     className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
                     onClick={() => handleResultClick({ type: 'organization', item: org })}
                     role="option"
                     aria-selected={selectedIndex === globalIndex}
+                    type="button"
                   >
                     <div className="global-search-result-icon">🏢</div>
                     <div className="global-search-result-content">
                       <div className="global-search-result-title">{org.name}</div>
                       <div className="global-search-result-subtitle">{org.description || 'Organization'}</div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
