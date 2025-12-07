@@ -2,13 +2,16 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import { MobileNav, type MobileNavItem } from './MobileNav';
+import { MobileNav, type MobileNavItem, type MobileNavOrganization } from './MobileNav';
 
 const renderMobileNav = (props: { 
   isOpen: boolean; 
   onClose: () => void; 
   items: MobileNavItem[];
   sections?: Array<{ label: string; items: MobileNavItem[] }>;
+  organizations?: MobileNavOrganization[];
+  activeOrgId?: string;
+  onOrgChange?: (orgId: string) => void;
 }) => {
   return render(
     <BrowserRouter>
@@ -206,5 +209,136 @@ describe('MobileNav', () => {
     // Shift+Tab should wrap to last link
     await user.tab({ shift: true });
     expect(settingsLink).toHaveFocus();
+  });
+
+  describe('Organization switcher', () => {
+    it('does not render org switcher when no organizations provided', () => {
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+      });
+      
+      expect(screen.queryByText('Organization')).toBeFalsy();
+    });
+
+    it('does not render org switcher when only one organization', () => {
+      const organizations: MobileNavOrganization[] = [
+        { id: 'org1', name: 'Org 1', role: 'OrgAdmin' },
+      ];
+      
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+        organizations,
+        activeOrgId: 'org1',
+      });
+      
+      expect(screen.queryByText('Organization')).toBeFalsy();
+    });
+
+    it('renders org switcher when multiple organizations provided', () => {
+      const organizations: MobileNavOrganization[] = [
+        { id: 'org1', name: 'Organization One', role: 'OrgAdmin' },
+        { id: 'org2', name: 'Organization Two', role: 'Member' },
+      ];
+      
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+        organizations,
+        activeOrgId: 'org1',
+      });
+      
+      expect(screen.getByText('Organization')).toBeTruthy();
+      expect(screen.getByText('Organization One')).toBeTruthy();
+      expect(screen.getByText('Organization Two')).toBeTruthy();
+    });
+
+    it('shows correct role badges for organizations', () => {
+      const organizations: MobileNavOrganization[] = [
+        { id: 'org1', name: 'Organization One', role: 'OrgAdmin' },
+        { id: 'org2', name: 'Organization Two', role: 'Member' },
+      ];
+      
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+        organizations,
+        activeOrgId: 'org1',
+      });
+      
+      const adminBadges = screen.getAllByText('Admin');
+      const memberBadges = screen.getAllByText('Member');
+      
+      expect(adminBadges.length).toBeGreaterThan(0);
+      expect(memberBadges.length).toBeGreaterThan(0);
+    });
+
+    it('marks active organization correctly', () => {
+      const organizations: MobileNavOrganization[] = [
+        { id: 'org1', name: 'Organization One', role: 'OrgAdmin' },
+        { id: 'org2', name: 'Organization Two', role: 'Member' },
+      ];
+      
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+        organizations,
+        activeOrgId: 'org1',
+      });
+      
+      const org1Button = screen.getByTestId('mobile-org-org1');
+      const org2Button = screen.getByTestId('mobile-org-org2');
+      
+      expect(org1Button.classList.contains('active')).toBe(true);
+      expect(org2Button.classList.contains('active')).toBe(false);
+    });
+
+    it('calls onOrgChange when organization is clicked', () => {
+      const onOrgChange = vi.fn();
+      const organizations: MobileNavOrganization[] = [
+        { id: 'org1', name: 'Organization One', role: 'OrgAdmin' },
+        { id: 'org2', name: 'Organization Two', role: 'Member' },
+      ];
+      
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+        organizations,
+        activeOrgId: 'org1',
+        onOrgChange,
+      });
+      
+      const org2Button = screen.getByTestId('mobile-org-org2');
+      fireEvent.click(org2Button);
+      
+      expect(onOrgChange).toHaveBeenCalledWith('org2');
+    });
+
+    it('org buttons meet minimum tap target of 44px', () => {
+      const organizations: MobileNavOrganization[] = [
+        { id: 'org1', name: 'Organization One', role: 'OrgAdmin' },
+        { id: 'org2', name: 'Organization Two', role: 'Member' },
+      ];
+      
+      renderMobileNav({
+        isOpen: true,
+        onClose: vi.fn(),
+        items: [],
+        organizations,
+        activeOrgId: 'org1',
+      });
+      
+      const org1Button = screen.getByTestId('mobile-org-org1');
+      
+      // Check that min-height is set in CSS (we verify the class is applied)
+      expect(org1Button.classList.contains('mobile-nav-org-button')).toBe(true);
+    });
   });
 });

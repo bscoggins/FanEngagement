@@ -5,7 +5,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
-import { MobileNav, type MobileNavItem } from './MobileNav';
+import { MobileNav, type MobileNavItem, type MobileNavOrganization } from './MobileNav';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
@@ -125,6 +125,41 @@ export const Layout: React.FC = () => {
       })),
     }];
   }, [canAccessAdminArea, activeOrg, activeOrgIsAdmin, globalNavItems, isNavItemActive]);
+
+  // Prepare mobile org data - only for non-platform admins
+  const mobileOrganizations: MobileNavOrganization[] | undefined = useMemo(() => {
+    if (isGlobalAdmin() || orgMemberships.length <= 1) {
+      return undefined;
+    }
+    
+    return orgMemberships.map(m => ({
+      id: m.organizationId,
+      name: m.organizationName,
+      role: m.role,
+    }));
+  }, [isGlobalAdmin, orgMemberships]);
+
+  const handleMobileOrgChange = useCallback((orgId: string) => {
+    const membership = orgMemberships.find(m => m.organizationId === orgId);
+    if (membership) {
+      setActiveOrg({
+        id: membership.organizationId,
+        name: membership.organizationName,
+        role: membership.role,
+      });
+
+      // Navigate based on role: OrgAdmin/platform admin → admin overview, else member view
+      if (isAdmin || membership.role === 'OrgAdmin') {
+        navigate(`/admin/organizations/${membership.organizationId}/edit`);
+      } else {
+        navigate(`/me/organizations/${membership.organizationId}`);
+      }
+      
+      // Close the mobile nav after org change
+      setIsMobileNavOpen(false);
+    }
+  }, [orgMemberships, setActiveOrg, isAdmin, navigate]);
+
 
   // For unauthenticated users, show simplified layout
   if (!isAuthenticated) {
@@ -259,6 +294,9 @@ export const Layout: React.FC = () => {
           onClose={() => setIsMobileNavOpen(false)}
           items={mobileNavItems}
           sections={mobileNavSections}
+          organizations={mobileOrganizations}
+          activeOrgId={activeOrg?.id}
+          onOrgChange={handleMobileOrgChange}
         />
       </div>
     </>

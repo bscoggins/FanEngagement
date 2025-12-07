@@ -80,6 +80,93 @@
   padding: 1rem 0;
 }
 
+/* Organization section */
+.mobile-nav-org-section {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid #444;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-nav-org-label {
+  font-size: var(--font-size-sm, 0.75rem);
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-weight-semibold, 600);
+  margin-bottom: 0.75rem;
+}
+
+.mobile-nav-org-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobile-nav-org-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  min-height: 44px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.mobile-nav-org-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.mobile-nav-org-button:focus {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: 2px;
+}
+
+.mobile-nav-org-button.active {
+  background-color: rgba(0, 123, 255, 0.2);
+  border-color: var(--color-primary-600, #007bff);
+}
+
+.mobile-nav-org-name {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium, 500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-nav-org-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold, 600);
+  flex-shrink: 0;
+}
+
+.mobile-nav-org-badge.admin {
+  background-color: #007bff;
+  color: white;
+}
+
+.mobile-nav-org-badge.member {
+  background-color: #6c757d;
+  color: white;
+}
+
+.mobile-nav-org-checkmark {
+  font-size: 1.25rem;
+  color: var(--color-primary-600, #007bff);
+  flex-shrink: 0;
+}
+
+
 /* Navigation list */
 .mobile-nav-list {
   list-style: none;
