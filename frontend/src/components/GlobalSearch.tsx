@@ -2,15 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { organizationsApi } from '../api/organizationsApi';
-import { proposalsApi } from '../api/proposalsApi';
 import { addRecent } from '../utils/recentsUtils';
-import type { User, Organization, Proposal } from '../types/api';
+import type { User, Organization } from '../types/api';
 import './GlobalSearch.css';
 
 interface SearchResults {
   users: User[];
   organizations: Organization[];
-  proposals: Proposal[];
 }
 
 interface GlobalSearchProps {
@@ -20,7 +18,7 @@ interface GlobalSearchProps {
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus = false }) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResults>({ users: [], organizations: [], proposals: [] });
+  const [results, setResults] = useState<SearchResults>({ users: [], organizations: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isOpen, setIsOpen] = useState(false);
@@ -40,13 +38,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
   const allResults = [
     ...results.users.map(u => ({ type: 'user' as const, item: u })),
     ...results.organizations.map(o => ({ type: 'organization' as const, item: o })),
-    ...results.proposals.map(p => ({ type: 'proposal' as const, item: p })),
   ];
 
   // Perform search
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
-      setResults({ users: [], organizations: [], proposals: [] });
+      setResults({ users: [], organizations: [] });
       setIsSearching(false);
       setIsOpen(false);
       return;
@@ -60,19 +57,16 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
       const [usersResult, orgsResult] = await Promise.all([
         usersApi.getAllPaged(1, 5, searchQuery),
         organizationsApi.getAllPaged(1, 5, searchQuery),
-        // Proposals don't have a platform-wide search endpoint yet
-        Promise.resolve({ items: [] as Proposal[], totalCount: 0, page: 1, pageSize: 5 }),
       ]);
 
       setResults({
         users: usersResult.items,
         organizations: orgsResult.items,
-        proposals: orgsResult.items, // Placeholder
       });
       setSelectedIndex(-1);
     } catch (error) {
       console.error('Search failed:', error);
-      setResults({ users: [], organizations: [], proposals: [] });
+      setResults({ users: [], organizations: [] });
     } finally {
       setIsSearching(false);
     }
@@ -132,21 +126,17 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
   };
 
   // Navigate to result and track in recents
-  const handleResultClick = (result: { type: 'user' | 'organization' | 'proposal'; item: User | Organization | Proposal }) => {
+  const handleResultClick = (result: { type: 'user' | 'organization'; item: User | Organization }) => {
     const { type, item } = result;
 
     if (type === 'user') {
       const user = item as User;
-      addRecent({ id: user.id, name: user.displayName || user.username, type: 'user' });
+      addRecent({ id: user.id, name: user.displayName, type: 'user' });
       navigate(`/admin/users/${user.id}`);
     } else if (type === 'organization') {
       const org = item as Organization;
       addRecent({ id: org.id, name: org.name, type: 'organization' });
       navigate(`/admin/organizations/${org.id}/edit`);
-    } else if (type === 'proposal') {
-      const proposal = item as Proposal;
-      // Proposals don't go in recents for now
-      navigate(`/admin/organizations/${proposal.organizationId}/proposals/${proposal.id}`);
     }
 
     setQuery('');
@@ -172,7 +162,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const hasResults = results.users.length > 0 || results.organizations.length > 0 || results.proposals.length > 0;
+  const hasResults = results.users.length > 0 || results.organizations.length > 0;
 
   return (
     <div className="global-search">
@@ -231,7 +221,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           {!isSearching && results.users.length > 0 && (
             <div className="global-search-section">
               <div className="global-search-section-title">Users</div>
-              {results.users.map((user, index) => {
+              {results.users.map((user) => {
                 const globalIndex = allResults.findIndex(r => r.type === 'user' && r.item.id === user.id);
                 return (
                   <div
@@ -244,8 +234,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
                   >
                     <div className="global-search-result-icon">👤</div>
                     <div className="global-search-result-content">
-                      <div className="global-search-result-title">{user.displayName || user.username}</div>
-                      <div className="global-search-result-subtitle">{user.username}</div>
+                      <div className="global-search-result-title">{user.displayName}</div>
+                      <div className="global-search-result-subtitle">{user.email}</div>
                     </div>
                   </div>
                 );
@@ -256,7 +246,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           {!isSearching && results.organizations.length > 0 && (
             <div className="global-search-section">
               <div className="global-search-section-title">Organizations</div>
-              {results.organizations.map((org, index) => {
+              {results.organizations.map((org) => {
                 const globalIndex = allResults.findIndex(r => r.type === 'organization' && r.item.id === org.id);
                 return (
                   <div
@@ -271,31 +261,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
                     <div className="global-search-result-content">
                       <div className="global-search-result-title">{org.name}</div>
                       <div className="global-search-result-subtitle">{org.description || 'Organization'}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {!isSearching && results.proposals.length > 0 && (
-            <div className="global-search-section">
-              <div className="global-search-section-title">Proposals</div>
-              {results.proposals.map((proposal, index) => {
-                const globalIndex = allResults.findIndex(r => r.type === 'proposal' && r.item.id === proposal.id);
-                return (
-                  <div
-                    key={proposal.id}
-                    id={`search-result-${globalIndex}`}
-                    className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
-                    onClick={() => handleResultClick({ type: 'proposal', item: proposal })}
-                    role="option"
-                    aria-selected={selectedIndex === globalIndex}
-                  >
-                    <div className="global-search-result-icon">📋</div>
-                    <div className="global-search-result-content">
-                      <div className="global-search-result-title">{proposal.title}</div>
-                      <div className="global-search-result-subtitle">{proposal.status}</div>
                     </div>
                   </div>
                 );
