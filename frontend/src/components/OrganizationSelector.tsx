@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useActiveOrganization } from '../contexts/OrgContext';
+import { getRoleBadgeClass, getRoleLabel } from '../utils/roleUtils';
 import type { MembershipWithOrganizationDto } from '../types/api';
 import './OrganizationSelector.css';
 
@@ -146,9 +147,6 @@ export const OrganizationSelector: React.FC = () => {
   if (!hasMultipleOrgs) {
     return null;
   }
-
-  const getRoleBadgeClass = (role: string) => role === 'OrgAdmin' ? 'admin' : 'member';
-  const getRoleLabel = (role: string) => role === 'OrgAdmin' ? 'Admin' : 'Member';
 
   return (
     <div className="org-selector-container" ref={dropdownRef}>

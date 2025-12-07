@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { getRoleBadgeClass, getRoleLabel, type RoleType } from '../utils/roleUtils';
 import './MobileNav.css';
 
 export interface MobileNavItem {
@@ -12,22 +13,8 @@ export interface MobileNavItem {
 export interface MobileNavOrganization {
   id: string;
   name: string;
-  role: string;
+  role: RoleType;
 }
-
-/**
- * Helper function to get role badge class name
- */
-const getRoleBadgeClass = (role: string): string => {
-  return role === 'OrgAdmin' ? 'admin' : 'member';
-};
-
-/**
- * Helper function to get role display label
- */
-const getRoleLabel = (role: string): string => {
-  return role === 'OrgAdmin' ? 'Admin' : 'Member';
-};
 
 interface MobileNavProps {
   isOpen: boolean;

@@ -176,4 +176,4 @@ Potential improvements for future iterations:
 - Implemented touch-friendly UI with ≥44px tap targets
 - Added comprehensive unit and e2e tests
 - Created visual documentation
-- Ensured WCAG 2.1 AA accessibility compliance
+- Ensured WCAG 2.1 AAA accessibility compliance
