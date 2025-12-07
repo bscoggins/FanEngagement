@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { getRoleBadgeClass, getRoleLabel, type RoleType } from '../utils/roleUtils';
 import './MobileNav.css';
 
 export interface MobileNavItem {
@@ -7,6 +8,12 @@ export interface MobileNavItem {
   label: string;
   path: string;
   isActive?: boolean;
+}
+
+export interface MobileNavOrganization {
+  id: string;
+  name: string;
+  role: RoleType;
 }
 
 interface MobileNavProps {
@@ -17,6 +24,9 @@ interface MobileNavProps {
     label: string;
     items: MobileNavItem[];
   }>;
+  organizations?: MobileNavOrganization[];
+  activeOrgId?: string;
+  onOrgChange?: (orgId: string) => void;
 }
 
 /**
@@ -27,7 +37,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   isOpen, 
   onClose, 
   items,
-  sections 
+  sections,
+  organizations,
+  activeOrgId,
+  onOrgChange 
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -161,6 +174,47 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         </div>
         
         <div className="mobile-nav-content">
+          {/* Organization switcher - shown only when multiple orgs are available */}
+          {organizations && organizations.length > 1 && (
+            <div className="mobile-nav-org-section">
+              <div className="mobile-nav-org-label">
+                Organization
+              </div>
+              <div className="mobile-nav-org-list">
+                {organizations.map(org => {
+                  const isActive = org.id === activeOrgId;
+                  const roleLabel = getRoleLabel(org.role);
+                  return (
+                    <button
+                      key={org.id}
+                      className={`mobile-nav-org-button ${isActive ? 'active' : ''}`}
+                      onClick={() => {
+                        if (onOrgChange) {
+                          onOrgChange(org.id);
+                        }
+                      }}
+                      aria-current={isActive ? 'true' : undefined}
+                      aria-label={`Switch to ${org.name} (${roleLabel})`}
+                      data-testid={`mobile-org-${org.id}`}
+                    >
+                      <span className="mobile-nav-org-name">
+                        {org.name}
+                      </span>
+                      <span className={`mobile-nav-org-badge ${getRoleBadgeClass(org.role)}`}>
+                        {roleLabel}
+                      </span>
+                      {isActive && (
+                        <span className="mobile-nav-org-checkmark" aria-hidden="true">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
           {/* Main items */}
           {items.length > 0 && (
             <ul className="mobile-nav-list">

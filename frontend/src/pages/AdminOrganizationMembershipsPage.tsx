@@ -4,6 +4,7 @@ import { membershipsApi } from '../api/membershipsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
+import { getRoleFullName } from '../utils/roleUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
@@ -288,7 +289,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
                       backgroundColor: membership.role === 'OrgAdmin' ? '#e3f2fd' : '#f5f5f5',
                       color: membership.role === 'OrgAdmin' ? '#1976d2' : '#666',
                     }}>
-                      {membership.role === 'OrgAdmin' ? 'Org Admin' : 'Member'}
+                      {getRoleFullName(membership.role)}
                     </span>
                   </td>
                   <td style={{ padding: '1rem', color: '#666', fontSize: '0.9rem' }}>

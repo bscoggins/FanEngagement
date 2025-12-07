@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useCallback, useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
+import { useMobileOrgSwitcher } from '../hooks/useMobileOrgSwitcher';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
@@ -125,6 +126,16 @@ export const Layout: React.FC = () => {
       })),
     }];
   }, [canAccessAdminArea, activeOrg, activeOrgIsAdmin, globalNavItems, isNavItemActive]);
+
+  // Use shared hook for mobile org switcher logic
+  const { mobileOrganizations, handleMobileOrgChange } = useMobileOrgSwitcher({
+    orgMemberships,
+    isGlobalAdmin,
+    setActiveOrg,
+    isAdmin,
+    navigate,
+    setIsMobileNavOpen,
+  });
 
   // For unauthenticated users, show simplified layout
   if (!isAuthenticated) {
@@ -259,6 +270,9 @@ export const Layout: React.FC = () => {
           onClose={() => setIsMobileNavOpen(false)}
           items={mobileNavItems}
           sections={mobileNavSections}
+          organizations={mobileOrganizations}
+          activeOrgId={activeOrg?.id}
+          onOrgChange={handleMobileOrgChange}
         />
       </div>
     </>
