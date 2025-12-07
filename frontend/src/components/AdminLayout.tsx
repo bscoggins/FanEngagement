@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react'
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
+import { useMobileOrgSwitcher } from '../hooks/useMobileOrgSwitcher';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
-import { MobileNav, type MobileNavItem, type MobileNavOrganization } from './MobileNav';
+import { MobileNav, type MobileNavItem } from './MobileNav';
 import './AdminLayout.css';
 
 export const AdminLayout: React.FC = () => {
@@ -186,40 +187,15 @@ export const AdminLayout: React.FC = () => {
     }];
   }, [activeOrg, activeOrgIsAdmin, orgNavItems, isNavItemActive]);
 
-  // Prepare mobile org data - only for non-platform admins
-  const mobileOrganizations: MobileNavOrganization[] | undefined = useMemo(() => {
-    if (isGlobalAdmin() || orgMemberships.length <= 1) {
-      return undefined;
-    }
-    
-    return orgMemberships.map(m => ({
-      id: m.organizationId,
-      name: m.organizationName,
-      role: m.role,
-    }));
-  }, [isGlobalAdmin, orgMemberships]);
-
-  const handleMobileOrgChange = useCallback((orgId: string) => {
-    const membership = orgMemberships.find(m => m.organizationId === orgId);
-    if (membership) {
-      setActiveOrg({
-        id: membership.organizationId,
-        name: membership.organizationName,
-        role: membership.role,
-      });
-
-      // Navigate based on role in the new org
-      if (isAdmin || membership.role === 'OrgAdmin') {
-        navigate(`/admin/organizations/${membership.organizationId}/edit`);
-      } else {
-        navigate(`/me/organizations/${membership.organizationId}`);
-      }
-      
-      // Close the mobile nav after org change
-      setIsMobileNavOpen(false);
-    }
-  }, [orgMemberships, setActiveOrg, isAdmin, navigate]);
-
+  // Use shared hook for mobile org switcher logic
+  const { mobileOrganizations, handleMobileOrgChange } = useMobileOrgSwitcher({
+    orgMemberships,
+    isGlobalAdmin,
+    setActiveOrg,
+    isAdmin,
+    navigate,
+    setIsMobileNavOpen,
+  });
 
   return (
     <>
