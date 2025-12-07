@@ -32,6 +32,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
@@ -40,7 +41,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
       
       // Focus the close button when drawer opens
-      setTimeout(() => {
+      focusTimeoutRef.current = setTimeout(() => {
         closeButtonRef.current?.focus();
       }, 100);
     } else {
@@ -49,6 +50,12 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         previouslyFocusedElement.current.focus();
       }
     }
+
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
+      }
+    };
   }, [isOpen]);
 
   // Close on Escape key
