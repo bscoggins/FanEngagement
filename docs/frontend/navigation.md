@@ -395,7 +395,7 @@ interface UseNavigationOptions {
   homeRoute: string;               // Appropriate home route for user
   navContext: NavContext;          // Current navigation context
   isLoading: boolean;              // Whether nav data is still loading
-  activeOrg: ActiveOrg | null;     // Currently selected organization
+  activeOrg: ActiveOrganization | null;     // Currently selected organization
   hasActiveOrg: boolean;           // Whether user has selected an org
 }
 ```
