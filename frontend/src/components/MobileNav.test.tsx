@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 
@@ -164,5 +165,46 @@ describe('MobileNav', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('traps focus within drawer', async () => {
+    const user = userEvent.setup();
+    const items: MobileNavItem[] = [
+      { id: 'home', label: 'Home', path: '/' },
+      { id: 'account', label: 'My Account', path: '/me' },
+      { id: 'settings', label: 'Settings', path: '/settings' },
+    ];
+    
+    renderMobileNav({
+      isOpen: true,
+      onClose: vi.fn(),
+      items,
+    });
+
+    const closeButton = screen.getByRole('button', { name: 'Close navigation' });
+    const homeLink = screen.getByRole('link', { name: 'Home' });
+    const settingsLink = screen.getByRole('link', { name: 'Settings' });
+
+    // Wait for focus to be set on close button
+    await vi.waitFor(() => {
+      expect(closeButton).toHaveFocus();
+    });
+
+    // Tab to first link
+    await user.tab();
+    expect(homeLink).toHaveFocus();
+
+    // Tab through to last link
+    await user.tab();
+    await user.tab();
+    expect(settingsLink).toHaveFocus();
+
+    // Tab should wrap to close button
+    await user.tab();
+    expect(closeButton).toHaveFocus();
+
+    // Shift+Tab should wrap to last link
+    await user.tab({ shift: true });
+    expect(settingsLink).toHaveFocus();
   });
 });

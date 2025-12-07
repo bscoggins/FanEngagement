@@ -60,20 +60,6 @@ body {
   outline: none;
 }
 
-/* Ensure buttons and interactive elements have consistent focus treatment */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
-[role="button"]:focus-visible,
-[role="link"]:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
-}
-
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *:focus-visible {
