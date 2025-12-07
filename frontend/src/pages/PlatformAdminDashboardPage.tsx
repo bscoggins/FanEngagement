@@ -239,7 +239,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
                 backgroundColor: '#e3f2fd',
                 borderRadius: '8px',
               }}>
-                🏢
+                ➕
               </div>
               <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333', fontWeight: 600 }}>Create Organization</h3>
             </div>

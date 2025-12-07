@@ -62,8 +62,15 @@ export const PlatformAdminLayout: React.FC = () => {
         return;
       }
 
-      // Focus search with Ctrl+K or Cmd+K
-      const modifierKey = navigator.platform.toUpperCase().includes('MAC') ? e.metaKey : e.ctrlKey;
+      // Focus search with Ctrl+K or Cmd+K - use same detection as KeyboardShortcutOverlay
+      const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+      const isMac = nav.userAgentData?.platform
+        ? nav.userAgentData.platform.toUpperCase().includes('MAC')
+        : navigator.platform
+        ? navigator.platform.toUpperCase().includes('MAC')
+        : /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+      
+      const modifierKey = isMac ? e.metaKey : e.ctrlKey;
       if (modifierKey && e.key === 'k' && !e.altKey && !e.shiftKey) {
         e.preventDefault();
         const input = searchInputRef.current?.querySelector('input');

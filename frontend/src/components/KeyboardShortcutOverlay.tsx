@@ -42,7 +42,7 @@ export const KeyboardShortcutOverlay: React.FC<KeyboardShortcutOverlayProps> = (
     { key: 'Escape', description: 'Close overlay or dialog', category: 'General' },
     { key: '↑ ↓', description: 'Navigate search results', category: 'Search' },
     { key: 'Enter', description: 'Select result', category: 'Search' },
-    { key: `${modifierKey}+1–6`, description: 'Navigate org admin pages (when applicable)', category: 'Navigation' },
+    { key: `${modifierKey}+1-6`, description: 'Navigate org admin pages (when applicable)', category: 'Navigation' },
   ], [modifierKey]);
 
   const displayShortcuts = shortcuts || defaultShortcuts;

@@ -49,7 +49,7 @@ describe('GlobalSearch', () => {
       </BrowserRouter>
     );
 
-    const input = screen.getByPlaceholderText(/search users, organizations, proposals/i);
+    const input = screen.getByPlaceholderText(/search users, organizations/i);
     expect(input).toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe('GlobalSearch', () => {
       </BrowserRouter>
     );
 
-    const input = screen.getByPlaceholderText(/search users, organizations, proposals/i);
+    const input = screen.getByPlaceholderText(/search users, organizations/i);
     fireEvent.change(input, { target: { value: 'test' } });
 
     const clearButton = screen.getByLabelText(/clear search/i);
@@ -74,7 +74,7 @@ describe('GlobalSearch', () => {
       </BrowserRouter>
     );
 
-    const input = screen.getByPlaceholderText(/search users, organizations, proposals/i) as HTMLInputElement;
+    const input = screen.getByPlaceholderText(/search users, organizations/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'test' } });
     
     const clearButton = screen.getByLabelText(/clear search/i);
@@ -90,7 +90,7 @@ describe('GlobalSearch', () => {
       </BrowserRouter>
     );
 
-    const input = screen.getByPlaceholderText(/search users, organizations, proposals/i);
+    const input = screen.getByPlaceholderText(/search users, organizations/i);
     expect(input).toHaveAttribute('aria-label', 'Global search');
     expect(input).toHaveAttribute('aria-expanded', 'false');
   });
@@ -102,7 +102,7 @@ describe('GlobalSearch', () => {
       </BrowserRouter>
     );
 
-    const input = screen.getByPlaceholderText(/search users, organizations, proposals/i);
+    const input = screen.getByPlaceholderText(/search users, organizations/i);
     expect(input).toBeInTheDocument();
   });
 });

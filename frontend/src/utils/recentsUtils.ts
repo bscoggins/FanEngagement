@@ -36,8 +36,8 @@ export const addRecent = (item: Omit<RecentItem, 'timestamp'>): void => {
   try {
     const existing = getRecents();
     
-    // Remove any existing item with the same id
-    const filtered = existing.filter(r => r.id !== item.id);
+    // Remove any existing item with the same id AND type
+    const filtered = existing.filter(r => !(r.id === item.id && r.type === item.type));
     
     // Add new item at the front with current timestamp
     const updated = [

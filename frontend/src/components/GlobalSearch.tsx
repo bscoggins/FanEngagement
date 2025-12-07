@@ -172,7 +172,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           ref={inputRef}
           type="text"
           className="global-search-input"
-          placeholder="Search users, organizations, proposals..."
+          placeholder="Search users, organizations..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
