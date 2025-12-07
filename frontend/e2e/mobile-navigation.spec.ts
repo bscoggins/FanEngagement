@@ -191,7 +191,7 @@ test.describe('Mobile navigation', () => {
 test.describe('Mobile navigation on tablet', () => {
   test.use({ 
     ...devices['iPad'],
-    viewport: { width: 768, height: 1024 }
+    viewport: { width: 769, height: 1024 } // Just above 768px breakpoint
   });
 
   test.beforeEach(async ({ page }) => {
@@ -199,9 +199,8 @@ test.describe('Mobile navigation on tablet', () => {
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
   });
 
-  test('at 768px breakpoint, shows desktop sidebar instead of mobile hamburger', async ({ page }) => {
-    // At exactly 768px, mobile nav should be hidden, desktop should be visible
-    // Since media query is max-width: 768px, at 768 we should see desktop
+  test('above 768px breakpoint, shows desktop sidebar instead of mobile hamburger', async ({ page }) => {
+    // At 769px (above max-width: 768px), mobile nav should be hidden, desktop should be visible
     const desktopSidebar = page.getByTestId('unified-sidebar');
     const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
     

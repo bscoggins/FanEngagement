@@ -34,8 +34,8 @@ See [mobile-navigation-visual-demo.png](./mobile-navigation-visual-demo.png) for
 ### Accessibility
 - **Focus trap** - Tab navigation stays within drawer when open
 - **Escape key** - Closes drawer and returns focus to hamburger button
-- **ARIA labels** - Proper roles and labels for all interactive elements
-- **aria-current** - Active navigation items marked for screen readers
+- **ARIA labels** - Proper roles, labels, and descriptive aria-labels for interactive elements including organization switcher buttons
+- **aria-current** - Active navigation items and organizations marked for screen readers
 - **Focus management** - Auto-focus on close button when drawer opens
 - **Keyboard navigation** - Full keyboard support for all interactions
 

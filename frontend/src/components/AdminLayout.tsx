@@ -212,7 +212,7 @@ export const AdminLayout: React.FC = () => {
       if (isAdmin || membership.role === 'OrgAdmin') {
         navigate(`/admin/organizations/${membership.organizationId}/edit`);
       } else {
-        navigate(`/me/home`);
+        navigate(`/me/organizations/${membership.organizationId}`);
       }
       
       // Close the mobile nav after org change

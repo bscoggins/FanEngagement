@@ -15,6 +15,20 @@ export interface MobileNavOrganization {
   role: string;
 }
 
+/**
+ * Helper function to get role badge class name
+ */
+const getRoleBadgeClass = (role: string): string => {
+  return role === 'OrgAdmin' ? 'admin' : 'member';
+};
+
+/**
+ * Helper function to get role display label
+ */
+const getRoleLabel = (role: string): string => {
+  return role === 'OrgAdmin' ? 'Admin' : 'Member';
+};
+
 interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
@@ -182,6 +196,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
               <div className="mobile-nav-org-list">
                 {organizations.map(org => {
                   const isActive = org.id === activeOrgId;
+                  const roleLabel = getRoleLabel(org.role);
                   return (
                     <button
                       key={org.id}
@@ -192,13 +207,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({
                         }
                       }}
                       aria-current={isActive ? 'true' : undefined}
+                      aria-label={`Switch to ${org.name} (${roleLabel})`}
                       data-testid={`mobile-org-${org.id}`}
                     >
                       <span className="mobile-nav-org-name">
                         {org.name}
                       </span>
-                      <span className={`mobile-nav-org-badge ${org.role === 'OrgAdmin' ? 'admin' : 'member'}`}>
-                        {org.role === 'OrgAdmin' ? 'Admin' : 'Member'}
+                      <span className={`mobile-nav-org-badge ${getRoleBadgeClass(org.role)}`}>
+                        {roleLabel}
                       </span>
                       {isActive && (
                         <span className="mobile-nav-org-checkmark" aria-hidden="true">
