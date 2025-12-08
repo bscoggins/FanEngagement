@@ -145,10 +145,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
     }
   }, [isOpen, allResults, selectedIndex, onClose, handleResultClick]);
 
-  // Navigate to result and track in recents - Moved above handleKeyDown
-  // const handleResultClick = ...
-
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
