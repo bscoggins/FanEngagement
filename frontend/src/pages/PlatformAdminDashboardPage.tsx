@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { QuickActionCard } from '../components/QuickActionCard';
 import { parseApiError } from '../utils/errorUtils';
 
 interface PlatformStats {
@@ -198,119 +198,49 @@ export const PlatformAdminDashboardPage: React.FC = () => {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem',
+          marginBottom: '2rem',
         }}
         data-testid="quick-actions-grid"
       >
-        {/* Manage Users */}
-        <Link
+        <QuickActionCard
+          to="/admin/organizations/new"
+          icon="➕"
+          iconBackground="#e3f2fd"
+          title="Create Organization"
+          description="Set up a new organization with custom governance and share types."
+          actionText="Create new"
+          testId="create-organization-card"
+        />
+        
+        <QuickActionCard
           to="/admin/users"
-          style={{ textDecoration: 'none' }}
-          data-testid="manage-users-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>👥</span>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333' }}>Manage Users</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
-              View, create, and manage user accounts across the platform.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500 }}>
-              Go to Users →
-            </div>
-          </div>
-        </Link>
-
-        {/* Manage Organizations */}
-        <Link
+          icon="👥"
+          iconBackground="#f3e5f5"
+          title="Manage Users"
+          description="View, create, and manage user accounts across the platform."
+          actionText="Go to Users"
+          testId="manage-users-card"
+        />
+        
+        <QuickActionCard
           to="/admin/organizations"
-          style={{ textDecoration: 'none' }}
-          data-testid="manage-organizations-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>🏢</span>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333' }}>Manage Organizations</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
-              Create and configure organizations and their settings.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500 }}>
-              Go to Organizations →
-            </div>
-          </div>
-        </Link>
-
-        {/* Dev Tools */}
-        <Link
+          icon="🏢"
+          iconBackground="#e8f5e9"
+          title="View Organizations"
+          description="Browse and configure all organizations and their settings."
+          actionText="Go to Organizations"
+          testId="manage-organizations-card"
+        />
+        
+        <QuickActionCard
           to="/admin/dev-tools"
-          style={{ textDecoration: 'none' }}
-          data-testid="dev-tools-card"
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              padding: '1.5rem',
-              transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>🛠️</span>
-              <h3 style={{ margin: 0, fontSize: '1.125rem', color: '#333' }}>Dev Tools</h3>
-            </div>
-            <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
-              Development utilities for seeding data and testing.
-            </p>
-            <div style={{ marginTop: '1rem', color: '#007bff', fontWeight: 500 }}>
-              Go to Dev Tools →
-            </div>
-          </div>
-        </Link>
+          icon="🛠️"
+          iconBackground="#fff3e0"
+          title="Dev Tools"
+          description="Development utilities for seeding data and testing."
+          actionText="Go to Dev Tools"
+          testId="dev-tools-card"
+        />
       </div>
 
       {/* Platform Admin Info */}

@@ -13,12 +13,28 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  gap: 1rem;
 }
 
 .admin-header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
+}
+
+.admin-header-center {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+}
+
+.admin-header-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .admin-mobile-menu-button {
@@ -63,7 +79,6 @@
 }
 
 .admin-badge {
-  margin-right: 1rem;
   padding: 0.25rem 0.75rem;
   background-color: #dc3545;
   color: white;
@@ -197,6 +212,14 @@
 
   .admin-header {
     padding: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-header-center {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.75rem;
   }
 
   .admin-container {

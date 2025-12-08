@@ -1,0 +1,91 @@
+/**
+ * Quick Action Card Component Styles
+ * Reusable card component for dashboard quick actions
+ */
+
+.quick-action-card-link {
+  text-decoration: none;
+  display: block;
+}
+
+.quick-action-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+  height: 100%;
+}
+
+.quick-action-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.quick-action-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.quick-action-card-icon {
+  font-size: 2rem;
+  margin-right: 0.75rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.quick-action-card-title {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.quick-action-card-description {
+  color: #666;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.quick-action-card-action {
+  margin-top: 1rem;
+  color: #007bff;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .quick-action-card {
+    transition: none;
+  }
+
+  .quick-action-card:hover {
+    transform: none;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .quick-action-card {
+    padding: 1.25rem;
+  }
+
+  .quick-action-card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.75rem;
+  }
+
+  .quick-action-card-title {
+    font-size: 1rem;
+  }
+}

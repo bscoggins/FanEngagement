@@ -1,0 +1,201 @@
+/**
+ * Recents Dropdown Styles
+ */
+
+.recents-dropdown {
+  position: relative;
+}
+
+.recents-dropdown-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md, 6px);
+  color: white;
+  font-size: var(--font-size-sm, 0.875rem);
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
+}
+
+.recents-dropdown-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.recents-dropdown-button:focus-visible {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: 2px;
+}
+
+.recents-dropdown-icon {
+  font-size: 1rem;
+}
+
+.recents-dropdown-label {
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.recents-dropdown-arrow {
+  font-size: 0.625rem;
+  opacity: 0.7;
+  transition: transform 0.15s var(--ease-out);
+}
+
+.recents-dropdown-button[aria-expanded="true"] .recents-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.recents-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 280px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-md, 6px);
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1)), 0 10px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.recents-dropdown-title {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold, 600);
+  text-transform: uppercase;
+  color: var(--color-neutral-600, #666);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.recents-dropdown-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--color-neutral-600, #666);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.recents-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease-out);
+}
+
+.recents-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.recents-dropdown-item:focus-visible {
+  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline-offset: -2px;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.recents-dropdown-item-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.recents-dropdown-item:hover .recents-dropdown-item-icon {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.recents-dropdown-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.recents-dropdown-item-name {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-neutral-700, #333);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recents-dropdown-item-type {
+  font-size: 0.75rem;
+  color: var(--color-neutral-600, #666);
+  margin-top: 0.125rem;
+}
+
+/* Animation for menu appearance */
+@media (prefers-reduced-motion: no-preference) {
+  .recents-dropdown-menu {
+    animation: dropdown-fade-in 0.15s ease-out;
+  }
+
+  @keyframes dropdown-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .recents-dropdown-button,
+  .recents-dropdown-item,
+  .recents-dropdown-arrow {
+    transition: none;
+  }
+
+  .recents-dropdown-menu {
+    animation: none;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .recents-dropdown-button {
+    padding: 0.5rem;
+  }
+
+  .recents-dropdown-label {
+    display: none;
+  }
+
+  .recents-dropdown-menu {
+    right: auto;
+    left: 0;
+    min-width: 260px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .recents-dropdown-button {
+    border-width: 2px;
+  }
+
+  .recents-dropdown-menu {
+    border-width: 2px;
+  }
+
+  .recents-dropdown-item:focus-visible {
+    outline-width: 3px;
+  }
+}
