@@ -199,7 +199,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ href, isActive, children }) =>
   padding: 0.5rem 1.5rem;
   
   /* Use typography tokens */
-  font-size: var(--font-size-sm, 0.75rem);
+  font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-semibold, 600);
   
   /* Uppercase and spaced */

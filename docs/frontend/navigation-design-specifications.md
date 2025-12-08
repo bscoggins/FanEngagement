@@ -219,11 +219,13 @@ This document provides comprehensive design specifications for all navigation su
 
 **Styling:**
 - Padding: 0.5rem 1.5rem
-- Font Size: `var(--font-size-sm)` (0.75rem / 12px)
+- Font Size: `var(--font-size-sm, 0.75rem)` (0.875rem / 14px; fallback: 0.75rem / 12px)
 - Text Transform: uppercase
 - Color: #888
 - Letter Spacing: 0.05em
 - Font Weight: `var(--font-weight-semibold)` (600)
+
+**Note:** The CSS variable `--font-size-sm` is set to `0.875rem` (14px) in `index.css`. Components use `0.75rem` (12px) as a fallback value.
 
 ### Organization Info Display
 
@@ -366,7 +368,7 @@ This document provides comprehensive design specifications for all navigation su
 - Margin Bottom: 0.5rem
 
 **Section Label:**
-- Font Size: `var(--font-size-sm)` (0.75rem / 12px)
+- Font Size: `var(--font-size-sm, 0.75rem)` (0.875rem / 14px; fallback: 0.75rem / 12px)
 - Text Transform: uppercase
 - Color: #888
 - Letter Spacing: 0.05em
@@ -419,7 +421,7 @@ This document provides comprehensive design specifications for all navigation su
 **Role Badge:**
 - Padding: 0.25rem 0.5rem
 - Border Radius: 4px
-- Font Size: `var(--font-size-sm)` (0.75rem / 12px)
+- Font Size: `var(--font-size-sm, 0.75rem)` (0.875rem / 14px; fallback: 0.75rem / 12px)
 - Font Weight: `var(--font-weight-semibold)` (600)
 - Flex Shrink: 0
 
