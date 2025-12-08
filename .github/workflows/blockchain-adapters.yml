@@ -48,7 +48,7 @@ jobs:
           docker images solana-adapter:test
       
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'solana-adapter:test'
           format: 'sarif'
@@ -65,7 +65,7 @@ jobs:
           sarif_file: 'trivy-solana-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'solana-adapter:test'
           format: 'table'
@@ -178,7 +178,7 @@ jobs:
           docker images polygon-adapter:test
       
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'polygon-adapter:test'
           format: 'sarif'
@@ -195,7 +195,7 @@ jobs:
           sarif_file: 'trivy-polygon-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'polygon-adapter:test'
           format: 'table'
