@@ -255,7 +255,7 @@ body { font-size: var(--font-size-base); }
 .text-body-small { font-size: var(--font-size-sm); }
 .text-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
 .text-caption { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
-.text-overline { font-size: var(--font-size-2xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--letter-spacing-wider); text-transform: uppercase; }
+.text-overline { font-size: var(--font-size-2xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--letter-spacing-widest); text-transform: uppercase; }
 ```
 
 ### Font Weights
@@ -353,7 +353,7 @@ The design system includes utility classes for common text patterns:
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-normal);
-  letter-spacing: var(--letter-spacing-wider);
+  letter-spacing: var(--letter-spacing-widest);
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
