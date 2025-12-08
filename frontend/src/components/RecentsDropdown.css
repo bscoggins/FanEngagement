@@ -26,16 +26,16 @@
 }
 
 .recents-dropdown-button:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
 .recents-dropdown-icon {
-  font-size: var(--spacing-4);
+  font-size: var(--font-size-base);
 }
 
 .recents-dropdown-label {
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium);
 }
 
 .recents-dropdown-arrow {
@@ -63,10 +63,10 @@
 
 .recents-dropdown-title {
   padding: var(--spacing-3) var(--spacing-4);
-  font-size: var(--spacing-3);
-  font-weight: var(--font-weight-semibold, 600);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  color: var(--color-neutral-600, #666);
+  color: var(--color-neutral-600);
   letter-spacing: 0.05em;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -74,7 +74,7 @@
 .recents-dropdown-empty {
   padding: var(--spacing-6) var(--spacing-4);
   text-align: center;
-  color: var(--color-neutral-600, #666);
+  color: var(--color-neutral-600);
   font-size: var(--font-size-sm, var(--font-size-sm));
 }
 
@@ -96,13 +96,13 @@
 }
 
 .recents-dropdown-item:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;
   background-color: rgba(0, 123, 255, 0.1);
 }
 
 .recents-dropdown-item-icon {
-  font-size: var(--spacing-5);
+  font-size: var(--font-size-xl);
   flex-shrink: 0;
   width: 32px;
   height: 32px;
@@ -124,7 +124,7 @@
 
 .recents-dropdown-item-name {
   font-size: var(--font-size-sm, var(--font-size-sm));
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium);
   color: var(--color-neutral-700, #333);
   white-space: nowrap;
   overflow: hidden;
@@ -132,8 +132,8 @@
 }
 
 .recents-dropdown-item-type {
-  font-size: var(--spacing-3);
-  color: var(--color-neutral-600, #666);
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-600);
   margin-top: var(--spacing-0-5);
 }
 

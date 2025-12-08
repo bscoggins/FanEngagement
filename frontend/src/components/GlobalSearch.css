@@ -19,7 +19,7 @@
   position: absolute;
   left: var(--spacing-3);
   pointer-events: none;
-  font-size: var(--spacing-4);
+  font-size: var(--font-size-base);
   opacity: 0.6;
 }
 
@@ -46,7 +46,7 @@
 .global-search-input:focus {
   outline: none;
   background-color: rgba(255, 255, 255, 0.2);
-  border-color: var(--color-primary-600, #007bff);
+  border-color: var(--color-primary-600);
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
 }
 
@@ -56,7 +56,7 @@
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.6);
-  font-size: var(--spacing-6);
+  font-size: var(--font-size-2xl);
   cursor: pointer;
   padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--radius-sm);
@@ -70,7 +70,7 @@
 }
 
 .global-search-clear:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
@@ -92,7 +92,7 @@
 .global-search-empty {
   padding: var(--spacing-6);
   text-align: center;
-  color: var(--color-neutral-600, #666);
+  color: var(--color-neutral-600);
   font-size: var(--font-size-sm, var(--font-size-sm));
 }
 
@@ -134,8 +134,8 @@
 
 .global-search-section-title {
   padding: var(--spacing-2) var(--spacing-4);
-  font-size: var(--spacing-3);
-  font-weight: var(--font-weight-semibold, 600);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: var(--color-neutral-400, #999);
   letter-spacing: 0.05em;
@@ -164,7 +164,7 @@
 }
 
 .global-search-result-icon {
-  font-size: var(--spacing-6);
+  font-size: var(--font-size-2xl);
   flex-shrink: 0;
   width: 32px;
   height: 32px;
@@ -186,7 +186,7 @@
 
 .global-search-result-title {
   font-size: var(--font-size-sm, var(--font-size-sm));
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium);
   color: var(--color-neutral-700, #333);
   white-space: nowrap;
   overflow: hidden;
@@ -194,8 +194,8 @@
 }
 
 .global-search-result-subtitle {
-  font-size: var(--spacing-3);
-  color: var(--color-neutral-600, #666);
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-600);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -242,6 +242,6 @@
 
   .global-search-result.selected {
     background-color: rgba(0, 123, 255, 0.2);
-    border-left: 3px solid var(--color-primary-600, #007bff);
+    border-left: 3px solid var(--color-primary-600);
   }
 }

@@ -16,7 +16,7 @@
 
 .header h1 {
   margin: 0;
-  font-size: var(--spacing-6);
+  font-size: var(--font-size-2xl);
 }
 
 .nav {
@@ -93,7 +93,7 @@
   background: none;
   border: none;
   color: var(--color-text-inverse);
-  font-size: var(--spacing-6);
+  font-size: var(--font-size-2xl);
   padding: var(--spacing-2);
   cursor: pointer;
   border-radius: var(--radius-sm);
@@ -109,7 +109,7 @@
 }
 
 .unified-mobile-menu-button:focus {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
@@ -125,7 +125,7 @@
 
 .unified-header-title h1 {
   margin: 0;
-  font-size: var(--spacing-6);
+  font-size: var(--font-size-2xl);
 }
 
 .unified-header-title:hover {
@@ -195,7 +195,7 @@
 }
 
 .unified-logout-button:focus {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
@@ -226,24 +226,24 @@
   padding: var(--spacing-3, var(--spacing-3)) var(--spacing-6);
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium);
 }
 
 .unified-nav-link:hover {
   background-color: #333;
   color: var(--color-text-inverse);
-  border-left-color: var(--color-primary-600, #007bff);
+  border-left-color: var(--color-primary-600);
 }
 
 .unified-nav-link.active {
   background-color: #333;
   color: var(--color-text-inverse);
-  border-left-color: var(--color-primary-600, #007bff);
-  font-weight: var(--font-weight-semibold, 600);
+  border-left-color: var(--color-primary-600);
+  font-weight: var(--font-weight-semibold);
 }
 
 .unified-nav-link:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;
 }
 
@@ -259,7 +259,7 @@
 
 .unified-nav-section-label {
   padding: var(--spacing-2) var(--spacing-6);
-  font-size: var(--spacing-3);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   color: #888;
   letter-spacing: 0.05em;
@@ -327,7 +327,7 @@
   }
 
   .unified-header h1 {
-    font-size: var(--spacing-5);
+    font-size: var(--font-size-xl);
   }
 
   .unified-header {
