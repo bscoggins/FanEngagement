@@ -110,6 +110,7 @@
   --letter-spacing-tight: -0.02em;
   --letter-spacing-normal: 0;
   --letter-spacing-wide: 0.02em;
+  --letter-spacing-medium: 0.025em;
   --letter-spacing-wider: 0.05em;
 
   /* ===== Spacing (Base unit: 4px) ===== */

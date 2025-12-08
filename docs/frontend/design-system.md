@@ -281,6 +281,7 @@ body { font-size: var(--font-size-base); }
 --letter-spacing-tight: -0.02em    /* Large headings */
 --letter-spacing-normal: 0         /* Body text (default) */
 --letter-spacing-wide: 0.02em      /* Small caps, labels */
+--letter-spacing-medium: 0.025em   /* Badges, compact uppercase */
 --letter-spacing-wider: 0.05em     /* Uppercase labels, overlines */
 ```
 
