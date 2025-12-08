@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useActiveOrganization } from '../contexts/OrgContext';
-import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
+import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { GlobalSearch } from './GlobalSearch';
@@ -41,11 +41,6 @@ export const PlatformAdminLayout: React.FC = () => {
   const orgNavItems = useMemo(() => {
     const items = getVisibleNavItems(navContext, { scope: 'org' });
     return items.map(item => getResolvedNavItem(item, navContext));
-  }, [navContext]);
-
-  // Get the appropriate home route
-  const homeRoute = useMemo(() => {
-    return getDefaultHomeRoute(navContext);
   }, [navContext]);
 
   // Keyboard shortcuts: ? for help overlay, Ctrl/Cmd+K for search focus
@@ -206,11 +201,6 @@ export const PlatformAdminLayout: React.FC = () => {
                 </>
               )}
             </nav>
-            <div className="admin-sidebar-footer">
-              <Link to={homeRoute} className="admin-back-link" aria-label="Go to home page">
-                ← Home
-              </Link>
-            </div>
           </aside>
           <main className="admin-main" id="main-content" role="main">
             <Outlet />

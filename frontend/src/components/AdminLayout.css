@@ -225,30 +225,10 @@
   flex: 1;
 }
 
-.admin-nav-shortcut {
-  font-size: var(--font-size-xs);
-  color: var(--color-neutral-400);
-  background-color: var(--color-overlay-light);
-  padding: var(--spacing-0-5) var(--spacing-2);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-family-mono);
-  letter-spacing: var(--letter-spacing-wide);
-  transition: background-color var(--duration-fast) var(--ease-out), 
-              color var(--duration-fast) var(--ease-out);
-  border: 1px solid var(--color-overlay-light);
-  flex-shrink: 0;
-  margin-left: var(--spacing-2);
-}
-
 .admin-nav-link:hover {
   background-color: var(--color-neutral-700);
   color: var(--color-text-inverse);
   border-left-color: var(--color-primary-600);
-}
-
-.admin-nav-link:hover .admin-nav-shortcut {
-  background-color: var(--color-overlay-medium);
-  color: var(--color-neutral-300);
 }
 
 .admin-nav-link.active {
@@ -258,31 +238,9 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.admin-nav-link.active .admin-nav-shortcut {
-  background-color: var(--color-primary-900);
-  color: var(--color-primary-400);
-  border-color: var(--color-primary-700);
-}
-
 .admin-nav-link:focus-visible {
   outline: 2px solid var(--focus-ring-color, #0056b3);
   outline-offset: -2px;
-}
-
-.admin-sidebar-footer {
-  padding: var(--spacing-4) var(--spacing-6);
-  border-top: 1px solid var(--color-border-dark);
-}
-
-.admin-back-link {
-  color: var(--color-neutral-400);
-  text-decoration: none;
-  font-size: var(--font-size-base);
-  transition: color var(--duration-normal) var(--ease-out);
-}
-
-.admin-back-link:hover {
-  color: var(--color-text-inverse);
 }
 
 .admin-main {
@@ -401,10 +359,6 @@
     right: var(--spacing-4);
     left: var(--spacing-4);
     max-width: none;
-  }
-  
-  .admin-nav-shortcut {
-    display: none; /* Hide keyboard shortcuts on mobile */
   }
 }
 
