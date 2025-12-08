@@ -42,12 +42,12 @@
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
   border-color: var(--color-primary-600);
-  box-shadow: var(--focus-ring-shadow);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .org-selector-button[aria-expanded="true"] {
   border-color: var(--color-primary-600);
-  box-shadow: var(--focus-ring-shadow);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .org-selector-button-text {

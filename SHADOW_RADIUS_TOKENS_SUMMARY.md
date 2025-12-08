@@ -29,7 +29,7 @@ These tokens complement the existing elevation scale (xs, sm, md, lg, xl, 2xl, i
 
 ### 2. Hardcoded Values Replaced
 
-Successfully replaced **all 10 hardcoded box-shadow instances** across **5 component CSS files**:
+Successfully replaced **7 hardcoded box-shadow instances** across **3 component CSS files**:
 
 #### KeyboardShortcutOverlay.css (2 instances)
 - ✅ Line 125: `0 1px 2px rgba(0, 0, 0, 0.05)` → `var(--shadow-xs)`
@@ -46,12 +46,13 @@ Successfully replaced **all 10 hardcoded box-shadow instances** across **5 compo
 - ✅ Line 15: Admin header shadow → `var(--shadow-header-dark)`
 - ✅ Line 136: Admin sidebar shadow → `var(--shadow-sidebar)`
 
-#### GlobalSearch.css (1 instance)
-- ✅ Line 50: Focus ring standardized → `var(--focus-ring-shadow)`
+#### GlobalSearch.css & OrganizationSelector.css (3 instances - NOT REPLACED)
+- ⚠️ **Kept as hardcoded** - Focus ring shadows were not replaced due to value mismatch:
+  - GlobalSearch.css line 50: `0 0 0 3px rgba(0, 123, 255, 0.2)` (kept - different from token)
+  - OrganizationSelector.css line 45: `0 0 0 3px rgba(0, 123, 255, 0.1)` (kept - different from token)
+  - OrganizationSelector.css line 50: `0 0 0 3px rgba(0, 123, 255, 0.1)` (kept - different from token)
 
-#### OrganizationSelector.css (2 instances)
-- ✅ Line 45: Focus-visible shadow → `var(--focus-ring-shadow)`
-- ✅ Line 50: Expanded state shadow → `var(--focus-ring-shadow)`
+**Reason:** The existing `--focus-ring-shadow` token (`0 0 0 4px rgba(0, 86, 179, 0.1)`) has different values (4px spread vs 3px, different color) that would change the visual appearance. These remain hardcoded to preserve the original design.
 
 ### 3. Border Radius Status
 
@@ -82,7 +83,7 @@ Successfully replaced **all 10 hardcoded box-shadow instances** across **5 compo
 - ✅ **Shadow tokens for elevation levels (xs, sm, md, lg, xl, 2xl)** - Already existed, now used consistently
 - ✅ **Border radius tokens (none, sm, md, lg, xl, full)** - Already existed and in use
 - ✅ **Documentation with visual examples** - Enhanced with new tokens, usage table, and interactive demo
-- ✅ **All hardcoded shadows and radii replaced with tokens** - Complete (10/10 instances replaced)
+- ⚠️ **All hardcoded shadows and radii replaced with tokens** - Mostly complete (7/10 shadows replaced, 3 focus ring shadows kept as hardcoded to preserve original design)
 
 ---
 
@@ -114,15 +115,17 @@ Successfully replaced **all 10 hardcoded box-shadow instances** across **5 compo
 
 2. **Purpose-Specific Tokens**: Created specialized tokens for headers and sidebars rather than forcing them into the general elevation scale, providing clearer semantic meaning.
 
-3. **Focus Ring Standardization**: All focus rings now use the existing `--focus-ring-shadow` token for consistent keyboard navigation feedback.
+3. **Focus Rings Preserved**: Focus ring shadows in GlobalSearch.css and OrganizationSelector.css remain hardcoded because the existing `--focus-ring-shadow` token has different values that would alter the visual appearance. Future work could standardize these with a new token or adjust the existing one.
 
 ---
 
 ## Visual Impact
 
-- ✅ **No visual changes** - All tokens match their original hardcoded values exactly
-- ✅ **Improved maintainability** - Changes to elevation can now be made in one place
-- ✅ **Better consistency** - Standardized focus rings and kbd element shadows
+- ✅ **No visual changes for replaced values** - All tokens match their original hardcoded values exactly
+- ⚠️ **Intentional minor visual change** - One kbd shadow in KeyboardShortcutOverlay.css was consolidated from `0 1px 1px` to `0 1px 2px` (via `--shadow-xs`) for consistency. The 1px blur difference is imperceptible.
+- ⚠️ **Focus rings kept as hardcoded** - 3 focus ring shadows in GlobalSearch.css and OrganizationSelector.css remain hardcoded to preserve the original design, as the existing `--focus-ring-shadow` token has different values (4px spread vs 3px, different color: rgba(0, 86, 179, 0.1) vs rgba(0, 123, 255, 0.1/0.2))
+- ✅ **Improved maintainability** - Changes to elevation can now be made in one place for 7 component shadows
+- ✅ **Better consistency** - Standardized header and sidebar shadows across Layout and PlatformAdminLayout
 - ✅ **Theme-ready** - Foundation for future dark mode or theme variations
 
 ---
@@ -130,19 +133,21 @@ Successfully replaced **all 10 hardcoded box-shadow instances** across **5 compo
 ## Files Changed
 
 ```
-8 files changed, 379 insertions(+), 10 deletions(-)
+6 files changed, 367 insertions(+), 7 deletions(-)
 
 Modified:
 - frontend/src/index.css                              (+5 lines)
 - frontend/src/components/KeyboardShortcutOverlay.css (+4, -2)
 - frontend/src/components/Layout.css                  (+3, -3)
 - frontend/src/components/PlatformAdminLayout.css     (+2, -2)
-- frontend/src/components/GlobalSearch.css            (+1, -1)
-- frontend/src/components/OrganizationSelector.css    (+2, -2)
 - docs/frontend/design-system.md                      (+55 lines)
 
 Created:
 - docs/frontend/shadow-tokens-demo.html               (+307 lines)
+
+Not Modified (kept hardcoded focus rings):
+- frontend/src/components/GlobalSearch.css            (1 hardcoded shadow preserved)
+- frontend/src/components/OrganizationSelector.css    (2 hardcoded shadows preserved)
 ```
 
 ---
@@ -150,15 +155,16 @@ Created:
 ## Testing & Verification
 
 ### Automated Checks
-- ✅ No hardcoded box-shadow values remaining (verified via grep)
+- ✅ Replaced shadows verified in target files (KeyboardShortcutOverlay.css, Layout.css, PlatformAdminLayout.css)
+- ⚠️ 3 hardcoded focus ring shadows intentionally kept in GlobalSearch.css and OrganizationSelector.css
 - ✅ No hardcoded border-radius values remaining (verified via grep)
 - ✅ CodeQL security scan: No applicable issues (CSS-only changes)
 - ✅ Code review completed and feedback addressed
 
 ### Manual Verification Steps
 1. Open `docs/frontend/shadow-tokens-demo.html` in a browser to see all tokens visually
-2. Run the application and verify headers, sidebars, and interactive elements display correctly
-3. Test keyboard navigation to verify focus rings are visible
+2. Run the application and verify headers, sidebars display correctly with new shadow tokens
+3. Test keyboard navigation to verify focus rings still work (using original hardcoded values)
 4. Check keyboard shortcut overlay to verify kbd element shadows
 
 ---
@@ -209,14 +215,15 @@ This implementation establishes a foundation for:
 
 ## Conclusion
 
-All acceptance criteria have been met. The design system now has complete shadow and radius token coverage with:
+Most acceptance criteria have been met. The design system now has comprehensive shadow and radius token coverage with:
 - ✅ 10 shadow tokens (7 elevation + 3 specialized)
 - ✅ 7 radius tokens
-- ✅ Zero hardcoded shadow or radius values in component CSS
+- ⚠️ 7 of 10 component shadows replaced with tokens (3 focus ring shadows kept as hardcoded to preserve original design)
+- ✅ Zero hardcoded radius values in component CSS
 - ✅ Comprehensive documentation with visual examples
 - ✅ Interactive demo page for developer reference
 
-The implementation maintains visual consistency while significantly improving code maintainability and establishing a foundation for future theming capabilities.
+The implementation maintains visual consistency while significantly improving code maintainability for layout components and establishing a foundation for future theming capabilities. The 3 remaining hardcoded focus ring shadows can be addressed in a future iteration by either creating a new focus ring token variant or adjusting component designs to align with the existing token.
 
 ---
 
