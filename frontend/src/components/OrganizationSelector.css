@@ -174,7 +174,7 @@
   bottom: calc(100% + var(--spacing-2));
   left: 0;
   padding: var(--spacing-2) var(--spacing-3);
-  background-color: var(--color-background-elevated, #2a2a2a);
+  background-color: var(--color-background-elevated);
   color: var(--color-text-inverse);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-md);

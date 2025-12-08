@@ -23,7 +23,7 @@
   bottom: 0;
   width: 280px;
   max-width: 85vw;
-  background-color: var(--color-background-elevated, #2a2a2a);
+  background-color: var(--color-background-elevated);
   color: var(--color-text-inverse);
   z-index: 1000;
   display: flex;
