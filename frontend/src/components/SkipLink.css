@@ -7,28 +7,28 @@
   left: -9999px;
   top: 0;
   z-index: 9999;
-  padding: 1rem 1.5rem;
-  background-color: var(--color-primary-600, #007bff);
-  color: white;
+  padding: var(--spacing-4) var(--spacing-6);
+  background-color: var(--color-primary-600);
+  color: var(--color-text-on-primary);
   text-decoration: none;
-  font-weight: 600;
-  font-size: 1rem;
-  border-radius: 0 0 4px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  border-radius: 0 0 var(--radius-sm) 0;
+  box-shadow: var(--shadow-md);
   transition: none;
 }
 
 .skip-link:focus {
   left: 0;
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: no-preference) {
   .skip-link:focus {
-    transition: transform 0.2s ease-out;
-    animation: slide-in 0.2s ease-out;
+    transition: transform var(--duration-normal) var(--ease-out);
+    animation: slide-in var(--duration-normal) var(--ease-out);
   }
 
   @keyframes slide-in {
