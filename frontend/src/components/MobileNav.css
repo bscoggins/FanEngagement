@@ -38,7 +38,7 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-4) var(--spacing-6);
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--color-border-dark);
 }
 
 .mobile-nav-title {
@@ -83,7 +83,7 @@
 /* Organization section */
 .mobile-nav-org-section {
   padding: 0 var(--spacing-6) var(--spacing-6);
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--color-border-dark);
   margin-bottom: var(--spacing-2);
 }
 

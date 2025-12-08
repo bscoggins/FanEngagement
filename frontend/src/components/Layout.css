@@ -5,7 +5,7 @@
 }
 
 .header {
-  background-color: #333;
+  background-color: var(--color-neutral-700);
   color: var(--color-text-inverse);
   padding: var(--spacing-4) var(--spacing-8);
   display: flex;
@@ -152,17 +152,17 @@
 
 .unified-header-org-select {
   padding: var(--spacing-2);
-  border: 1px solid #444;
+  border: 1px solid var(--color-border-dark);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
-  background-color: #333;
+  background-color: var(--color-neutral-700);
   color: var(--color-text-inverse);
   cursor: pointer;
   min-width: 200px;
 }
 
 .unified-header-org-select:hover {
-  background-color: #444;
+  background-color: var(--color-border-dark);
 }
 
 .unified-admin-badge {
@@ -180,7 +180,7 @@
 }
 
 .unified-logout-button {
-  background-color: #444;
+  background-color: var(--color-border-dark);
   color: var(--color-text-inverse);
   border: none;
   padding: var(--spacing-2) var(--spacing-4);
@@ -206,7 +206,7 @@
 
 .unified-sidebar {
   width: 250px;
-  background-color: #2a2a2a;
+  background-color: var(--color-surface-elevated);
   color: var(--color-text-inverse);
   display: flex;
   flex-direction: column;
@@ -230,13 +230,13 @@
 }
 
 .unified-nav-link:hover {
-  background-color: #333;
+  background-color: var(--color-neutral-700);
   color: var(--color-text-inverse);
   border-left-color: var(--color-primary-600);
 }
 
 .unified-nav-link.active {
-  background-color: #333;
+  background-color: var(--color-neutral-700);
   color: var(--color-text-inverse);
   border-left-color: var(--color-primary-600);
   font-weight: var(--font-weight-semibold);
@@ -248,12 +248,12 @@
 }
 
 .unified-nav-divider {
-  border-top: 1px solid #444;
+  border-top: 1px solid var(--color-border-dark);
   margin: var(--spacing-2) 0;
 }
 
 .unified-nav-divider-small {
-  border-top: 1px solid #444;
+  border-top: 1px solid var(--color-border-dark);
   margin: var(--spacing-2) var(--spacing-6);
 }
 
@@ -366,7 +366,7 @@
       background-color: rgba(0, 123, 255, 0.3);
     }
     to {
-      background-color: #333;
+      background-color: var(--color-neutral-700);
     }
   }
 }
