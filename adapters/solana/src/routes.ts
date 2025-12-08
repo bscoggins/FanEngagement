@@ -186,14 +186,28 @@ export function createRoutes(solanaService: SolanaService): Router {
 
       const statusCode = health.status === 'healthy' ? 200 : 503;
 
-      res.status(statusCode).json({
+      const payload: {
+        status: string;
+        blockchain: string;
+        network: string;
+        rpcStatus: string;
+        lastBlockNumber?: number;
+        timestamp: string;
+        errorMessage?: string;
+      } = {
         status: health.status,
         blockchain: 'solana',
         network: health.network,
         rpcStatus: health.rpcStatus,
         lastBlockNumber: health.lastBlockNumber,
         timestamp: new Date().toISOString(),
-      });
+      };
+
+      if (health.errorMessage) {
+        payload.errorMessage = health.errorMessage;
+      }
+
+      res.status(statusCode).json(payload);
     } catch (error) {
       healthStatus.set(0);
       res.status(503).json({

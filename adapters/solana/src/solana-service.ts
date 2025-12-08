@@ -24,16 +24,29 @@ import {
   lastBlockNumber,
 } from './metrics.js';
 
+const serializeError = (error: unknown) => {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    };
+  }
+
+  if (error === undefined) {
+    return { message: 'Unknown error' };
+  }
+
+  return { message: String(error) };
+};
+
 export class SolanaService {
   private connection: Connection;
   private keypair: Keypair;
   private programId: PublicKey;
 
   constructor(keypair: Keypair) {
-    this.connection = new Connection(config.solana.rpcUrl, {
-      commitment: config.solana.commitment as Commitment,
-      confirmTransactionInitialTimeout: config.solana.confirmTimeout,
-    });
+    this.connection = this.createConnection();
     this.keypair = keypair;
     
     // TODO: Replace with actual deployed Solana program ID
@@ -100,7 +113,7 @@ export class SolanaService {
       };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'failed' });
-      logger.error('Failed to create organization', { organizationId, error });
+      logger.error('Failed to create organization', { organizationId, error: serializeError(error) });
       throw error;
     }
   }
@@ -169,7 +182,7 @@ export class SolanaService {
       };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'failed' });
-      logger.error('Failed to create share type', { shareTypeId, error });
+      logger.error('Failed to create share type', { shareTypeId, error: serializeError(error) });
       throw error;
     }
   }
@@ -239,7 +252,7 @@ export class SolanaService {
       };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'failed' });
-      logger.error('Failed to record share issuance', { issuanceId, error });
+      logger.error('Failed to record share issuance', { issuanceId, error: serializeError(error) });
       throw error;
     }
   }
@@ -291,7 +304,7 @@ export class SolanaService {
       };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'failed' });
-      logger.error('Failed to create proposal', { proposalId, error });
+      logger.error('Failed to create proposal', { proposalId, error: serializeError(error) });
       throw error;
     }
   }
@@ -334,7 +347,7 @@ export class SolanaService {
       return { transactionSignature: signature };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'failed' });
-      logger.error('Failed to record vote', { voteId, error });
+      logger.error('Failed to record vote', { voteId, error: serializeError(error) });
       throw error;
     }
   }
@@ -376,7 +389,7 @@ export class SolanaService {
       return { transactionSignature: signature };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'failed' });
-      logger.error('Failed to commit proposal results', { proposalId, error });
+      logger.error('Failed to commit proposal results', { proposalId, error: serializeError(error) });
       throw error;
     }
   }
@@ -434,7 +447,7 @@ export class SolanaService {
       };
     } catch (error) {
       rpcErrorsTotal.inc({ error_type: 'get_transaction_status' });
-      logger.error('Failed to get transaction status', { transactionId, error });
+      logger.error('Failed to get transaction status', { transactionId, error: serializeError(error) });
       throw error;
     }
   }
@@ -448,10 +461,14 @@ export class SolanaService {
     network: string;
     lastBlockNumber?: number;
     keypairValid: boolean;
+    errorMessage?: string;
   }> {
     try {
-      // Check RPC connection by getting slot
-      const slot = await this.connection.getSlot();
+      // Check RPC connection by getting slot with retry to smooth transient RPC blips
+      const slot = await this.retryWithBackoff(
+        () => this.connection.getSlot(),
+        'health_check_get_slot'
+      );
 
       // Update metrics
       lastBlockNumber.set(slot);
@@ -464,14 +481,27 @@ export class SolanaService {
         keypairValid: true,
       };
     } catch (error) {
-      logger.error('Health check failed', { error });
+      logger.error('Health check failed', { error: serializeError(error) });
+      this.refreshConnection();
       return {
         status: 'unhealthy',
         rpcStatus: 'disconnected',
         network: config.solana.network,
         keypairValid: true,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  private createConnection(): Connection {
+    return new Connection(config.solana.rpcUrl, {
+      commitment: config.solana.commitment as Commitment,
+      confirmTransactionInitialTimeout: config.solana.confirmTimeout,
+    });
+  }
+
+  private refreshConnection(): void {
+    this.connection = this.createConnection();
   }
 
   /**
@@ -581,7 +611,7 @@ export class SolanaService {
       logger.error('Operation failed after retries', {
         operation: operationName,
         attempts: attempt + 1,
-        error,
+        error: serializeError(error),
       });
 
       throw error;

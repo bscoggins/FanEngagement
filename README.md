@@ -214,6 +214,7 @@ Swagger UI is available at `http://localhost:8080/swagger` for API documentation
 
 ### Compose Profiles
 
+- `solana` – Brings up the Solana adapter (now pointed at Solana devnet by default) and, only if you ask for it, the local `solana-test-validator`. For routine work run `docker compose --profile solana up -d solana-adapter` to talk to devnet. When you need the deterministic validator, include it in the command: `docker compose --profile solana up -d solana-test-validator solana-adapter` and override `SOLANA_RPC_URL` to `http://solana-test-validator:8899`.
 - The backend unit/integration test runner is behind the `tests` profile. Run it on-demand with `docker compose --profile tests run --rm tests` (or `docker compose --profile tests up tests`).
 - The E2E test runner service is behind the `e2e` profile and will not start on a normal `docker compose up`.
 - A long-lived Playwright MCP helper is behind the `tools` profile and is also excluded by default.

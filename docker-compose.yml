@@ -27,7 +27,7 @@ services:
       # JWT configuration (override via .env or CI secrets)
       Jwt__Issuer: FanEngagement
       Jwt__Audience: FanEngagement
-      Jwt__SigningKey: ${JWT_SIGNING_KEY:-ChangeThisDevKey_GenerateAStrongRandomValueBeforeProd}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
     ports:
       - "8080:8080"
     depends_on:
@@ -44,6 +44,80 @@ services:
       - "3000:80"
     depends_on:
       - api
+  solana-test-validator:
+    image: solanalabs/solana:v1.18.26
+    container_name: solana-test-validator
+    profiles: ["solana"]
+    command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899 --quiet
+    environment:
+      RUST_LOG: error
+    ports:
+      - "8899:8899"
+    healthcheck:
+      test: ["CMD", "solana", "cluster-version", "--url", "http://localhost:8899"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - solana-adapter-network
+  solana-adapter:
+    build:
+      context: ./adapters/solana
+      dockerfile: Dockerfile
+    container_name: solana-adapter
+    profiles: ["solana"]
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      LOG_LEVEL: debug
+      SOLANA_NETWORK: devnet
+      SOLANA_RPC_URL: https://api.devnet.solana.com
+      SOLANA_COMMITMENT: confirmed
+      SOLANA_CONFIRM_TIMEOUT: 30000
+      SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY}
+      API_KEY: ${API_KEY:-dev-api-key-change-in-production}
+      REQUIRE_AUTH: "true"
+      RETRY_MAX_ATTEMPTS: 4
+      RETRY_BASE_DELAY_MS: 1000
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/v1/adapter/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - solana-adapter-network
+  polygon-adapter:
+    build:
+      context: ./adapters/polygon
+      dockerfile: Dockerfile
+    container_name: polygon-adapter
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      LOG_LEVEL: debug
+      POLYGON_NETWORK: amoy
+      POLYGON_RPC_URL: https://rpc-amoy.polygon.technology
+      POLYGON_CONFIRMATIONS: 6
+      POLYGON_TX_TIMEOUT: 120000
+      POLYGON_PRIVATE_KEY: ${POLYGON_PRIVATE_KEY}
+      API_KEY: ${API_KEY:-dev-api-key-change-in-production}
+      REQUIRE_AUTH: "true"
+      RETRY_MAX_ATTEMPTS: 4
+      RETRY_BASE_DELAY_MS: 1000
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/v1/adapter/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - polygon-adapter-network
   tests:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     working_dir: /src/backend
@@ -99,3 +173,9 @@ volumes:
   db_data:
   playwright-cache:
   frontend-node_modules:
+
+networks:
+  solana-adapter-network:
+    driver: bridge
+  polygon-adapter-network:
+    driver: bridge

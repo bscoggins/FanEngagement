@@ -48,6 +48,44 @@ docker compose up -d --build
 - **Backend API**: http://localhost:8080
 - **Frontend**: http://localhost:3000
 
+#### Solana Adapter + Validator (On Demand)
+
+The Solana adapter and the local `solana-test-validator` live behind the `solana` compose profile so they stay off by default. The adapter now targets Solana **devnet** unless you override its `SOLANA_RPC_URL`.
+
+```bash
+# Routine development: adapter only, pointed at devnet
+docker compose --profile solana up -d solana-adapter
+
+# Deterministic local testing: start adapter + validator and override RPC
+SOLANA_RPC_URL=http://solana-test-validator:8899 \
+  SOLANA_NETWORK=localnet \
+  docker compose --profile solana up -d solana-test-validator solana-adapter
+
+# Tear everything down when finished
+docker compose --profile solana down
+```
+
+Any scripts or test runs that rely on Solana should add `--profile solana` so the adapter container is present. If a workflow truly needs the embedded validator, include it explicitly (as shown above) or run the validator manually before launching the adapter.
+
+##### Generating and Funding a Devnet Keypair
+
+Use the Solana CLI to create a disposable keypair and request devnet SOL for transaction fees:
+
+```bash
+# 1) Create a keypair file (JSON array of numbers)
+solana-keygen new --outfile solana-devnet-keypair.json
+
+# 2) Request 2 devnet SOL for that key (repeat if rate-limited)
+solana airdrop 2 "$(solana-keygen pubkey solana-devnet-keypair.json)" \
+  --url https://api.devnet.solana.com
+
+# 3) Verify the balance
+solana balance "$(solana-keygen pubkey solana-devnet-keypair.json)" \
+  --url https://api.devnet.solana.com
+```
+
+Copy the JSON array from `solana-devnet-keypair.json` into `SOLANA_PRIVATE_KEY` within `.env.development` (or a more secure secret store) before starting the adapter.
+
 ### 3. Apply Migrations
 
 Migrations are automatically applied when the API starts. No manual steps needed.
