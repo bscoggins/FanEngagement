@@ -386,8 +386,10 @@ HOVER (150ms ease-out):
 │ Token    │ Hex      │ Usage                       │
 ├──────────┼──────────┼─────────────────────────────┤
 │ Primary  │ #007bff  │ Active states, links, focus │
+│ 600      │          │                             │
+├──────────┼──────────┼─────────────────────────────┤
 │ Primary  │ #0056b3  │ Hover states, focus ring    │
-│ Dark     │
+│ 700      │          │                             │
 ├──────────┼──────────┼─────────────────────────────┤
 │ Neutral  │ #999     │ Separators, inactive text   │
 │ 400      │          │                             │
@@ -465,12 +467,10 @@ Preferred 48×48px:
 ```
 Size     Pixels   Usage
 ─────────────────────────────────────────
-xs       11.2px   Small badges, shortcuts
-sm       12px     Section labels
-sm       14px     Breadcrumbs, secondary
-base     16px     Body text, nav links
-lg       18px     Subheadings
-xl       20px     Mobile nav title
+xs       11.2px   Small badges, shortcuts (hardcoded 0.7rem)
+sm       14px     Breadcrumbs, secondary (--font-size-sm: 0.875rem)
+base     16px     Body text, nav links (--font-size-base: 1rem)
+lg       20px     Mobile nav title (hardcoded 1.25rem)
 ```
 
 ### Font Weight Scale

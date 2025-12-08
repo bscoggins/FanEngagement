@@ -31,6 +31,7 @@ This guide provides practical code examples for implementing navigation componen
 
 ```css
 /* Copy these into your component CSS file */
+/* Note: Some values are hardcoded as they don't exist as CSS custom properties in index.css */
 
 /* Colors */
 --color-primary-600: #007bff;
@@ -41,12 +42,16 @@ This guide provides practical code examples for implementing navigation componen
 --color-background-elevated: #2a2a2a;
 --focus-ring-color: #0056b3;
 
-/* Typography */
---font-size-xs: 0.7rem;
---font-size-sm: 0.75rem;
+/* Typography (from index.css) */
+--font-size-sm: 0.875rem;
 --font-size-base: 1rem;
 --font-weight-medium: 500;
 --font-weight-semibold: 600;
+
+/* Typography (hardcoded - not in index.css) */
+/* Use 0.7rem for extra small text (badges, shortcuts) */
+/* Use 1.25rem for large text (mobile nav title) */
+/* Use 700 for bold font weight */
 
 /* Spacing */
 --spacing-2: 0.5rem;
@@ -111,6 +116,8 @@ This guide provides practical code examples for implementing navigation componen
 **Usage in React:**
 ```tsx
 // NavLink.tsx
+import React from 'react';
+import { Link } from 'react-router-dom';
 import './NavLink.css';
 
 interface NavLinkProps {
@@ -707,6 +714,9 @@ export const RoleBadge: React.FC<RoleBadgeProps> = ({ role }) => {
 **Usage in React:**
 ```tsx
 // Breadcrumb component
+import React from 'react';
+import { Link } from 'react-router-dom';
+
 interface BreadcrumbItem {
   label: string;
   path?: string;

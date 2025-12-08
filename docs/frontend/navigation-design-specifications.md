@@ -102,14 +102,15 @@ This document provides comprehensive design specifications for all navigation su
 ### Typography Tokens
 
 ```css
---font-size-xs: 0.7rem            /* 11.2px - Small badges, shortcuts */
---font-size-sm: 0.75rem           /* 12px - Section labels */
+/* Note: --font-size-xs and --font-size-lg not defined in index.css; use hardcoded values when needed */
+0.7rem                            /* 11.2px - Small badges, shortcuts */
+--font-size-sm: 0.875rem          /* 14px - Breadcrumbs, secondary text */
 --font-size-base: 1rem            /* 16px - Navigation links */
---font-size-lg: 1.25rem           /* 20px - Mobile nav title */
+1.25rem                           /* 20px - Mobile nav title (hardcoded) */
 
 --font-weight-medium: 500         /* Default nav item weight */
 --font-weight-semibold: 600       /* Active nav item weight */
---font-weight-bold: 700           /* Emphasis text */
+700                               /* Emphasis text (hardcoded) */
 ```
 
 ### Spacing Tokens

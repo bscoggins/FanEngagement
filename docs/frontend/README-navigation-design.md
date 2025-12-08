@@ -464,10 +464,11 @@ When making changes to navigation:
 
 | Document | Lines | Purpose | Primary Audience |
 |----------|-------|---------|------------------|
+| Navigation Design Index (README) | 719 | Central index | All teams |
 | Design Specifications | 1,316 | Technical specs | Developers, QA |
 | Visual Mockup Guide | 739 | Visual reference | Designers, PM |
 | Token Usage Guide | 1,117 | Code examples | Frontend devs |
-| **Total** | **3,172** | **Complete docs** | **All teams** |
+| **Total** | **3,891** | **Complete docs** | **All teams** |
 
 **Coverage:**
 - ✅ Desktop sidebar navigation
