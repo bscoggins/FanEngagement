@@ -6,7 +6,7 @@
 }
 
 .admin-header {
-  background-color: #1a1a1a;
+  background-color: var(--color-surface-dark);
   color: var(--color-text-inverse);
   padding: var(--spacing-4) var(--spacing-8);
   display: flex;
@@ -80,7 +80,7 @@
 
 .admin-badge {
   padding: var(--spacing-1) var(--spacing-3);
-  background-color: #dc3545;
+  background-color: var(--color-error-500);
   color: var(--color-text-inverse);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
@@ -88,7 +88,7 @@
 }
 
 .admin-user-info {
-  color: #ddd;
+  color: var(--color-neutral-200);
   font-size: var(--font-size-base);
 }
 
@@ -134,7 +134,7 @@
 }
 
 .admin-nav-link {
-  color: #ddd;
+  color: var(--color-neutral-200);
   text-decoration: none;
   padding: var(--spacing-3, var(--spacing-3)) var(--spacing-6);
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
@@ -169,7 +169,7 @@
   padding: var(--spacing-2) var(--spacing-6);
   font-size: var(--font-size-xs);
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-neutral-400);
   letter-spacing: 0.05em;
 }
 

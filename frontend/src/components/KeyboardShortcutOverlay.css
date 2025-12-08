@@ -18,7 +18,7 @@
 }
 
 .keyboard-shortcut-overlay-content {
-  background-color: var(--color-text-inverse);
+  background-color: var(--color-surface);
   border-radius: var(--radius-md, 6px);
   width: 90%;
   max-width: 600px;
@@ -133,8 +133,8 @@
 
 .keyboard-shortcut-description {
   flex: 1;
-  font-size: var(--font-size-sm, var(--font-size-sm));
-  color: var(--color-neutral-700, #333);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
 }
 
 .keyboard-shortcut-overlay-footer {
@@ -155,7 +155,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-0-5) 0.375rem;
-  background-color: var(--color-text-inverse);
+  background-color: var(--color-surface);
   border: 1px solid #d0d0d0;
   border-radius: var(--radius-sm);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;

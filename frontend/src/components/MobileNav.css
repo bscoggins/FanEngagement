@@ -51,7 +51,7 @@
   background: none;
   border: none;
   color: var(--color-text-inverse);
-  font-size: var(--spacing-8);
+  font-size: var(--font-size-3xl);
   line-height: 1;
   padding: 0;
   width: 44px;
@@ -88,9 +88,9 @@
 }
 
 .mobile-nav-org-label {
-  font-size: var(--font-size-sm, var(--spacing-3));
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-neutral-400);
   letter-spacing: 0.05em;
   font-weight: var(--font-weight-semibold);
   margin-bottom: var(--spacing-3);
@@ -183,7 +183,7 @@
   display: block;
   padding: var(--spacing-3) var(--spacing-6);
   min-height: 44px;
-  color: #ddd;
+  color: var(--color-neutral-200);
   text-decoration: none;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
@@ -216,9 +216,9 @@
 
 .mobile-nav-section-label {
   padding: var(--spacing-2) var(--spacing-6);
-  font-size: var(--font-size-sm, var(--spacing-3));
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-neutral-400);
   letter-spacing: 0.05em;
   font-weight: var(--font-weight-semibold);
 }

@@ -15,7 +15,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-md, 6px);
   color: var(--color-text-inverse);
-  font-size: var(--font-size-sm, var(--font-size-sm));
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
@@ -53,7 +53,7 @@
   top: calc(100% + var(--spacing-2));
   right: 0;
   min-width: 280px;
-  background-color: var(--color-text-inverse);
+  background-color: var(--color-surface);
   border: 1px solid #e0e0e0;
   border-radius: var(--radius-md, 6px);
   box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1)), 0 10px 20px rgba(0, 0, 0, 0.1);
@@ -75,7 +75,7 @@
   padding: var(--spacing-6) var(--spacing-4);
   text-align: center;
   color: var(--color-neutral-600);
-  font-size: var(--font-size-sm, var(--font-size-sm));
+  font-size: var(--font-size-sm);
 }
 
 .recents-dropdown-item {
@@ -123,9 +123,9 @@
 }
 
 .recents-dropdown-item-name {
-  font-size: var(--font-size-sm, var(--font-size-sm));
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--color-neutral-700, #333);
+  color: var(--color-neutral-700);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

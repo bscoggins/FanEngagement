@@ -11,7 +11,7 @@
 }
 
 .org-selector-label {
-  font-size: var(--font-size-sm, var(--font-size-sm));
+  font-size: var(--font-size-sm);
   color: var(--color-neutral-600);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
@@ -25,8 +25,8 @@
   padding: var(--spacing-2) var(--spacing-3);
   border: 1px solid #ddd;
   border-radius: var(--radius-md, 6px);
-  font-size: var(--font-size-sm, var(--font-size-sm));
-  background-color: var(--color-text-inverse);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-surface);
   cursor: pointer;
   min-width: 200px;
   transition: all var(--duration-normal) var(--ease-out);
@@ -93,7 +93,7 @@
   margin: 0;
   padding: var(--spacing-2, var(--spacing-2));
   list-style: none;
-  background-color: var(--color-text-inverse);
+  background-color: var(--color-surface);
   border: 1px solid #ddd;
   border-radius: var(--radius-md, 6px);
   box-shadow: var(--shadow-md);
@@ -176,7 +176,7 @@
   padding: var(--spacing-2, var(--spacing-2)) var(--spacing-3, var(--spacing-3));
   background-color: var(--color-background-elevated, #2a2a2a);
   color: var(--color-text-inverse);
-  font-size: var(--font-size-sm, var(--font-size-sm));
+  font-size: var(--font-size-sm);
   border-radius: var(--radius-md, 6px);
   box-shadow: var(--shadow-md);
   white-space: nowrap;
