@@ -138,7 +138,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: var(--color-neutral-400);
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-widest);
 }
 
 .global-search-result {

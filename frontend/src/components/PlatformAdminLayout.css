@@ -170,7 +170,7 @@
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   color: var(--color-neutral-400);
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-widest);
 }
 
 .admin-sidebar-footer {
