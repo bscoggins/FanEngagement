@@ -39,7 +39,7 @@
 }
 
 .recents-dropdown-arrow {
-  font-size: 0.625rem;
+  font-size: var(--font-size-2xs);
   opacity: 0.7;
   transition: transform var(--duration-fast) var(--ease-out);
 }
@@ -67,7 +67,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: var(--color-neutral-600);
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-wider);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 

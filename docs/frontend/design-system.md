@@ -225,6 +225,7 @@ Modular scale based on **1.25 ratio** for harmonious typography.
 
 | Token | Size | Pixels | Usage |
 |-------|------|--------|-------|
+| `--font-size-2xs` | 0.625rem | 10px | Keyboard shortcuts, tiny labels |
 | `--font-size-xs` | 0.75rem | 12px | Small badges, shortcuts, captions |
 | `--font-size-sm` | 0.875rem | 14px | Secondary text, breadcrumbs |
 | `--font-size-base` | 1rem | 16px | **Body text, navigation links** |
@@ -237,17 +238,24 @@ Modular scale based on **1.25 ratio** for harmonious typography.
 **Example Usage:**
 
 ```css
-/* Heading hierarchy */
+/* Heading hierarchy - automatically applied to h1-h6 */
 h1 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold); }
 h2 { font-size: var(--font-size-3xl); font-weight: var(--font-weight-semibold); }
 h3 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); }
 h4 { font-size: var(--font-size-xl); font-weight: var(--font-weight-medium); }
+h5 { font-size: var(--font-size-lg); font-weight: var(--font-weight-medium); }
+h6 { font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); }
 
 /* Body text */
 body { font-size: var(--font-size-base); }
 
-/* Secondary text */
-.caption { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+/* Semantic typography utility classes */
+.text-body { font-size: var(--font-size-base); }
+.text-body-large { font-size: var(--font-size-lg); }
+.text-body-small { font-size: var(--font-size-sm); }
+.text-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+.text-caption { font-size: var(--font-size-xs); color: var(--color-text-secondary); }
+.text-overline { font-size: var(--font-size-2xs); font-weight: var(--font-weight-semibold); letter-spacing: var(--letter-spacing-wider); text-transform: uppercase; }
 ```
 
 ### Font Weights
@@ -273,6 +281,135 @@ body { font-size: var(--font-size-base); }
 --letter-spacing-tight: -0.02em    /* Large headings */
 --letter-spacing-normal: 0         /* Body text (default) */
 --letter-spacing-wide: 0.02em      /* Small caps, labels */
+--letter-spacing-wider: 0.05em     /* Uppercase labels, overlines */
+```
+
+### Semantic Typography Classes
+
+The design system includes utility classes for common text patterns:
+
+#### Body Text
+
+```css
+/* Standard body text (16px) */
+.text-body {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+/* Large body text (18px) - for emphasis or introductory paragraphs */
+.text-body-large {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+/* Small body text (14px) - for dense content or sidebars */
+.text-body-small {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+```
+
+#### Labels and Captions
+
+```css
+/* Standard label (14px, medium weight) - for form labels, button text */
+.text-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+/* Small label (12px, medium weight) - for compact UI elements */
+.text-label-small {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+}
+
+/* Caption (12px) - for supplementary information */
+.text-caption {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+}
+```
+
+#### Special Purpose
+
+```css
+/* Overline (10px, uppercase, wide spacing) - for section headers, categories */
+.text-overline {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* Code text - for inline code or technical content */
+.text-code {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+```
+
+**Usage Examples:**
+
+```html
+<!-- Page title -->
+<h1>Platform Administration</h1>
+
+<!-- Section heading -->
+<h2>Recent Activity</h2>
+
+<!-- Subsection -->
+<h3>User Management</h3>
+
+<!-- Category label -->
+<div class="text-overline">Navigation</div>
+
+<!-- Primary content -->
+<p class="text-body">The platform enables multi-organization governance...</p>
+
+<!-- Supporting detail -->
+<span class="text-caption">Last updated 2 hours ago</span>
+
+<!-- Form label -->
+<label class="text-label">Organization Name</label>
+
+<!-- Code snippet -->
+<code class="text-code">npm install</code>
+```
+
+### Type Scale Visual Reference
+
+```
+┌─────────────────────────────────────────────────┐
+│ H1 (36px/2.25rem) - Bold                       │ ← Main page title
+│ H2 (30px/1.875rem) - Semibold                  │ ← Section heading
+│ H3 (24px/1.5rem) - Semibold                    │ ← Subsection
+│ H4 (20px/1.25rem) - Medium                     │ ← Card title
+│ H5 (18px/1.125rem) - Medium                    │ ← Minor heading
+│ H6 (16px/1rem) - Semibold                      │ ← Strong label
+│ Body (16px/1rem) - Regular                     │ ← Standard text
+│ Body Small (14px/0.875rem) - Regular           │ ← Dense content
+│ Label (14px/0.875rem) - Medium                 │ ← Form labels
+│ Caption (12px/0.75rem) - Regular               │ ← Help text
+│ Overline (10px/0.625rem) - Semibold, Uppercase │ ← Categories
+└─────────────────────────────────────────────────┘
 ```
 
 ---

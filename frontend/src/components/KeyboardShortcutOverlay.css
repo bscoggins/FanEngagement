@@ -86,7 +86,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: var(--color-neutral-600);
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-wider);
 }
 
 .keyboard-shortcut-list {
@@ -158,8 +158,8 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-sm);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
-  font-size: 0.625rem;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-neutral-700);
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
