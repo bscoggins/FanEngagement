@@ -715,7 +715,32 @@ Shadows create depth and hierarchy through elevation levels.
 
 --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)
   /* Inset shadow - Pressed buttons, input fields */
+
+/* Specialized shadows for layout components */
+--shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.1)
+  /* Header elevation (light backgrounds) */
+
+--shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.2)
+  /* Header elevation (dark backgrounds) */
+
+--shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.1)
+  /* Sidebar/drawer elevation (right edge) */
 ```
+
+### Shadow Usage Guidelines
+
+| Shadow Token | Use Case | Visual Impact |
+|--------------|----------|---------------|
+| `--shadow-xs` | Keyboard shortcuts, tags, subtle borders | Barely visible, hint of depth |
+| `--shadow-sm` | Buttons, small cards, form inputs | Light elevation, interactive elements |
+| `--shadow-md` | Cards, dropdowns, tooltips | Standard elevation for content panels |
+| `--shadow-lg` | Modals, popovers, dialogs | Clear separation from background |
+| `--shadow-xl` | Overlays, floating panels | Strong elevation for temporary UI |
+| `--shadow-2xl` | Full-screen modals, critical overlays | Maximum depth and focus |
+| `--shadow-inner` | Pressed buttons, inset areas | Recessed appearance |
+| `--shadow-header` | Navigation headers (light mode) | Consistent header elevation |
+| `--shadow-header-dark` | Navigation headers (dark surfaces) | Enhanced header elevation |
+| `--shadow-sidebar` | Sidebar navigation, drawers | Directional right-edge shadow |
 
 ### Shadow Examples
 
@@ -751,6 +776,36 @@ Shadows create depth and hierarchy through elevation levels.
   border-radius: var(--radius-xl);
   padding: var(--spacing-8);
   box-shadow: var(--shadow-2xl);
+}
+```
+
+**Header with Dark Surface Shadow:**
+```css
+.admin-header {
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-inverse);
+  padding: var(--spacing-4) var(--spacing-8);
+  box-shadow: var(--shadow-header-dark);
+}
+```
+
+**Sidebar with Directional Shadow:**
+```css
+.sidebar {
+  width: 250px;
+  background-color: var(--color-surface-elevated);
+  box-shadow: var(--shadow-sidebar); /* Creates right-edge elevation */
+}
+```
+
+**Keyboard Shortcut Key with Subtle Shadow:**
+```css
+kbd {
+  padding: var(--spacing-0-5) var(--spacing-2);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
 }
 ```
 
