@@ -90,7 +90,7 @@ Dimensions:
 **With Keyboard Shortcut:**
 ```
 │  • Link Text                      [Cmd+H]│
-   └─ Shortcut: monospace, 11px, #888
+   └─ Shortcut: monospace, 11.2px (0.7rem), #888
    └─ Shortcut bg: rgba(255,255,255,0.05)
    └─ Shortcut border: 1px rgba(255,255,255,0.1)
    └─ Shortcut padding: 2px 6px
