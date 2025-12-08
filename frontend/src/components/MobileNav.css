@@ -91,7 +91,7 @@
   font-size: var(--font-size-sm);
   text-transform: uppercase;
   color: var(--color-neutral-400);
-  letter-spacing: var(--letter-spacing-wider);
+  letter-spacing: var(--letter-spacing-widest);
   font-weight: var(--font-weight-semibold);
   margin-bottom: var(--spacing-3);
 }
@@ -219,7 +219,7 @@
   font-size: var(--font-size-sm);
   text-transform: uppercase;
   color: var(--color-neutral-400);
-  letter-spacing: var(--letter-spacing-wider);
+  letter-spacing: var(--letter-spacing-widest);
   font-weight: var(--font-weight-semibold);
 }
 

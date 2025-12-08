@@ -278,11 +278,11 @@ body { font-size: var(--font-size-base); }
 ### Letter Spacing
 
 ```css
---letter-spacing-tight: -0.02em    /* Large headings */
---letter-spacing-normal: 0         /* Body text (default) */
---letter-spacing-wide: 0.02em      /* Small caps, labels */
---letter-spacing-medium: 0.025em   /* Badges, compact uppercase */
---letter-spacing-wider: 0.05em     /* Uppercase labels, overlines */
+--letter-spacing-tight: -0.02em     /* Large headings */
+--letter-spacing-normal: 0          /* Body text (default) */
+--letter-spacing-wide: 0.02em       /* Small caps, labels */
+--letter-spacing-wider: 0.025em     /* Badges, compact uppercase */
+--letter-spacing-widest: 0.05em     /* Uppercase labels, overlines */
 ```
 
 ### Semantic Typography Classes

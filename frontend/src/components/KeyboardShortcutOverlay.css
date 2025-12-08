@@ -86,7 +86,7 @@
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: var(--color-neutral-600);
-  letter-spacing: var(--letter-spacing-wider);
+  letter-spacing: var(--letter-spacing-widest);
 }
 
 .keyboard-shortcut-list {

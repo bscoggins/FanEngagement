@@ -110,8 +110,8 @@
   --letter-spacing-tight: -0.02em;
   --letter-spacing-normal: 0;
   --letter-spacing-wide: 0.02em;
-  --letter-spacing-medium: 0.025em;
-  --letter-spacing-wider: 0.05em;
+  --letter-spacing-wider: 0.025em;
+  --letter-spacing-widest: 0.05em;
 
   /* ===== Spacing (Base unit: 4px) ===== */
   --spacing-0: 0;
@@ -262,7 +262,7 @@ h6 {
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-normal);
-  letter-spacing: var(--letter-spacing-wider);
+  letter-spacing: var(--letter-spacing-widest);
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
