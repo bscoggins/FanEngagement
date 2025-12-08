@@ -59,7 +59,7 @@ jobs:
           vuln-type: 'os'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-solana-results.sarif'
@@ -189,7 +189,7 @@ jobs:
           vuln-type: 'os'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-polygon-results.sarif'

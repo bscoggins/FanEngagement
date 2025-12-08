@@ -5,31 +5,35 @@
 }
 
 .header {
-  background-color: #333;
-  color: white;
-  padding: 1rem 2rem;
+  background-color: var(--color-neutral-700);
+  color: var(--color-text-inverse);
+  padding: var(--spacing-4) var(--spacing-8);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-header);
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
+  color: var(--color-primary-100);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .nav {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--spacing-6);
   align-items: center;
 }
 
 .nav a {
-  color: white;
+  color: var(--color-text-inverse);
   text-decoration: none;
-  font-weight: 500;
-  transition: opacity 0.2s;
+  font-weight: var(--font-weight-medium);
+  transition: opacity var(--duration-normal);
 }
 
 .nav a:hover {
@@ -37,19 +41,19 @@
 }
 
 .user-info {
-  color: #ddd;
-  font-size: 0.9rem;
+  color: var(--color-neutral-200);
+  font-size: var(--font-size-base);
 }
 
 .logout-button {
-  background-color: #555;
-  color: white;
+  background-color: var(--color-neutral-600);
+  color: var(--color-text-inverse);
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  font-size: var(--font-size-base);
+  transition: background-color var(--duration-normal);
 }
 
 .logout-button:hover {
@@ -58,7 +62,7 @@
 
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: var(--spacing-8);
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -69,35 +73,35 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
 }
 
 .unified-header {
-  background-color: #1a1a1a;
-  color: white;
-  padding: 1rem 2rem;
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-inverse);
+  padding: var(--spacing-4) var(--spacing-8);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-header-dark);
 }
 
 .unified-header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-4);
 }
 
 .unified-mobile-menu-button {
   display: none; /* Hidden on desktop, shown on mobile */
   background: none;
   border: none;
-  color: white;
-  font-size: 1.5rem;
-  padding: 0.5rem;
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-2xl);
+  padding: var(--spacing-2);
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-normal) ease;
   min-width: 44px;
   min-height: 44px;
   align-items: center;
@@ -105,11 +109,11 @@
 }
 
 .unified-mobile-menu-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-overlay-light);
 }
 
 .unified-mobile-menu-button:focus {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
@@ -120,12 +124,16 @@
 
 .unified-header-title {
   text-decoration: none;
-  color: white;
+  color: var(--color-text-inverse);
 }
 
 .unified-header-title h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
+  color: var(--color-primary-100);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .unified-header-title:hover {
@@ -134,68 +142,68 @@
 
 .unified-header-right {
   display: flex;
-  gap: 1rem;
+  gap: var(--spacing-4);
   align-items: center;
 }
 
 .unified-header-org-selector {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-2);
 }
 
 .unified-header-org-selector-label {
-  font-size: 0.875rem;
-  color: #ccc;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-200);
+  font-weight: var(--font-weight-medium);
 }
 
 .unified-header-org-select {
-  padding: 0.5rem;
-  border: 1px solid #444;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  background-color: #333;
-  color: white;
+  padding: var(--spacing-2);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-neutral-700);
+  color: var(--color-text-inverse);
   cursor: pointer;
   min-width: 200px;
 }
 
 .unified-header-org-select:hover {
-  background-color: #444;
+  background-color: var(--color-border-dark);
 }
 
 .unified-admin-badge {
-  padding: 0.25rem 0.75rem;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: bold;
+  padding: var(--spacing-1) var(--spacing-3);
+  background-color: var(--color-error-500);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .unified-user-info {
-  color: #ddd;
-  font-size: 0.9rem;
+  color: var(--color-neutral-200);
+  font-size: var(--font-size-base);
 }
 
 .unified-logout-button {
-  background-color: #444;
-  color: white;
+  background-color: var(--color-border-dark);
+  color: var(--color-text-inverse);
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  font-size: var(--font-size-base);
+  transition: background-color var(--duration-normal);
 }
 
 .unified-logout-button:hover {
-  background-color: #555;
+  background-color: var(--color-neutral-600);
 }
 
 .unified-logout-button:focus {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
@@ -206,98 +214,98 @@
 
 .unified-sidebar {
   width: 250px;
-  background-color: #2a2a2a;
-  color: white;
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-inverse);
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sidebar);
 }
 
 .unified-nav {
   flex: 1;
-  padding: 1rem 0;
+  padding: var(--spacing-4) 0;
   display: flex;
   flex-direction: column;
 }
 
 .unified-nav-link {
-  color: #ddd;
+  color: var(--color-neutral-200);
   text-decoration: none;
-  padding: var(--spacing-3, 0.75rem) 1.5rem;
-  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), border-left-color 0.15s var(--ease-out);
+  padding: var(--spacing-3) var(--spacing-6);
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium);
 }
 
 .unified-nav-link:hover {
-  background-color: #333;
-  color: white;
-  border-left-color: var(--color-primary-600, #007bff);
+  background-color: var(--color-neutral-700);
+  color: var(--color-text-inverse);
+  border-left-color: var(--color-primary-600);
 }
 
 .unified-nav-link.active {
-  background-color: #333;
-  color: white;
-  border-left-color: var(--color-primary-600, #007bff);
-  font-weight: var(--font-weight-semibold, 600);
+  background-color: var(--color-neutral-700);
+  color: var(--color-text-inverse);
+  border-left-color: var(--color-primary-600);
+  font-weight: var(--font-weight-semibold);
 }
 
 .unified-nav-link:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;
 }
 
 .unified-nav-divider {
-  border-top: 1px solid #444;
-  margin: 0.5rem 0;
+  border-top: 1px solid var(--color-border-dark);
+  margin: var(--spacing-2) 0;
 }
 
 .unified-nav-divider-small {
-  border-top: 1px solid #444;
-  margin: 0.5rem 1.5rem;
+  border-top: 1px solid var(--color-border-dark);
+  margin: var(--spacing-2) var(--spacing-6);
 }
 
 .unified-nav-section-label {
-  padding: 0.5rem 1.5rem;
-  font-size: 0.75rem;
+  padding: var(--spacing-2) var(--spacing-6);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
-  color: #888;
-  letter-spacing: 0.05em;
+  color: var(--color-neutral-400);
+  letter-spacing: var(--letter-spacing-widest);
 }
 
 .unified-org-info {
-  padding: 0.5rem 1.5rem;
+  padding: var(--spacing-2) var(--spacing-6);
 }
 
 .unified-org-name {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: #fff;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-2);
 }
 
 .unified-role-badge {
   display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  color: white;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: bold;
+  margin-top: var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
 }
 
 .unified-role-badge.admin {
-  background-color: #007bff;
+  background-color: var(--color-primary-600);
 }
 
 .unified-role-badge.member {
-  background-color: #6c757d;
+  background-color: var(--color-neutral-500);
 }
 
 .unified-member-info {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.8rem;
-  color: #888;
+  padding: var(--spacing-3) var(--spacing-6);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-400);
 }
 
 .unified-member-info p {
@@ -305,9 +313,9 @@
 }
 
 .unified-member-link {
-  color: #6ea8fe;
+  color: var(--color-primary-400);
   text-decoration: none;
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .unified-member-link:hover {
@@ -316,7 +324,7 @@
 
 .unified-main {
   flex: 1;
-  padding: 2rem;
+  padding: var(--spacing-8);
   overflow-y: auto;
 }
 
@@ -327,11 +335,11 @@
   }
 
   .unified-header h1 {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl);
   }
 
   .unified-header {
-    padding: 1rem;
+    padding: var(--spacing-4);
   }
 
   .unified-container {
@@ -343,7 +351,7 @@
   }
 
   .unified-main {
-    padding: 1rem;
+    padding: var(--spacing-4);
   }
 
   .unified-header-org-selector {
@@ -358,7 +366,7 @@
 /* Animations - respect reduced motion */
 @media (prefers-reduced-motion: no-preference) {
   .unified-nav-link.active {
-    animation: highlight-fade 0.3s var(--ease-out);
+    animation: highlight-fade var(--duration-slow) var(--ease-out);
   }
 
   @keyframes highlight-fade {
@@ -366,7 +374,7 @@
       background-color: rgba(0, 123, 255, 0.3);
     }
     to {
-      background-color: #333;
+      background-color: var(--color-neutral-700);
     }
   }
 }
@@ -376,3 +384,4 @@
     transition: none;
   }
 }
+
