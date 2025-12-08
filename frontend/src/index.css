@@ -336,29 +336,28 @@ h6 {
 }
 
 /* ===== Dark Mode Foundation (Optional) ===== */
-/* 
-  Dark mode tokens foundation for future implementation.
-  Currently not active, but provides structure for easy dark mode adoption.
+/*
+  Dark mode tokens foundation for future implementation. Attach the
+  `.theme-dark` class to the <body> element when we want to activate
+  dark mode explicitly; otherwise the light theme stays in place.
 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Surface Colors - Dark Mode */
-    --color-background: var(--color-neutral-900);
-    --color-surface: var(--color-neutral-800);
-    --color-surface-elevated: var(--color-neutral-700);
-    --color-surface-dark: hsl(0, 0%, 8%);
+body.theme-dark {
+  /* Surface Colors - Dark Mode */
+  --color-background: var(--color-neutral-900);
+  --color-surface: var(--color-neutral-800);
+  --color-surface-elevated: var(--color-neutral-700);
+  --color-surface-dark: hsl(0, 0%, 8%);
 
-    /* Text Colors - Dark Mode */
-    --color-text-primary: var(--color-neutral-50);
-    --color-text-secondary: var(--color-neutral-300);
-    --color-text-tertiary: var(--color-neutral-500);
+  /* Text Colors - Dark Mode */
+  --color-text-primary: var(--color-neutral-50);
+  --color-text-secondary: var(--color-neutral-300);
+  --color-text-tertiary: var(--color-neutral-500);
 
-    /* Border Colors - Dark Mode */
-    --color-border-subtle: var(--color-neutral-700);
-    --color-border-default: var(--color-neutral-600);
-    --color-border-strong: var(--color-neutral-500);
+  /* Border Colors - Dark Mode */
+  --color-border-subtle: var(--color-neutral-700);
+  --color-border-default: var(--color-neutral-600);
+  --color-border-strong: var(--color-neutral-500);
 
-    /* Focus Ring - Dark Mode */
-    --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
-  }
+  /* Focus Ring - Dark Mode */
+  --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
 }

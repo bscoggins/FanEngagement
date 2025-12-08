@@ -17,6 +17,10 @@
 .header h1 {
   margin: 0;
   font-size: var(--font-size-2xl);
+  color: var(--color-primary-100);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .nav {
@@ -126,6 +130,10 @@
 .unified-header-title h1 {
   margin: 0;
   font-size: var(--font-size-2xl);
+  color: var(--color-primary-100);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .unified-header-title:hover {
@@ -376,3 +384,4 @@
     transition: none;
   }
 }
+

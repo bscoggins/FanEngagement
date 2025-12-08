@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useMobileOrgSwitcher } from '../hooks/useMobileOrgSwitcher';
 import { useActiveOrganization } from '../contexts/OrgContext';
-import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
+import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import './AdminLayout.css';
@@ -32,7 +32,6 @@ export const AdminLayout: React.FC = () => {
     // Fallback to userAgent regex for Mac/iOS devices
     return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
   }, []);
-  const modifierKeyLabel = isMac ? '⌘' : 'Ctrl';
   const modifierKeyName = isMac ? 'Cmd' : 'Ctrl';
 
   // Build navigation context
@@ -54,11 +53,6 @@ export const AdminLayout: React.FC = () => {
   const orgNavItems = useMemo(() => {
     const items = getVisibleNavItems(navContext, { scope: 'org' });
     return items.map(item => getResolvedNavItem(item, navContext));
-  }, [navContext]);
-
-  // Get the appropriate home route
-  const homeRoute = useMemo(() => {
-    return getDefaultHomeRoute(navContext);
   }, [navContext]);
 
   // Check if user is OrgAdmin for a specific organization
@@ -305,13 +299,9 @@ export const AdminLayout: React.FC = () => {
                       className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
                       data-testid={`org-nav-${item.id}`}
                       aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
+                      aria-label={index < 6 ? `${item.label} (Shortcut ${modifierKeyName}+${index + 1})` : undefined}
                     >
                       <span className="admin-nav-link-text">{item.label}</span>
-                      {index < 6 && (
-                        <span className="admin-nav-shortcut" aria-label={`Keyboard shortcut: ${modifierKeyName}+${index + 1}`}>
-                          {modifierKeyLabel}{index + 1}
-                        </span>
-                      )}
                     </Link>
                   ))}
                 </>
@@ -330,11 +320,6 @@ export const AdminLayout: React.FC = () => {
                 </div>
               )}
             </nav>
-            <div className="admin-sidebar-footer">
-              <Link to={homeRoute} className="admin-back-link" aria-label="Go to home page">
-                ← Home
-              </Link>
-            </div>
           </aside>
           <main className="admin-main" id="main-content" role="main">
             <Outlet />
