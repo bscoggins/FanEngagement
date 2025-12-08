@@ -20,9 +20,9 @@ This implementation completes the Shadow and Radius Tokens story by replacing al
 Added 3 new specialized shadow tokens to `frontend/src/index.css`:
 
 ```css
---shadow-header: 0 2px 4px rgba(0, 0, 0, 0.1);           /* Header elevation (light) */
---shadow-header-dark: 0 2px 4px rgba(0, 0, 0, 0.2);      /* Header elevation (dark surface) */
---shadow-sidebar: 2px 0 4px rgba(0, 0, 0, 0.1);          /* Sidebar/drawer elevation (right edge) */
+--shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.1);           /* Header elevation (light) */
+--shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.2);      /* Header elevation (dark surface) */
+--shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.1);          /* Sidebar/drawer elevation (right edge) */
 ```
 
 These tokens complement the existing elevation scale (xs, sm, md, lg, xl, 2xl, inner) with purpose-specific shadows for layout components.

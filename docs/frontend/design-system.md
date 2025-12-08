@@ -717,13 +717,13 @@ Shadows create depth and hierarchy through elevation levels.
   /* Inset shadow - Pressed buttons, input fields */
 
 /* Specialized shadows for layout components */
---shadow-header: 0 2px 4px rgba(0, 0, 0, 0.1)
+--shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.1)
   /* Header elevation (light backgrounds) */
 
---shadow-header-dark: 0 2px 4px rgba(0, 0, 0, 0.2)
+--shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.2)
   /* Header elevation (dark backgrounds) */
 
---shadow-sidebar: 2px 0 4px rgba(0, 0, 0, 0.1)
+--shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.1)
   /* Sidebar/drawer elevation (right edge) */
 ```
 
