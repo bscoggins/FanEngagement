@@ -3,56 +3,329 @@
 }
 
 :root {
-  /* Color tokens */
-  --color-primary-600: #007bff;
-  --color-primary-700: #0056b3;
-  --color-neutral-400: #999;
-  --color-neutral-600: #666;
-  --color-neutral-700: #333;
-  --color-background-elevated: #2a2a2a;
-  --focus-ring-color: #0056b3;
+  /* ===== Brand Colors ===== */
+  --color-primary-50: hsl(210, 100%, 97%);
+  --color-primary-100: hsl(210, 100%, 95%);
+  --color-primary-200: hsl(210, 100%, 90%);
+  --color-primary-300: hsl(210, 100%, 80%);
+  --color-primary-400: hsl(210, 100%, 65%);
+  --color-primary-500: hsl(210, 100%, 55%);
+  --color-primary-600: hsl(210, 100%, 50%);  /* Main brand color: #007bff */
+  --color-primary-700: hsl(210, 100%, 42%);  /* Hover/active: #0056b3 */
+  --color-primary-800: hsl(210, 100%, 35%);
+  --color-primary-900: hsl(210, 100%, 20%);
+
+  /* ===== Semantic Colors ===== */
+  --color-success-50: hsl(142, 70%, 97%);
+  --color-success-100: hsl(142, 70%, 92%);
+  --color-success-500: hsl(142, 70%, 45%);
+  --color-success-600: hsl(142, 70%, 40%);
+  --color-success-700: hsl(142, 70%, 35%);
   
-  /* Typography tokens */
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
+  --color-warning-50: hsl(38, 90%, 97%);
+  --color-warning-100: hsl(38, 90%, 92%);
+  --color-warning-500: hsl(38, 90%, 50%);
+  --color-warning-600: hsl(38, 90%, 45%);
+  --color-warning-700: hsl(38, 90%, 40%);
+  
+  --color-error-50: hsl(0, 70%, 97%);
+  --color-error-100: hsl(0, 70%, 92%);
+  --color-error-500: hsl(0, 70%, 50%);
+  --color-error-600: hsl(0, 70%, 45%);
+  --color-error-700: hsl(0, 70%, 40%);
+  
+  --color-info-50: hsl(210, 90%, 97%);
+  --color-info-100: hsl(210, 90%, 92%);
+  --color-info-500: hsl(210, 90%, 55%);
+  --color-info-600: hsl(210, 90%, 50%);
+  --color-info-700: hsl(210, 90%, 45%);
+
+  /* ===== Neutral Scale ===== */
+  --color-neutral-50: hsl(0, 0%, 98%);
+  --color-neutral-100: hsl(0, 0%, 96%);
+  --color-neutral-200: hsl(0, 0%, 90%);
+  --color-neutral-300: hsl(0, 0%, 80%);
+  --color-neutral-400: hsl(0, 0%, 60%);  /* #999 */
+  --color-neutral-500: hsl(0, 0%, 50%);
+  --color-neutral-600: hsl(0, 0%, 40%);  /* #666 */
+  --color-neutral-700: hsl(0, 0%, 20%);  /* #333 */
+  --color-neutral-800: hsl(0, 0%, 15%);
+  --color-neutral-900: hsl(0, 0%, 10%);
+
+  /* ===== Surface Colors ===== */
+  --color-background: hsl(0, 0%, 96%);         /* #f5f5f5 - Main background */
+  --color-surface: hsl(0, 0%, 100%);           /* white - Cards, panels */
+  --color-surface-elevated: hsl(0, 0%, 16.5%); /* #2a2a2a - Sidebar, elevated elements */
+  --color-surface-dark: hsl(0, 0%, 10%);       /* #1a1a1a - Header, dark surfaces */
+
+  /* ===== Text Colors ===== */
+  --color-text-primary: var(--color-neutral-700);      /* #333 - Main text */
+  --color-text-secondary: var(--color-neutral-600);    /* #666 - Secondary text */
+  --color-text-tertiary: var(--color-neutral-400);     /* #999 - Tertiary/muted text */
+  --color-text-inverse: hsl(0, 0%, 100%);              /* white - Text on dark backgrounds */
+  --color-text-on-primary: hsl(0, 0%, 100%);           /* white - Text on primary color */
+
+  /* ===== Border Colors ===== */
+  --color-border-subtle: var(--color-neutral-200);     /* Light borders */
+  --color-border-default: var(--color-neutral-300);    /* Default borders */
+  --color-border-strong: var(--color-neutral-400);     /* Emphasized borders */
+  --color-border-dark: hsl(0, 0%, 27%);                /* #444 - Borders on dark surfaces */
+
+  /* ===== Alpha Colors (for overlays and shadows) ===== */
+  --color-overlay-light: rgba(255, 255, 255, 0.1);
+  --color-overlay-medium: rgba(255, 255, 255, 0.15);
+  --color-overlay-dark: rgba(0, 0, 0, 0.5);
+
+  /* ===== Focus Ring ===== */
+  --focus-ring-color: var(--color-primary-700);
+  --focus-ring-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
+
+  /* ===== Font Families ===== */
+  --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', 'Menlo', 'Monaco', 'Consolas', monospace;
+
+  /* ===== Font Sizes (Modular scale: 1.25 ratio) ===== */
+  --font-size-2xs: 0.625rem;    /* 10px */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+
+  /* ===== Font Weights ===== */
+  --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ===== Line Heights ===== */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ===== Letter Spacing ===== */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+  --letter-spacing-wider: 0.025em;
+  --letter-spacing-widest: 0.05em;
+
+  /* ===== Spacing (Base unit: 4px) ===== */
+  --spacing-0: 0;
+  --spacing-0-5: 0.125rem;   /* 2px */
+  --spacing-1: 0.25rem;      /* 4px */
+  --spacing-2: 0.5rem;       /* 8px */
+  --spacing-3: 0.75rem;      /* 12px */
+  --spacing-4: 1rem;         /* 16px */
+  --spacing-5: 1.25rem;      /* 20px */
+  --spacing-6: 1.5rem;       /* 24px */
+  --spacing-8: 2rem;         /* 32px */
+  --spacing-10: 2.5rem;      /* 40px */
+  --spacing-12: 3rem;        /* 48px */
+  --spacing-16: 4rem;        /* 64px */
+  --spacing-20: 5rem;        /* 80px */
+  --spacing-24: 6rem;        /* 96px */
+
+  /* ===== Shadows ===== */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   
-  /* Spacing tokens */
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  
-  /* Radius tokens */
-  --radius-md: 6px;
-  
-  /* Shadow tokens */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
-  /* Animation tokens */
+  /* Specialized shadows for layout components */
+  --shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.1);           /* Header elevation (light) */
+  --shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.2);      /* Header elevation (dark surface) */
+  --shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.1);          /* Sidebar/drawer elevation (right edge) */
+
+  /* ===== Border Radii ===== */
+  --radius-none: 0;
+  --radius-sm: 0.25rem;      /* 4px */
+  --radius-md: 0.375rem;     /* 6px */
+  --radius-lg: 0.5rem;       /* 8px */
+  --radius-xl: 0.75rem;      /* 12px */
+  --radius-2xl: 1rem;        /* 16px */
+  --radius-full: 9999px;     /* Circular */
+
+  /* ===== Transitions ===== */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
 }
 
 #root {
   min-height: 100vh;
 }
 
+/* ===== Heading Styles ===== */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--spacing-4) 0;
+  font-family: var(--font-family-sans);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+/* ===== Semantic Typography Utility Classes ===== */
+.text-body {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+.text-body-large {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+.text-body-small {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+.text-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+}
+
+.text-label-small {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+}
+
+.text-caption {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+}
+
+.text-overline {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.text-code {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+
+/* ===== Spacing Utility Classes ===== */
+/* Common spacing patterns for consistent layout rhythm */
+
+/* Flexbox Gap Utilities */
+.gap-0 { gap: var(--spacing-0); }
+.gap-1 { gap: var(--spacing-1); }
+.gap-2 { gap: var(--spacing-2); }
+.gap-3 { gap: var(--spacing-3); }
+.gap-4 { gap: var(--spacing-4); }
+.gap-5 { gap: var(--spacing-5); }
+.gap-6 { gap: var(--spacing-6); }
+.gap-8 { gap: var(--spacing-8); }
+
+/* Padding Utilities */
+.p-0 { padding: var(--spacing-0); }
+.p-2 { padding: var(--spacing-2); }
+.p-3 { padding: var(--spacing-3); }
+.p-4 { padding: var(--spacing-4); }
+.p-5 { padding: var(--spacing-5); }
+.p-6 { padding: var(--spacing-6); }
+.p-8 { padding: var(--spacing-8); }
+
+/* Padding X-axis (horizontal) */
+.px-2 { padding-left: var(--spacing-2); padding-right: var(--spacing-2); }
+.px-3 { padding-left: var(--spacing-3); padding-right: var(--spacing-3); }
+.px-4 { padding-left: var(--spacing-4); padding-right: var(--spacing-4); }
+.px-6 { padding-left: var(--spacing-6); padding-right: var(--spacing-6); }
+
+/* Padding Y-axis (vertical) */
+.py-2 { padding-top: var(--spacing-2); padding-bottom: var(--spacing-2); }
+.py-3 { padding-top: var(--spacing-3); padding-bottom: var(--spacing-3); }
+.py-4 { padding-top: var(--spacing-4); padding-bottom: var(--spacing-4); }
+.py-6 { padding-top: var(--spacing-6); padding-bottom: var(--spacing-6); }
+
+/* Margin Bottom Utilities (for vertical rhythm) */
+.mb-0 { margin-bottom: var(--spacing-0); }
+.mb-2 { margin-bottom: var(--spacing-2); }
+.mb-3 { margin-bottom: var(--spacing-3); }
+.mb-4 { margin-bottom: var(--spacing-4); }
+.mb-6 { margin-bottom: var(--spacing-6); }
+.mb-8 { margin-bottom: var(--spacing-8); }
+
 /* Global focus ring styles for keyboard navigation */
 *:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
+  box-shadow: var(--focus-ring-shadow);
 }
 
 /* Remove default focus styles when not using keyboard */
@@ -65,4 +338,31 @@ body {
   *:focus-visible {
     transition: none;
   }
+}
+
+/* ===== Dark Mode Foundation (Optional) ===== */
+/*
+  Dark mode tokens foundation for future implementation. Attach the
+  `.theme-dark` class to the <body> element when we want to activate
+  dark mode explicitly; otherwise the light theme stays in place.
+*/
+body.theme-dark {
+  /* Surface Colors - Dark Mode */
+  --color-background: var(--color-neutral-900);
+  --color-surface: var(--color-neutral-800);
+  --color-surface-elevated: var(--color-neutral-700);
+  --color-surface-dark: hsl(0, 0%, 8%);
+
+  /* Text Colors - Dark Mode */
+  --color-text-primary: var(--color-neutral-50);
+  --color-text-secondary: var(--color-neutral-300);
+  --color-text-tertiary: var(--color-neutral-500);
+
+  /* Border Colors - Dark Mode */
+  --color-border-subtle: var(--color-neutral-700);
+  --color-border-default: var(--color-neutral-600);
+  --color-border-strong: var(--color-neutral-500);
+
+  /* Focus Ring - Dark Mode */
+  --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
 }

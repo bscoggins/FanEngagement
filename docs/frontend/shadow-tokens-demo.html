@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow & Radius Tokens Demo - FanEngagement Design System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Shadow tokens from design system */
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+      --shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+      --shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+      --shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.1);
+
+      /* Radius tokens */
+      --radius-none: 0;
+      --radius-sm: 0.25rem;
+      --radius-md: 0.375rem;
+      --radius-lg: 0.5rem;
+      --radius-xl: 0.75rem;
+      --radius-2xl: 1rem;
+      --radius-full: 9999px;
+
+      /* Colors */
+      --color-background: #f5f5f5;
+      --color-surface: white;
+      --color-surface-dark: #1a1a1a;
+      --color-primary: #007bff;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--color-background);
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: #666;
+      margin-bottom: 3rem;
+    }
+
+    h2 {
+      font-size: 1.875rem;
+      margin-top: 3rem;
+      margin-bottom: 1.5rem;
+      color: #1a1a1a;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .demo-card {
+      background-color: var(--color-surface);
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+
+    .demo-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      color: var(--color-primary);
+    }
+
+    .demo-card code {
+      font-size: 0.875rem;
+      color: #666;
+      background-color: #f5f5f5;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+
+    .shadow-sample {
+      background-color: var(--color-surface);
+      width: 100%;
+      height: 120px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      color: #999;
+    }
+
+    .radius-sample {
+      background-color: var(--color-primary);
+      width: 100px;
+      height: 100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Apply shadows */
+    .shadow-xs { box-shadow: var(--shadow-xs); }
+    .shadow-sm { box-shadow: var(--shadow-sm); }
+    .shadow-md { box-shadow: var(--shadow-md); }
+    .shadow-lg { box-shadow: var(--shadow-lg); }
+    .shadow-xl { box-shadow: var(--shadow-xl); }
+    .shadow-2xl { box-shadow: var(--shadow-2xl); }
+    .shadow-inner { box-shadow: var(--shadow-inner); }
+    .shadow-header { box-shadow: var(--shadow-header); }
+    .shadow-header-dark { box-shadow: var(--shadow-header-dark); }
+    .shadow-sidebar { box-shadow: var(--shadow-sidebar); }
+
+    /* Apply radii */
+    .radius-none { border-radius: var(--radius-none); }
+    .radius-sm { border-radius: var(--radius-sm); }
+    .radius-md { border-radius: var(--radius-md); }
+    .radius-lg { border-radius: var(--radius-lg); }
+    .radius-xl { border-radius: var(--radius-xl); }
+    .radius-2xl { border-radius: var(--radius-2xl); }
+    .radius-full { border-radius: var(--radius-full); }
+
+    .usage-note {
+      background-color: #e3f2fd;
+      border-left: 4px solid var(--color-primary);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      margin: 2rem 0;
+    }
+
+    .usage-note strong {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--color-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Shadow & Radius Tokens</h1>
+    <p class="subtitle">Visual demonstration of FanEngagement design system shadow and border radius tokens</p>
+
+    <h2>Shadow Elevation Levels</h2>
+    <div class="demo-grid">
+      <div class="demo-card">
+        <h3>--shadow-xs</h3>
+        <code>0 1px 2px 0 rgba(0, 0, 0, 0.05)</code>
+        <div class="shadow-sample shadow-xs">Extra Small</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-sm</h3>
+        <code>Multi-layer</code>
+        <div class="shadow-sample shadow-sm">Small</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-md</h3>
+        <code>Multi-layer</code>
+        <div class="shadow-sample shadow-md">Medium</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-lg</h3>
+        <code>Multi-layer</code>
+        <div class="shadow-sample shadow-lg">Large</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-xl</h3>
+        <code>Multi-layer</code>
+        <div class="shadow-sample shadow-xl">Extra Large</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-2xl</h3>
+        <code>0 25px 50px -12px</code>
+        <div class="shadow-sample shadow-2xl">2X Large</div>
+      </div>
+    </div>
+
+    <h2>Specialized Layout Shadows</h2>
+    <div class="demo-grid">
+      <div class="demo-card">
+        <h3>--shadow-header</h3>
+        <code>0 2px 4px rgba(0, 0, 0, 0.1)</code>
+        <div class="shadow-sample shadow-header">Header (Light)</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-header-dark</h3>
+        <code>0 2px 4px rgba(0, 0, 0, 0.2)</code>
+        <div class="shadow-sample shadow-header-dark">Header (Dark)</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-sidebar</h3>
+        <code>2px 0 4px rgba(0, 0, 0, 0.1)</code>
+        <div class="shadow-sample shadow-sidebar">Sidebar (Directional)</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--shadow-inner</h3>
+        <code>inset 0 2px 4px 0</code>
+        <div class="shadow-sample shadow-inner">Inner/Inset</div>
+      </div>
+    </div>
+
+    <div class="usage-note">
+      <strong>Usage Guidelines:</strong>
+      <ul>
+        <li><strong>xs/sm:</strong> Buttons, tags, keyboard shortcuts</li>
+        <li><strong>md:</strong> Cards, dropdowns, standard panels</li>
+        <li><strong>lg/xl:</strong> Modals, popovers, overlays</li>
+        <li><strong>2xl:</strong> Full-screen modals, critical overlays</li>
+        <li><strong>header/sidebar:</strong> Navigation components for consistent elevation</li>
+        <li><strong>inner:</strong> Pressed states, input fields</li>
+      </ul>
+    </div>
+
+    <h2>Border Radius Scale</h2>
+    <div class="demo-grid">
+      <div class="demo-card">
+        <h3>--radius-none</h3>
+        <code>0</code>
+        <div class="radius-sample radius-none">None</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--radius-sm</h3>
+        <code>0.25rem (4px)</code>
+        <div class="radius-sample radius-sm">Small</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--radius-md</h3>
+        <code>0.375rem (6px)</code>
+        <div class="radius-sample radius-md">Medium</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--radius-lg</h3>
+        <code>0.5rem (8px)</code>
+        <div class="radius-sample radius-lg">Large</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--radius-xl</h3>
+        <code>0.75rem (12px)</code>
+        <div class="radius-sample radius-xl">XL</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--radius-2xl</h3>
+        <code>1rem (16px)</code>
+        <div class="radius-sample radius-2xl">2XL</div>
+      </div>
+
+      <div class="demo-card">
+        <h3>--radius-full</h3>
+        <code>9999px</code>
+        <div class="radius-sample radius-full">Full</div>
+      </div>
+    </div>
+
+    <div class="usage-note">
+      <strong>Usage Guidelines:</strong>
+      <ul>
+        <li><strong>sm (0.25rem / 4px):</strong> Small elements like tags, badges</li>
+        <li><strong>md (0.375rem / 6px):</strong> Default for buttons and inputs</li>
+        <li><strong>lg (0.5rem / 8px):</strong> Cards and panels</li>
+        <li><strong>xl (0.75rem / 12px):</strong> Large cards and modals</li>
+        <li><strong>2xl (1rem / 16px):</strong> Hero sections and prominent panels</li>
+        <li><strong>full (9999px):</strong> Circular elements (avatars, badges)</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

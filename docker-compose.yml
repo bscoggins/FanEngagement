@@ -49,6 +49,7 @@ services:
     working_dir: /src/backend
     volumes:
       - ./:/src
+    profiles: ["tests"]
     depends_on:
       db:
         condition: service_healthy

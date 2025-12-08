@@ -1,0 +1,200 @@
+/**
+ * Table Component Styles
+ * Reusable table styles using spacing tokens
+ * Use these classes instead of inline styles for consistent table layouts
+ */
+
+/* Table Container */
+.table-container {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: var(--spacing-6);
+}
+
+/* Base Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Table Header */
+.data-table thead {
+  background-color: var(--color-neutral-100);
+  border-bottom: 2px solid var(--color-border-default);
+}
+
+.data-table th {
+  padding: var(--spacing-4);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.data-table th.text-center {
+  text-align: center;
+}
+
+.data-table th.text-right {
+  text-align: right;
+}
+
+/* Table Body */
+.data-table tbody tr {
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--color-neutral-50);
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table td {
+  padding: var(--spacing-4);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.data-table td.text-center {
+  text-align: center;
+}
+
+.data-table td.text-right {
+  text-align: right;
+}
+
+/* Secondary text in cells */
+.data-table .text-secondary {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+/* Status badges in tables */
+.data-table .status-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.data-table .status-badge.success {
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+.data-table .status-badge.warning {
+  background-color: var(--color-warning-100);
+  color: var(--color-warning-700);
+}
+
+.data-table .status-badge.error {
+  background-color: var(--color-error-100);
+  color: var(--color-error-700);
+}
+
+.data-table .status-badge.info {
+  background-color: var(--color-info-100);
+  color: var(--color-info-700);
+}
+
+.data-table .status-badge.neutral {
+  background-color: var(--color-neutral-200);
+  color: var(--color-text-primary);
+}
+
+/* Table actions (buttons in cells) */
+.table-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: center;
+  align-items: center;
+}
+
+.table-action-button {
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--color-primary-600);
+  color: var(--color-text-on-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.table-action-button:hover {
+  background-color: var(--color-primary-700);
+}
+
+.table-action-button.secondary {
+  background-color: var(--color-neutral-200);
+  color: var(--color-text-primary);
+}
+
+.table-action-button.secondary:hover {
+  background-color: var(--color-neutral-300);
+}
+
+.table-action-button.danger {
+  background-color: var(--color-error-500);
+  color: var(--color-text-on-primary);
+}
+
+.table-action-button.danger:hover {
+  background-color: var(--color-error-600);
+}
+
+/* Compact table variant */
+.data-table.compact th,
+.data-table.compact td {
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    min-width: 600px; /* Prevent table from becoming too narrow */
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--spacing-3);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* Empty state for tables */
+.table-empty {
+  padding: var(--spacing-8);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.table-empty-icon {
+  font-size: var(--font-size-4xl);
+  margin-bottom: var(--spacing-4);
+  color: var(--color-text-tertiary);
+}
+
+.table-empty-message {
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-2);
+}
+
+.table-empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}

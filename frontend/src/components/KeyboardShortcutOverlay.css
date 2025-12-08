@@ -14,17 +14,17 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  padding: 1rem;
+  padding: var(--spacing-4);
 }
 
 .keyboard-shortcut-overlay-content {
-  background-color: white;
-  border-radius: var(--radius-md, 6px);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
   overflow: hidden;
-  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1)), 0 20px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md), 0 20px 40px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
 }
@@ -33,47 +33,47 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e0e0e0;
+  padding: var(--spacing-6) var(--spacing-8);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .keyboard-shortcut-overlay-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--color-neutral-700, #333);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-700);
 }
 
 .keyboard-shortcut-overlay-close {
-  padding: 0.5rem;
+  padding: var(--spacing-2);
   background-color: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   cursor: pointer;
   line-height: 1;
-  color: var(--color-neutral-600, #666);
-  border-radius: 4px;
-  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+  color: var(--color-neutral-600);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 
 .keyboard-shortcut-overlay-close:hover {
   background-color: rgba(0, 0, 0, 0.05);
-  color: var(--color-neutral-700, #333);
+  color: var(--color-neutral-700);
 }
 
 .keyboard-shortcut-overlay-close:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
 .keyboard-shortcut-overlay-body {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem 2rem;
+  padding: var(--spacing-6) var(--spacing-8);
 }
 
 .keyboard-shortcut-category {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-8);
 }
 
 .keyboard-shortcut-category:last-child {
@@ -81,31 +81,31 @@
 }
 
 .keyboard-shortcut-category-title {
-  margin: 0 0 1rem 0;
-  font-size: 0.875rem;
-  font-weight: var(--font-weight-semibold, 600);
+  margin: 0 0 var(--spacing-4) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  color: var(--color-neutral-600, #666);
-  letter-spacing: 0.05em;
+  color: var(--color-neutral-600);
+  letter-spacing: var(--letter-spacing-widest);
 }
 
 .keyboard-shortcut-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-3);
 }
 
 .keyboard-shortcut-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--spacing-4);
 }
 
 .keyboard-shortcut-key {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--spacing-1);
   flex-shrink: 0;
 }
 
@@ -113,66 +113,68 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  padding: 0.25rem 0.5rem;
-  background-color: #f5f5f5;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  min-width: var(--spacing-8);
+  padding: var(--spacing-1) var(--spacing-2);
+  background-color: var(--color-neutral-100);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
-  font-size: 0.75rem;
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--color-neutral-700, #333);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-700);
+  /* Original: 0 1px 2px rgba(0, 0, 0, 0.05) - standardized to --shadow-xs */
+  box-shadow: var(--shadow-xs);
 }
 
 .keyboard-shortcut-plus {
-  color: var(--color-neutral-600, #666);
-  font-size: 0.75rem;
-  margin: 0 0.125rem;
+  color: var(--color-neutral-600);
+  font-size: var(--font-size-xs);
+  margin: 0 var(--spacing-0-5);
 }
 
 .keyboard-shortcut-description {
   flex: 1;
-  font-size: var(--font-size-sm, 0.875rem);
-  color: var(--color-neutral-700, #333);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
 }
 
 .keyboard-shortcut-overlay-footer {
-  padding: 1rem 2rem;
-  border-top: 1px solid #e0e0e0;
+  padding: var(--spacing-4) var(--spacing-8);
+  border-top: 1px solid var(--color-border-subtle);
   text-align: center;
-  background-color: #f9f9f9;
+  background-color: var(--color-neutral-50);
 }
 
 .keyboard-shortcut-overlay-footer p {
   margin: 0;
-  font-size: 0.75rem;
-  color: var(--color-neutral-600, #666);
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-600);
 }
 
 .keyboard-shortcut-overlay-footer kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.125rem 0.375rem;
-  background-color: white;
-  border: 1px solid #d0d0d0;
-  border-radius: 3px;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
-  font-size: 0.625rem;
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--color-neutral-700, #333);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  padding: var(--spacing-0-5) 0.375rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-700);
+  /* Original: 0 1px 1px rgba(0, 0, 0, 0.05) - consolidated to --shadow-xs for consistency */
+  box-shadow: var(--shadow-xs);
 }
 
 /* Animation for overlay appearance */
 @media (prefers-reduced-motion: no-preference) {
   .keyboard-shortcut-overlay-backdrop {
-    animation: overlay-fade-in 0.2s ease-out;
+    animation: overlay-fade-in var(--duration-normal) ease-out;
   }
 
   .keyboard-shortcut-overlay-content {
-    animation: overlay-slide-in 0.2s ease-out;
+    animation: overlay-slide-in var(--duration-normal) ease-out;
   }
 
   @keyframes overlay-fade-in {
@@ -211,7 +213,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .keyboard-shortcut-overlay-backdrop {
-    padding: 0.5rem;
+    padding: var(--spacing-2);
   }
 
   .keyboard-shortcut-overlay-content {
@@ -219,25 +221,25 @@
   }
 
   .keyboard-shortcut-overlay-header {
-    padding: 1.25rem 1.5rem;
+    padding: var(--spacing-5) var(--spacing-6);
   }
 
   .keyboard-shortcut-overlay-title {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl);
   }
 
   .keyboard-shortcut-overlay-body {
-    padding: 1rem 1.5rem;
+    padding: var(--spacing-4) var(--spacing-6);
   }
 
   .keyboard-shortcut-overlay-footer {
-    padding: 0.75rem 1.5rem;
+    padding: var(--spacing-3) var(--spacing-6);
   }
 
   .keyboard-shortcut-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: var(--spacing-2);
   }
 }
 

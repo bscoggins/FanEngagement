@@ -214,6 +214,7 @@ Swagger UI is available at `http://localhost:8080/swagger` for API documentation
 
 ### Compose Profiles
 
+- The backend unit/integration test runner is behind the `tests` profile. Run it on-demand with `docker compose --profile tests run --rm tests` (or `docker compose --profile tests up tests`).
 - The E2E test runner service is behind the `e2e` profile and will not start on a normal `docker compose up`.
 - A long-lived Playwright MCP helper is behind the `tools` profile and is also excluded by default.
 
@@ -228,7 +229,7 @@ dotnet test
 Or run tests in a container (requires Docker):
 
 ```bash
-docker compose run --rm tests
+docker compose --profile tests run --rm tests
 ```
 
 ### End-to-End (Playwright)

@@ -9,39 +9,39 @@
 .recents-dropdown-button {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(255, 255, 255, 0.1);
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--color-overlay-light);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-md, 6px);
-  color: white;
-  font-size: var(--font-size-sm, 0.875rem);
+  border-radius: var(--radius-md);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: background-color 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 
 .recents-dropdown-button:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--color-overlay-medium);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
 .recents-dropdown-button:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 
 .recents-dropdown-icon {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
 }
 
 .recents-dropdown-label {
-  font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium);
 }
 
 .recents-dropdown-arrow {
-  font-size: 0.625rem;
+  font-size: var(--font-size-2xs);
   opacity: 0.7;
-  transition: transform 0.15s var(--ease-out);
+  transition: transform var(--duration-fast) var(--ease-out);
 }
 
 .recents-dropdown-button[aria-expanded="true"] .recents-dropdown-arrow {
@@ -50,67 +50,67 @@
 
 .recents-dropdown-menu {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + var(--spacing-2));
   right: 0;
   min-width: 280px;
-  background-color: white;
-  border: 1px solid #e0e0e0;
-  border-radius: var(--radius-md, 6px);
-  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1)), 0 10px 20px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md), 0 10px 20px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   overflow: hidden;
 }
 
 .recents-dropdown-title {
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
-  font-weight: var(--font-weight-semibold, 600);
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  color: var(--color-neutral-600, #666);
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #f0f0f0;
+  color: var(--color-neutral-600);
+  letter-spacing: var(--letter-spacing-widest);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .recents-dropdown-empty {
-  padding: 1.5rem 1rem;
+  padding: var(--spacing-6) var(--spacing-4);
   text-align: center;
-  color: var(--color-neutral-600, #666);
-  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-neutral-600);
+  font-size: var(--font-size-sm);
 }
 
 .recents-dropdown-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--spacing-3);
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: var(--spacing-3) var(--spacing-4);
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s var(--ease-out);
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .recents-dropdown-item:hover {
-  background-color: #f5f5f5;
+  background-color: var(--color-neutral-100);
 }
 
 .recents-dropdown-item:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #0056b3);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;
   background-color: rgba(0, 123, 255, 0.1);
 }
 
 .recents-dropdown-item-icon {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   flex-shrink: 0;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  background-color: var(--color-neutral-100);
+  border-radius: var(--radius-sm);
 }
 
 .recents-dropdown-item:hover .recents-dropdown-item-icon {
@@ -123,24 +123,24 @@
 }
 
 .recents-dropdown-item-name {
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--color-neutral-700, #333);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-700);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .recents-dropdown-item-type {
-  font-size: 0.75rem;
-  color: var(--color-neutral-600, #666);
-  margin-top: 0.125rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-600);
+  margin-top: var(--spacing-0-5);
 }
 
 /* Animation for menu appearance */
 @media (prefers-reduced-motion: no-preference) {
   .recents-dropdown-menu {
-    animation: dropdown-fade-in 0.15s ease-out;
+    animation: dropdown-fade-in var(--duration-fast) ease-out;
   }
 
   @keyframes dropdown-fade-in {
@@ -171,7 +171,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .recents-dropdown-button {
-    padding: 0.5rem;
+    padding: var(--spacing-2);
   }
 
   .recents-dropdown-label {
