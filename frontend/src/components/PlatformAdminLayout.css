@@ -7,19 +7,19 @@
 
 .admin-header {
   background-color: #1a1a1a;
-  color: white;
-  padding: 1rem 2rem;
+  color: var(--color-text-inverse);
+  padding: var(--spacing-4) var(--spacing-8);
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  gap: 1rem;
+  gap: var(--spacing-4);
 }
 
 .admin-header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--spacing-4);
   flex-shrink: 0;
 }
 
@@ -32,7 +32,7 @@
 
 .admin-header-right {
   display: flex;
-  gap: 1rem;
+  gap: var(--spacing-4);
   align-items: center;
   flex-shrink: 0;
 }
@@ -41,12 +41,12 @@
   display: none; /* Hidden on desktop, shown on mobile */
   background: none;
   border: none;
-  color: white;
-  font-size: 1.5rem;
-  padding: 0.5rem;
+  color: var(--color-text-inverse);
+  font-size: var(--spacing-6);
+  padding: var(--spacing-2);
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--duration-normal) ease;
   min-width: 44px;
   min-height: 44px;
   align-items: center;
@@ -54,7 +54,7 @@
 }
 
 .admin-mobile-menu-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-overlay-light);
 }
 
 .admin-mobile-menu-button:focus {
@@ -69,38 +69,38 @@
 
 .admin-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--spacing-6);
 }
 
 .admin-header-right {
   display: flex;
-  gap: 1rem;
+  gap: var(--spacing-4);
   align-items: center;
 }
 
 .admin-badge {
-  padding: 0.25rem 0.75rem;
+  padding: var(--spacing-1) var(--spacing-3);
   background-color: #dc3545;
-  color: white;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: bold;
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
 }
 
 .admin-user-info {
   color: #ddd;
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
 }
 
 .admin-logout-button {
   background-color: #444;
-  color: white;
+  color: var(--color-text-inverse);
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  font-size: var(--font-size-base);
+  transition: background-color var(--duration-normal);
 }
 
 .admin-logout-button:hover {
@@ -120,7 +120,7 @@
 .admin-sidebar {
   width: 250px;
   background-color: #2a2a2a;
-  color: white;
+  color: var(--color-text-inverse);
   display: flex;
   flex-direction: column;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
@@ -128,7 +128,7 @@
 
 .admin-nav {
   flex: 1;
-  padding: 1rem 0;
+  padding: var(--spacing-4) 0;
   display: flex;
   flex-direction: column;
 }
@@ -136,21 +136,21 @@
 .admin-nav-link {
   color: #ddd;
   text-decoration: none;
-  padding: var(--spacing-3, 0.75rem) 1.5rem;
-  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out), border-left-color 0.15s var(--ease-out);
+  padding: var(--spacing-3, var(--spacing-3)) var(--spacing-6);
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
   font-weight: var(--font-weight-medium, 500);
 }
 
 .admin-nav-link:hover {
   background-color: #333;
-  color: white;
+  color: var(--color-text-inverse);
   border-left-color: var(--color-primary-600, #007bff);
 }
 
 .admin-nav-link.active {
   background-color: #333;
-  color: white;
+  color: var(--color-text-inverse);
   border-left-color: var(--color-primary-600, #007bff);
   font-weight: var(--font-weight-semibold, 600);
 }
@@ -162,31 +162,31 @@
 
 .admin-nav-divider {
   border-top: 1px solid #444;
-  margin: 0.5rem 0;
+  margin: var(--spacing-2) 0;
 }
 
 .admin-nav-section-label {
-  padding: 0.5rem 1.5rem;
-  font-size: 0.75rem;
+  padding: var(--spacing-2) var(--spacing-6);
+  font-size: var(--spacing-3);
   text-transform: uppercase;
   color: #888;
   letter-spacing: 0.05em;
 }
 
 .admin-sidebar-footer {
-  padding: 1rem 1.5rem;
+  padding: var(--spacing-4) var(--spacing-6);
   border-top: 1px solid #444;
 }
 
 .admin-back-link {
   color: #aaa;
   text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.2s;
+  font-size: var(--font-size-base);
+  transition: color var(--duration-normal);
 }
 
 .admin-back-link:hover {
-  color: white;
+  color: var(--color-text-inverse);
 }
 
 .admin-back-link:focus {
@@ -196,7 +196,7 @@
 
 .admin-main {
   flex: 1;
-  padding: 2rem;
+  padding: var(--spacing-8);
   overflow-y: auto;
 }
 
@@ -207,11 +207,11 @@
   }
 
   .admin-header h1 {
-    font-size: 1.25rem;
+    font-size: var(--spacing-5);
   }
 
   .admin-header {
-    padding: 1rem;
+    padding: var(--spacing-4);
     flex-wrap: wrap;
   }
 
@@ -219,7 +219,7 @@
     order: 3;
     width: 100%;
     max-width: 100%;
-    margin-top: 0.75rem;
+    margin-top: var(--spacing-3);
   }
 
   .admin-container {
@@ -231,14 +231,14 @@
   }
 
   .admin-main {
-    padding: 1rem;
+    padding: var(--spacing-4);
   }
 }
 
 /* Animations - respect reduced motion */
 @media (prefers-reduced-motion: no-preference) {
   .admin-nav-link.active {
-    animation: highlight-fade 0.3s var(--ease-out);
+    animation: highlight-fade var(--duration-slow) var(--ease-out);
   }
 
   @keyframes highlight-fade {

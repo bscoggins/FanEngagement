@@ -6,12 +6,12 @@
 .org-selector-container {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-2, 0.5rem);
+  gap: var(--spacing-2, var(--spacing-2));
   position: relative;
 }
 
 .org-selector-label {
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-sm, var(--font-size-sm));
   color: var(--color-neutral-600, #666);
   font-weight: var(--font-weight-medium, 500);
   white-space: nowrap;
@@ -21,15 +21,15 @@
 .org-selector-button {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2, 0.5rem);
-  padding: 0.5rem 0.75rem;
+  gap: var(--spacing-2, var(--spacing-2));
+  padding: var(--spacing-2) var(--spacing-3);
   border: 1px solid #ddd;
   border-radius: var(--radius-md, 6px);
-  font-size: var(--font-size-sm, 0.875rem);
-  background-color: white;
+  font-size: var(--font-size-sm, var(--font-size-sm));
+  background-color: var(--color-text-inverse);
   cursor: pointer;
   min-width: 200px;
-  transition: all 0.2s var(--ease-out);
+  transition: all var(--duration-normal) var(--ease-out);
   position: relative;
 }
 
@@ -59,10 +59,10 @@
 }
 
 .org-selector-button-badge {
-  padding: 0.125rem 0.5rem;
-  color: white;
+  padding: var(--spacing-0-5) var(--spacing-2);
+  color: var(--color-text-inverse);
   border-radius: var(--radius-md, 6px);
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold, 600);
   white-space: nowrap;
   text-transform: uppercase;
@@ -78,33 +78,33 @@
 }
 
 .org-selector-button-arrow {
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   color: var(--color-neutral-600, #666);
 }
 
 /* Dropdown menu */
 .org-selector-dropdown {
   position: absolute;
-  top: calc(100% + 0.25rem);
+  top: calc(100% + var(--spacing-1));
   left: 0;
   right: 0;
   max-height: 300px;
   overflow-y: auto;
   margin: 0;
-  padding: var(--spacing-2, 0.5rem);
+  padding: var(--spacing-2, var(--spacing-2));
   list-style: none;
-  background-color: white;
+  background-color: var(--color-text-inverse);
   border: 1px solid #ddd;
   border-radius: var(--radius-md, 6px);
   box-shadow: var(--shadow-md);
   z-index: 1000;
-  animation: dropdown-appear 0.15s var(--ease-out);
+  animation: dropdown-appear var(--duration-fast) var(--ease-out);
 }
 
 @keyframes dropdown-appear {
   from {
     opacity: 0;
-    transform: translateY(-0.5rem);
+    transform: translateY(-var(--spacing-2));
   }
   to {
     opacity: 1;
@@ -116,11 +116,11 @@
 .org-selector-option {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2, 0.5rem);
-  padding: 0.625rem 0.75rem;
+  gap: var(--spacing-2, var(--spacing-2));
+  padding: 0.625rem var(--spacing-3);
   cursor: pointer;
   border-radius: var(--radius-md, 6px);
-  transition: background-color 0.15s var(--ease-out);
+  transition: background-color var(--duration-fast) var(--ease-out);
   position: relative;
   /* Ensure touch target is at least 44px */
   min-height: 44px;
@@ -144,10 +144,10 @@
 }
 
 .org-selector-option-badge {
-  padding: 0.125rem 0.5rem;
-  color: white;
+  padding: var(--spacing-0-5) var(--spacing-2);
+  color: var(--color-text-inverse);
   border-radius: var(--radius-md, 6px);
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold, 600);
   white-space: nowrap;
   text-transform: uppercase;
@@ -164,31 +164,31 @@
 
 .org-selector-option-checkmark {
   color: var(--color-primary-600, #007bff);
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
   margin-left: auto;
 }
 
 /* Tooltip for truncated org names */
 .org-selector-tooltip {
   position: absolute;
-  bottom: calc(100% + 0.5rem);
+  bottom: calc(100% + var(--spacing-2));
   left: 0;
-  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
+  padding: var(--spacing-2, var(--spacing-2)) var(--spacing-3, var(--spacing-3));
   background-color: var(--color-background-elevated, #2a2a2a);
-  color: white;
-  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-sm, var(--font-size-sm));
   border-radius: var(--radius-md, 6px);
   box-shadow: var(--shadow-md);
   white-space: nowrap;
   z-index: 1001;
-  animation: tooltip-appear 0.15s var(--ease-out);
+  animation: tooltip-appear var(--duration-fast) var(--ease-out);
   pointer-events: none;
 }
 
 @keyframes tooltip-appear {
   from {
     opacity: 0;
-    transform: translateY(0.25rem);
+    transform: translateY(var(--spacing-1));
   }
   to {
     opacity: 1;
@@ -227,7 +227,7 @@
 @media (max-width: 768px) {
   .org-selector-container {
     flex-wrap: wrap;
-    gap: var(--spacing-2, 0.5rem);
+    gap: var(--spacing-2, var(--spacing-2));
     width: 100%;
   }
 
@@ -244,7 +244,7 @@
   
   /* Ensure adequate touch targets on mobile */
   .org-selector-option {
-    padding: 0.75rem;
+    padding: var(--spacing-3);
     min-height: 48px;
   }
 }
