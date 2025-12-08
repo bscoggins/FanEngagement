@@ -34,7 +34,7 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-6) var(--spacing-8);
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .keyboard-shortcut-overlay-title {
@@ -115,8 +115,8 @@
   justify-content: center;
   min-width: var(--spacing-8);
   padding: var(--spacing-1) var(--spacing-2);
-  background-color: #f5f5f5;
-  border: 1px solid #d0d0d0;
+  background-color: var(--color-neutral-100);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-sm);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
   font-size: var(--font-size-xs);
@@ -139,9 +139,9 @@
 
 .keyboard-shortcut-overlay-footer {
   padding: var(--spacing-4) var(--spacing-8);
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--color-border-subtle);
   text-align: center;
-  background-color: #f9f9f9;
+  background-color: var(--color-neutral-50);
 }
 
 .keyboard-shortcut-overlay-footer p {
@@ -156,7 +156,7 @@
   justify-content: center;
   padding: var(--spacing-0-5) 0.375rem;
   background-color: var(--color-surface);
-  border: 1px solid #d0d0d0;
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-sm);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
   font-size: 0.625rem;

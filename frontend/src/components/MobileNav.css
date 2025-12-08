@@ -151,12 +151,12 @@
 }
 
 .mobile-nav-org-badge.admin {
-  background-color: #007bff;
+  background-color: var(--color-primary-600);
   color: var(--color-text-inverse);
 }
 
 .mobile-nav-org-badge.member {
-  background-color: #6c757d;
+  background-color: var(--color-neutral-500);
   color: var(--color-text-inverse);
 }
 

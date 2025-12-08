@@ -37,12 +37,12 @@
 }
 
 .user-info {
-  color: #ddd;
+  color: var(--color-neutral-200);
   font-size: var(--font-size-base);
 }
 
 .logout-button {
-  background-color: #555;
+  background-color: var(--color-neutral-600);
   color: var(--color-text-inverse);
   border: none;
   padding: var(--spacing-2) var(--spacing-4);
@@ -69,7 +69,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
 }
 
 .unified-header {
@@ -146,7 +146,7 @@
 
 .unified-header-org-selector-label {
   font-size: var(--font-size-sm);
-  color: #ccc;
+  color: var(--color-neutral-200);
   font-weight: var(--font-weight-medium);
 }
 
@@ -175,7 +175,7 @@
 }
 
 .unified-user-info {
-  color: #ddd;
+  color: var(--color-neutral-200);
   font-size: var(--font-size-base);
 }
 
@@ -191,7 +191,7 @@
 }
 
 .unified-logout-button:hover {
-  background-color: #555;
+  background-color: var(--color-neutral-600);
 }
 
 .unified-logout-button:focus {
@@ -221,9 +221,9 @@
 }
 
 .unified-nav-link {
-  color: #ddd;
+  color: var(--color-neutral-200);
   text-decoration: none;
-  padding: var(--spacing-3, var(--spacing-3)) var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-6);
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
   font-weight: var(--font-weight-medium);
@@ -261,7 +261,7 @@
   padding: var(--spacing-2) var(--spacing-6);
   font-size: var(--font-size-xs);
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-neutral-400);
   letter-spacing: 0.05em;
 }
 
@@ -287,17 +287,17 @@
 }
 
 .unified-role-badge.admin {
-  background-color: #007bff;
+  background-color: var(--color-primary-600);
 }
 
 .unified-role-badge.member {
-  background-color: #6c757d;
+  background-color: var(--color-neutral-500);
 }
 
 .unified-member-info {
   padding: var(--spacing-3) var(--spacing-6);
   font-size: var(--font-size-sm);
-  color: #888;
+  color: var(--color-neutral-400);
 }
 
 .unified-member-info p {
@@ -305,7 +305,7 @@
 }
 
 .unified-member-link {
-  color: #6ea8fe;
+  color: var(--color-primary-400);
   text-decoration: none;
   font-size: var(--font-size-sm);
 }

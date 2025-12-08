@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--color-background);
 }
 
 .admin-header {
@@ -104,7 +104,7 @@
 }
 
 .admin-logout-button:hover {
-  background-color: #555;
+  background-color: var(--color-neutral-600);
 }
 
 .admin-logout-button:focus {
@@ -136,7 +136,7 @@
 .admin-nav-link {
   color: var(--color-neutral-200);
   text-decoration: none;
-  padding: var(--spacing-3, var(--spacing-3)) var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-6);
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
   font-weight: var(--font-weight-medium);
