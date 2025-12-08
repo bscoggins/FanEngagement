@@ -17,7 +17,7 @@ This is the central index for the FanEngagement navigation design documentation.
 
 ### 📐 [Navigation Design Specifications](./navigation-design-specifications.md)
 **Purpose:** Comprehensive technical specifications for all navigation elements  
-**Length:** 1,316 lines  
+**Length:** 1,319 lines  
 **Best For:** Developers, QA engineers, accessibility reviewers
 
 **Contents:**
