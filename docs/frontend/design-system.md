@@ -457,22 +457,234 @@ gap: var(--spacing-2);
 
 ### Spacing Visualization
 
+Visual representation of the spacing scale (each block = 4px):
+
 ```
-0     ▏
-0.5   ▎
-1     ▎
-2     ▌
-3     ▊
-4     █
-5     █▎
-6     █▌
-8     ██
-10    ██▌
-12    ███
-16    ████
-20    █████
-24    ██████
+Token    Value       Visual Scale
+──────────────────────────────────────────────────
+0        0px         (none)
+0.5      2px         ▎
+1        4px         ▌
+2        8px         █
+3        12px        █▌
+4        16px        ██               ← Standard spacing
+5        20px        ██▌
+6        24px        ███              ← Section spacing
+8        32px        ████
+10       40px        █████
+12       48px        ██████
+16       64px        ████████
+20       80px        ██████████
+24       96px        ████████████
 ```
+
+### Spacing Utility Classes
+
+The design system includes utility classes for common spacing patterns:
+
+#### Gap Utilities (Flexbox/Grid)
+```css
+.gap-0  /* gap: 0 */
+.gap-1  /* gap: 4px */
+.gap-2  /* gap: 8px */
+.gap-3  /* gap: 12px */
+.gap-4  /* gap: 16px */
+.gap-5  /* gap: 20px */
+.gap-6  /* gap: 24px */
+.gap-8  /* gap: 32px */
+```
+
+**Usage:**
+```tsx
+<div className="gap-4" style={{ display: 'flex' }}>
+  <button>Action 1</button>
+  <button>Action 2</button>
+</div>
+```
+
+#### Padding Utilities
+```css
+/* All sides */
+.p-0  /* padding: 0 */
+.p-2  /* padding: 8px */
+.p-3  /* padding: 12px */
+.p-4  /* padding: 16px */
+.p-5  /* padding: 20px */
+.p-6  /* padding: 24px */
+.p-8  /* padding: 32px */
+
+/* Horizontal (left + right) */
+.px-2  /* padding-left: 8px; padding-right: 8px */
+.px-3  /* padding-left: 12px; padding-right: 12px */
+.px-4  /* padding-left: 16px; padding-right: 16px */
+.px-6  /* padding-left: 24px; padding-right: 24px */
+
+/* Vertical (top + bottom) */
+.py-2  /* padding-top: 8px; padding-bottom: 8px */
+.py-3  /* padding-top: 12px; padding-bottom: 12px */
+.py-4  /* padding-top: 16px; padding-bottom: 16px */
+.py-6  /* padding-top: 24px; padding-bottom: 24px */
+```
+
+**Usage:**
+```tsx
+<div className="p-6">
+  <h2>Card Title</h2>
+  <p>Card content with consistent padding</p>
+</div>
+```
+
+#### Margin Bottom Utilities (Vertical Rhythm)
+```css
+.mb-0  /* margin-bottom: 0 */
+.mb-2  /* margin-bottom: 8px */
+.mb-3  /* margin-bottom: 12px */
+.mb-4  /* margin-bottom: 16px */
+.mb-6  /* margin-bottom: 24px */
+.mb-8  /* margin-bottom: 32px */
+```
+
+**Usage:**
+```tsx
+<div>
+  <h2 className="mb-4">Section Title</h2>
+  <p className="mb-6">Paragraph with spacing below</p>
+  <button>Call to Action</button>
+</div>
+```
+
+### Using Spacing Tokens in Custom CSS
+
+When utility classes don't fit your needs, use spacing tokens directly:
+
+```css
+/* Component-specific spacing */
+.custom-component {
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+  gap: var(--spacing-4);
+}
+
+/* Asymmetric padding */
+.header {
+  padding: var(--spacing-4) var(--spacing-8);
+}
+
+/* Responsive spacing */
+@media (max-width: 768px) {
+  .custom-component {
+    padding: var(--spacing-4);
+    gap: var(--spacing-2);
+  }
+}
+```
+
+### Spacing Best Practices
+
+1. **Always use spacing tokens** - Never use hardcoded pixel or rem values
+2. **Start with the scale** - Choose from existing tokens before creating custom spacing
+3. **Maintain vertical rhythm** - Use consistent spacing (4, 6, 8) between sections
+4. **Use utility classes first** - Apply `.gap-4`, `.p-6`, `.mb-4` before writing custom CSS
+5. **Group related elements** - Closer spacing (2-3) for related items, wider spacing (6-8) between sections
+6. **Responsive spacing** - Reduce spacing on mobile (e.g., 8 → 4, 6 → 4)
+
+### Common Spacing Patterns
+
+#### Card Layout
+```tsx
+<div className="p-6 mb-4">
+  <h3 className="mb-3">Card Title</h3>
+  <p className="mb-4">Card content</p>
+  <div className="gap-3" style={{ display: 'flex' }}>
+    <button>Primary</button>
+    <button>Secondary</button>
+  </div>
+</div>
+```
+
+#### Form Layout
+```tsx
+<form>
+  <div className="mb-4">
+    <label className="mb-2">Name</label>
+    <input type="text" />
+  </div>
+  <div className="mb-6">
+    <label className="mb-2">Email</label>
+    <input type="email" />
+  </div>
+  <button>Submit</button>
+</form>
+```
+
+#### Section Spacing
+```tsx
+<div>
+  <section className="mb-8">
+    <h2 className="mb-4">Section 1</h2>
+    <p>Content</p>
+  </section>
+  <section className="mb-8">
+    <h2 className="mb-4">Section 2</h2>
+    <p>Content</p>
+  </section>
+</div>
+```
+
+### Migration Guide: From Inline Styles to Spacing Tokens
+
+If you have existing code with hardcoded spacing values, here's how to migrate:
+
+#### Before (❌ Hardcoded values)
+```tsx
+<div style={{ 
+  padding: '1.5rem',
+  marginBottom: '2rem',
+  gap: '1rem',
+  display: 'flex'
+}}>
+  <button style={{ padding: '0.75rem 1rem' }}>Action</button>
+</div>
+```
+
+#### After (✅ Using tokens and utilities)
+```tsx
+<div className="p-6 mb-8 gap-4" style={{ display: 'flex' }}>
+  <button className="py-3 px-4">Action</button>
+</div>
+```
+
+#### Or with CSS custom properties (for more complex layouts)
+```tsx
+// Component.css
+.custom-layout {
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+  gap: var(--spacing-4);
+  display: flex;
+}
+
+.custom-button {
+  padding: var(--spacing-3) var(--spacing-4);
+}
+
+// Component.tsx
+<div className="custom-layout">
+  <button className="custom-button">Action</button>
+</div>
+```
+
+### Spacing Token Reference Card
+
+Quick reference for common conversions:
+
+| Old Value | Token | Utility Class | Pixels |
+|-----------|-------|---------------|--------|
+| `0.5rem` | `--spacing-2` | `.p-2`, `.gap-2`, `.mb-2` | 8px |
+| `0.75rem` | `--spacing-3` | `.p-3`, `.gap-3`, `.mb-3` | 12px |
+| `1rem` | `--spacing-4` | `.p-4`, `.gap-4`, `.mb-4` | 16px |
+| `1.5rem` | `--spacing-6` | `.p-6`, `.gap-6`, `.mb-6` | 24px |
+| `2rem` | `--spacing-8` | `.p-8`, `.gap-8`, `.mb-8` | 32px |
 
 ---
 
