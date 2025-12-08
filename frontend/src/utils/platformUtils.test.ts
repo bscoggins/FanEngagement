@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { isMacPlatform } from './platformUtils';
 
 describe('platformUtils', () => {
   describe('isMacPlatform', () => {
     // Store original navigator properties
     const originalNavigator = global.navigator;
-    const originalUserAgent = navigator.userAgent;
 
     afterEach(() => {
       // Restore original navigator

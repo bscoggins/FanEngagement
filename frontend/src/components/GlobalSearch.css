@@ -103,16 +103,24 @@
   gap: 0.5rem;
 }
 
-.global-search-spinner {
-  animation: spin 1s linear infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .global-search-spinner {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+@media (prefers-reduced-motion: reduce) {
+  .global-search-spinner {
+    animation: none;
   }
 }
 
