@@ -12,7 +12,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-header-dark);
   gap: var(--spacing-4);
 }
 
@@ -133,7 +133,7 @@
   color: var(--color-text-inverse);
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sidebar);
 }
 
 .admin-nav {

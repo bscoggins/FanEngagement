@@ -26,7 +26,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -48,7 +48,7 @@ jobs:
           docker images solana-adapter:test
       
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'solana-adapter:test'
           format: 'sarif'
@@ -59,13 +59,13 @@ jobs:
           vuln-type: 'os'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-solana-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'solana-adapter:test'
           format: 'table'
@@ -156,7 +156,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -178,7 +178,7 @@ jobs:
           docker images polygon-adapter:test
       
       - name: Run Trivy security scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'polygon-adapter:test'
           format: 'sarif'
@@ -189,13 +189,13 @@ jobs:
           vuln-type: 'os'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-polygon-results.sarif'
       
       - name: Fail on HIGH or CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: 'polygon-adapter:test'
           format: 'table'
