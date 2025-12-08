@@ -509,6 +509,7 @@ The design system includes utility classes for common spacing patterns:
 .p-2  /* padding: 8px */
 .p-3  /* padding: 12px */
 .p-4  /* padding: 16px */
+.p-5  /* padding: 20px */
 .p-6  /* padding: 24px */
 .p-8  /* padding: 32px */
 
