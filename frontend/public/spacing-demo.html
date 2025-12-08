@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spacing Tokens Demo - FanEngagement</title>
+  <link rel="stylesheet" href="../src/index.css">
+  <link rel="stylesheet" href="../src/components/Table.css">
+  <style>
+    body {
+      padding: var(--spacing-8);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .demo-section {
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--spacing-6);
+      margin-bottom: var(--spacing-8);
+    }
+    
+    .demo-box {
+      background-color: var(--color-primary-100);
+      border: 2px solid var(--color-primary-600);
+      border-radius: var(--radius-sm);
+      padding: var(--spacing-3);
+      display: inline-block;
+    }
+    
+    .spacing-visual {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--spacing-3);
+    }
+    
+    .spacing-label {
+      width: 150px;
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .spacing-bar {
+      height: 24px;
+      background-color: var(--color-primary-600);
+      border-radius: var(--radius-sm);
+      transition: width var(--duration-normal) var(--ease-out);
+    }
+  </style>
+</head>
+<body>
+  <h1 class="mb-4">Spacing Tokens Demo</h1>
+  <p class="mb-8 text-body-large">Demonstrating the spacing system with tokens, utility classes, and visual examples.</p>
+
+  <!-- Spacing Scale Visualization -->
+  <div class="demo-section">
+    <h2 class="mb-4">Spacing Scale Visualization</h2>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-1 (4px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-1);"></div>
+    </div>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-2 (8px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-2);"></div>
+    </div>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-3 (12px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-3);"></div>
+    </div>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-4 (16px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-4);"></div>
+    </div>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-6 (24px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-6);"></div>
+    </div>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-8 (32px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-8);"></div>
+    </div>
+    <div class="spacing-visual">
+      <span class="spacing-label">--spacing-12 (48px)</span>
+      <div class="spacing-bar" style="width: var(--spacing-12);"></div>
+    </div>
+  </div>
+
+  <!-- Gap Utilities -->
+  <div class="demo-section">
+    <h2 class="mb-4">Gap Utilities</h2>
+    <p class="mb-4 text-body-small">Flexbox gap utilities for consistent spacing between elements.</p>
+    
+    <h3 class="mb-3">gap-2 (8px)</h3>
+    <div class="gap-2 mb-6" style="display: flex;">
+      <div class="demo-box">Box 1</div>
+      <div class="demo-box">Box 2</div>
+      <div class="demo-box">Box 3</div>
+    </div>
+
+    <h3 class="mb-3">gap-4 (16px)</h3>
+    <div class="gap-4 mb-6" style="display: flex;">
+      <div class="demo-box">Box 1</div>
+      <div class="demo-box">Box 2</div>
+      <div class="demo-box">Box 3</div>
+    </div>
+
+    <h3 class="mb-3">gap-6 (24px)</h3>
+    <div class="gap-6" style="display: flex;">
+      <div class="demo-box">Box 1</div>
+      <div class="demo-box">Box 2</div>
+      <div class="demo-box">Box 3</div>
+    </div>
+  </div>
+
+  <!-- Padding Utilities -->
+  <div class="demo-section">
+    <h2 class="mb-4">Padding Utilities</h2>
+    
+    <h3 class="mb-3">p-2 (8px all sides)</h3>
+    <div class="p-2 mb-4" style="background-color: var(--color-neutral-100); display: inline-block;">
+      <div class="demo-box">Content</div>
+    </div>
+
+    <h3 class="mb-3">p-6 (24px all sides)</h3>
+    <div class="p-6 mb-4" style="background-color: var(--color-neutral-100); display: inline-block;">
+      <div class="demo-box">Content</div>
+    </div>
+
+    <h3 class="mb-3">px-6 py-3 (24px horizontal, 12px vertical)</h3>
+    <div class="px-6 py-3" style="background-color: var(--color-neutral-100); display: inline-block;">
+      <div class="demo-box">Content</div>
+    </div>
+  </div>
+
+  <!-- Margin Bottom Utilities -->
+  <div class="demo-section">
+    <h2 class="mb-4">Margin Bottom Utilities (Vertical Rhythm)</h2>
+    <div style="border-left: 3px solid var(--color-primary-600); padding-left: var(--spacing-4);">
+      <p class="mb-2">Paragraph with mb-2 (8px)</p>
+      <p class="mb-4">Paragraph with mb-4 (16px)</p>
+      <p class="mb-6">Paragraph with mb-6 (24px)</p>
+      <p class="mb-8">Paragraph with mb-8 (32px)</p>
+      <p>Final paragraph (no margin)</p>
+    </div>
+  </div>
+
+  <!-- Table Example -->
+  <div class="demo-section">
+    <h2 class="mb-4">Token-based Table Styling</h2>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th class="text-center">Count</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Item 1</td>
+            <td><span class="status-badge success">Active</span></td>
+            <td class="text-center">42</td>
+            <td class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">View</button>
+                <button class="table-action-button secondary">Edit</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Item 2</td>
+            <td><span class="status-badge warning">Pending</span></td>
+            <td class="text-center">18</td>
+            <td class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">View</button>
+                <button class="table-action-button secondary">Edit</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Item 3</td>
+            <td><span class="status-badge error">Failed</span></td>
+            <td class="text-center">5</td>
+            <td class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">View</button>
+                <button class="table-action-button danger">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Card Example -->
+  <div class="demo-section">
+    <h2 class="mb-4">Consistent Card Layouts</h2>
+    <div class="gap-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+      <div class="p-6" style="background-color: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h3 class="mb-3">Card Title 1</h3>
+        <p class="mb-4 text-body-small">Card content with consistent spacing using utility classes.</p>
+        <div class="gap-3" style="display: flex;">
+          <button style="padding: var(--spacing-2) var(--spacing-4); background-color: var(--color-primary-600); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer;">Action</button>
+        </div>
+      </div>
+      
+      <div class="p-6" style="background-color: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h3 class="mb-3">Card Title 2</h3>
+        <p class="mb-4 text-body-small">Same spacing, consistent rhythm across all cards.</p>
+        <div class="gap-3" style="display: flex;">
+          <button style="padding: var(--spacing-2) var(--spacing-4); background-color: var(--color-primary-600); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer;">Action</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mb-8">
+    <p class="text-caption">All spacing uses design tokens defined in index.css</p>
+  </footer>
+</body>
+</html>
