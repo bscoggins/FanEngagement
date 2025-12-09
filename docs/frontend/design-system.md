@@ -11,7 +11,7 @@
 **[View Interactive Token Showcase →](design-tokens-showcase.html)**
 
 For a visual, interactive reference of all design tokens, open the **design-tokens-showcase.html** file in your browser. This live demo includes:
-- Color swatches with hex/HSL values
+- Color swatches with HSL values
 - Typography scale with live examples
 - Spacing scale with visual measurements
 - Shadow elevation demonstrations
