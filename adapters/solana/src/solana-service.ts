@@ -24,7 +24,7 @@ import {
   lastBlockNumber,
 } from './metrics.js';
 
-const serializeError = (error: unknown) => {
+export const serializeError = (error: unknown) => {
   if (error instanceof Error) {
     return {
       message: error.message,

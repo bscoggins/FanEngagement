@@ -1,17 +1,6 @@
 import { describe, test, expect } from '@jest/globals';
 import { PublicKey } from '@solana/web3.js';
-
-// Helper function to test - copied from solana-service.ts
-const serializeError = (error: unknown) => {
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    };
-  }
-  return { message: String(error) };
-};
+import { serializeError } from '../src/solana-service.js';
 
 describe('Solana Adapter Unit Tests', () => {
   describe('serializeError', () => {
