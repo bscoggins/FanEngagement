@@ -664,6 +664,8 @@ export class PolygonService {
     if (message.includes('gas')) {
       throw new TransactionError('Gas estimation or execution error', serialized.message);
     }
+    // Re-throw as generic RpcError if no specific pattern matches
+    throw new RpcError('Blockchain operation failed', serialized.message);
   }
 
   /**
