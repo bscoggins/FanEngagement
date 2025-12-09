@@ -248,6 +248,17 @@ RETRY_BASE_DELAY_MS=1000
 
 ```bash
 # From FanEngagement root directory
+
+# ⚠️ NOTE: When using Docker Compose, you must provide your Solana keypair as a JSON array
+# in the SOLANA_PRIVATE_KEY environment variable (not as a file path).
+
+# First, convert your keypair file to a JSON array:
+cat ~/.fanengagement/keys/solana-devnet-keypair.json
+
+# Export the keypair array (Linux/macOS):
+export SOLANA_PRIVATE_KEY='[1,2,3,4,...]'  # Replace with your actual keypair array
+
+# Now start the adapter
 docker-compose up -d solana-adapter
 
 # View logs
@@ -336,9 +347,11 @@ curl -X POST http://localhost:3001/v1/adapter/organizations \
   "timestamp": "2024-12-09T00:00:00.000Z"
 }
 
+# Save the transactionId for verification
+export SOLANA_TX_ID="5j8s9KfGpnVCwmAjWBfnN4mKR8sT3pQwX9HvLyE2dNkM..."
+
 # Test 2: Verify transaction on explorer
-# Copy transactionId and visit:
-# https://explorer.solana.com/tx/<transactionId>?cluster=devnet
+# Visit: https://explorer.solana.com/tx/${SOLANA_TX_ID}?cluster=devnet
 ```
 
 ---
@@ -640,15 +653,17 @@ curl -X POST http://localhost:3002/v1/adapter/organizations \
 
 # Expected response:
 {
-  "transactionId": "0x5a3b...",
-  "accountAddress": "0x9876...",
+  "transactionHash": "0x5a3b...",
+  "contractAddress": "0x9876...",
+  "gasUsed": 21000,
   "status": "confirmed",
+  "network": "amoy",
   "timestamp": "2024-12-09T00:00:00.000Z"
 }
 
 # Test 2: Verify transaction on explorer
-# Copy transactionId and visit:
-# https://amoy.polygonscan.com/tx/<transactionId>
+# Copy transactionHash and visit:
+# https://amoy.polygonscan.com/tx/<transactionHash>
 ```
 
 ---
@@ -734,9 +749,16 @@ docker-compose up -d solana-adapter polygon-adapter
 **Kubernetes (ConfigMaps and Secrets):**
 
 ```bash
-# Create from .env file
-kubectl create configmap solana-adapter-config --from-env-file=.env -n fanengagement
-kubectl create secret generic solana-adapter-secret --from-env-file=.env -n fanengagement
+# ⚠️ SECURITY: DO NOT store secrets in ConfigMaps!
+# Split your .env into two files:
+#   - .env.config   (non-secret config only: PORT, LOG_LEVEL, NETWORK, RPC_URL, etc.)
+#   - .env.secrets  (secrets only: API_KEY, SOLANA_PRIVATE_KEY, POLYGON_PRIVATE_KEY)
+
+# Create ConfigMap from non-secret config
+kubectl create configmap solana-adapter-config --from-env-file=.env.config -n fanengagement
+
+# Create Secret from secrets only
+kubectl create secret generic solana-adapter-secret --from-env-file=.env.secrets -n fanengagement
 ```
 
 ### 5.4 Network-Specific Configurations
@@ -807,7 +829,7 @@ curl -X POST http://localhost:3001/v1/adapter/organizations \
 # - timestamp: ISO 8601 format
 
 # Save transaction ID for next test
-export SOLANA_TX_ID="<transactionId from response>"
+export SOLANA_TX_ID="<copy transactionId from response>"
 ```
 
 **Test 3: Transaction Lookup**
@@ -888,26 +910,29 @@ curl -X POST http://localhost:3002/v1/adapter/organizations \
   }' | jq
 
 # ✅ Pass criteria:
-# - transactionId: Hex string starting with 0x (66 chars)
-# - accountAddress: Ethereum address starting with 0x (42 chars)
+# - transactionHash: Hex string starting with 0x (66 chars)
+# - contractAddress: Ethereum address starting with 0x (42 chars)
+# - gasUsed: Positive integer
 # - status: "confirmed"
+# - network: "amoy"
 # - timestamp: ISO 8601 format
 
-# Save transaction ID for next test
-export POLYGON_TX_ID="<transactionId from response>"
+# Save transaction hash for next test
+export POLYGON_TX_HASH="<copy transactionHash from response>"
 ```
 
 **Test 3: Transaction Lookup**
 
 ```bash
-curl "http://localhost:3002/v1/adapter/transactions/${POLYGON_TX_ID}" \
+curl "http://localhost:3002/v1/adapter/transactions/${POLYGON_TX_HASH}" \
   -H "X-Adapter-API-Key: dev-api-key-change-in-production" | jq
 
 # ✅ Pass criteria:
-# - transactionId: Matches $POLYGON_TX_ID
+# - transactionHash: Matches $POLYGON_TX_HASH
 # - status: "confirmed"
 # - confirmations: >= 6
 # - blockNumber: > 0
+# - gasUsed: Positive integer
 # - explorerUrl: Contains amoy.polygonscan.com
 ```
 
@@ -915,13 +940,13 @@ curl "http://localhost:3002/v1/adapter/transactions/${POLYGON_TX_ID}" \
 
 ```bash
 # Visit PolygonScan Amoy
-echo "https://amoy.polygonscan.com/tx/${POLYGON_TX_ID}"
+echo "https://amoy.polygonscan.com/tx/${POLYGON_TX_HASH}"
 
 # Manual verification:
 # ✅ Transaction found
 # ✅ Status: Success (green checkmark)
 # ✅ Block number matches adapter response
-# ✅ Transaction hash matches transaction ID
+# ✅ Transaction hash matches the value from response
 # ✅ From address matches wallet address from health check
 ```
 
@@ -937,12 +962,13 @@ curl -X POST http://localhost:3002/v1/adapter/share-types \
     "name": "Voting Token",
     "symbol": "VOTE",
     "decimals": 18,
-    "maxSupply": 1000000
+    "maxSupply": "1000000"
   }' | jq
 
 # ✅ Pass criteria:
-# - transactionId: Valid hex string (0x...)
+# - transactionHash: Valid hex string (0x...)
 # - tokenAddress: Valid Ethereum address (0x...)
+# - gasUsed: Positive integer
 # - status: "confirmed"
 ```
 
@@ -1407,7 +1433,7 @@ docker-compose config
   "type": "https://fanengagement.io/errors/unauthorized",
   "title": "Unauthorized",
   "status": 401,
-  "detail": "Missing or invalid API key"
+  "detail": "Missing API key. Provide X-Adapter-API-Key header or Authorization: Bearer <token>"
 }
 ```
 
