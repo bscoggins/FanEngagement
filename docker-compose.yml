@@ -59,8 +59,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    networks:
-      - solana-adapter-network
   solana-adapter:
     build:
       context: ./adapters/solana
@@ -88,8 +86,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - solana-adapter-network
   polygon-adapter:
     build:
       context: ./adapters/polygon
@@ -116,8 +112,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - polygon-adapter-network
   tests:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     working_dir: /src/backend
@@ -173,9 +167,3 @@ volumes:
   db_data:
   playwright-cache:
   frontend-node_modules:
-
-networks:
-  solana-adapter-network:
-    driver: bridge
-  polygon-adapter-network:
-    driver: bridge

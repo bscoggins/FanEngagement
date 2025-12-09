@@ -7,8 +7,15 @@ FRONTEND_URL="http://localhost:3000"
 
 cd "$ROOT_DIR"
 
-# Always load compose with our shared dev env vars so CI and local runs get the same secrets
-COMPOSE_CMD=(docker compose --env-file .env.development)
+# Always load compose with our shared dev env vars when the file exists locally.
+# In CI the workflow sets the env vars directly, so fall back to default compose invocation.
+if [[ -f .env.development ]]; then
+  echo "Using .env.development for docker compose overrides"
+  COMPOSE_CMD=(docker compose --env-file .env.development)
+else
+  echo "Warning: .env.development not found; relying on process env vars"
+  COMPOSE_CMD=(docker compose)
+fi
 
 echo "Starting database, API, and frontend via Docker Compose (rebuilding to pick up latest frontend/UI changes)..."
 "${COMPOSE_CMD[@]}" up -d --build db api frontend
