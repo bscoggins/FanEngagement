@@ -77,7 +77,7 @@ services:
       SOLANA_RPC_URL: https://api.devnet.solana.com
       SOLANA_COMMITMENT: confirmed
       SOLANA_CONFIRM_TIMEOUT: 30000
-      SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY}
+      SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY:-}
       API_KEY: ${API_KEY:-dev-api-key-change-in-production}
       REQUIRE_AUTH: "true"
       RETRY_MAX_ATTEMPTS: 4
