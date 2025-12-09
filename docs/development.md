@@ -95,7 +95,7 @@ solana balance "$(solana-keygen pubkey solana-devnet-keypair.json)" \
   --url https://api.devnet.solana.com
 
 # 4) Store the private key securely for development
-echo "SOLANA_PRIVATE_KEY=$(cat solana-devnet-keypair.json)" >> .env.development
+echo "SOLANA_PRIVATE_KEY='$(cat solana-devnet-keypair.json)'" >> .env.development
 
 # 5) Verify .env.development is in .gitignore (it should already be)
 git check-ignore .env.development
