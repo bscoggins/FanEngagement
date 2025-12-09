@@ -1,8 +1,22 @@
 # FanEngagement Design System
 
 **Version:** 1.0  
-**Last Updated:** 2025-12-08  
+**Last Updated:** 2025-12-09  
 **Status:** Authoritative Reference
+
+---
+
+## 🎨 Interactive Token Showcase
+
+**[View Interactive Token Showcase →](design-tokens-showcase.html)**
+
+For a visual, interactive reference of all design tokens, open the **design-tokens-showcase.html** file in your browser. This live demo includes:
+- Color swatches with hex/HSL values
+- Typography scale with live examples
+- Spacing scale with visual measurements
+- Shadow elevation demonstrations
+- Border radius examples
+- Interactive component patterns
 
 ---
 
@@ -19,6 +33,53 @@
 9. [Accessibility](#accessibility)
 10. [Usage Guidelines](#usage-guidelines)
 11. [Dark Mode Foundation](#dark-mode-foundation)
+
+---
+
+## Quick Start Guide
+
+### For Developers: How to Use Tokens
+
+**In CSS/Component Styles:**
+```css
+.my-component {
+  /* Colors */
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  
+  /* Typography */
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  
+  /* Spacing */
+  padding: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  gap: var(--spacing-3);
+  
+  /* Shadows & Borders */
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
+  
+  /* Transitions */
+  transition: all var(--duration-normal) var(--ease-out);
+}
+```
+
+**Using Utility Classes (index.css):**
+```html
+<div class="p-6 mb-4 gap-3">
+  <h2 class="mb-3">Title</h2>
+  <p class="text-body mb-4">Content</p>
+</div>
+```
+
+**Finding the Right Token:**
+1. **Colors**: Use semantic names (`--color-text-primary`, `--color-success-600`)
+2. **Typography**: Start with `--font-size-base` (16px) and adjust up/down
+3. **Spacing**: Use multiples of 4px (`--spacing-2` = 8px, `--spacing-4` = 16px)
+4. **Shadows**: `--shadow-sm` for buttons, `--shadow-md` for cards, `--shadow-lg` for modals
+
+**🎨 [View All Tokens Interactively →](design-tokens-showcase.html)**
 
 ---
 
@@ -44,9 +105,31 @@ The design system emphasizes clarity, readability, and a professional aesthetic 
 
 ## Color System
 
+### Visual Color Reference
+
+**For interactive color swatches, see [design-tokens-showcase.html](design-tokens-showcase.html)**
+
+Below is a text-based reference. For the best visual experience with actual color previews, click on backgrounds, and interactive examples, open the showcase HTML file in your browser.
+
 ### Brand Colors
 
 The primary brand color is blue, used for primary actions, links, and brand emphasis.
+
+**Visual Palette:**
+```
+████ primary-50  - Very light blue backgrounds
+████ primary-100 - Light blue hover backgrounds  
+████ primary-200 - Light blue fills
+████ primary-300 - Light accents
+████ primary-400 - Medium blue
+████ primary-500 - Main interactive blue
+████ primary-600 - #007bff MAIN BRAND COLOR ⭐
+████ primary-700 - #0056b3 Hover/Active states
+████ primary-800 - Dark blue emphasis
+████ primary-900 - Very dark blue
+```
+
+**Token Reference:**
 
 ```css
 --color-primary-50: hsl(210, 100%, 97%)   /* Very light blue - backgrounds */
@@ -71,6 +154,17 @@ The primary brand color is blue, used for primary actions, links, and brand emph
 Semantic colors convey meaning and state in the UI.
 
 #### Success (Green)
+
+**Visual Palette:**
+```
+████ success-50  - Light green background
+████ success-100 - Very light green
+████ success-500 - Main success color ✓
+████ success-600 - Hover state
+████ success-700 - Active state
+```
+
+**Token Reference:**
 ```css
 --color-success-50: hsl(142, 70%, 97%)   /* Light green background */
 --color-success-100: hsl(142, 70%, 92%)
@@ -82,6 +176,17 @@ Semantic colors convey meaning and state in the UI.
 **Usage:** Successful actions, positive feedback, confirmation messages
 
 #### Warning (Amber)
+
+**Visual Palette:**
+```
+████ warning-50  - Light amber background
+████ warning-100 - Very light amber
+████ warning-500 - Main warning color ⚠️
+████ warning-600 - Hover state
+████ warning-700 - Active state
+```
+
+**Token Reference:**
 ```css
 --color-warning-50: hsl(38, 90%, 97%)    /* Light amber background */
 --color-warning-100: hsl(38, 90%, 92%)
@@ -93,6 +198,17 @@ Semantic colors convey meaning and state in the UI.
 **Usage:** Caution messages, non-critical issues, warnings
 
 #### Error (Red)
+
+**Visual Palette:**
+```
+████ error-50  - Light red background
+████ error-100 - Very light red
+████ error-500 - Main error color ❌
+████ error-600 - Hover state
+████ error-700 - Active state
+```
+
+**Token Reference:**
 ```css
 --color-error-50: hsl(0, 70%, 97%)       /* Light red background */
 --color-error-100: hsl(0, 70%, 92%)
@@ -104,6 +220,17 @@ Semantic colors convey meaning and state in the UI.
 **Usage:** Errors, destructive actions, validation failures
 
 #### Info (Blue)
+
+**Visual Palette:**
+```
+████ info-50  - Light blue background
+████ info-100 - Very light blue
+████ info-500 - Main info color ℹ️
+████ info-600 - Hover state
+████ info-700 - Active state
+```
+
+**Token Reference:**
 ```css
 --color-info-50: hsl(210, 90%, 97%)      /* Light blue background */
 --color-info-100: hsl(210, 90%, 92%)
@@ -117,6 +244,22 @@ Semantic colors convey meaning and state in the UI.
 ### Neutral Scale
 
 A 10-step grayscale for backgrounds, borders, and text.
+
+**Visual Palette:**
+```
+██ neutral-50  - #fafafa Very light gray
+██ neutral-100 - #f5f5f5 Light gray backgrounds
+██ neutral-200 - #e6e6e6 Subtle borders
+██ neutral-300 - #cccccc Default borders
+██ neutral-400 - #999999 Disabled text
+██ neutral-500 - #808080 Mid-gray
+██ neutral-600 - #666666 Secondary text
+██ neutral-700 - #333333 Primary text ⭐
+██ neutral-800 - #262626 Dark surfaces
+██ neutral-900 - #1a1a1a Very dark surfaces
+```
+
+**Token Reference:**
 
 ```css
 --color-neutral-50: hsl(0, 0%, 98%)      /* #fafafa - Very light gray */
