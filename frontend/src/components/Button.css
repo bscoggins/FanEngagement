@@ -204,6 +204,7 @@
   border-color: var(--color-error-700);
   box-shadow: var(--shadow-xs);
   transform: translateY(1px);
+  filter: brightness(0.9);
 }
 
 /* ===== Button Icon ===== */
