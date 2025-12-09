@@ -1981,7 +1981,7 @@ All blockchain adapters must implement these endpoints:
 **Acceptance Criteria:**
 
 - [ ] Create `docs/blockchain/adapter-testing-playbook.md` that covers local, devnet, and Amoy workflows
-- [ ] Document how to generate/local-store Solana keypairs (`solana-keygen new`) and Polygon private keys (OpenSSL/Node scripts), including rotation guidance
+- [ ] Document how to generate and locally store Solana keypairs (`solana-keygen new`) and Polygon private keys (OpenSSL/Node scripts), including rotation guidance
 - [ ] Include instructions for funding Solana devnet wallets (`solana config set --url https://api.devnet.solana.com` + `solana airdrop 2`) and obtaining Amoy/Mumbai MATIC via the Polygon faucet
 - [ ] Describe environment variable mapping for each network (`SOLANA_PRIVATE_KEY`, `POLYGON_PRIVATE_KEY`, RPC URLs, API keys) and how to load them via `.env.*`
 - [ ] Provide smoke-test steps for each adapter: health check, `/v1/adapter/organizations`, transaction lookup, plus explorer links (Solana Devnet Explorer, Amoy Polygonscan)
