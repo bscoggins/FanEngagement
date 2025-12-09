@@ -483,7 +483,7 @@ export class SolanaService {
         rpcStatus: 'disconnected',
         network: config.solana.network,
         keypairValid: true,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: serializeError(error).message,
       };
     }
   }
