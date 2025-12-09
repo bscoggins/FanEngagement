@@ -160,9 +160,11 @@ describe('UserCreatePage', () => {
     const submitButton = screen.getByRole('button', { name: /create user/i });
     await user.click(submitButton);
     
-    // Button should show loading state
+    // Button should be disabled and show aria-busy while loading
     await waitFor(() => {
-      expect(screen.getByText(/creating/i)).toBeInTheDocument();
+      const button = screen.getByRole('button', { name: /create user/i });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('aria-busy', 'true');
     });
   });
 

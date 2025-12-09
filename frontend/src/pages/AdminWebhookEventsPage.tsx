@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Modal } from '../components/Modal';
+import { Button } from '../components/Button';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
 const getStatusBadgeStyle = (status: OutboundEventStatus): React.CSSProperties => {
@@ -318,36 +319,22 @@ export const AdminWebhookEventsPage: React.FC = () => {
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button
+                      <Button
                         onClick={() => handleViewDetails(event.id)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#0066cc',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                        }}
+                        size="sm"
+                        variant="primary"
                       >
                         View
-                      </button>
+                      </Button>
                       {event.status === 'Failed' && (
-                        <button
+                        <Button
                           onClick={() => handleRetry(event.id)}
-                          disabled={retryingEventId === event.id}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: retryingEventId === event.id ? '#ccc' : '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: retryingEventId === event.id ? 'not-allowed' : 'pointer',
-                            fontSize: '0.875rem',
-                          }}
+                          isLoading={retryingEventId === event.id}
+                          size="sm"
+                          variant="secondary"
                         >
-                          {retryingEventId === event.id ? 'Retrying...' : 'Retry'}
-                        </button>
+                          Retry
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -463,34 +450,20 @@ export const AdminWebhookEventsPage: React.FC = () => {
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               {selectedEvent.status === 'Failed' && (
-                <button
+                <Button
                   onClick={handleRetryFromModal}
-                  disabled={retryingEventId === selectedEvent.id}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: retryingEventId === selectedEvent.id ? '#ccc' : '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: retryingEventId === selectedEvent.id ? 'not-allowed' : 'pointer',
-                  }}
+                  isLoading={retryingEventId === selectedEvent.id}
+                  variant="secondary"
                 >
-                  {retryingEventId === selectedEvent.id ? 'Retrying...' : 'Retry Event'}
-                </button>
+                  Retry Event
+                </Button>
               )}
-              <button
+              <Button
                 onClick={handleCloseModal}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                variant="ghost"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </>
         ) : null}

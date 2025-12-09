@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import type { CreateUserRequest } from '../types/api';
 import { InfoBox } from '../components/InfoBox';
+import { Button } from '../components/Button';
 
 export const UserCreatePage: React.FC = () => {
   const navigate = useNavigate();
@@ -138,35 +139,17 @@ export const UserCreatePage: React.FC = () => {
         )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: isLoading ? '#ccc' : '#0066cc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-            }}
+            variant="primary"
+            isLoading={isLoading}
           >
-            {isLoading ? 'Creating...' : 'Create User'}
-          </button>
-          <Link
-            to="/users"
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: '#fff',
-              color: '#333',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Cancel
+            Create User
+          </Button>
+          <Link to="/users">
+            <Button variant="secondary" type="button">
+              Cancel
+            </Button>
           </Link>
         </div>
       </form>

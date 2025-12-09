@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useRoleBasedNavigation } from '../hooks/useRoleBasedNavigation';
+import { Button } from '../components/Button';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -107,22 +108,15 @@ export const LoginPage: React.FC = () => {
               {error}
             </div>
           )}
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            style={{
-              padding: '0.75rem',
-              fontSize: '1rem',
-              backgroundColor: isLoading ? '#ccc' : '#0066cc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-            }}
+            isLoading={isLoading}
+            variant="primary"
+            fullWidth
           >
-            {isLoading ? 'Verifying...' : 'Verify Code'}
-          </button>
-          <button
+            Verify Code
+          </Button>
+          <Button
             type="button"
             onClick={() => {
               setMfaRequired(false);
@@ -130,18 +124,11 @@ export const LoginPage: React.FC = () => {
               setMfaCode('');
               setError('');
             }}
-            style={{
-              padding: '0.75rem',
-              fontSize: '1rem',
-              backgroundColor: '#fff',
-              color: '#666',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            variant="secondary"
+            fullWidth
           >
             Back to Login
-          </button>
+          </Button>
         </form>
       </div>
     );
@@ -198,21 +185,14 @@ export const LoginPage: React.FC = () => {
             {error}
           </div>
         )}
-        <button
+        <Button
           type="submit"
-          disabled={isLoading}
-          style={{
-            padding: '0.75rem',
-            fontSize: '1rem',
-            backgroundColor: isLoading ? '#ccc' : '#0066cc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-          }}
+          isLoading={isLoading}
+          variant="primary"
+          fullWidth
         >
-          {isLoading ? 'Logging in...' : 'Log In'}
-        </button>
+          Log In
+        </Button>
       </form>
     </div>
   );

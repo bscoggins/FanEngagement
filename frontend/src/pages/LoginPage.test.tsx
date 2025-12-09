@@ -275,9 +275,11 @@ describe('LoginPage', () => {
     const submitButton = screen.getByRole('button', { name: /log in/i });
     await user.click(submitButton);
 
-    // Button should show loading state
+    // Button should be disabled and show aria-busy while loading
     await waitFor(() => {
-      expect(screen.getByText(/logging in/i)).toBeInTheDocument();
+      const button = screen.getByRole('button', { name: /log in/i });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('aria-busy', 'true');
     });
   });
 });
