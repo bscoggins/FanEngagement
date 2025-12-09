@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button Component Showcase - FanEngagement Design System</title>
+  <link rel="stylesheet" href="../src/index.css">
+  <link rel="stylesheet" href="../src/components/Button.css">
+  <style>
+    body {
+      padding: var(--spacing-8);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .showcase-section {
+      margin-bottom: var(--spacing-12);
+    }
+    
+    .showcase-section h2 {
+      margin-bottom: var(--spacing-6);
+      padding-bottom: var(--spacing-3);
+      border-bottom: 2px solid var(--color-border-default);
+      color: var(--color-text-primary);
+    }
+    
+    .showcase-section h3 {
+      margin-top: var(--spacing-6);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-lg);
+    }
+    
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-6);
+      align-items: center;
+    }
+    
+    .button-demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+      padding: var(--spacing-4);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .button-demo-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .code-block {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-inverse);
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      overflow-x: auto;
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .state-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: var(--spacing-6);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .state-table th,
+    .state-table td {
+      padding: var(--spacing-3) var(--spacing-4);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+    
+    .state-table th {
+      background: var(--color-neutral-100);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+    }
+    
+    .state-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .interactive-demo {
+      background: var(--color-surface);
+      padding: var(--spacing-6);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    @keyframes btn-spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    
+    @keyframes btn-dash {
+      0% {
+        stroke-dashoffset: 28;
+      }
+      50% {
+        stroke-dashoffset: 7;
+        transform: rotate(135deg);
+      }
+      100% {
+        stroke-dashoffset: 28;
+        transform: rotate(450deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Button Component Showcase</h1>
+    <p style="font-size: var(--font-size-lg); color: var(--color-text-secondary); margin-bottom: var(--spacing-8);">
+      Complete reference for the FanEngagement Button component with all variants, sizes, states, and usage examples.
+    </p>
+  </header>
+
+  <!-- Variants Section -->
+  <section class="showcase-section">
+    <h2>🎨 Button Variants</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Five distinct visual styles for different semantic purposes.
+    </p>
+    
+    <div class="button-grid">
+      <div class="button-demo">
+        <span class="button-demo-label">Primary</span>
+        <button class="btn btn--primary btn--md">Primary Button</button>
+      </div>
+      <div class="button-demo">
+        <span class="button-demo-label">Secondary</span>
+        <button class="btn btn--secondary btn--md">Secondary Button</button>
+      </div>
+      <div class="button-demo">
+        <span class="button-demo-label">Outline</span>
+        <button class="btn btn--outline btn--md">Outline Button</button>
+      </div>
+      <div class="button-demo">
+        <span class="button-demo-label">Ghost</span>
+        <button class="btn btn--ghost btn--md">Ghost Button</button>
+      </div>
+      <div class="button-demo">
+        <span class="button-demo-label">Danger</span>
+        <button class="btn btn--danger btn--md">Danger Button</button>
+      </div>
+    </div>
+    
+    <div class="code-block">&lt;Button variant="primary"&gt;Primary&lt;/Button&gt;
+&lt;Button variant="secondary"&gt;Secondary&lt;/Button&gt;
+&lt;Button variant="outline"&gt;Outline&lt;/Button&gt;
+&lt;Button variant="ghost"&gt;Ghost&lt;/Button&gt;
+&lt;Button variant="danger"&gt;Danger&lt;/Button&gt;</div>
+  </section>
+
+  <!-- Sizes Section -->
+  <section class="showcase-section">
+    <h2>📏 Button Sizes</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Five size options from extra small to extra large.
+    </p>
+    
+    <div class="button-row">
+      <button class="btn btn--primary btn--xs">Extra Small</button>
+      <button class="btn btn--primary btn--sm">Small</button>
+      <button class="btn btn--primary btn--md">Medium (Default)</button>
+      <button class="btn btn--primary btn--lg">Large</button>
+      <button class="btn btn--primary btn--xl">Extra Large</button>
+    </div>
+    
+    <div class="code-block">&lt;Button size="xs"&gt;Extra Small&lt;/Button&gt;
+&lt;Button size="sm"&gt;Small&lt;/Button&gt;
+&lt;Button size="md"&gt;Medium&lt;/Button&gt;  {/* Default */}
+&lt;Button size="lg"&gt;Large&lt;/Button&gt;
+&lt;Button size="xl"&gt;Extra Large&lt;/Button&gt;</div>
+  </section>
+
+  <!-- States Section -->
+  <section class="showcase-section">
+    <h2>⚡ Button States</h2>
+    
+    <h3>Default State</h3>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md">Default</button>
+      <button class="btn btn--secondary btn--md">Default</button>
+      <button class="btn btn--outline btn--md">Default</button>
+    </div>
+    
+    <h3>Hover State</h3>
+    <p style="margin-bottom: var(--spacing-4); color: var(--color-text-tertiary); font-size: var(--font-size-sm);">
+      Hover over the buttons to see the effect
+    </p>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md">Hover Me</button>
+      <button class="btn btn--secondary btn--md">Hover Me</button>
+      <button class="btn btn--outline btn--md">Hover Me</button>
+    </div>
+    
+    <h3>Disabled State</h3>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md" disabled>Disabled</button>
+      <button class="btn btn--secondary btn--md" disabled>Disabled</button>
+      <button class="btn btn--outline btn--md" disabled>Disabled</button>
+      <button class="btn btn--danger btn--md" disabled>Disabled</button>
+    </div>
+    
+    <h3>Loading State</h3>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md btn--loading" disabled aria-busy="true">
+        <span class="btn__spinner" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="28" stroke-dashoffset="28"/>
+          </svg>
+        </span>
+        <span class="btn__text">Loading...</span>
+      </button>
+      <button class="btn btn--secondary btn--md btn--loading" disabled aria-busy="true">
+        <span class="btn__spinner" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="28" stroke-dashoffset="28"/>
+          </svg>
+        </span>
+        <span class="btn__text">Processing...</span>
+      </button>
+      <button class="btn btn--danger btn--md btn--loading" disabled aria-busy="true">
+        <span class="btn__spinner" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="28" stroke-dashoffset="28"/>
+          </svg>
+        </span>
+        <span class="btn__text">Deleting...</span>
+      </button>
+    </div>
+    
+    <div class="code-block">&lt;Button disabled&gt;Disabled&lt;/Button&gt;
+&lt;Button isLoading&gt;Loading...&lt;/Button&gt;</div>
+  </section>
+
+  <!-- Icon Support Section -->
+  <section class="showcase-section">
+    <h2>🎯 Icon Support</h2>
+    
+    <h3>Icon on Left (Default)</h3>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md">
+        <span class="btn__icon" aria-hidden="true">✓</span>
+        <span class="btn__text">Save</span>
+      </button>
+      <button class="btn btn--secondary btn--md">
+        <span class="btn__icon" aria-hidden="true">+</span>
+        <span class="btn__text">Add Item</span>
+      </button>
+      <button class="btn btn--outline btn--md">
+        <span class="btn__icon" aria-hidden="true">🔍</span>
+        <span class="btn__text">Search</span>
+      </button>
+    </div>
+    
+    <h3>Icon on Right</h3>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md">
+        <span class="btn__text">Next</span>
+        <span class="btn__icon" aria-hidden="true">→</span>
+      </button>
+      <button class="btn btn--secondary btn--md">
+        <span class="btn__text">Continue</span>
+        <span class="btn__icon" aria-hidden="true">→</span>
+      </button>
+      <button class="btn btn--outline btn--md">
+        <span class="btn__text">External</span>
+        <span class="btn__icon" aria-hidden="true">↗</span>
+      </button>
+    </div>
+    
+    <h3>Icon Only Buttons</h3>
+    <div class="button-row">
+      <button class="btn btn--primary btn--md btn--icon-only" aria-label="Search">
+        <span class="btn__icon" aria-hidden="true">🔍</span>
+        <span class="visually-hidden">Search</span>
+      </button>
+      <button class="btn btn--secondary btn--md btn--icon-only" aria-label="Settings">
+        <span class="btn__icon" aria-hidden="true">⚙</span>
+        <span class="visually-hidden">Settings</span>
+      </button>
+      <button class="btn btn--outline btn--md btn--icon-only" aria-label="Edit">
+        <span class="btn__icon" aria-hidden="true">✏</span>
+        <span class="visually-hidden">Edit</span>
+      </button>
+      <button class="btn btn--ghost btn--md btn--icon-only" aria-label="More options">
+        <span class="btn__icon" aria-hidden="true">⋮</span>
+        <span class="visually-hidden">More options</span>
+      </button>
+      <button class="btn btn--danger btn--md btn--icon-only" aria-label="Delete">
+        <span class="btn__icon" aria-hidden="true">×</span>
+        <span class="visually-hidden">Delete</span>
+      </button>
+    </div>
+    
+    <div class="code-block">&lt;Button icon="✓"&gt;Save&lt;/Button&gt;
+&lt;Button icon="→" iconPosition="right"&gt;Next&lt;/Button&gt;
+&lt;Button icon="🔍" iconOnly aria-label="Search"&gt;Search&lt;/Button&gt;</div>
+  </section>
+
+  <!-- Full Width Section -->
+  <section class="showcase-section">
+    <h2>↔️ Full Width Buttons</h2>
+    <div style="max-width: 400px;">
+      <button class="btn btn--primary btn--md btn--full-width" style="margin-bottom: var(--spacing-3);">
+        Full Width Primary
+      </button>
+      <button class="btn btn--secondary btn--md btn--full-width" style="margin-bottom: var(--spacing-3);">
+        Full Width Secondary
+      </button>
+      <button class="btn btn--outline btn--md btn--full-width">
+        Full Width Outline
+      </button>
+    </div>
+    
+    <div class="code-block">&lt;Button fullWidth&gt;Full Width Button&lt;/Button&gt;</div>
+  </section>
+
+  <!-- Common Patterns Section -->
+  <section class="showcase-section">
+    <h2>📋 Common Usage Patterns</h2>
+    
+    <h3>Form Actions</h3>
+    <div class="interactive-demo">
+      <div style="display: flex; gap: var(--spacing-3);">
+        <button class="btn btn--primary btn--md" type="submit">
+          Submit
+        </button>
+        <button class="btn btn--secondary btn--md" type="button">
+          Cancel
+        </button>
+      </div>
+    </div>
+    
+    <h3>Destructive Actions</h3>
+    <div class="interactive-demo">
+      <div style="display: flex; gap: var(--spacing-3); align-items: center;">
+        <button class="btn btn--danger btn--md">
+          <span class="btn__icon" aria-hidden="true">🗑</span>
+          <span class="btn__text">Delete Account</span>
+        </button>
+        <button class="btn btn--outline btn--md">
+          Cancel
+        </button>
+      </div>
+    </div>
+    
+    <h3>Call-to-Action</h3>
+    <div class="interactive-demo">
+      <button class="btn btn--primary btn--lg">
+        <span class="btn__text">Get Started</span>
+        <span class="btn__icon" aria-hidden="true">→</span>
+      </button>
+    </div>
+    
+    <h3>Toolbar Actions</h3>
+    <div class="interactive-demo">
+      <div style="display: flex; gap: var(--spacing-2);">
+        <button class="btn btn--ghost btn--sm btn--icon-only" aria-label="Bold">
+          <span class="btn__icon" aria-hidden="true">B</span>
+          <span class="visually-hidden">Bold</span>
+        </button>
+        <button class="btn btn--ghost btn--sm btn--icon-only" aria-label="Italic">
+          <span class="btn__icon" aria-hidden="true">I</span>
+          <span class="visually-hidden">Italic</span>
+        </button>
+        <button class="btn btn--ghost btn--sm btn--icon-only" aria-label="Underline">
+          <span class="btn__icon" aria-hidden="true">U</span>
+          <span class="visually-hidden">Underline</span>
+        </button>
+        <div style="width: 1px; background: var(--color-border-default); margin: 0 var(--spacing-1);"></div>
+        <button class="btn btn--ghost btn--sm btn--icon-only" aria-label="Link">
+          <span class="btn__icon" aria-hidden="true">🔗</span>
+          <span class="visually-hidden">Link</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility Section -->
+  <section class="showcase-section">
+    <h2>♿ Accessibility Features</h2>
+    
+    <table class="state-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Implementation</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Focus Ring</strong></td>
+          <td><code>outline: 2px solid</code> on <code>:focus-visible</code></td>
+          <td>Keyboard navigation visibility</td>
+        </tr>
+        <tr>
+          <td><strong>ARIA Labels</strong></td>
+          <td><code>aria-label</code> for icon-only buttons</td>
+          <td>Screen reader context</td>
+        </tr>
+        <tr>
+          <td><strong>Disabled State</strong></td>
+          <td><code>disabled</code> attribute + visual opacity</td>
+          <td>Prevent interaction, communicate state</td>
+        </tr>
+        <tr>
+          <td><strong>Loading State</strong></td>
+          <td><code>aria-busy="true"</code> + spinner animation</td>
+          <td>Communicate asynchronous operation</td>
+        </tr>
+        <tr>
+          <td><strong>Visually Hidden Text</strong></td>
+          <td><code>.visually-hidden</code> class</td>
+          <td>Context for icon-only buttons</td>
+        </tr>
+        <tr>
+          <td><strong>Color Contrast</strong></td>
+          <td>WCAG 2.1 AA compliant token usage</td>
+          <td>Readability for all users</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Design Tokens Section -->
+  <section class="showcase-section">
+    <h2>🎨 Design Tokens Used</h2>
+    
+    <table class="state-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Colors</strong></td>
+          <td>
+            <code>--color-primary-*</code>, 
+            <code>--color-error-*</code>, 
+            <code>--color-neutral-*</code>, 
+            <code>--color-text-*</code>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Spacing</strong></td>
+          <td>
+            <code>--spacing-1</code> to <code>--spacing-6</code> for padding
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Typography</strong></td>
+          <td>
+            <code>--font-size-xs</code> to <code>--font-size-xl</code>,
+            <code>--font-weight-medium</code>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Shadows</strong></td>
+          <td>
+            <code>--shadow-xs</code>, 
+            <code>--shadow-sm</code>, 
+            <code>--shadow-md</code>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Border Radius</strong></td>
+          <td>
+            <code>--radius-sm</code>, 
+            <code>--radius-md</code>, 
+            <code>--radius-lg</code>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Transitions</strong></td>
+          <td>
+            <code>--duration-normal</code>, 
+            <code>--ease-out</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Component API Section -->
+  <section class="showcase-section">
+    <h2>📚 Component API Reference</h2>
+    
+    <div class="code-block">interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
+  iconOnly?: boolean;
+  isLoading?: boolean;
+  fullWidth?: boolean;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  className?: string;
+  testId?: string;
+  children?: React.ReactNode;
+  // ...plus all standard button HTML attributes
+}</div>
+  </section>
+
+  <footer style="margin-top: var(--spacing-12); padding-top: var(--spacing-6); border-top: 1px solid var(--color-border-default); color: var(--color-text-tertiary);">
+    <p>FanEngagement Design System · Button Component v1.0</p>
+    <p style="font-size: var(--font-size-sm);">
+      Built with design tokens for consistency, accessibility, and maintainability.
+    </p>
+  </footer>
+</body>
+</html>
