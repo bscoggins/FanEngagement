@@ -215,7 +215,7 @@ Swagger UI is available at `http://localhost:8080/swagger` for API documentation
 ### Compose Profiles
 
 - `solana` – Brings up the Solana adapter (now pointed at Solana devnet by default) and, only if you ask for it, the local `solana-test-validator`. For routine work run `docker compose --profile solana up -d solana-adapter` to talk to devnet. When you need the deterministic validator, include it in the command: `docker compose --profile solana up -d solana-test-validator solana-adapter` and override `SOLANA_RPC_URL` to `http://solana-test-validator:8899`.
-- **Note:** The `polygon-adapter` service is **not** behind a profile and will start by default with `docker compose up`. This is intentional—unlike Solana which requires profile activation, Polygon testing in the upstream framework works directly with the running service.
+- **Note:** The `polygon-adapter` service now requires a `POLYGON_PRIVATE_KEY` environment variable to be set. If this variable is not configured, `docker compose up` will fail to start the service. Be sure to set `POLYGON_PRIVATE_KEY` in your environment or `.env` file before running `docker compose up`. If you do not need the Polygon adapter, you may wish to comment it out in the compose file or use a profile to avoid startup failures.
 - The backend unit/integration test runner is behind the `tests` profile. Run it on-demand with `docker compose --profile tests run --rm tests` (or `docker compose --profile tests up tests`).
 - The E2E test runner service is behind the `e2e` profile and will not start on a normal `docker compose up`.
 - A long-lived Playwright MCP helper is behind the `tools` profile and is also excluded by default.
