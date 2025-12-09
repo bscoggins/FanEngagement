@@ -496,6 +496,7 @@ export class SolanaService {
   }
 
   private refreshConnection(): void {
+    logger.info('Refreshing Solana RPC connection', { rpcUrl: config.solana.rpcUrl });
     this.connection = this.createConnection();
   }
 
