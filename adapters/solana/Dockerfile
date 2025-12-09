@@ -33,7 +33,7 @@ FROM builder AS test
 RUN npm test -- --testPathIgnorePatterns=integration
 
 # Stage 3: Production
-FROM node:20-alpine
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
