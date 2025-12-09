@@ -18,6 +18,17 @@
 - Looking for color, spacing, typography, or shadow tokens
 - Wondering which tokens to use
 
+### 🎭 **Figma Design Library**
+**[figma-setup-guide.md](./figma-setup-guide.md)** — Step-by-step Figma library creation  
+**[figma-token-mapping.md](./figma-token-mapping.md)** — CSS-to-Figma token reference  
+**[figma-component-specs.md](./figma-component-specs.md)** — Detailed component specifications
+
+**Start here** if you're:
+- Creating the Figma design library
+- Importing design tokens into Figma
+- Building components in Figma
+- Verifying designs match the codebase
+
 ### 🧭 **Navigation Design**
 **[README-navigation-design.md](./README-navigation-design.md)** — Navigation documentation index  
 **[navigation-design-specifications.md](./navigation-design-specifications.md)** — Complete navigation specs
@@ -40,6 +51,15 @@
 | [shadow-tokens-demo.html](./shadow-tokens-demo.html) | Shadow & radius token demonstrations | Designers, developers |
 | [spacing-tokens-demo.png](./spacing-tokens-demo.png) | Visual spacing reference image | Designers |
 
+### Figma Design Library
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [figma-setup-guide.md](./figma-setup-guide.md) | **Step-by-step Figma library setup** | Designers |
+| [figma-token-mapping.md](./figma-token-mapping.md) | **Complete CSS-to-Figma token mapping** | Designers, developers |
+| [figma-component-specs.md](./figma-component-specs.md) | Detailed component specifications for Figma | Designers |
+| [design-tokens.json](./design-tokens.json) | Machine-readable token export for plugins | Designers (automated import) |
+| [design-tokens.csv](./design-tokens.csv) | Spreadsheet-friendly token export | Designers, PMs |
+
 ### Navigation System
 | Document | Purpose | Audience |
 |----------|---------|----------|
@@ -52,9 +72,27 @@
 
 ---
 
-## 🚀 Quick Start for Developers
+## 🚀 Quick Start
 
-### Using Design Tokens
+### For Designers: Building the Figma Library
+
+**1. Start with the setup guide:**
+- Open [figma-setup-guide.md](./figma-setup-guide.md)
+- Follow step-by-step instructions (2-3 hours)
+
+**2. Import tokens:**
+- Use [design-tokens.json](./design-tokens.json) with Figma Tokens plugin (fastest)
+- Or manually create styles using [figma-token-mapping.md](./figma-token-mapping.md)
+
+**3. Build components:**
+- Follow specifications in [figma-component-specs.md](./figma-component-specs.md)
+- Create variants for all states (hover, focus, active, disabled)
+
+**4. Publish and share:**
+- Publish library for team use
+- Share with developers for verification
+
+### For Developers: Using Design Tokens
 
 **1. Find the token you need:**
 - Open [design-tokens-showcase.html](./design-tokens-showcase.html) in your browser
@@ -142,6 +180,12 @@ All documentation in this directory follows these standards:
 ### "I need visual mockups for navigation"
 → [navigation-visual-mockup-guide.md](./navigation-visual-mockup-guide.md) — Visual design reference
 
+### "I need to create a Figma design library"
+→ [figma-setup-guide.md](./figma-setup-guide.md) — Complete setup instructions
+
+### "I need to verify Figma designs match code"
+→ [figma-token-mapping.md](./figma-token-mapping.md) — CSS-to-Figma token reference
+
 ---
 
 ## 📝 Contributing to Documentation
@@ -172,6 +216,7 @@ When adding or updating documentation:
 | Category | Status | Last Updated |
 |----------|--------|--------------|
 | Design System | ✅ Complete | 2025-12-09 |
+| Figma Design Library | ✅ Complete | 2025-12-09 |
 | Navigation Design | ✅ Complete | 2025-12-08 |
 | Keyboard Navigation | ✅ Complete | 2025-12-08 |
 | Interactive Demos | ✅ Complete | 2025-12-09 |
