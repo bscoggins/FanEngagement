@@ -25,6 +25,8 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=fanengagement;Username=fanengagement;Password=fanengagement
       # JWT configuration (override via .env or CI secrets)
+      # BREAKING CHANGE: You must set JWT_SIGNING_KEY in your environment or .env.development file.
+      # The API will fail to start if this variable is not set.
       Jwt__Issuer: FanEngagement
       Jwt__Audience: FanEngagement
       Jwt__SigningKey: ${JWT_SIGNING_KEY}
