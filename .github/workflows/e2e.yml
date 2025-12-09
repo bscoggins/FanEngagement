@@ -24,6 +24,11 @@ jobs:
           docker compose version
 
       - name: Run Playwright E2E via Docker Compose
+        env:
+          JWT_SIGNING_KEY: ufR4PUiX7iBk38CbMQm286N2AmEd9oh5rzNWyoMcO057iY2QHhFB0nyXy4m_RZOO-LRgADWqt2G3dVvHN8WHKg==
+          API_KEY: dev-api-key-change-me
+          SOLANA_PRIVATE_KEY: '[225,65,166,0,235,117,85,232,231,137,243,188,212,253,159,105,243,119,231,160,222,81,15,156,94,123,69,86,9,226,213,217,26,237,154,14,30,218,94,94,18,69,161,167,136,167,154,164,192,193,22,19,151,225,156,204,52,194,8,182,150,99,26,209]'
+          POLYGON_PRIVATE_KEY: 2ee2b4687011ddccfbe5e2c217092919188e67742c193ba7b6184bf2a8b6f394
         run: bash ./scripts/run-e2e.sh
 
       - name: Upload Playwright HTML report
