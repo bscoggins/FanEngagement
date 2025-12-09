@@ -34,8 +34,8 @@ jobs:
       - name: Build Solana adapter image
         uses: docker/build-push-action@v6
         with:
-          context: ./adapters/solana
-          file: ./adapters/solana/Dockerfile
+          context: .
+          file: adapters/solana/Dockerfile
           load: true
           tags: solana-adapter:test
           target: test
@@ -138,8 +138,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: ./adapters/solana
-          file: ./adapters/solana/Dockerfile
+          context: .
+          file: adapters/solana/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -164,8 +164,8 @@ jobs:
       - name: Build Polygon adapter image
         uses: docker/build-push-action@v6
         with:
-          context: ./adapters/polygon
-          file: ./adapters/polygon/Dockerfile
+          context: .
+          file: adapters/polygon/Dockerfile
           load: true
           tags: polygon-adapter:test
           target: test
@@ -268,8 +268,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: ./adapters/polygon
-          file: ./adapters/polygon/Dockerfile
+          context: .
+          file: adapters/polygon/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
