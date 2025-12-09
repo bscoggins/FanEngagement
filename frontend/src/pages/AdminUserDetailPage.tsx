@@ -18,6 +18,7 @@ export const AdminUserDetailPage: React.FC = () => {
     email: '',
     displayName: '',
     role: 'User',
+    mfaRequired: false,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,6 +43,7 @@ export const AdminUserDetailPage: React.FC = () => {
         email: userData.email,
         displayName: userData.displayName,
         role: userData.role,
+        mfaRequired: userData.mfaRequired ?? false,
       });
 
       // Fetch user's memberships with organization details in a single call
@@ -62,8 +64,11 @@ export const AdminUserDetailPage: React.FC = () => {
   }, [userId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const nextValue = type === 'checkbox'
+      ? (e.target as HTMLInputElement).checked
+      : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +79,10 @@ export const AdminUserDetailPage: React.FC = () => {
     setIsSaving(true);
 
     try {
-      await usersApi.update(userId, formData);
+      await usersApi.update(userId, {
+        ...formData,
+        mfaRequired: formData.mfaRequired ?? false,
+      });
       showSuccess('User updated successfully!');
       
       // Refresh user data
@@ -84,6 +92,7 @@ export const AdminUserDetailPage: React.FC = () => {
         email: updatedUser.email,
         displayName: updatedUser.displayName,
         role: updatedUser.role,
+        mfaRequired: updatedUser.mfaRequired ?? false,
       });
     } catch (err) {
       console.error('Failed to update user:', err);
@@ -209,6 +218,26 @@ export const AdminUserDetailPage: React.FC = () => {
                 <option value="User">User</option>
                 <option value="Admin">Admin</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="mfaRequired" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Require MFA for Admin Access
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  id="mfaRequired"
+                  name="mfaRequired"
+                  type="checkbox"
+                  checked={!!formData.mfaRequired}
+                  onChange={handleChange}
+                  style={{ width: '1rem', height: '1rem' }}
+                />
+                <span style={{ fontSize: '0.95rem' }}>Force this user to complete MFA before accessing admin tools.</span>
+              </div>
+              <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
+                Disable if the user should be allowed to sign in without MFA.
+              </small>
             </div>
 
             <div style={{ 

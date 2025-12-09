@@ -106,11 +106,13 @@ test.describe('Top navigation visibility by role', () => {
     await expect(page.getByText('Administration', { exact: true })).toBeVisible();
     
     // Switch to Green Energy United (where alice is a Member)
-    const orgSelector = page.getByTestId('admin-header-org-selector');
+    const dropdownButton = page.getByTestId('admin-header-org-selector-button');
+    await dropdownButton.click();
+    const memberOption = page.getByRole('menuitemradio', { name: /Green Energy United/i });
     const memberOrgPattern = /\/me\/organizations\/[^/]+$/;
     await Promise.all([
       page.waitForURL(memberOrgPattern),
-      orgSelector.selectOption({ label: 'Green Energy United' }),
+      memberOption.click(),
     ]);
     await page.waitForLoadState('networkidle');
     const memberOrgUrl = await page.url();
