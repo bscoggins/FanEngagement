@@ -107,6 +107,7 @@ describe('AdminOrganizationEditPage', () => {
         logoUrl: '',
         primaryColor: '',
         secondaryColor: '',
+        blockchainType: 'None',
       });
     });
     

@@ -7,6 +7,7 @@ import { useActiveOrganization } from '../contexts/OrgContext';
 import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
+import { OrganizationDropdown } from './OrganizationDropdown';
 import './AdminLayout.css';
 
 export const AdminLayout: React.FC = () => {
@@ -63,8 +64,7 @@ export const AdminLayout: React.FC = () => {
   }, [isAdmin, orgMemberships]);
 
   // Handle organization selection change
-  const handleOrgChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const orgId = e.target.value;
+  const handleOrgSelect = useCallback((orgId: string) => {
     const membership = orgMemberships.find(m => m.organizationId === orgId);
     if (membership) {
       setActiveOrg({
@@ -107,7 +107,7 @@ export const AdminLayout: React.FC = () => {
   }, [location.pathname]);
 
   // Check if active org has admin role
-  const activeOrgIsAdmin = activeOrg && isOrgAdminForOrg(activeOrg.id);
+  const activeOrgIsAdmin = !!(activeOrg && isOrgAdminForOrg(activeOrg.id));
 
   // Keyboard shortcuts for org admin navigation (Ctrl+1 through Ctrl+6)
   useEffect(() => {
@@ -236,28 +236,15 @@ export const AdminLayout: React.FC = () => {
                 Org Admin
               </span>
             )}
-            {/* Organization dropdown - only shown for non-platform admins */}
-            {!isGlobalAdmin() && orgMemberships.length > 0 && (
+            {/* Organization dropdown - shown for any user with org memberships */}
+            {orgMemberships.length > 0 && (
               <div className="admin-header-org-selector">
-                <label
-                  htmlFor="admin-header-org-selector"
-                  className="admin-header-org-selector-label"
-                >
-                  Organization:
-                </label>
-                <select
-                  id="admin-header-org-selector"
-                  data-testid="admin-header-org-selector"
-                  value={activeOrg?.id || ''}
-                  onChange={handleOrgChange}
-                  className="admin-header-org-select"
-                >
-                  {orgMemberships.map((membership) => (
-                    <option key={membership.organizationId} value={membership.organizationId}>
-                      {membership.organizationName}
-                    </option>
-                  ))}
-                </select>
+                <OrganizationDropdown
+                  memberships={orgMemberships}
+                  activeOrgId={activeOrg?.id}
+                  onSelect={handleOrgSelect}
+                  testId="admin-header-org-selector"
+                />
               </div>
             )}
             <button 

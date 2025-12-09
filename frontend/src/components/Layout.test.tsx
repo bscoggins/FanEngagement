@@ -218,6 +218,25 @@ describe('Layout', () => {
         expect(screen.getByRole('link', { name: /^organizations$/i })).toBeInTheDocument();
       });
     });
+
+    it('shows organization dropdown for PlatformAdmin when memberships exist', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Global Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      renderLayout({ isAuthenticated: true, role: 'Admin' }, mockMemberships);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
+      });
+    });
   });
 
   describe('Navigation link destinations', () => {
@@ -356,10 +375,12 @@ describe('Layout', () => {
       });
 
       const user = userEvent.setup();
-      const orgSelector = screen.getByTestId('unified-header-org-selector');
+      const orgSelectorButton = screen.getByTestId('unified-header-org-selector-button');
 
       // Switch to the Admin Org (which is OrgAdmin role)
-      await user.selectOptions(orgSelector, 'org-1');
+      await user.click(orgSelectorButton);
+      const adminOption = await screen.findByTestId('org-option-org-1');
+      await user.click(adminOption);
 
       // Should navigate to admin overview for OrgAdmin
       await waitFor(() => {
@@ -424,10 +445,12 @@ describe('Layout', () => {
       });
 
       const user = userEvent.setup();
-      const orgSelector = screen.getByTestId('unified-header-org-selector');
+      const orgSelectorButton = screen.getByTestId('unified-header-org-selector-button');
 
       // Switch to the Member Org (which is Member role)
-      await user.selectOptions(orgSelector, 'org-2');
+      await user.click(orgSelectorButton);
+      const memberOption = await screen.findByTestId('org-option-org-2');
+      await user.click(memberOption);
 
       // Should navigate to member view for regular member
       await waitFor(() => {
@@ -582,8 +605,10 @@ describe('Layout', () => {
 
       // Switch to the member-only org
       const user = userEvent.setup();
-      const orgSelector = screen.getByTestId('unified-header-org-selector');
-      await user.selectOptions(orgSelector, 'org-2');
+      const orgSelectorButton = screen.getByTestId('unified-header-org-selector-button');
+      await user.click(orgSelectorButton);
+      const memberOption = await screen.findByTestId('org-option-org-2');
+      await user.click(memberOption);
 
       // Wait for navigation to member view
       await waitFor(() => {

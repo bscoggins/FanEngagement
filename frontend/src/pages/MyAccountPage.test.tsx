@@ -333,7 +333,9 @@ describe('MyAccountPage', () => {
       });
 
       // Check that password change elements are present
-      expect(screen.getByText('Change Password')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: /change password/i, level: 2 })
+      ).toBeInTheDocument();
       expect(screen.getByTestId('password-change-form')).toBeInTheDocument();
       expect(screen.getByTestId('current-password-input')).toBeInTheDocument();
       expect(screen.getByTestId('new-password-input')).toBeInTheDocument();
@@ -474,7 +476,9 @@ describe('MyAccountPage', () => {
       await user.click(screen.getByTestId('change-password-button'));
 
       await waitFor(() => {
-        expect(screen.getByText(/Current password is incorrect/i)).toBeInTheDocument();
+        expect(screen.getByTestId('password-error')).toHaveTextContent(
+          /Current password is incorrect/i
+        );
       });
     });
   });
