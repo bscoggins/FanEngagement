@@ -1,0 +1,118 @@
+Category,Token Name,Figma Style Name,Value,Hex,Type,Usage
+Color,primary-50,Color/Primary/50,hsl(210 100% 97%),#f0f9ff,color,Very light blue backgrounds
+Color,primary-100,Color/Primary/100,hsl(210 100% 95%),#e0f4ff,color,Light blue hover backgrounds
+Color,primary-200,Color/Primary/200,hsl(210 100% 90%),#b3e0ff,color,Light fills
+Color,primary-300,Color/Primary/300,hsl(210 100% 80%),#66ccff,color,Light accents
+Color,primary-400,Color/Primary/400,hsl(210 100% 65%),#1ab3ff,color,Medium blue
+Color,primary-500,Color/Primary/500,hsl(210 100% 55%),#0099ff,color,Interactive blue
+Color,primary-600,Color/Primary/600,hsl(210 100% 50%),#007bff,color,Main brand color ⭐
+Color,primary-700,Color/Primary/700,hsl(210 100% 42%),#0056b3,color,Hover/active states
+Color,primary-800,Color/Primary/800,hsl(210 100% 35%),#003d80,color,Dark emphasis
+Color,primary-900,Color/Primary/900,hsl(210 100% 20%),#00264d,color,Very dark blue
+Color,success-50,Color/Success/50,hsl(142 70% 97%),#f0fcf4,color,Light green background
+Color,success-100,Color/Success/100,hsl(142 70% 92%),#ddf9e5,color,Very light green
+Color,success-500,Color/Success/500,hsl(142 70% 45%),#2d8a4d,color,Main success color ✓
+Color,success-600,Color/Success/600,hsl(142 70% 40%),#257a41,color,Hover state
+Color,success-700,Color/Success/700,hsl(142 70% 35%),#1d6a35,color,Active state
+Color,warning-50,Color/Warning/50,hsl(38 90% 97%),#fffaf0,color,Light amber background
+Color,warning-100,Color/Warning/100,hsl(38 90% 92%),#fff4db,color,Very light amber
+Color,warning-500,Color/Warning/500,hsl(38 90% 50%),#f5a623,color,Main warning color ⚠️
+Color,warning-600,Color/Warning/600,hsl(38 90% 45%),#dd9519,color,Hover state
+Color,warning-700,Color/Warning/700,hsl(38 90% 40%),#c58410,color,Active state
+Color,error-50,Color/Error/50,hsl(0 70% 97%),#fef2f2,color,Light red background
+Color,error-100,Color/Error/100,hsl(0 70% 92%),#fee5e5,color,Very light red
+Color,error-500,Color/Error/500,hsl(0 70% 50%),#cc3333,color,Main error color ❌
+Color,error-600,Color/Error/600,hsl(0 70% 45%),#b82d2d,color,Hover state
+Color,error-700,Color/Error/700,hsl(0 70% 40%),#a32626,color,Active state
+Color,info-50,Color/Info/50,hsl(210 90% 97%),#f0f9ff,color,Light blue background
+Color,info-100,Color/Info/100,hsl(210 90% 92%),#e0f3ff,color,Very light blue
+Color,info-500,Color/Info/500,hsl(210 90% 55%),#1a9fff,color,Main info color ℹ️
+Color,info-600,Color/Info/600,hsl(210 90% 50%),#0085e6,color,Hover state
+Color,info-700,Color/Info/700,hsl(210 90% 45%),#006bb8,color,Active state
+Color,neutral-50,Color/Neutral/50,hsl(0 0% 98%),#fafafa,color,Very light gray
+Color,neutral-100,Color/Neutral/100,hsl(0 0% 96%),#f5f5f5,color,Light gray backgrounds
+Color,neutral-200,Color/Neutral/200,hsl(0 0% 90%),#e6e6e6,color,Subtle borders
+Color,neutral-300,Color/Neutral/300,hsl(0 0% 80%),#cccccc,color,Default borders
+Color,neutral-400,Color/Neutral/400,hsl(0 0% 60%),#999999,color,Disabled text
+Color,neutral-500,Color/Neutral/500,hsl(0 0% 50%),#808080,color,Mid-gray
+Color,neutral-600,Color/Neutral/600,hsl(0 0% 40%),#666666,color,Secondary text
+Color,neutral-700,Color/Neutral/700,hsl(0 0% 20%),#333333,color,Primary text ⭐
+Color,neutral-800,Color/Neutral/800,hsl(0 0% 15%),#262626,color,Dark surfaces
+Color,neutral-900,Color/Neutral/900,hsl(0 0% 10%),#1a1a1a,color,Very dark surfaces
+Color,background,Color/Surface/Background,hsl(0 0% 96%),#f5f5f5,color,Main page background
+Color,surface,Color/Surface/Default,hsl(0 0% 100%),#ffffff,color,Cards panels modals
+Color,surface-elevated,Color/Surface/Elevated,hsl(0 0% 16.5%),#2a2a2a,color,Sidebar (dark)
+Color,surface-dark,Color/Surface/Dark,hsl(0 0% 10%),#1a1a1a,color,Header (very dark)
+Color,text-primary,Color/Text/Primary,hsl(0 0% 20%),#333333,color,Main text
+Color,text-secondary,Color/Text/Secondary,hsl(0 0% 40%),#666666,color,Secondary text
+Color,text-tertiary,Color/Text/Tertiary,hsl(0 0% 60%),#999999,color,Muted text
+Color,text-inverse,Color/Text/Inverse,hsl(0 0% 100%),#ffffff,color,Text on dark backgrounds
+Color,text-on-primary,Color/Text/OnPrimary,hsl(0 0% 100%),#ffffff,color,Text on primary color
+Color,border-subtle,Color/Border/Subtle,hsl(0 0% 90%),#e6e6e6,color,Light borders
+Color,border-default,Color/Border/Default,hsl(0 0% 80%),#cccccc,color,Default borders
+Color,border-strong,Color/Border/Strong,hsl(0 0% 60%),#999999,color,Emphasized borders
+Color,border-dark,Color/Border/Dark,hsl(0 0% 27%),#444444,color,Borders on dark surfaces
+Color,focus-ring,Color/Focus/Ring,hsl(210 100% 42%),#0056b3,color,Focus indicators
+Color,overlay-light,Color/Overlay/Light,rgba(255 255 255 / 0.1),rgba(255 255 255 / 0.1),color,10% white overlay
+Color,overlay-medium,Color/Overlay/Medium,rgba(255 255 255 / 0.15),rgba(255 255 255 / 0.15),color,15% white overlay
+Color,overlay-dark,Color/Overlay/Dark,rgba(0 0 0 / 0.5),rgba(0 0 0 / 0.5),color,50% black overlay for modals
+Typography,font-family-sans,Font/Sans,system-ui -apple-system BlinkMacSystemFont,system-ui,fontFamily,System font stack
+Typography,font-family-mono,Font/Mono,ui-monospace 'SF Mono' 'Cascadia Code',ui-monospace,fontFamily,Monospace font stack
+Typography,font-size-2xs,Text/Size/2XS,0.625rem,10px,fontSize,Keyboard shortcuts tiny labels
+Typography,font-size-xs,Text/Size/XS,0.75rem,12px,fontSize,Captions small text
+Typography,font-size-sm,Text/Size/SM,0.875rem,14px,fontSize,Secondary text labels
+Typography,font-size-base,Text/Size/Base,1rem,16px,fontSize,Body text default ⭐
+Typography,font-size-lg,Text/Size/LG,1.125rem,18px,fontSize,Large body subheadings
+Typography,font-size-xl,Text/Size/XL,1.25rem,20px,fontSize,H4-H5
+Typography,font-size-2xl,Text/Size/2XL,1.5rem,24px,fontSize,H3
+Typography,font-size-3xl,Text/Size/3XL,1.875rem,30px,fontSize,H2
+Typography,font-size-4xl,Text/Size/4XL,2.25rem,36px,fontSize,H1
+Typography,font-weight-regular,Weight/Regular,400,400,fontWeight,Body text default
+Typography,font-weight-medium,Weight/Medium,500,500,fontWeight,Labels emphasis
+Typography,font-weight-semibold,Weight/Semibold,600,600,fontWeight,Headings active states
+Typography,font-weight-bold,Weight/Bold,700,700,fontWeight,Strong emphasis
+Typography,line-height-tight,LineHeight/Tight,1.2,1.2,lineHeight,Headings compact text
+Typography,line-height-normal,LineHeight/Normal,1.5,1.5,lineHeight,Body text default
+Typography,line-height-relaxed,LineHeight/Relaxed,1.75,1.75,lineHeight,Long-form content
+Typography,letter-spacing-tight,LetterSpacing/Tight,-0.02em,-2%,letterSpacing,Large headings
+Typography,letter-spacing-normal,LetterSpacing/Normal,0,0%,letterSpacing,Body text default
+Typography,letter-spacing-wide,LetterSpacing/Wide,0.02em,2%,letterSpacing,Small caps labels
+Typography,letter-spacing-wider,LetterSpacing/Wider,0.025em,2.5%,letterSpacing,Badges compact uppercase
+Typography,letter-spacing-widest,LetterSpacing/Widest,0.05em,5%,letterSpacing,Uppercase labels overlines
+Spacing,spacing-0,Spacing/0,0,0px,spacing,No spacing
+Spacing,spacing-0-5,Spacing/0.5,0.125rem,2px,spacing,Tight spacing
+Spacing,spacing-1,Spacing/1,0.25rem,4px,spacing,Very small gaps
+Spacing,spacing-2,Spacing/2,0.5rem,8px,spacing,Small gaps icon spacing ⭐
+Spacing,spacing-3,Spacing/3,0.75rem,12px,spacing,Nav padding compact elements ⭐
+Spacing,spacing-4,Spacing/4,1rem,16px,spacing,Standard spacing button padding ⭐
+Spacing,spacing-5,Spacing/5,1.25rem,20px,spacing,Medium spacing
+Spacing,spacing-6,Spacing/6,1.5rem,24px,spacing,Large spacing section gaps ⭐
+Spacing,spacing-8,Spacing/8,2rem,32px,spacing,Extra large spacing
+Spacing,spacing-10,Spacing/10,2.5rem,40px,spacing,Section padding
+Spacing,spacing-12,Spacing/12,3rem,48px,spacing,Large section padding
+Spacing,spacing-16,Spacing/16,4rem,64px,spacing,Extra large sections
+Spacing,spacing-20,Spacing/20,5rem,80px,spacing,Hero padding
+Spacing,spacing-24,Spacing/24,6rem,96px,spacing,Very large spacing
+BorderRadius,radius-none,Radius/None,0,0px,borderRadius,Square corners
+BorderRadius,radius-sm,Radius/SM,0.25rem,4px,borderRadius,Small elements
+BorderRadius,radius-md,Radius/MD,0.375rem,6px,borderRadius,Buttons inputs ⭐
+BorderRadius,radius-lg,Radius/LG,0.5rem,8px,borderRadius,Cards panels ⭐
+BorderRadius,radius-xl,Radius/XL,0.75rem,12px,borderRadius,Modals
+BorderRadius,radius-2xl,Radius/2XL,1rem,16px,borderRadius,Hero sections
+BorderRadius,radius-full,Radius/Full,9999px,9999px,borderRadius,Circular badges avatars
+Shadow,shadow-xs,Effect/Shadow/XS,0 1px 2px 0 rgba(0 0 0 / 0.05),,shadow,Subtle borders
+Shadow,shadow-sm,Effect/Shadow/SM,0 1px 3px 0 rgba(0 0 0 / 0.1),,shadow,Buttons small cards
+Shadow,shadow-md,Effect/Shadow/MD,0 4px 6px -1px rgba(0 0 0 / 0.1),,shadow,Cards dropdowns ⭐
+Shadow,shadow-lg,Effect/Shadow/LG,0 10px 15px -3px rgba(0 0 0 / 0.1),,shadow,Modals popovers
+Shadow,shadow-xl,Effect/Shadow/XL,0 20px 25px -5px rgba(0 0 0 / 0.1),,shadow,Overlays floating panels
+Shadow,shadow-2xl,Effect/Shadow/2XL,0 25px 50px -12px rgba(0 0 0 / 0.25),,shadow,Full-screen modals
+Shadow,shadow-inner,Effect/Shadow/Inner,inset 0 2px 4px 0 rgba(0 0 0 / 0.06),,shadow,Pressed buttons inputs
+Shadow,shadow-header,Effect/Shadow/Header,0 2px 4px 0 rgba(0 0 0 / 0.1),,shadow,Header elevation light
+Shadow,shadow-header-dark,Effect/Shadow/HeaderDark,0 2px 4px 0 rgba(0 0 0 / 0.2),,shadow,Header elevation dark
+Shadow,shadow-sidebar,Effect/Shadow/Sidebar,2px 0 4px 0 rgba(0 0 0 / 0.1),,shadow,Sidebar right edge
+Transition,duration-fast,Duration/Fast,150ms,150ms,duration,Quick interactions hover focus
+Transition,duration-normal,Duration/Normal,200ms,200ms,duration,Standard transitions buttons
+Transition,duration-slow,Duration/Slow,300ms,300ms,duration,Complex transitions drawers
+Transition,easing-in,Easing/In,cubic-bezier(0.4 0 1 1),,cubicBezier,Accelerating entering
+Transition,easing-out,Easing/Out,cubic-bezier(0 0 0.2 1),,cubicBezier,Decelerating exiting
+Transition,easing-in-out,Easing/InOut,cubic-bezier(0.4 0 0.2 1),,cubicBezier,Smooth both ways

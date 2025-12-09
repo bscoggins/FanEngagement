@@ -1,0 +1,217 @@
+{
+  "$schema": "https://schemas.figmatokens.com/token-format.json",
+  "name": "FanEngagement Design Tokens",
+  "version": "1.0.0",
+  "description": "Design tokens for FanEngagement application - ready for Figma import",
+  "colors": {
+    "primary": {
+      "50": { "value": "hsl(210, 100%, 97%)", "type": "color", "description": "Very light blue backgrounds" },
+      "100": { "value": "hsl(210, 100%, 95%)", "type": "color", "description": "Light blue hover backgrounds" },
+      "200": { "value": "hsl(210, 100%, 90%)", "type": "color" },
+      "300": { "value": "hsl(210, 100%, 80%)", "type": "color" },
+      "400": { "value": "hsl(210, 100%, 65%)", "type": "color" },
+      "500": { "value": "hsl(210, 100%, 55%)", "type": "color" },
+      "600": { "value": "hsl(210, 100%, 50%)", "type": "color", "description": "Main brand color #007bff" },
+      "700": { "value": "hsl(210, 100%, 42%)", "type": "color", "description": "Hover/active states #0056b3" },
+      "800": { "value": "hsl(210, 100%, 35%)", "type": "color" },
+      "900": { "value": "hsl(210, 100%, 20%)", "type": "color", "description": "Very dark blue" }
+    },
+    "success": {
+      "50": { "value": "hsl(142, 70%, 97%)", "type": "color", "description": "Light green background" },
+      "100": { "value": "hsl(142, 70%, 92%)", "type": "color" },
+      "500": { "value": "hsl(142, 70%, 45%)", "type": "color", "description": "Main success color" },
+      "600": { "value": "hsl(142, 70%, 40%)", "type": "color", "description": "Hover state" },
+      "700": { "value": "hsl(142, 70%, 35%)", "type": "color", "description": "Active state" }
+    },
+    "warning": {
+      "50": { "value": "hsl(38, 90%, 97%)", "type": "color", "description": "Light amber background" },
+      "100": { "value": "hsl(38, 90%, 92%)", "type": "color" },
+      "500": { "value": "hsl(38, 90%, 50%)", "type": "color", "description": "Main warning color" },
+      "600": { "value": "hsl(38, 90%, 45%)", "type": "color", "description": "Hover state" },
+      "700": { "value": "hsl(38, 90%, 40%)", "type": "color", "description": "Active state" }
+    },
+    "error": {
+      "50": { "value": "hsl(0, 70%, 97%)", "type": "color", "description": "Light red background" },
+      "100": { "value": "hsl(0, 70%, 92%)", "type": "color" },
+      "500": { "value": "hsl(0, 70%, 50%)", "type": "color", "description": "Main error color" },
+      "600": { "value": "hsl(0, 70%, 45%)", "type": "color", "description": "Hover state" },
+      "700": { "value": "hsl(0, 70%, 40%)", "type": "color", "description": "Active state" }
+    },
+    "info": {
+      "50": { "value": "hsl(210, 90%, 97%)", "type": "color", "description": "Light blue background" },
+      "100": { "value": "hsl(210, 90%, 92%)", "type": "color" },
+      "500": { "value": "hsl(210, 90%, 55%)", "type": "color", "description": "Main info color" },
+      "600": { "value": "hsl(210, 90%, 50%)", "type": "color", "description": "Hover state" },
+      "700": { "value": "hsl(210, 90%, 45%)", "type": "color", "description": "Active state" }
+    },
+    "neutral": {
+      "50": { "value": "hsl(0, 0%, 98%)", "type": "color", "description": "#fafafa - Very light gray" },
+      "100": { "value": "hsl(0, 0%, 96%)", "type": "color", "description": "#f5f5f5 - Light gray backgrounds" },
+      "200": { "value": "hsl(0, 0%, 90%)", "type": "color", "description": "#e6e6e6 - Subtle borders" },
+      "300": { "value": "hsl(0, 0%, 80%)", "type": "color", "description": "#cccccc - Default borders" },
+      "400": { "value": "hsl(0, 0%, 60%)", "type": "color", "description": "#999999 - Disabled text" },
+      "500": { "value": "hsl(0, 0%, 50%)", "type": "color", "description": "#808080 - Mid-gray" },
+      "600": { "value": "hsl(0, 0%, 40%)", "type": "color", "description": "#666666 - Secondary text" },
+      "700": { "value": "hsl(0, 0%, 20%)", "type": "color", "description": "#333333 - Primary text" },
+      "800": { "value": "hsl(0, 0%, 15%)", "type": "color", "description": "#262626 - Dark surfaces" },
+      "900": { "value": "hsl(0, 0%, 10%)", "type": "color", "description": "#1a1a1a - Very dark surfaces" }
+    },
+    "surface": {
+      "background": { "value": "hsl(0, 0%, 96%)", "type": "color", "description": "#f5f5f5 - Main page background" },
+      "default": { "value": "hsl(0, 0%, 100%)", "type": "color", "description": "white - Cards, panels, modals" },
+      "elevated": { "value": "hsl(0, 0%, 16.5%)", "type": "color", "description": "#2a2a2a - Sidebar (dark)" },
+      "dark": { "value": "hsl(0, 0%, 10%)", "type": "color", "description": "#1a1a1a - Header (very dark)" }
+    },
+    "text": {
+      "primary": { "value": "{colors.neutral.700}", "type": "color", "description": "#333 - Main text" },
+      "secondary": { "value": "{colors.neutral.600}", "type": "color", "description": "#666 - Secondary text" },
+      "tertiary": { "value": "{colors.neutral.400}", "type": "color", "description": "#999 - Tertiary/muted text" },
+      "inverse": { "value": "hsl(0, 0%, 100%)", "type": "color", "description": "white - Text on dark backgrounds" },
+      "onPrimary": { "value": "hsl(0, 0%, 100%)", "type": "color", "description": "white - Text on primary color" }
+    },
+    "border": {
+      "subtle": { "value": "{colors.neutral.200}", "type": "color", "description": "Light borders" },
+      "default": { "value": "{colors.neutral.300}", "type": "color", "description": "Default borders" },
+      "strong": { "value": "{colors.neutral.400}", "type": "color", "description": "Emphasized borders" },
+      "dark": { "value": "hsl(0, 0%, 27%)", "type": "color", "description": "#444 - Borders on dark surfaces" }
+    },
+    "focus": {
+      "ring": { "value": "{colors.primary.700}", "type": "color", "description": "#0056b3 - Focus indicators" }
+    },
+    "overlay": {
+      "light": { "value": "rgba(255, 255, 255, 0.1)", "type": "color", "description": "10% white overlay" },
+      "medium": { "value": "rgba(255, 255, 255, 0.15)", "type": "color", "description": "15% white overlay" },
+      "dark": { "value": "rgba(0, 0, 0, 0.5)", "type": "color", "description": "50% black overlay for modals" }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": { 
+        "value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif", 
+        "type": "fontFamily" 
+      },
+      "mono": { 
+        "value": "ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', 'Menlo', 'Monaco', 'Consolas', monospace", 
+        "type": "fontFamily" 
+      }
+    },
+    "fontSize": {
+      "2xs": { "value": "0.625rem", "type": "fontSize", "description": "10px - Keyboard shortcuts, tiny labels" },
+      "xs": { "value": "0.75rem", "type": "fontSize", "description": "12px - Captions, small text" },
+      "sm": { "value": "0.875rem", "type": "fontSize", "description": "14px - Secondary text, labels" },
+      "base": { "value": "1rem", "type": "fontSize", "description": "16px - Body text, default" },
+      "lg": { "value": "1.125rem", "type": "fontSize", "description": "18px - Large body, subheadings" },
+      "xl": { "value": "1.25rem", "type": "fontSize", "description": "20px - H4-H5" },
+      "2xl": { "value": "1.5rem", "type": "fontSize", "description": "24px - H3" },
+      "3xl": { "value": "1.875rem", "type": "fontSize", "description": "30px - H2" },
+      "4xl": { "value": "2.25rem", "type": "fontSize", "description": "36px - H1" }
+    },
+    "fontWeight": {
+      "regular": { "value": "400", "type": "fontWeight", "description": "Body text, default" },
+      "medium": { "value": "500", "type": "fontWeight", "description": "Labels, emphasis" },
+      "semibold": { "value": "600", "type": "fontWeight", "description": "Headings, active states" },
+      "bold": { "value": "700", "type": "fontWeight", "description": "Strong emphasis" }
+    },
+    "lineHeight": {
+      "tight": { "value": "1.2", "type": "lineHeight", "description": "Headings, compact text" },
+      "normal": { "value": "1.5", "type": "lineHeight", "description": "Body text (default)" },
+      "relaxed": { "value": "1.75", "type": "lineHeight", "description": "Long-form content" }
+    },
+    "letterSpacing": {
+      "tight": { "value": "-0.02em", "type": "letterSpacing", "description": "Large headings" },
+      "normal": { "value": "0", "type": "letterSpacing", "description": "Body text (default)" },
+      "wide": { "value": "0.02em", "type": "letterSpacing", "description": "Small caps, labels" },
+      "wider": { "value": "0.025em", "type": "letterSpacing", "description": "Badges, compact uppercase" },
+      "widest": { "value": "0.05em", "type": "letterSpacing", "description": "Uppercase labels, overlines" }
+    }
+  },
+  "spacing": {
+    "0": { "value": "0", "type": "spacing", "description": "No spacing" },
+    "0.5": { "value": "0.125rem", "type": "spacing", "description": "2px - Tight spacing" },
+    "1": { "value": "0.25rem", "type": "spacing", "description": "4px - Very small gaps" },
+    "2": { "value": "0.5rem", "type": "spacing", "description": "8px - Small gaps, icon spacing" },
+    "3": { "value": "0.75rem", "type": "spacing", "description": "12px - Nav padding, compact elements" },
+    "4": { "value": "1rem", "type": "spacing", "description": "16px - Standard spacing, button padding" },
+    "5": { "value": "1.25rem", "type": "spacing", "description": "20px - Medium spacing" },
+    "6": { "value": "1.5rem", "type": "spacing", "description": "24px - Large spacing, section gaps" },
+    "8": { "value": "2rem", "type": "spacing", "description": "32px - Extra large spacing" },
+    "10": { "value": "2.5rem", "type": "spacing", "description": "40px - Section padding" },
+    "12": { "value": "3rem", "type": "spacing", "description": "48px - Large section padding" },
+    "16": { "value": "4rem", "type": "spacing", "description": "64px - Extra large sections" },
+    "20": { "value": "5rem", "type": "spacing", "description": "80px - Hero padding" },
+    "24": { "value": "6rem", "type": "spacing", "description": "96px - Very large spacing" }
+  },
+  "borderRadius": {
+    "none": { "value": "0", "type": "borderRadius", "description": "Square corners" },
+    "sm": { "value": "0.25rem", "type": "borderRadius", "description": "4px - Small elements" },
+    "md": { "value": "0.375rem", "type": "borderRadius", "description": "6px - Buttons, inputs" },
+    "lg": { "value": "0.5rem", "type": "borderRadius", "description": "8px - Cards, panels" },
+    "xl": { "value": "0.75rem", "type": "borderRadius", "description": "12px - Modals" },
+    "2xl": { "value": "1rem", "type": "borderRadius", "description": "16px - Hero sections" },
+    "full": { "value": "9999px", "type": "borderRadius", "description": "Circular - Badges, avatars" }
+  },
+  "shadow": {
+    "xs": { 
+      "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+      "type": "shadow", 
+      "description": "Subtle shadow - Borders, very slight elevation" 
+    },
+    "sm": { 
+      "value": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)", 
+      "type": "shadow", 
+      "description": "Small shadow - Buttons, small cards" 
+    },
+    "md": { 
+      "value": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)", 
+      "type": "shadow", 
+      "description": "Medium shadow - Cards, dropdowns" 
+    },
+    "lg": { 
+      "value": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)", 
+      "type": "shadow", 
+      "description": "Large shadow - Modals, popovers" 
+    },
+    "xl": { 
+      "value": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)", 
+      "type": "shadow", 
+      "description": "Extra large shadow - Overlays, floating panels" 
+    },
+    "2xl": { 
+      "value": "0 25px 50px -12px rgba(0, 0, 0, 0.25)", 
+      "type": "shadow", 
+      "description": "Massive shadow - Full-screen modals" 
+    },
+    "inner": { 
+      "value": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)", 
+      "type": "shadow", 
+      "description": "Inset shadow - Pressed buttons, inputs" 
+    },
+    "header": { 
+      "value": "0 2px 4px 0 rgba(0, 0, 0, 0.1)", 
+      "type": "shadow", 
+      "description": "Header elevation (light backgrounds)" 
+    },
+    "headerDark": { 
+      "value": "0 2px 4px 0 rgba(0, 0, 0, 0.2)", 
+      "type": "shadow", 
+      "description": "Header elevation (dark backgrounds)" 
+    },
+    "sidebar": { 
+      "value": "2px 0 4px 0 rgba(0, 0, 0, 0.1)", 
+      "type": "shadow", 
+      "description": "Sidebar/drawer elevation (right edge)" 
+    }
+  },
+  "transition": {
+    "duration": {
+      "fast": { "value": "150ms", "type": "duration", "description": "Quick interactions - hover, focus" },
+      "normal": { "value": "200ms", "type": "duration", "description": "Standard transitions - buttons" },
+      "slow": { "value": "300ms", "type": "duration", "description": "Complex transitions - drawers" }
+    },
+    "easing": {
+      "in": { "value": "cubic-bezier(0.4, 0, 1, 1)", "type": "cubicBezier", "description": "Accelerating (entering)" },
+      "out": { "value": "cubic-bezier(0, 0, 0.2, 1)", "type": "cubicBezier", "description": "Decelerating (exiting)" },
+      "inOut": { "value": "cubic-bezier(0.4, 0, 0.2, 1)", "type": "cubicBezier", "description": "Smooth both ways" }
+    }
+  }
+}
