@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+# package-lock.json stays tracked for deterministic installs (see docs/development.md)
 
 # Build output
 dist/
@@ -28,12 +29,11 @@ yarn-error.log*
 coverage/
 .nyc_output/
 
-# Keypairs (NEVER commit)
-*.json
-!package.json
-!package-lock.json
-!tsconfig.json
-!jest.config.json
+# Secrets (NEVER commit)
+keypair.json
+*.key
+*.pem
+secrets/
 
 # OS
 .DS_Store

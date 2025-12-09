@@ -12,157 +12,152 @@ import { handleError } from './errors.js';
 import { getMetricsRegistry } from './metrics.js';
 import { healthStatus } from './metrics.js';
 import { config } from './config.js';
+import { createPostHandler } from '../../shared/http.js';
 
 export function createRoutes(polygonService: PolygonService): Router {
   const router = Router();
 
   // POST /v1/adapter/organizations
-  router.post('/v1/adapter/organizations', async (req: Request, res: Response) => {
-    try {
-      const data = createOrganizationSchema.parse(req.body);
-
-      const result = await polygonService.createOrganization(
-        data.organizationId,
-        data.name,
-        data.description
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/organizations',
+    createPostHandler({
+      schema: createOrganizationSchema,
+      execute: (data) =>
+        polygonService.createOrganization(
+          data.organizationId,
+          data.name,
+          data.description
+        ),
+      buildResponse: (result) => ({
         transactionHash: result.transactionHash,
         contractAddress: result.contractAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         network: config.polygon.network,
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/share-types
-  router.post('/v1/adapter/share-types', async (req: Request, res: Response) => {
-    try {
-      const data = createShareTypeSchema.parse(req.body);
-
-      const result = await polygonService.createShareType(
-        data.shareTypeId,
-        data.organizationId,
-        data.name,
-        data.symbol,
-        data.decimals
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/share-types',
+    createPostHandler({
+      schema: createShareTypeSchema,
+      execute: (data) =>
+        polygonService.createShareType(
+          data.shareTypeId,
+          data.organizationId,
+          data.name,
+          data.symbol,
+          data.decimals
+        ),
+      buildResponse: (result) => ({
         transactionHash: result.transactionHash,
         tokenAddress: result.tokenAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/share-issuances
-  router.post('/v1/adapter/share-issuances', async (req: Request, res: Response) => {
-    try {
-      const data = recordShareIssuanceSchema.parse(req.body);
-
-      const result = await polygonService.recordShareIssuance(
-        data.issuanceId,
-        data.shareTypeId,
-        data.userId,
-        data.quantity,
-        data.recipientAddress,
-        data.tokenAddress
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/share-issuances',
+    createPostHandler({
+      schema: recordShareIssuanceSchema,
+      execute: (data) =>
+        polygonService.recordShareIssuance(
+          data.issuanceId,
+          data.shareTypeId,
+          data.userId,
+          data.quantity,
+          data.recipientAddress,
+          data.tokenAddress
+        ),
+      buildResponse: (result, data) => ({
         transactionHash: result.transactionHash,
         gasUsed: result.gasUsed,
         recipientAddress: data.recipientAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/proposals
-  router.post('/v1/adapter/proposals', async (req: Request, res: Response) => {
-    try {
-      const data = createProposalSchema.parse(req.body);
-
-      const result = await polygonService.createProposal(
-        data.proposalId,
-        data.organizationId,
-        data.title,
-        data.contentHash,
-        new Date(data.startAt),
-        new Date(data.endAt)
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/proposals',
+    createPostHandler({
+      schema: createProposalSchema,
+      execute: (data) =>
+        polygonService.createProposal(
+          data.proposalId,
+          data.organizationId,
+          data.title,
+          data.contentHash,
+          new Date(data.startAt),
+          new Date(data.endAt)
+        ),
+      buildResponse: (result) => ({
         transactionHash: result.transactionHash,
         proposalAddress: result.proposalAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/votes
-  router.post('/v1/adapter/votes', async (req: Request, res: Response) => {
-    try {
-      const data = recordVoteSchema.parse(req.body);
-
-      const result = await polygonService.recordVote(
-        data.voteId,
-        data.proposalId,
-        data.userId,
-        data.optionId,
-        data.votingPower
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/votes',
+    createPostHandler({
+      schema: recordVoteSchema,
+      execute: (data) =>
+        polygonService.recordVote(
+          data.voteId,
+          data.proposalId,
+          data.userId,
+          data.optionId,
+          data.votingPower
+        ),
+      buildResponse: (result) => ({
         transactionHash: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/proposal-results
-  router.post('/v1/adapter/proposal-results', async (req: Request, res: Response) => {
-    try {
-      const data = commitProposalResultsSchema.parse(req.body);
-
-      const result = await polygonService.commitProposalResults(
-        data.proposalId,
-        data.resultsHash,
-        data.winningOptionId || '',
-        data.totalVotesCast
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/proposal-results',
+    createPostHandler({
+      schema: commitProposalResultsSchema,
+      execute: (data) =>
+        polygonService.commitProposalResults(
+          data.proposalId,
+          data.resultsHash,
+          data.winningOptionId || '',
+          data.totalVotesCast
+        ),
+      buildResponse: (result) => ({
         transactionHash: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // GET /v1/adapter/transactions/:txId
   router.get('/v1/adapter/transactions/:txId', async (req: Request, res: Response) => {

@@ -12,149 +12,144 @@ import { handleError } from './errors.js';
 import { getMetricsRegistry } from './metrics.js';
 import { healthStatus } from './metrics.js';
 import { config } from './config.js';
+import { createPostHandler } from '../../shared/http.js';
 
 export function createRoutes(solanaService: SolanaService): Router {
   const router = Router();
 
   // POST /v1/adapter/organizations
-  router.post('/v1/adapter/organizations', async (req: Request, res: Response) => {
-    try {
-      const data = createOrganizationSchema.parse(req.body);
-      
-      const result = await solanaService.createOrganization(
-        data.organizationId,
-        data.name,
-        data.description
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/organizations',
+    createPostHandler({
+      schema: createOrganizationSchema,
+      execute: (data) =>
+        solanaService.createOrganization(
+          data.organizationId,
+          data.name,
+          data.description
+        ),
+      buildResponse: (result) => ({
         transactionId: result.transactionSignature,
         accountAddress: result.accountAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/share-types
-  router.post('/v1/adapter/share-types', async (req: Request, res: Response) => {
-    try {
-      const data = createShareTypeSchema.parse(req.body);
-      
-      const result = await solanaService.createShareType(
-        data.shareTypeId,
-        data.organizationId,
-        data.name,
-        data.symbol,
-        data.decimals
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/share-types',
+    createPostHandler({
+      schema: createShareTypeSchema,
+      execute: (data) =>
+        solanaService.createShareType(
+          data.shareTypeId,
+          data.organizationId,
+          data.name,
+          data.symbol,
+          data.decimals
+        ),
+      buildResponse: (result) => ({
         transactionId: result.transactionSignature,
         mintAddress: result.mintAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/share-issuances
-  router.post('/v1/adapter/share-issuances', async (req: Request, res: Response) => {
-    try {
-      const data = recordShareIssuanceSchema.parse(req.body);
-      
-      const result = await solanaService.recordShareIssuance(
-        data.issuanceId,
-        data.shareTypeId,
-        data.userId,
-        data.quantity,
-        data.recipientAddress
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/share-issuances',
+    createPostHandler({
+      schema: recordShareIssuanceSchema,
+      execute: (data) =>
+        solanaService.recordShareIssuance(
+          data.issuanceId,
+          data.shareTypeId,
+          data.userId,
+          data.quantity,
+          data.recipientAddress
+        ),
+      buildResponse: (result) => ({
         transactionId: result.transactionSignature,
         recipientAddress: result.recipientAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/proposals
-  router.post('/v1/adapter/proposals', async (req: Request, res: Response) => {
-    try {
-      const data = createProposalSchema.parse(req.body);
-      
-      const result = await solanaService.createProposal(
-        data.proposalId,
-        data.organizationId,
-        data.title,
-        data.contentHash,
-        new Date(data.startAt),
-        new Date(data.endAt)
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/proposals',
+    createPostHandler({
+      schema: createProposalSchema,
+      execute: (data) =>
+        solanaService.createProposal(
+          data.proposalId,
+          data.organizationId,
+          data.title,
+          data.contentHash,
+          new Date(data.startAt),
+          new Date(data.endAt)
+        ),
+      buildResponse: (result) => ({
         transactionId: result.transactionSignature,
         proposalAddress: result.proposalAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/votes
-  router.post('/v1/adapter/votes', async (req: Request, res: Response) => {
-    try {
-      const data = recordVoteSchema.parse(req.body);
-      
-      const result = await solanaService.recordVote(
-        data.voteId,
-        data.proposalId,
-        data.userId,
-        data.optionId,
-        data.votingPower
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/votes',
+    createPostHandler({
+      schema: recordVoteSchema,
+      execute: (data) =>
+        solanaService.recordVote(
+          data.voteId,
+          data.proposalId,
+          data.userId,
+          data.optionId,
+          data.votingPower
+        ),
+      buildResponse: (result) => ({
         transactionId: result.transactionSignature,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // POST /v1/adapter/proposal-results
-  router.post('/v1/adapter/proposal-results', async (req: Request, res: Response) => {
-    try {
-      const data = commitProposalResultsSchema.parse(req.body);
-      
-      const result = await solanaService.commitProposalResults(
-        data.proposalId,
-        data.resultsHash,
-        data.winningOptionId || '',
-        data.totalVotesCast
-      );
-
-      res.status(201).json({
+  router.post(
+    '/v1/adapter/proposal-results',
+    createPostHandler({
+      schema: commitProposalResultsSchema,
+      execute: (data) =>
+        solanaService.commitProposalResults(
+          data.proposalId,
+          data.resultsHash,
+          data.winningOptionId || '',
+          data.totalVotesCast
+        ),
+      buildResponse: (result) => ({
         transactionId: result.transactionSignature,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  });
+      }),
+      onError: handleError,
+    })
+  );
 
   // GET /v1/adapter/transactions/:txId
   router.get('/v1/adapter/transactions/:txId', async (req: Request, res: Response) => {
@@ -186,14 +181,28 @@ export function createRoutes(solanaService: SolanaService): Router {
 
       const statusCode = health.status === 'healthy' ? 200 : 503;
 
-      res.status(statusCode).json({
+      const payload: {
+        status: string;
+        blockchain: string;
+        network: string;
+        rpcStatus: string;
+        lastBlockNumber?: number;
+        timestamp: string;
+        errorMessage?: string;
+      } = {
         status: health.status,
         blockchain: 'solana',
         network: health.network,
         rpcStatus: health.rpcStatus,
         lastBlockNumber: health.lastBlockNumber,
         timestamp: new Date().toISOString(),
-      });
+      };
+
+      if (health.errorMessage) {
+        payload.errorMessage = health.errorMessage;
+      }
+
+      res.status(statusCode).json(payload);
     } catch (error) {
       healthStatus.set(0);
       res.status(503).json({

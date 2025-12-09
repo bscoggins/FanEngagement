@@ -1971,6 +1971,29 @@ All blockchain adapters must implement these endpoints:
 
 ---
 
+###### Story E-007-11
+
+> As a **developer**, I want a **repeatable checklist for testing the Solana and Polygon adapters**, so that **anyone can stand up wallets, fund test accounts, and validate adapters against devnet/Amoy without tribal knowledge**.
+
+**Status:** Proposed  
+**Priority:** Next  
+
+**Acceptance Criteria:**
+
+- [ ] Extend `docs/blockchain/adapter-testing.md` to cover local, devnet, and Amoy workflows
+- [ ] Document how to generate and locally store Solana keypairs (`solana-keygen new`) and Polygon private keys (OpenSSL/Node scripts), including rotation guidance
+- [ ] Include instructions for funding Solana devnet wallets (`solana config set --url https://api.devnet.solana.com` + `solana airdrop 2`) and obtaining Amoy/Mumbai MATIC via the Polygon faucet
+- [ ] Describe environment variable mapping for each network (`SOLANA_PRIVATE_KEY`, `POLYGON_PRIVATE_KEY`, RPC URLs, API keys) and how to load them via `.env.*`
+- [ ] Provide smoke-test steps for each adapter: health check, `/v1/adapter/organizations`, transaction lookup, plus explorer links (Solana Devnet Explorer, Amoy Polygonscan)
+- [ ] Outline prerequisites for CI and manual QA (test validator container, rate limits, expected confirmation times)
+
+**Notes for implementation:**
+
+- Emphasize separation of dev/test/prod wallets and never reusing faucet-funded keys in production
+- Capture troubleshooting tips (insufficient funds, RPC throttling, stale private key formats) and pointers to faucets/bookmarks for quick reference
+
+---
+
 #### Dependencies
 
 - **E-004 Solana Documentation**: Solana adapter leverages research from E-004 (capabilities, governance, tokenization)

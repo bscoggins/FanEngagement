@@ -7,8 +7,20 @@ FRONTEND_URL="http://localhost:3000"
 
 cd "$ROOT_DIR"
 
+# Always load compose with our shared dev env vars when the file exists locally.
+# In CI the workflow sets the env vars directly, so fall back to default compose invocation.
+# Note: If .env.development exists but contains invalid syntax, Docker Compose will fail
+# with an error. Ensure the file is well-formed (key=value pairs, one per line).
+if [[ -f .env.development ]]; then
+  echo "Using .env.development for docker compose overrides"
+  COMPOSE_CMD=(docker compose --env-file .env.development)
+else
+  echo "Warning: .env.development not found; relying on process env vars"
+  COMPOSE_CMD=(docker compose)
+fi
+
 echo "Starting database, API, and frontend via Docker Compose (rebuilding to pick up latest frontend/UI changes)..."
-docker compose up -d --build db api frontend
+"${COMPOSE_CMD[@]}" up -d --build db api frontend
 
 cleanup() {
   echo "Stopping Compose services..."
@@ -17,9 +29,9 @@ cleanup() {
   docker ps -aq --filter "name=fanengagement-e2e" | xargs -r docker rm -f >/dev/null 2>&1 || true
   docker ps -aq --filter "name=fanengagement-playwright-mcp" | xargs -r docker rm -f >/dev/null 2>&1 || true
   # Remove any one-off containers created by `docker compose run e2e`
-  docker compose rm -f -s -v e2e >/dev/null 2>&1 || true
+  "${COMPOSE_CMD[@]}" rm -f -s -v e2e >/dev/null 2>&1 || true
   # Bring down the compose stack and remove orphans so the network can be cleaned up
-  docker compose down --remove-orphans || true
+  "${COMPOSE_CMD[@]}" down --remove-orphans || true
 }
 
 trap cleanup EXIT
@@ -82,7 +94,7 @@ fi
 echo "Running Playwright E2E suite inside Docker..."
 set +e
 # Forward optional E2E_DEBUG from host if set, to toggle verbose logs in tests
-docker compose --profile e2e run --rm -e E2E_DEBUG e2e
+"${COMPOSE_CMD[@]}" --profile e2e run --rm -e E2E_DEBUG e2e
 E2E_EXIT_CODE=$?
 set -e
 

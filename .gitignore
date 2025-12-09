@@ -96,6 +96,8 @@ Icon?
 # Env files (keep out of source control)
 .env
 .env.development
+.env.demo
+.env.qa
 .env.production
 .env.test
 

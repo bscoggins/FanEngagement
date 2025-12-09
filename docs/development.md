@@ -9,6 +9,12 @@ This guide helps you get up and running with the FanEngagement development envir
 - **.NET 9 SDK** (for backend development without Docker)
 - **PostgreSQL 16** (if running without Docker)
 
+## Node Dependency Management
+
+- Every Node-based project in this repo (frontend plus both adapters) keeps its `package-lock.json` committed so `npm ci` installs the exact dependency graph that CI and production use.
+- When adding or updating dependencies, run `npm install` (which refreshes the lockfile), commit the resulting `package-lock.json`, and verify `npm ci && npm test` succeed inside the package you touched.
+- CI workflows rely on `npm ci`, so missing or untracked lockfiles will fail builds—make sure new Node packages follow the same convention.
+
 ## Getting Started
 
 ### 1. Clone the Repository
@@ -48,6 +54,59 @@ docker compose up -d --build
 - **Backend API**: http://localhost:8080
 - **Frontend**: http://localhost:3000
 
+#### Solana Adapter + Validator (On Demand)
+
+The Solana adapter and the local `solana-test-validator` live behind the `solana` compose profile so they stay off by default. The adapter now targets Solana **devnet** unless you override its `SOLANA_RPC_URL`.
+
+```bash
+# Routine development: adapter only, pointed at devnet
+docker compose --profile solana up -d solana-adapter
+
+# Deterministic local testing: start adapter + validator and override RPC
+# Recommended: use an env file
+echo "SOLANA_RPC_URL=http://solana-test-validator:8899" > .env.local
+echo "SOLANA_NETWORK=localnet" >> .env.local
+docker compose --env-file .env.local --profile solana up -d solana-test-validator solana-adapter
+
+# Or export variables in your shell before running
+export SOLANA_RPC_URL=http://solana-test-validator:8899
+export SOLANA_NETWORK=localnet
+docker compose --profile solana up -d solana-test-validator solana-adapter
+# Tear everything down when finished
+docker compose --profile solana down
+```
+
+Any scripts or test runs that rely on Solana should add `--profile solana` so the adapter container is present. If a workflow truly needs the embedded validator, include it explicitly (as shown above) or run the validator manually before launching the adapter.
+
+##### Generating and Funding a Devnet Keypair
+
+Use the Solana CLI to create a disposable keypair and request devnet SOL for transaction fees:
+
+```bash
+# 1) Create a keypair file (JSON array of numbers)
+solana-keygen new --outfile solana-devnet-keypair.json
+
+# 2) Request 2 devnet SOL for that key (repeat if rate-limited)
+solana airdrop 2 "$(solana-keygen pubkey solana-devnet-keypair.json)" \
+  --url https://api.devnet.solana.com
+
+# 3) Verify the balance
+solana balance "$(solana-keygen pubkey solana-devnet-keypair.json)" \
+  --url https://api.devnet.solana.com
+
+# 4) Store the private key securely for development
+echo "SOLANA_PRIVATE_KEY='$(cat solana-devnet-keypair.json)'" >> .env.development
+
+# 5) Verify .env.development is in .gitignore (it should already be)
+git check-ignore .env.development
+
+# If the above command returns nothing, add `.env.development` to your .gitignore immediately.
+```
+
+> **Note:**  
+> `.env.development` is intentionally listed in `.gitignore` and is safe to use for local development.  
+> However, it contains sensitive information (your Solana private key) and should **never** be committed to version control or shared outside your local environment.
+
 ### 3. Apply Migrations
 
 Migrations are automatically applied when the API starts. No manual steps needed.
@@ -57,11 +116,13 @@ Migrations are automatically applied when the API starts. No manual steps needed
 Use the Admin Dev Tools UI or the API to seed test data:
 
 **Via UI (Recommended):**
+
 1. Log in as admin (`admin@example.com` / `Admin123!`)
 2. Navigate to Admin → Dev Tools (`/admin/dev-tools`)
 3. Select a scenario and click "Seed"
 
 **Via API:**
+
 ```bash
 # Seed basic demo data
 curl -X POST http://localhost:5049/admin/seed-dev-data \
@@ -73,6 +134,7 @@ curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=HeavyProposals"
 ```
 
 **Available Scenarios:**
+
 - `BasicDemo` - Small but comprehensive dataset (default)
 - `HeavyProposals` - 50+ proposals for pagination testing
 - `WebhookFailures` - Webhook events with various statuses

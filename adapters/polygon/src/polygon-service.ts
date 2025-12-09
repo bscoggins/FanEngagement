@@ -23,6 +23,7 @@ import {
   gasPriceGwei,
 } from './metrics.js';
 import { RpcError, TransactionError } from './errors.js';
+import { serializeError } from '../../shared/errors.js';
 
 // Simple Governance Registry contract ABI
 const GOVERNANCE_ABI = [
@@ -553,7 +554,7 @@ export class PolygonService {
       };
     } catch (error) {
       logger.error('Health check failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: serializeError(error),
       });
 
       return {
@@ -604,7 +605,7 @@ export class PolygonService {
         if (attempt >= maxAttempts) {
           throw new TransactionError(
             `Transaction confirmation failed after ${maxAttempts} attempts`,
-            error instanceof Error ? error.message : 'Unknown error'
+            serializeError(error).message
           );
         }
 
@@ -627,33 +628,34 @@ export class PolygonService {
    * Handle blockchain errors and convert to appropriate error types
    */
   private handleBlockchainError(error: unknown, operation: string): void {
+    const serialized = serializeError(error);
+    
     logger.error('Blockchain operation failed', {
       operation,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
+      error: serialized,
     });
 
     rpcErrorsTotal.inc({ error_type: operation });
 
-    if (error instanceof Error) {
-      const message = error.message.toLowerCase();
+    const message = serialized.message.toLowerCase();
 
-      if (message.includes('timeout') || message.includes('network')) {
-        throw new RpcError('RPC timeout or network error', error.message);
-      }
-
-      if (message.includes('insufficient funds') || message.includes('balance')) {
-        throw new TransactionError('Insufficient MATIC balance for gas fees', error.message);
-      }
-
-      if (message.includes('nonce')) {
-        throw new TransactionError('Nonce error, transaction may be pending', error.message);
-      }
-
-      if (message.includes('gas')) {
-        throw new TransactionError('Gas estimation or execution error', error.message);
-      }
+    if (message.includes('timeout') || message.includes('network')) {
+      throw new RpcError('RPC timeout or network error', serialized.message);
     }
+
+    if (message.includes('insufficient funds') || message.includes('balance')) {
+      throw new TransactionError('Insufficient MATIC balance for gas fees', serialized.message);
+    }
+
+    if (message.includes('nonce')) {
+      throw new TransactionError('Nonce error, transaction may be pending', serialized.message);
+    }
+
+    if (message.includes('gas')) {
+      throw new TransactionError('Gas estimation or execution error', serialized.message);
+    }
+    // Re-throw as generic RpcError if no specific pattern matches
+    throw new RpcError('Blockchain operation failed', serialized.message);
   }
 
   /**
