@@ -6,6 +6,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { Button } from '../components/Button';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
 export const AdminUserDetailPage: React.FC = () => {
@@ -266,21 +267,13 @@ export const AdminUserDetailPage: React.FC = () => {
             )}
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              <button
+              <Button
                 type="submit"
-                disabled={isSaving}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  backgroundColor: isSaving ? '#ccc' : '#0066cc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: isSaving ? 'not-allowed' : 'pointer',
-                }}
+                isLoading={isSaving}
+                variant="primary"
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
+                Save Changes
+              </Button>
             </div>
           </form>
         </div>
@@ -475,22 +468,14 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
         />
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        style={{
-          padding: '0.75rem 1.5rem',
-          fontSize: '1rem',
-          backgroundColor: isSubmitting ? '#ccc' : '#0066cc',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: isSubmitting ? 'not-allowed' : 'pointer',
-        }}
-        data-testid="set-password-button"
+        isLoading={isSubmitting}
+        variant="primary"
+        testId="set-password-button"
       >
-        {isSubmitting ? 'Setting Password...' : 'Set New Password'}
-      </button>
+        Set New Password
+      </Button>
     </form>
   );
 };

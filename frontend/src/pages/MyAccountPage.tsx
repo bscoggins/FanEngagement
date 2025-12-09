@@ -6,6 +6,7 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { MfaSettings } from '../components/MfaSettings';
+import { Button } from '../components/Button';
 import type { UserProfile } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
@@ -147,19 +148,12 @@ export const MyAccountPage: React.FC = () => {
           </div>
 
           {isAdmin ? (
-            <button
+            <Button
               onClick={() => setIsEditing(true)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              variant="primary"
             >
               Edit Profile
-            </button>
+            </Button>
           ) : (
             <p style={{ color: '#6c757d', fontStyle: 'italic' }}>
               Contact an administrator to update your profile information.
@@ -216,20 +210,13 @@ export const MyAccountPage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
+            <Button
               type="submit"
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              variant="primary"
             >
               Save Changes
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => {
                 setIsEditing(false);
@@ -239,17 +226,10 @@ export const MyAccountPage: React.FC = () => {
                 });
                 setError('');
               }}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              variant="secondary"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -417,21 +397,14 @@ const PasswordChangeForm: React.FC = () => {
         />
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isSubmitting}
-        style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: isSubmitting ? 'not-allowed' : 'pointer',
-        }}
-        data-testid="change-password-button"
+        isLoading={isSubmitting}
+        variant="primary"
+        testId="change-password-button"
       >
-        {isSubmitting ? 'Changing Password...' : 'Change Password'}
-      </button>
+        Change Password
+      </Button>
     </form>
   );
 };
