@@ -370,7 +370,16 @@ public class UsersController(
     [Authorize(Policy = "GlobalAdmin")]
     public async Task<ActionResult> SetUserPassword(Guid id, [FromBody] SetPasswordRequest request, CancellationToken cancellationToken)
     {
-        var success = await userService.SetPasswordAsync(id, request.NewPassword, cancellationToken);
+        // Get the current admin user info for audit logging
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userNameClaim = User.Identity?.Name ?? "Unknown Admin";
+        
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var actorId))
+        {
+            return Forbid();
+        }
+
+        var success = await userService.SetPasswordAsync(id, request.NewPassword, actorId, userNameClaim, cancellationToken);
         if (!success)
         {
             return NotFound();

@@ -295,7 +295,7 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         return true;
     }
 
-    public async Task<bool> SetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken = default)
+    public async Task<bool> SetPasswordAsync(Guid userId, string newPassword, Guid actorId, string actorName, CancellationToken cancellationToken = default)
     {
         var user = await dbContext.Users.FindAsync([userId], cancellationToken);
         if (user == null)
@@ -312,6 +312,7 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         {
             await auditService.LogAsync(
                 new AuditEventBuilder()
+                    .WithActor(actorId, actorName)
                     .WithAction(AuditActionType.Updated)
                     .WithResource(AuditResourceType.User, userId, user.Email)
                     .WithDetails(new { Action = "PASSWORD_SET_BY_ADMIN" })

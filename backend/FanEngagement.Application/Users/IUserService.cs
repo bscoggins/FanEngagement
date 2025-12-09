@@ -11,5 +11,5 @@ public interface IUserService
     Task<UserDto?> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
-    Task<bool> SetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken = default);
+    Task<bool> SetPasswordAsync(Guid userId, string newPassword, Guid actorId, string actorName, CancellationToken cancellationToken = default);
 }
