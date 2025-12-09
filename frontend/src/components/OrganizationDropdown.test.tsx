@@ -8,25 +8,28 @@ describe('OrganizationDropdown', () => {
 
   const mockMemberships: MembershipWithOrganizationDto[] = [
     {
+      id: 'membership-1',
       organizationId: 'org-1',
       organizationName: 'Organization One',
       role: 'OrgAdmin',
       userId: 'user-1',
-      joinedAt: '2024-01-01T00:00:00Z',
+      createdAt: '2024-01-01T00:00:00Z',
     },
     {
+      id: 'membership-2',
       organizationId: 'org-2',
       organizationName: 'Organization Two',
       role: 'Member',
       userId: 'user-1',
-      joinedAt: '2024-01-02T00:00:00Z',
+      createdAt: '2024-01-02T00:00:00Z',
     },
     {
+      id: 'membership-3',
       organizationId: 'org-3',
       organizationName: 'Very Long Organization Name That Should Be Truncated',
       role: 'OrgAdmin',
       userId: 'user-1',
-      joinedAt: '2024-01-03T00:00:00Z',
+      createdAt: '2024-01-03T00:00:00Z',
     },
   ];
 
