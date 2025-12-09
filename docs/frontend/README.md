@@ -1,0 +1,182 @@
+# Frontend Documentation
+
+**Version:** 1.0  
+**Last Updated:** 2025-12-09  
+**Repository:** FanEngagement
+
+---
+
+## 📚 Quick Links
+
+### 🎨 **Design System**
+**[design-system.md](./design-system.md)** — Complete design token documentation  
+**[design-tokens-showcase.html](./design-tokens-showcase.html)** — Interactive visual reference for all tokens
+
+**Start here** if you're:
+- Building new UI components
+- Styling existing components
+- Looking for color, spacing, typography, or shadow tokens
+- Wondering which tokens to use
+
+### 🧭 **Navigation Design**
+**[README-navigation-design.md](./README-navigation-design.md)** — Navigation documentation index  
+**[navigation-design-specifications.md](./navigation-design-specifications.md)** — Complete navigation specs
+
+**Start here** if you're:
+- Working on navigation components
+- Implementing sidebar, mobile nav, or organization switcher
+- Need navigation-specific token usage
+
+---
+
+## 📖 Complete Documentation Index
+
+### Design System & Tokens
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [design-system.md](./design-system.md) | **Authoritative design token reference** | All developers |
+| [design-tokens-showcase.html](./design-tokens-showcase.html) | **Interactive visual showcase** | Designers, developers |
+| [SPACING_TOKENS_SUMMARY.md](./SPACING_TOKENS_SUMMARY.md) | Spacing token implementation summary | Developers |
+| [shadow-tokens-demo.html](./shadow-tokens-demo.html) | Shadow & radius token demonstrations | Designers, developers |
+| [spacing-tokens-demo.png](./spacing-tokens-demo.png) | Visual spacing reference image | Designers |
+
+### Navigation System
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [README-navigation-design.md](./README-navigation-design.md) | Navigation documentation index | All |
+| [navigation-design-specifications.md](./navigation-design-specifications.md) | Complete navigation technical specs | Developers, QA |
+| [navigation.md](./navigation.md) | Navigation implementation guide | Developers |
+| [navigation-visual-mockup-guide.md](./navigation-visual-mockup-guide.md) | Visual design mockups | Designers, PMs |
+| [navigation-token-usage-guide.md](./navigation-token-usage-guide.md) | Token usage in navigation | Developers |
+| [keyboard-navigation.md](./keyboard-navigation.md) | Keyboard accessibility guide | Developers, QA, Accessibility |
+
+---
+
+## 🚀 Quick Start for Developers
+
+### Using Design Tokens
+
+**1. Find the token you need:**
+- Open [design-tokens-showcase.html](./design-tokens-showcase.html) in your browser
+- Or search [design-system.md](./design-system.md) for token documentation
+
+**2. Use in your CSS:**
+```css
+.my-component {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+```
+
+**3. Use utility classes (when appropriate):**
+```html
+<div class="p-6 mb-4 gap-3">
+  <h2 class="mb-3">Title</h2>
+  <p class="text-body">Content</p>
+</div>
+```
+
+### Building Navigation Components
+
+**1. Review navigation specifications:**
+- Read [navigation-design-specifications.md](./navigation-design-specifications.md)
+- Check [navigation-token-usage-guide.md](./navigation-token-usage-guide.md) for token usage
+
+**2. Follow existing patterns:**
+- Use the same tokens as similar components
+- Maintain consistent spacing and elevation
+
+**3. Test keyboard navigation:**
+- Review [keyboard-navigation.md](./keyboard-navigation.md)
+- Ensure all interactive elements are keyboard accessible
+
+---
+
+## 🎯 Documentation Standards
+
+All documentation in this directory follows these standards:
+
+### Structure
+- **Version number** at the top
+- **Last updated date**
+- **Purpose/audience** clearly stated
+- **Table of contents** for long documents
+- **Code examples** with syntax highlighting
+- **Visual references** where helpful
+
+### Design Tokens
+- Token names use CSS custom property syntax: `var(--token-name)`
+- Include both token name and computed value
+- Provide usage guidelines
+- Show anti-patterns (what NOT to do)
+
+### Navigation Specs
+- Complete measurements and spacing
+- Token references for all values
+- Visual mockups where helpful
+- Accessibility requirements
+- Responsive behavior
+
+---
+
+## 🔍 Finding What You Need
+
+### "I need to style a button"
+→ [design-system.md](./design-system.md) — See "Common Patterns" section
+
+### "I need to add spacing between elements"
+→ [design-tokens-showcase.html](./design-tokens-showcase.html) — Open in browser, scroll to "Spacing Scale"
+
+### "I need to implement the sidebar"
+→ [navigation-design-specifications.md](./navigation-design-specifications.md) — See "Desktop Sidebar Navigation"
+
+### "I need to know which colors to use"
+→ [design-tokens-showcase.html](./design-tokens-showcase.html) — Open in browser, scroll to "Colors"
+
+### "I need to make my component keyboard accessible"
+→ [keyboard-navigation.md](./keyboard-navigation.md) — Complete keyboard navigation guide
+
+### "I need visual mockups for navigation"
+→ [navigation-visual-mockup-guide.md](./navigation-visual-mockup-guide.md) — Visual design reference
+
+---
+
+## 📝 Contributing to Documentation
+
+When adding or updating documentation:
+
+1. **Update the version number and date**
+2. **Add an entry to this README** if it's a new file
+3. **Link to related documentation** where appropriate
+4. **Include code examples** with proper syntax highlighting
+5. **Provide visual examples** (HTML demos, images) when helpful
+6. **Follow existing naming conventions**
+7. **Test all links** before committing
+
+---
+
+## 🆘 Need Help?
+
+- **Questions about design tokens?** See [design-system.md](./design-system.md) or open the [interactive showcase](./design-tokens-showcase.html)
+- **Questions about navigation?** Start with [README-navigation-design.md](./README-navigation-design.md)
+- **Can't find what you need?** Check the main [docs/](../) directory
+- **Found an issue?** Open a GitHub issue with the `documentation` label
+
+---
+
+## 📊 Documentation Status
+
+| Category | Status | Last Updated |
+|----------|--------|--------------|
+| Design System | ✅ Complete | 2025-12-09 |
+| Navigation Design | ✅ Complete | 2025-12-08 |
+| Keyboard Navigation | ✅ Complete | 2025-12-08 |
+| Interactive Demos | ✅ Complete | 2025-12-09 |
+
+---
+
+**Maintained by:** FanEngagement Frontend Team  
+**Last Reviewed:** 2025-12-09
