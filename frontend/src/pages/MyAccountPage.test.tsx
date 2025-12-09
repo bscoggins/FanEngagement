@@ -456,7 +456,7 @@ describe('MyAccountPage', () => {
       };
 
       vi.mocked(usersApi.changeMyPassword).mockRejectedValue({
-        response: { data: { title: 'Current password is incorrect' } }
+        response: { data: { message: 'Current password is incorrect' } }
       });
 
       renderWithAuth(mockUser);

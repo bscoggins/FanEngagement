@@ -415,7 +415,7 @@ describe('AdminUserDetailPage', () => {
       vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
       vi.mocked(usersApi.setUserPassword).mockRejectedValue({
-        response: { data: { title: 'User not found' } }
+        response: { data: { message: 'User not found' } }
       });
 
       renderAdminUserDetailPage();

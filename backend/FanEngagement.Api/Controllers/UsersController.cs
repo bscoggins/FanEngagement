@@ -342,6 +342,7 @@ public class UsersController(
 
     [HttpPost("me/password")]
     [Authorize]
+    [EnableRateLimiting("PasswordChange")]
     public async Task<ActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

@@ -69,7 +69,7 @@ public class PasswordChangeTests : IClassFixture<TestWebApplicationFactory>
     public async Task ChangeMyPassword_Fails_WithIncorrectCurrentPassword()
     {
         // Arrange
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         _client.AddAuthorizationHeader(token);
 
         var request = new ChangePasswordRequest
@@ -108,7 +108,7 @@ public class PasswordChangeTests : IClassFixture<TestWebApplicationFactory>
     public async Task ChangeMyPassword_Fails_WithShortPassword()
     {
         // Arrange
-        var (user, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, token) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         _client.AddAuthorizationHeader(token);
 
         var request = new ChangePasswordRequest
@@ -197,7 +197,7 @@ public class PasswordChangeTests : IClassFixture<TestWebApplicationFactory>
     public async Task SetUserPassword_RequiresAdminRole()
     {
         // Arrange - create two regular users
-        var (user1, token1) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
+        var (_, token1) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
         var (user2, _) = await TestAuthenticationHelper.CreateAuthenticatedUserAsync(_client);
 
         // Try to set another user's password as a regular user
