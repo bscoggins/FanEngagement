@@ -3,19 +3,21 @@
 # Stage 1: Builder
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy package files
-COPY package*.json ./
+# Copy shared helpers so relative imports resolve during builds
+COPY adapters/shared ./adapters/shared
 
-# Install all dependencies
+# Copy package files for the Polygon adapter and install dependencies
+WORKDIR /workspace/adapters/polygon
+COPY adapters/polygon/package*.json ./
 RUN npm install
 
 # Copy source code
-COPY tsconfig.json ./
-COPY jest.config.json ./
-COPY src ./src
-COPY tests ./tests
+COPY adapters/polygon/tsconfig.json ./
+COPY adapters/polygon/jest.config.json ./
+COPY adapters/polygon/src ./src
+COPY adapters/polygon/tests ./tests
 
 # Build TypeScript
 RUN npm run build
@@ -30,14 +32,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy shared helpers for runtime imports
+COPY adapters/shared ./adapters/shared
 
-# Install only production dependencies
+# Prepare adapter workspace and install production dependencies
+WORKDIR /app/adapters/polygon
+COPY adapters/polygon/package*.json ./
 RUN npm install --omit=dev
 
 # Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /workspace/adapters/polygon/dist ./dist
 
 # Create directory for secrets with proper ownership
 RUN mkdir -p /secrets && chown node:node /secrets

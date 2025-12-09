@@ -1,6 +1,9 @@
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { PublicKey } from '@solana/web3.js';
-import { serializeError } from '../src/solana-service.js';
+import type { Request, Response } from 'express';
+import { z } from 'zod';
+import { serializeError } from '../../shared/errors.js';
+import { createPostHandler } from '../../shared/http.js';
 
 describe('Solana Adapter Unit Tests', () => {
   describe('serializeError', () => {
@@ -154,6 +157,71 @@ describe('Solana Adapter Unit Tests', () => {
       expect(serialized).toHaveProperty('message', 'Range error occurred');
       expect(serialized).toHaveProperty('name', 'RangeError');
       expect(serialized).toHaveProperty('stack');
+    });
+  });
+
+  describe('createPostHandler', () => {
+    const schema = z.object({ value: z.string() });
+    const buildResponse = jest.fn((result: Record<string, string>) => result);
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test('should validate input, execute task, and send response', async () => {
+      const execute = jest.fn(async (data: { value: string }) => ({ id: '123', ...data }));
+      const onError = jest.fn();
+      const handler = createPostHandler({
+        schema,
+        execute,
+        buildResponse,
+        status: 202,
+        onError,
+      });
+
+      const req = { body: { value: 'hello' } } as unknown as Request;
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await handler(req, res);
+
+      expect(execute).toHaveBeenCalledWith({ value: 'hello' });
+      expect(buildResponse).toHaveBeenCalledWith({ id: '123', value: 'hello' }, { value: 'hello' });
+      expect(res.status).toHaveBeenCalledWith(202);
+      expect(res.json).toHaveBeenCalledWith({ id: '123', value: 'hello' });
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    test('should call onError when validation fails', async () => {
+      const execute = jest.fn();
+      const onError = jest.fn();
+      const handler = createPostHandler({
+        schema,
+        execute,
+        buildResponse,
+        onError,
+      });
+
+      const req = { body: {} } as unknown as Request;
+      const res = {} as Response;
+
+      await handler(req, res);
+
+      expect(execute).not.toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith(expect.any(Error), req, res);
+    });
+
+    test('should throw when onError handler is missing', () => {
+      expect(() =>
+        createPostHandler({
+          schema,
+          execute: async () => ({ id: '123' }),
+          buildResponse,
+          onError: undefined as unknown as (error: unknown) => void,
+        })
+      ).toThrow('createPostHandler requires an onError handler');
     });
   });
   describe('PDA Derivation', () => {

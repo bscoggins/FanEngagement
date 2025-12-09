@@ -63,8 +63,8 @@ services:
       start_period: 10s
   solana-adapter:
     build:
-      context: ./adapters/solana
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: adapters/solana/Dockerfile
     container_name: solana-adapter
     profiles: ["solana"]
     ports:
@@ -90,8 +90,8 @@ services:
       start_period: 10s
   polygon-adapter:
     build:
-      context: ./adapters/polygon
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: adapters/polygon/Dockerfile
     container_name: polygon-adapter
     ports:
       - "3002:3002"

@@ -67,3 +67,37 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}-frontend:demo
             ${{ env.IMAGE_PREFIX }}-frontend:demo-${{ github.sha }}
+
+  build-adapters:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        adapter: [solana, polygon]
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/fanengagement
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push ${{ matrix.adapter }} adapter image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: adapters/${{ matrix.adapter }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.adapter }}-adapter:demo
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.adapter }}-adapter:demo-${{ github.sha }}

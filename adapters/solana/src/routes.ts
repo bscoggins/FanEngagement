@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import type { ZodTypeAny, TypeOf } from 'zod';
 import { SolanaService } from './solana-service.js';
 import { 
   createOrganizationSchema,
@@ -13,30 +12,7 @@ import { handleError } from './errors.js';
 import { getMetricsRegistry } from './metrics.js';
 import { healthStatus } from './metrics.js';
 import { config } from './config.js';
-
-type HandlerOptions<TSchema extends ZodTypeAny, TResult> = {
-  schema: TSchema;
-  execute: (data: TypeOf<TSchema>) => Promise<TResult>;
-  buildResponse: (result: TResult, data: TypeOf<TSchema>) => Record<string, unknown>;
-  status?: number;
-};
-
-const createPostHandler = <TSchema extends ZodTypeAny, TResult>({
-  schema,
-  execute,
-  buildResponse,
-  status = 201,
-}: HandlerOptions<TSchema, TResult>) => {
-  return async (req: Request, res: Response) => {
-    try {
-      const data = schema.parse(req.body);
-      const result = await execute(data);
-      res.status(status).json(buildResponse(result, data));
-    } catch (error) {
-      handleError(error, req, res);
-    }
-  };
-};
+import { createPostHandler } from '../../shared/http.js';
 
 export function createRoutes(solanaService: SolanaService): Router {
   const router = Router();
@@ -58,6 +34,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
+      onError: handleError,
     })
   );
 
@@ -80,6 +57,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
+      onError: handleError,
     })
   );
 
@@ -102,6 +80,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
+      onError: handleError,
     })
   );
 
@@ -125,6 +104,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
+      onError: handleError,
     })
   );
 
@@ -146,6 +126,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
+      onError: handleError,
     })
   );
 
@@ -166,6 +147,7 @@ export function createRoutes(solanaService: SolanaService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
+      onError: handleError,
     })
   );
 

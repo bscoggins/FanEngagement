@@ -23,17 +23,7 @@ import {
   gasPriceGwei,
 } from './metrics.js';
 import { RpcError, TransactionError } from './errors.js';
-
-const serializeError = (error: unknown) => {
-  if (error instanceof Error) {
-    return {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    };
-  }
-  return { message: String(error) };
-};
+import { serializeError } from '../../shared/errors.js';
 
 // Simple Governance Registry contract ABI
 const GOVERNANCE_ABI = [
