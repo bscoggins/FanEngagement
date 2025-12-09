@@ -638,14 +638,15 @@ export class PolygonService {
    * Handle blockchain errors and convert to appropriate error types
    */
   private handleBlockchainError(error: unknown, operation: string): void {
+    const serialized = serializeError(error);
+    
     logger.error('Blockchain operation failed', {
       operation,
-      error: serializeError(error),
+      error: serialized,
     });
 
     rpcErrorsTotal.inc({ error_type: operation });
 
-    const serialized = serializeError(error);
     const message = serialized.message.toLowerCase();
 
     if (message.includes('timeout') || message.includes('network')) {
