@@ -315,4 +315,167 @@ describe('MyAccountPage', () => {
       });
     });
   });
+
+  describe('Password Change', () => {
+    it('displays password change form for all users', async () => {
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User' as const,
+      };
+
+      renderWithAuth(mockUser);
+
+      // Wait for page to load
+      await waitFor(() => {
+        expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+      });
+
+      // Check that password change elements are present
+      expect(screen.getByText('Change Password')).toBeInTheDocument();
+      expect(screen.getByTestId('password-change-form')).toBeInTheDocument();
+      expect(screen.getByTestId('current-password-input')).toBeInTheDocument();
+      expect(screen.getByTestId('new-password-input')).toBeInTheDocument();
+      expect(screen.getByTestId('confirm-password-input')).toBeInTheDocument();
+      expect(screen.getByTestId('change-password-button')).toBeInTheDocument();
+    });
+
+    it('successfully changes password with valid inputs', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User' as const,
+      };
+
+      vi.mocked(usersApi.changeMyPassword).mockResolvedValue({ message: 'Password changed successfully' });
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('password-change-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form
+      await user.type(screen.getByTestId('current-password-input'), 'OldPassword123!');
+      await user.type(screen.getByTestId('new-password-input'), 'NewPassword456!');
+      await user.type(screen.getByTestId('confirm-password-input'), 'NewPassword456!');
+
+      // Submit
+      await user.click(screen.getByTestId('change-password-button'));
+
+      await waitFor(() => {
+        expect(usersApi.changeMyPassword).toHaveBeenCalledWith({
+          currentPassword: 'OldPassword123!',
+          newPassword: 'NewPassword456!',
+        });
+      });
+
+      // Check success notification appears
+      await waitFor(() => {
+        expect(screen.getByText('Password changed successfully!')).toBeInTheDocument();
+      });
+
+      // Form should be cleared
+      expect(screen.getByTestId('current-password-input')).toHaveValue('');
+      expect(screen.getByTestId('new-password-input')).toHaveValue('');
+      expect(screen.getByTestId('confirm-password-input')).toHaveValue('');
+    });
+
+    it('shows error when passwords do not match', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User' as const,
+      };
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('password-change-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form with mismatched passwords
+      await user.type(screen.getByTestId('current-password-input'), 'OldPassword123!');
+      await user.type(screen.getByTestId('new-password-input'), 'NewPassword456!');
+      await user.type(screen.getByTestId('confirm-password-input'), 'DifferentPassword789!');
+
+      // Submit
+      await user.click(screen.getByTestId('change-password-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText('New passwords do not match')).toBeInTheDocument();
+      });
+
+      // Should not call the API
+      expect(usersApi.changeMyPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error when new password is too short', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User' as const,
+      };
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('password-change-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form with short password
+      await user.type(screen.getByTestId('current-password-input'), 'OldPassword123!');
+      await user.type(screen.getByTestId('new-password-input'), 'short');
+      await user.type(screen.getByTestId('confirm-password-input'), 'short');
+
+      // Submit
+      await user.click(screen.getByTestId('change-password-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText('New password must be at least 8 characters long')).toBeInTheDocument();
+      });
+
+      // Should not call the API
+      expect(usersApi.changeMyPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error message when API call fails', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        displayName: 'Test User',
+        role: 'User' as const,
+      };
+
+      vi.mocked(usersApi.changeMyPassword).mockRejectedValue({
+        response: { data: { message: 'Current password is incorrect' } }
+      });
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('password-change-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form
+      await user.type(screen.getByTestId('current-password-input'), 'WrongPassword123!');
+      await user.type(screen.getByTestId('new-password-input'), 'NewPassword456!');
+      await user.type(screen.getByTestId('confirm-password-input'), 'NewPassword456!');
+
+      // Submit
+      await user.click(screen.getByTestId('change-password-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Current password is incorrect/i)).toBeInTheDocument();
+      });
+    });
+  });
 });

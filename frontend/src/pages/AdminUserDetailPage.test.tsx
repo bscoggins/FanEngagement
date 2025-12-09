@@ -15,6 +15,7 @@ vi.mock('../api/usersApi', () => ({
   usersApi: {
     getById: vi.fn(),
     update: vi.fn(),
+    setUserPassword: vi.fn(),
   },
 }));
 
@@ -284,5 +285,155 @@ describe('AdminUserDetailPage', () => {
     
     const backLinks = screen.getAllByText('← Back to Users');
     expect(backLinks[0].closest('a')).toHaveAttribute('href', '/admin/users');
+  });
+
+  describe('Password Management', () => {
+    const renderAdminUserDetailPage = () => {
+      return render(
+        <NotificationProvider>
+          <NotificationContainer />
+          <MemoryRouter initialEntries={['/admin/users/user-1']}>
+            <AuthProvider>
+              <Routes>
+                <Route path="/admin/users/:userId" element={<AdminUserDetailPage />} />
+              </Routes>
+            </AuthProvider>
+          </MemoryRouter>
+        </NotificationProvider>
+      );
+    };
+
+    it('displays password management section', async () => {
+      vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+
+      renderAdminUserDetailPage();
+
+      await waitFor(() => {
+        expect(screen.getByText('Password Management')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('admin-password-set-form')).toBeInTheDocument();
+      expect(screen.getByTestId('new-password-input')).toBeInTheDocument();
+      expect(screen.getByTestId('confirm-password-input')).toBeInTheDocument();
+      expect(screen.getByTestId('set-password-button')).toBeInTheDocument();
+    });
+
+    it('successfully sets password with valid inputs', async () => {
+      const user = userEvent.setup();
+      
+      vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+      vi.mocked(usersApi.setUserPassword).mockResolvedValue({ message: 'Password set successfully' });
+
+      renderAdminUserDetailPage();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-password-set-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form
+      await user.type(screen.getByTestId('new-password-input'), 'NewPassword456!');
+      await user.type(screen.getByTestId('confirm-password-input'), 'NewPassword456!');
+
+      // Submit
+      await user.click(screen.getByTestId('set-password-button'));
+
+      await waitFor(() => {
+        expect(usersApi.setUserPassword).toHaveBeenCalledWith('user-1', {
+          newPassword: 'NewPassword456!',
+        });
+      });
+
+      // Check success notification appears
+      await waitFor(() => {
+        expect(screen.getByText('Password set successfully!')).toBeInTheDocument();
+      });
+
+      // Form should be cleared
+      expect(screen.getByTestId('new-password-input')).toHaveValue('');
+      expect(screen.getByTestId('confirm-password-input')).toHaveValue('');
+    });
+
+    it('shows error when passwords do not match', async () => {
+      const user = userEvent.setup();
+      
+      vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+
+      renderAdminUserDetailPage();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-password-set-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form with mismatched passwords
+      await user.type(screen.getByTestId('new-password-input'), 'NewPassword456!');
+      await user.type(screen.getByTestId('confirm-password-input'), 'DifferentPassword789!');
+
+      // Submit
+      await user.click(screen.getByTestId('set-password-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Passwords do not match')).toBeInTheDocument();
+      });
+
+      // Should not call the API
+      expect(usersApi.setUserPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error when password is too short', async () => {
+      const user = userEvent.setup();
+      
+      vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+
+      renderAdminUserDetailPage();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-password-set-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form with short password
+      await user.type(screen.getByTestId('new-password-input'), 'short');
+      await user.type(screen.getByTestId('confirm-password-input'), 'short');
+
+      // Submit
+      await user.click(screen.getByTestId('set-password-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument();
+      });
+
+      // Should not call the API
+      expect(usersApi.setUserPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error message when API call fails', async () => {
+      const user = userEvent.setup();
+      
+      vi.mocked(usersApi.getById).mockResolvedValue(mockUser);
+      vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMembershipsWithOrg);
+      vi.mocked(usersApi.setUserPassword).mockRejectedValue({
+        response: { data: { message: 'User not found' } }
+      });
+
+      renderAdminUserDetailPage();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('admin-password-set-form')).toBeInTheDocument();
+      });
+
+      // Fill in the form
+      await user.type(screen.getByTestId('new-password-input'), 'NewPassword456!');
+      await user.type(screen.getByTestId('confirm-password-input'), 'NewPassword456!');
+
+      // Submit
+      await user.click(screen.getByTestId('set-password-button'));
+
+      await waitFor(() => {
+        expect(screen.getByText(/User not found/i)).toBeInTheDocument();
+      });
+    });
   });
 });

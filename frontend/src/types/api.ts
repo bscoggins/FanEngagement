@@ -80,6 +80,15 @@ export interface UpdateUserRequest {
   role?: 'User' | 'Admin';
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface SetPasswordRequest {
+  newPassword: string;
+}
+
 export interface Organization {
   id: string;
   name: string;

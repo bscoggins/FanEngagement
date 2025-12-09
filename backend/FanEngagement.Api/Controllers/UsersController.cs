@@ -339,4 +339,53 @@ public class UsersController(
 
         return Ok(new { mfaEnabled = user.MfaEnabled });
     }
+
+    [HttpPost("me/password")]
+    [Authorize]
+    [EnableRateLimiting("PasswordChange")]
+    public async Task<ActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var success = await userService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword, cancellationToken);
+            if (!success)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { message = "Password changed successfully" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:guid}/password")]
+    [Authorize(Policy = "GlobalAdmin")]
+    public async Task<ActionResult> SetUserPassword(Guid id, [FromBody] SetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        // Get the current admin user info for audit logging
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userNameClaim = User.Identity?.Name ?? "Unknown Admin";
+        
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var actorId))
+        {
+            return Forbid();
+        }
+
+        var success = await userService.SetPasswordAsync(id, request.NewPassword, actorId, userNameClaim, cancellationToken);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return Ok(new { message = "Password set successfully" });
+    }
 }

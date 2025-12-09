@@ -256,6 +256,78 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         return true;
     }
 
+    public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user == null)
+        {
+            return false;
+        }
+
+        // Verify current password
+        if (!authService.VerifyPassword(currentPassword, user.PasswordHash))
+        {
+            throw new InvalidOperationException("Current password is incorrect");
+        }
+
+        // Hash and update password
+        user.PasswordHash = authService.HashPassword(newPassword);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit password change
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(userId, user.DisplayName)
+                    .WithAction(AuditActionType.Updated)
+                    .WithResource(AuditResourceType.User, userId, user.Email)
+                    .WithDetails(new { Action = "PASSWORD_CHANGED" })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail user operations
+            logger.LogWarning(ex, "Failed to audit password change for {UserId}", userId);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> SetPasswordAsync(Guid userId, string newPassword, Guid actorId, string actorName, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user == null)
+        {
+            return false;
+        }
+
+        // Hash and update password (no current password verification needed for admin action)
+        user.PasswordHash = authService.HashPassword(newPassword);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Audit password set/reset by admin
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(actorId, actorName)
+                    .WithAction(AuditActionType.Updated)
+                    .WithResource(AuditResourceType.User, userId, user.Email)
+                    .WithDetails(new { Action = "PASSWORD_SET_BY_ADMIN" })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Audit failures should not fail user operations
+            logger.LogWarning(ex, "Failed to audit password set for {UserId}", userId);
+        }
+
+        return true;
+    }
+
     private static UserDto MapToDto(User user)
     {
         return new UserDto

@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { User, CreateUserRequest, UpdateUserRequest, PagedResult } from '../types/api';
+import type { User, CreateUserRequest, UpdateUserRequest, PagedResult, ChangePasswordRequest, SetPasswordRequest } from '../types/api';
 
 export const usersApi = {
   getAll: async (): Promise<User[]> => {
@@ -36,5 +36,15 @@ export const usersApi = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/users/${id}`);
+  },
+
+  changeMyPassword: async (request: ChangePasswordRequest): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>('/users/me/password', request);
+    return response.data;
+  },
+
+  setUserPassword: async (id: string, request: SetPasswordRequest): Promise<{ message: string }> => {
+    const response = await apiClient.put<{ message: string }>(`/users/${id}/password`, request);
+    return response.data;
   },
 };
