@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Token Showcase - FanEngagement Design System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* ===== Brand Colors ===== */
+      --color-primary-50: hsl(210, 100%, 97%);
+      --color-primary-100: hsl(210, 100%, 95%);
+      --color-primary-200: hsl(210, 100%, 90%);
+      --color-primary-300: hsl(210, 100%, 80%);
+      --color-primary-400: hsl(210, 100%, 65%);
+      --color-primary-500: hsl(210, 100%, 55%);
+      --color-primary-600: hsl(210, 100%, 50%);
+      --color-primary-700: hsl(210, 100%, 42%);
+      --color-primary-800: hsl(210, 100%, 35%);
+      --color-primary-900: hsl(210, 100%, 20%);
+
+      /* ===== Semantic Colors ===== */
+      --color-success-50: hsl(142, 70%, 97%);
+      --color-success-100: hsl(142, 70%, 92%);
+      --color-success-500: hsl(142, 70%, 45%);
+      --color-success-600: hsl(142, 70%, 40%);
+      --color-success-700: hsl(142, 70%, 35%);
+      
+      --color-warning-50: hsl(38, 90%, 97%);
+      --color-warning-100: hsl(38, 90%, 92%);
+      --color-warning-500: hsl(38, 90%, 50%);
+      --color-warning-600: hsl(38, 90%, 45%);
+      --color-warning-700: hsl(38, 90%, 40%);
+      
+      --color-error-50: hsl(0, 70%, 97%);
+      --color-error-100: hsl(0, 70%, 92%);
+      --color-error-500: hsl(0, 70%, 50%);
+      --color-error-600: hsl(0, 70%, 45%);
+      --color-error-700: hsl(0, 70%, 40%);
+      
+      --color-info-50: hsl(210, 90%, 97%);
+      --color-info-100: hsl(210, 90%, 92%);
+      --color-info-500: hsl(210, 90%, 55%);
+      --color-info-600: hsl(210, 90%, 50%);
+      --color-info-700: hsl(210, 90%, 45%);
+
+      /* ===== Neutral Scale ===== */
+      --color-neutral-50: hsl(0, 0%, 98%);
+      --color-neutral-100: hsl(0, 0%, 96%);
+      --color-neutral-200: hsl(0, 0%, 90%);
+      --color-neutral-300: hsl(0, 0%, 80%);
+      --color-neutral-400: hsl(0, 0%, 60%);
+      --color-neutral-500: hsl(0, 0%, 50%);
+      --color-neutral-600: hsl(0, 0%, 40%);
+      --color-neutral-700: hsl(0, 0%, 20%);
+      --color-neutral-800: hsl(0, 0%, 15%);
+      --color-neutral-900: hsl(0, 0%, 10%);
+
+      /* ===== Surface Colors ===== */
+      --color-background: hsl(0, 0%, 96%);
+      --color-surface: hsl(0, 0%, 100%);
+      --color-surface-elevated: hsl(0, 0%, 16.5%);
+      --color-surface-dark: hsl(0, 0%, 10%);
+
+      /* ===== Text Colors ===== */
+      --color-text-primary: var(--color-neutral-700);
+      --color-text-secondary: var(--color-neutral-600);
+      --color-text-tertiary: var(--color-neutral-400);
+      --color-text-inverse: hsl(0, 0%, 100%);
+      --color-text-on-primary: hsl(0, 0%, 100%);
+
+      /* ===== Border Colors ===== */
+      --color-border-subtle: var(--color-neutral-200);
+      --color-border-default: var(--color-neutral-300);
+      --color-border-strong: var(--color-neutral-400);
+      --color-border-dark: hsl(0, 0%, 27%);
+
+      /* ===== Alpha Colors (for overlays and shadows) ===== */
+      --color-overlay-light: rgba(255, 255, 255, 0.1);
+      --color-overlay-medium: rgba(255, 255, 255, 0.15);
+      --color-overlay-dark: rgba(0, 0, 0, 0.5);
+
+      /* ===== Focus Ring ===== */
+      --focus-ring-color: var(--color-primary-700);
+      --focus-ring-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
+
+      /* ===== Font Families ===== */
+      --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      --font-family-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', 'Menlo', 'Monaco', 'Consolas', monospace;
+
+      /* ===== Font Sizes ===== */
+      --font-size-2xs: 0.625rem;
+      --font-size-xs: 0.75rem;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.25rem;
+      --font-size-2xl: 1.5rem;
+      --font-size-3xl: 1.875rem;
+      --font-size-4xl: 2.25rem;
+
+      /* ===== Font Weights ===== */
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+
+      /* ===== Line Heights ===== */
+      --line-height-tight: 1.2;
+      --line-height-normal: 1.5;
+      --line-height-relaxed: 1.75;
+
+      /* ===== Letter Spacing ===== */
+      --letter-spacing-tight: -0.02em;
+      --letter-spacing-normal: 0;
+      --letter-spacing-wide: 0.02em;
+      --letter-spacing-wider: 0.025em;
+      --letter-spacing-widest: 0.05em;
+
+      /* ===== Spacing ===== */
+      --spacing-0: 0;
+      --spacing-0-5: 0.125rem;
+      --spacing-1: 0.25rem;
+      --spacing-2: 0.5rem;
+      --spacing-3: 0.75rem;
+      --spacing-4: 1rem;
+      --spacing-5: 1.25rem;
+      --spacing-6: 1.5rem;
+      --spacing-8: 2rem;
+      --spacing-10: 2.5rem;
+      --spacing-12: 3rem;
+      --spacing-16: 4rem;
+      --spacing-20: 5rem;
+      --spacing-24: 6rem;
+
+      /* ===== Shadows ===== */
+      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+      --shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+      --shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+      --shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.1);
+
+      /* ===== Border Radii ===== */
+      --radius-none: 0;
+      --radius-sm: 0.25rem;
+      --radius-md: 0.375rem;
+      --radius-lg: 0.5rem;
+      --radius-xl: 0.75rem;
+      --radius-2xl: 1rem;
+      --radius-full: 9999px;
+
+      /* ===== Transitions ===== */
+      --duration-fast: 150ms;
+      --duration-normal: 200ms;
+      --duration-slow: 300ms;
+      --ease-in: cubic-bezier(0.4, 0, 1, 1);
+      --ease-out: cubic-bezier(0, 0, 0.2, 1);
+      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: var(--font-family-sans);
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      line-height: var(--line-height-normal);
+      padding: var(--spacing-8);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: var(--font-size-4xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--spacing-2);
+      color: var(--color-text-primary);
+    }
+
+    .subtitle {
+      font-size: var(--font-size-lg);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--spacing-8);
+    }
+
+    h2 {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-semibold);
+      margin-top: var(--spacing-12);
+      margin-bottom: var(--spacing-6);
+      color: var(--color-text-primary);
+      border-bottom: 2px solid var(--color-border-subtle);
+      padding-bottom: var(--spacing-2);
+    }
+
+    h3 {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-medium);
+      margin-top: var(--spacing-8);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-primary);
+    }
+
+    .section {
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-6);
+      margin-bottom: var(--spacing-6);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Color Swatches */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+
+    .color-swatch {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    .color-preview {
+      height: 80px;
+      width: 100%;
+    }
+
+    .color-info {
+      padding: var(--spacing-3);
+      background-color: var(--color-surface);
+    }
+
+    .color-name {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
+      font-family: var(--font-family-mono);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .color-value {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      font-family: var(--font-family-mono);
+    }
+
+    /* Typography Scale */
+    .type-example {
+      margin-bottom: var(--spacing-4);
+      padding: var(--spacing-4);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .type-label {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      font-family: var(--font-family-mono);
+      margin-bottom: var(--spacing-2);
+    }
+
+    /* Spacing Scale */
+    .spacing-grid {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+
+    .spacing-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      padding: var(--spacing-3);
+      background-color: var(--color-neutral-50);
+      border-radius: var(--radius-md);
+    }
+
+    .spacing-label {
+      min-width: 150px;
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+    }
+
+    .spacing-value {
+      min-width: 100px;
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .spacing-visual {
+      height: 24px;
+      background-color: var(--color-primary-500);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--duration-normal) var(--ease-out);
+    }
+
+    .spacing-visual:hover {
+      background-color: var(--color-primary-600);
+    }
+
+    /* Shadow Examples */
+    .shadow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--spacing-6);
+    }
+
+    .shadow-box {
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-6);
+      text-align: center;
+    }
+
+    .shadow-label {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      margin-top: var(--spacing-3);
+    }
+
+    /* Border Radius Examples */
+    .radius-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--spacing-4);
+    }
+
+    .radius-box {
+      background-color: var(--color-primary-100);
+      border: 2px solid var(--color-primary-600);
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-primary-700);
+    }
+
+    /* Interactive Examples */
+    .button-example {
+      display: inline-block;
+      background-color: var(--color-primary-600);
+      color: var(--color-text-on-primary);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-medium);
+      padding: var(--spacing-3) var(--spacing-4);
+      border-radius: var(--radius-md);
+      border: none;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: background-color var(--duration-normal) var(--ease-out),
+                  box-shadow var(--duration-normal) var(--ease-out);
+    }
+
+    .button-example:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+
+    .button-example:active {
+      transform: translateY(1px);
+    }
+
+    .card-example {
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-6);
+      box-shadow: var(--shadow-md);
+      transition: box-shadow var(--duration-normal) var(--ease-out),
+                  transform var(--duration-normal) var(--ease-out);
+    }
+
+    .card-example:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-6);
+    }
+
+    /* Code Display */
+    code {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      background-color: var(--color-neutral-100);
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-primary);
+    }
+
+    .code-block {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      background-color: var(--color-neutral-800);
+      color: var(--color-text-inverse);
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      margin: var(--spacing-4) 0;
+    }
+
+    /* Navigation */
+    nav {
+      background-color: var(--color-surface);
+      padding: var(--spacing-4);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-8);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: var(--spacing-4);
+      z-index: 100;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-2);
+    }
+
+    nav a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: var(--radius-md);
+      transition: background-color var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+    }
+
+    nav a:hover {
+      background-color: var(--color-neutral-100);
+      color: var(--color-text-primary);
+    }
+
+    /* Semantic Alert Examples */
+    .alert {
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-3);
+      border-left: 4px solid;
+    }
+
+    .alert-success {
+      background-color: var(--color-success-50);
+      border-color: var(--color-success-600);
+      color: var(--color-success-700);
+    }
+
+    .alert-warning {
+      background-color: var(--color-warning-50);
+      border-color: var(--color-warning-600);
+      color: var(--color-warning-700);
+    }
+
+    .alert-error {
+      background-color: var(--color-error-50);
+      border-color: var(--color-error-600);
+      color: var(--color-error-700);
+    }
+
+    .alert-info {
+      background-color: var(--color-info-50);
+      border-color: var(--color-info-600);
+      color: var(--color-info-700);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>FanEngagement Design Token Showcase</h1>
+    <p class="subtitle">Interactive reference for all design tokens in the FanEngagement design system</p>
+
+    <nav aria-label="Design token categories navigation">
+      <ul>
+        <li><a href="#colors">Colors</a></li>
+        <li><a href="#overlays">Overlays</a></li>
+        <li><a href="#focus">Focus States</a></li>
+        <li><a href="#transitions">Transitions</a></li>
+        <li><a href="#typography">Typography</a></li>
+        <li><a href="#spacing">Spacing</a></li>
+        <li><a href="#shadows">Shadows</a></li>
+        <li><a href="#radius">Border Radius</a></li>
+        <li><a href="#examples">Common Patterns</a></li>
+      </ul>
+    </nav>
+
+    <!-- COLORS SECTION -->
+    <section id="colors">
+      <h2>Colors</h2>
+
+      <div class="section">
+        <h3>Brand Colors (Primary)</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-50)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-50</div>
+              <div class="color-value">hsl(210, 100%, 97%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-100)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-100</div>
+              <div class="color-value">hsl(210, 100%, 95%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-200)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-200</div>
+              <div class="color-value">hsl(210, 100%, 90%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-300)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-300</div>
+              <div class="color-value">hsl(210, 100%, 80%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-400)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-400</div>
+              <div class="color-value">hsl(210, 100%, 65%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-500)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-500</div>
+              <div class="color-value">hsl(210, 100%, 55%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-600)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-600</div>
+              <div class="color-value">hsl(210, 100%, 50%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-700)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-700</div>
+              <div class="color-value">hsl(210, 100%, 42%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-800)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-800</div>
+              <div class="color-value">hsl(210, 100%, 35%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-primary-900)"></div>
+            <div class="color-info">
+              <div class="color-name">primary-900</div>
+              <div class="color-value">hsl(210, 100%, 20%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Semantic Colors</h3>
+        
+        <h4 style="margin-top: var(--spacing-6); margin-bottom: var(--spacing-3); font-size: var(--font-size-lg); color: var(--color-success-600);">Success (Green)</h4>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-success-50)"></div>
+            <div class="color-info">
+              <div class="color-name">success-50</div>
+              <div class="color-value">hsl(142, 70%, 97%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-success-100)"></div>
+            <div class="color-info">
+              <div class="color-name">success-100</div>
+              <div class="color-value">hsl(142, 70%, 92%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-success-500)"></div>
+            <div class="color-info">
+              <div class="color-name">success-500</div>
+              <div class="color-value">hsl(142, 70%, 45%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-success-600)"></div>
+            <div class="color-info">
+              <div class="color-name">success-600</div>
+              <div class="color-value">hsl(142, 70%, 40%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-success-700)"></div>
+            <div class="color-info">
+              <div class="color-name">success-700</div>
+              <div class="color-value">hsl(142, 70%, 35%)</div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin-top: var(--spacing-6); margin-bottom: var(--spacing-3); font-size: var(--font-size-lg); color: var(--color-warning-600);">Warning (Amber)</h4>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-warning-50)"></div>
+            <div class="color-info">
+              <div class="color-name">warning-50</div>
+              <div class="color-value">hsl(38, 90%, 97%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-warning-100)"></div>
+            <div class="color-info">
+              <div class="color-name">warning-100</div>
+              <div class="color-value">hsl(38, 90%, 92%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-warning-500)"></div>
+            <div class="color-info">
+              <div class="color-name">warning-500</div>
+              <div class="color-value">hsl(38, 90%, 50%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-warning-600)"></div>
+            <div class="color-info">
+              <div class="color-name">warning-600</div>
+              <div class="color-value">hsl(38, 90%, 45%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-warning-700)"></div>
+            <div class="color-info">
+              <div class="color-name">warning-700</div>
+              <div class="color-value">hsl(38, 90%, 40%)</div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin-top: var(--spacing-6); margin-bottom: var(--spacing-3); font-size: var(--font-size-lg); color: var(--color-error-600);">Error (Red)</h4>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-error-50)"></div>
+            <div class="color-info">
+              <div class="color-name">error-50</div>
+              <div class="color-value">hsl(0, 70%, 97%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-error-100)"></div>
+            <div class="color-info">
+              <div class="color-name">error-100</div>
+              <div class="color-value">hsl(0, 70%, 92%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-error-500)"></div>
+            <div class="color-info">
+              <div class="color-name">error-500</div>
+              <div class="color-value">hsl(0, 70%, 50%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-error-600)"></div>
+            <div class="color-info">
+              <div class="color-name">error-600</div>
+              <div class="color-value">hsl(0, 70%, 45%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-error-700)"></div>
+            <div class="color-info">
+              <div class="color-name">error-700</div>
+              <div class="color-value">hsl(0, 70%, 40%)</div>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="margin-top: var(--spacing-6); margin-bottom: var(--spacing-3); font-size: var(--font-size-lg); color: var(--color-info-600);">Info (Blue)</h4>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-info-50)"></div>
+            <div class="color-info">
+              <div class="color-name">info-50</div>
+              <div class="color-value">hsl(210, 90%, 97%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-info-100)"></div>
+            <div class="color-info">
+              <div class="color-name">info-100</div>
+              <div class="color-value">hsl(210, 90%, 92%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-info-500)"></div>
+            <div class="color-info">
+              <div class="color-name">info-500</div>
+              <div class="color-value">hsl(210, 90%, 55%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-info-600)"></div>
+            <div class="color-info">
+              <div class="color-name">info-600</div>
+              <div class="color-value">hsl(210, 90%, 50%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-info-700)"></div>
+            <div class="color-info">
+              <div class="color-name">info-700</div>
+              <div class="color-value">hsl(210, 90%, 45%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Neutral Scale</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-50)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-50</div>
+              <div class="color-value">hsl(0, 0%, 98%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-100)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-100</div>
+              <div class="color-value">hsl(0, 0%, 96%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-200)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-200</div>
+              <div class="color-value">hsl(0, 0%, 90%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-300)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-300</div>
+              <div class="color-value">hsl(0, 0%, 80%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-400)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-400</div>
+              <div class="color-value">hsl(0, 0%, 60%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-500)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-500</div>
+              <div class="color-value">hsl(0, 0%, 50%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-600)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-600</div>
+              <div class="color-value">hsl(0, 0%, 40%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-700)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-700</div>
+              <div class="color-value">hsl(0, 0%, 20%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-800)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-800</div>
+              <div class="color-value">hsl(0, 0%, 15%)</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background-color: var(--color-neutral-900)"></div>
+            <div class="color-info">
+              <div class="color-name">neutral-900</div>
+              <div class="color-value">hsl(0, 0%, 10%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERLAY COLORS SECTION -->
+    <section id="overlays">
+      <h2>Overlay & Alpha Colors</h2>
+
+      <div class="section">
+        <h3>Overlay Colors (for modals and layering effects)</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-4);">
+          <div style="background-color: var(--color-neutral-800); padding: var(--spacing-6); border-radius: var(--radius-lg);">
+            <div style="background-color: var(--color-overlay-light); padding: var(--spacing-6); border-radius: var(--radius-md); text-align: center; color: var(--color-text-inverse);">
+              <strong>Overlay Light</strong>
+              <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); margin-top: var(--spacing-2);">--color-overlay-light</div>
+              <div style="font-size: var(--font-size-xs); margin-top: var(--spacing-2);">rgba(255, 255, 255, 0.1)</div>
+              <p style="font-size: var(--font-size-xs); margin-top: var(--spacing-3);">Subtle overlay on dark surfaces</p>
+            </div>
+          </div>
+          <div style="background-color: var(--color-neutral-800); padding: var(--spacing-6); border-radius: var(--radius-lg);">
+            <div style="background-color: var(--color-overlay-medium); padding: var(--spacing-6); border-radius: var(--radius-md); text-align: center; color: var(--color-text-inverse);">
+              <strong>Overlay Medium</strong>
+              <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); margin-top: var(--spacing-2);">--color-overlay-medium</div>
+              <div style="font-size: var(--font-size-xs); margin-top: var(--spacing-2);">rgba(255, 255, 255, 0.15)</div>
+              <p style="font-size: var(--font-size-xs); margin-top: var(--spacing-3);">Medium overlay for emphasis</p>
+            </div>
+          </div>
+          <div style="background-color: var(--color-surface); padding: var(--spacing-6); border-radius: var(--radius-lg); border: 1px solid var(--color-border-default);">
+            <div style="background-color: var(--color-overlay-dark); padding: var(--spacing-6); border-radius: var(--radius-md); text-align: center; color: var(--color-text-inverse);">
+              <strong>Overlay Dark</strong>
+              <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); margin-top: var(--spacing-2);">--color-overlay-dark</div>
+              <div style="font-size: var(--font-size-xs); margin-top: var(--spacing-2);">rgba(0, 0, 0, 0.5)</div>
+              <p style="font-size: var(--font-size-xs); margin-top: var(--spacing-3);">Modal backdrop overlay</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOCUS STATES SECTION -->
+    <section id="focus">
+      <h2>Focus States</h2>
+
+      <div class="section">
+        <h3>Focus Ring Tokens (for keyboard accessibility)</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-6);">
+          <div style="padding: var(--spacing-6); background-color: var(--color-neutral-50); border-radius: var(--radius-lg);">
+            <div style="text-align: center; margin-bottom: var(--spacing-4);">
+              <strong>Focus Ring Color</strong>
+              <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); margin-top: var(--spacing-2);">--focus-ring-color</div>
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-1);">var(--color-primary-700)</div>
+            </div>
+            <button style="padding: var(--spacing-3) var(--spacing-4); background-color: var(--color-primary-600); color: white; border: none; border-radius: var(--radius-md); font-weight: var(--font-weight-medium); cursor: pointer; width: 100%; outline: 2px solid var(--focus-ring-color); outline-offset: 2px;">
+              Button with Focus Ring
+            </button>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-3); text-align: center;">WCAG 2.1 AAA compliant (3:1 contrast)</p>
+          </div>
+          <div style="padding: var(--spacing-6); background-color: var(--color-neutral-50); border-radius: var(--radius-lg);">
+            <div style="text-align: center; margin-bottom: var(--spacing-4);">
+              <strong>Focus Ring Shadow</strong>
+              <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); margin-top: var(--spacing-2);">--focus-ring-shadow</div>
+              <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-1);">0 0 0 4px rgba(0, 86, 179, 0.1)</div>
+            </div>
+            <button style="padding: var(--spacing-3) var(--spacing-4); background-color: var(--color-primary-600); color: white; border: none; border-radius: var(--radius-md); font-weight: var(--font-weight-medium); cursor: pointer; width: 100%; outline: 2px solid var(--focus-ring-color); outline-offset: 2px; box-shadow: var(--focus-ring-shadow);">
+              Button with Focus Ring + Shadow
+            </button>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-3); text-align: center;">Soft blue glow for enhanced visibility</p>
+          </div>
+        </div>
+
+        <div class="code-block" style="margin-top: var(--spacing-6);">
+*:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring-shadow);
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSITIONS SECTION -->
+    <section id="transitions">
+      <h2>Transitions & Timing</h2>
+
+      <div class="section">
+        <h3>Duration Tokens</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+          <div style="padding: var(--spacing-4); border: 2px solid var(--color-border-default); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-2);">--duration-fast</div>
+            <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-primary-600); margin-bottom: var(--spacing-2);">150ms</div>
+            <div style="width: 80px; height: 80px; margin: 0 auto var(--spacing-2); background-color: var(--color-primary-500); border-radius: var(--radius-md); transition: transform var(--duration-fast) var(--ease-out); cursor: pointer;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Quick interactions (hover, focus)</p>
+          </div>
+          <div style="padding: var(--spacing-4); border: 2px solid var(--color-border-default); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-2);">--duration-normal</div>
+            <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-primary-600); margin-bottom: var(--spacing-2);">200ms</div>
+            <div style="width: 80px; height: 80px; margin: 0 auto var(--spacing-2); background-color: var(--color-success-500); border-radius: var(--radius-md); transition: transform var(--duration-normal) var(--ease-out); cursor: pointer;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Standard transitions (buttons, cards)</p>
+          </div>
+          <div style="padding: var(--spacing-4); border: 2px solid var(--color-border-default); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-2);">--duration-slow</div>
+            <div style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-primary-600); margin-bottom: var(--spacing-2);">300ms</div>
+            <div style="width: 80px; height: 80px; margin: 0 auto var(--spacing-2); background-color: var(--color-warning-500); border-radius: var(--radius-md); transition: transform var(--duration-slow) var(--ease-out); cursor: pointer;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Complex transitions (drawers, modals)</p>
+          </div>
+        </div>
+
+        <h3>Easing Functions</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-4);">
+          <div style="padding: var(--spacing-4); background-color: var(--color-neutral-50); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-2);">--ease-in</div>
+            <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: var(--spacing-3);">cubic-bezier(0.4, 0, 1, 1)</div>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Accelerating (entering animations)</p>
+          </div>
+          <div style="padding: var(--spacing-4); background-color: var(--color-neutral-50); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-2);">--ease-out</div>
+            <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: var(--spacing-3);">cubic-bezier(0, 0, 0.2, 1)</div>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Decelerating (exiting animations) ⭐ Most common</p>
+          </div>
+          <div style="padding: var(--spacing-4); background-color: var(--color-neutral-50); border-radius: var(--radius-md); text-align: center;">
+            <div style="font-family: var(--font-family-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-2);">--ease-in-out</div>
+            <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: var(--spacing-3);">cubic-bezier(0.4, 0, 0.2, 1)</div>
+            <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Smooth both ways (complex animations)</p>
+          </div>
+        </div>
+
+        <div class="code-block" style="margin-top: var(--spacing-6);">
+/* Standard transition pattern */
+.button {
+  transition: background-color var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+
+/* Card hover with lift effect */
+.card {
+  transition: transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- TYPOGRAPHY SECTION -->
+    <section id="typography">
+      <h2>Typography</h2>
+
+      <div class="section">
+        <h3>Font Sizes</h3>
+        <div class="type-example" style="font-size: var(--font-size-4xl);">
+          <div class="type-label">--font-size-4xl (2.25rem / 36px)</div>
+          The quick brown fox jumps
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-3xl);">
+          <div class="type-label">--font-size-3xl (1.875rem / 30px)</div>
+          The quick brown fox jumps over
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-2xl);">
+          <div class="type-label">--font-size-2xl (1.5rem / 24px)</div>
+          The quick brown fox jumps over the lazy dog
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-xl);">
+          <div class="type-label">--font-size-xl (1.25rem / 20px)</div>
+          The quick brown fox jumps over the lazy dog
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-lg);">
+          <div class="type-label">--font-size-lg (1.125rem / 18px)</div>
+          The quick brown fox jumps over the lazy dog and runs away
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-base);">
+          <div class="type-label">--font-size-base (1rem / 16px) — Default body text</div>
+          The quick brown fox jumps over the lazy dog and runs away into the forest
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-sm);">
+          <div class="type-label">--font-size-sm (0.875rem / 14px)</div>
+          The quick brown fox jumps over the lazy dog and runs away into the forest where it lives
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-xs);">
+          <div class="type-label">--font-size-xs (0.75rem / 12px)</div>
+          The quick brown fox jumps over the lazy dog and runs away into the forest where it lives with other animals
+        </div>
+        <div class="type-example" style="font-size: var(--font-size-2xs);">
+          <div class="type-label">--font-size-2xs (0.625rem / 10px)</div>
+          The quick brown fox jumps over the lazy dog and runs away into the forest where it lives with other animals and they all play together
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Font Weights</h3>
+        <div class="type-example" style="font-weight: var(--font-weight-regular);">
+          <div class="type-label">--font-weight-regular (400)</div>
+          The quick brown fox jumps over the lazy dog
+        </div>
+        <div class="type-example" style="font-weight: var(--font-weight-medium);">
+          <div class="type-label">--font-weight-medium (500)</div>
+          The quick brown fox jumps over the lazy dog
+        </div>
+        <div class="type-example" style="font-weight: var(--font-weight-semibold);">
+          <div class="type-label">--font-weight-semibold (600)</div>
+          The quick brown fox jumps over the lazy dog
+        </div>
+        <div class="type-example" style="font-weight: var(--font-weight-bold);">
+          <div class="type-label">--font-weight-bold (700)</div>
+          The quick brown fox jumps over the lazy dog
+        </div>
+      </div>
+    </section>
+
+    <!-- SPACING SECTION -->
+    <section id="spacing">
+      <h2>Spacing Scale</h2>
+
+      <div class="section">
+        <h3>All Spacing Tokens (Base: 4px)</h3>
+        <div class="spacing-grid">
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-0</span>
+            <span class="spacing-value">0rem (0px)</span>
+            <div class="spacing-visual" style="width: 0px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-0-5</span>
+            <span class="spacing-value">0.125rem (2px)</span>
+            <div class="spacing-visual" style="width: 2px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-1</span>
+            <span class="spacing-value">0.25rem (4px)</span>
+            <div class="spacing-visual" style="width: 4px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-2</span>
+            <span class="spacing-value">0.5rem (8px)</span>
+            <div class="spacing-visual" style="width: 8px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-3</span>
+            <span class="spacing-value">0.75rem (12px)</span>
+            <div class="spacing-visual" style="width: 12px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-4</span>
+            <span class="spacing-value">1rem (16px)</span>
+            <div class="spacing-visual" style="width: 16px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-5</span>
+            <span class="spacing-value">1.25rem (20px)</span>
+            <div class="spacing-visual" style="width: 20px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-6</span>
+            <span class="spacing-value">1.5rem (24px)</span>
+            <div class="spacing-visual" style="width: 24px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-8</span>
+            <span class="spacing-value">2rem (32px)</span>
+            <div class="spacing-visual" style="width: 32px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-10</span>
+            <span class="spacing-value">2.5rem (40px)</span>
+            <div class="spacing-visual" style="width: 40px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-12</span>
+            <span class="spacing-value">3rem (48px)</span>
+            <div class="spacing-visual" style="width: 48px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-16</span>
+            <span class="spacing-value">4rem (64px)</span>
+            <div class="spacing-visual" style="width: 64px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-20</span>
+            <span class="spacing-value">5rem (80px)</span>
+            <div class="spacing-visual" style="width: 80px;"></div>
+          </div>
+          <div class="spacing-item">
+            <span class="spacing-label">--spacing-24</span>
+            <span class="spacing-value">6rem (96px)</span>
+            <div class="spacing-visual" style="width: 96px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHADOWS SECTION -->
+    <section id="shadows">
+      <h2>Shadows & Elevation</h2>
+
+      <div class="section">
+        <h3>Shadow Tokens</h3>
+        <div class="shadow-grid">
+          <div class="shadow-box" style="box-shadow: var(--shadow-xs);">
+            <div style="padding: var(--spacing-4);">
+              <strong>Extra Small</strong>
+              <div class="shadow-label" style="margin-top: var(--spacing-2);">--shadow-xs</div>
+              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-2);">Subtle shadow for borders</p>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-sm);">
+            <div style="padding: var(--spacing-4);">
+              <strong>Small</strong>
+              <div class="shadow-label" style="margin-top: var(--spacing-2);">--shadow-sm</div>
+              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-2);">Buttons, small cards</p>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-md);">
+            <div style="padding: var(--spacing-4);">
+              <strong>Medium</strong>
+              <div class="shadow-label" style="margin-top: var(--spacing-2);">--shadow-md</div>
+              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-2);">Cards, dropdowns</p>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-lg);">
+            <div style="padding: var(--spacing-4);">
+              <strong>Large</strong>
+              <div class="shadow-label" style="margin-top: var(--spacing-2);">--shadow-lg</div>
+              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-2);">Modals, popovers</p>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-xl);">
+            <div style="padding: var(--spacing-4);">
+              <strong>Extra Large</strong>
+              <div class="shadow-label" style="margin-top: var(--spacing-2);">--shadow-xl</div>
+              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-2);">Overlays, floating panels</p>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-2xl);">
+            <div style="padding: var(--spacing-4);">
+              <strong>2X Large</strong>
+              <div class="shadow-label" style="margin-top: var(--spacing-2);">--shadow-2xl</div>
+              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: var(--spacing-2);">Full-screen modals</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Specialized Shadows</h3>
+        <div style="display: flex; gap: var(--spacing-6); flex-wrap: wrap;">
+          <div class="shadow-box" style="box-shadow: var(--shadow-header); width: 200px;">
+            <div style="padding: var(--spacing-4);">
+              <strong>Header</strong>
+              <div class="shadow-label">--shadow-header</div>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-header-dark); background-color: var(--color-surface-dark); color: var(--color-text-inverse); width: 200px;">
+            <div style="padding: var(--spacing-4);">
+              <strong>Header Dark</strong>
+              <div class="shadow-label">--shadow-header-dark</div>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-sidebar); width: 200px;">
+            <div style="padding: var(--spacing-4);">
+              <strong>Sidebar</strong>
+              <div class="shadow-label">--shadow-sidebar</div>
+            </div>
+          </div>
+          <div class="shadow-box" style="box-shadow: var(--shadow-inner); width: 200px;">
+            <div style="padding: var(--spacing-4);">
+              <strong>Inner</strong>
+              <div class="shadow-label">--shadow-inner</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BORDER RADIUS SECTION -->
+    <section id="radius">
+      <h2>Border Radii</h2>
+
+      <div class="section">
+        <h3>Radius Tokens</h3>
+        <div class="radius-grid">
+          <div class="radius-box" style="border-radius: var(--radius-none);">
+            <div>
+              <strong>None</strong>
+              <div>--radius-none</div>
+              <div style="font-size: var(--font-size-xs);">0px</div>
+            </div>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-sm);">
+            <div>
+              <strong>Small</strong>
+              <div>--radius-sm</div>
+              <div style="font-size: var(--font-size-xs);">4px</div>
+            </div>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-md);">
+            <div>
+              <strong>Medium</strong>
+              <div>--radius-md</div>
+              <div style="font-size: var(--font-size-xs);">6px</div>
+            </div>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-lg);">
+            <div>
+              <strong>Large</strong>
+              <div>--radius-lg</div>
+              <div style="font-size: var(--font-size-xs);">8px</div>
+            </div>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-xl);">
+            <div>
+              <strong>XL</strong>
+              <div>--radius-xl</div>
+              <div style="font-size: var(--font-size-xs);">12px</div>
+            </div>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-2xl);">
+            <div>
+              <strong>2XL</strong>
+              <div>--radius-2xl</div>
+              <div style="font-size: var(--font-size-xs);">16px</div>
+            </div>
+          </div>
+          <div class="radius-box" style="border-radius: var(--radius-full); width: 100px; height: 100px;">
+            <div>
+              <strong>Full</strong>
+              <div>--radius-full</div>
+              <div style="font-size: var(--font-size-xs);">9999px</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMON PATTERNS SECTION -->
+    <section id="examples">
+      <h2>Common Patterns</h2>
+
+      <div class="section">
+        <h3>Interactive Components</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+          <button class="button-example">Primary Button</button>
+          <button class="button-example" style="background-color: var(--color-success-600);">Success Button</button>
+          <button class="button-example" style="background-color: var(--color-error-600);">Error Button</button>
+          <button class="button-example" style="background-color: var(--color-neutral-600);">Secondary Button</button>
+        </div>
+        
+        <div class="code-block">
+.button-primary {
+  background-color: var(--color-primary-600);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--duration-normal) var(--ease-out);
+}
+
+.button-primary:hover {
+  background-color: var(--color-primary-700);
+  box-shadow: var(--shadow-md);
+}
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Card Components</h3>
+        <div class="examples-grid">
+          <div class="card-example">
+            <h4 style="margin-bottom: var(--spacing-3);">Interactive Card</h4>
+            <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">This card uses elevation shadows and transitions for hover effects.</p>
+            <button class="button-example">Learn More</button>
+          </div>
+          <div class="card-example">
+            <h4 style="margin-bottom: var(--spacing-3);">Another Card</h4>
+            <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">Cards provide visual hierarchy and group related content together.</p>
+            <button class="button-example">Take Action</button>
+          </div>
+        </div>
+
+        <div class="code-block">
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Alert Messages</h3>
+        <div class="alert alert-success">
+          <strong>Success!</strong> Your changes have been saved successfully.
+        </div>
+        <div class="alert alert-info">
+          <strong>Info:</strong> This is an informational message for the user.
+        </div>
+        <div class="alert alert-warning">
+          <strong>Warning:</strong> Please review your settings before proceeding.
+        </div>
+        <div class="alert alert-error">
+          <strong>Error:</strong> Something went wrong. Please try again.
+        </div>
+
+        <div class="code-block">
+.alert {
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+}
+
+.alert-success {
+  background-color: var(--color-success-50);
+  border-color: var(--color-success-600);
+  color: var(--color-success-700);
+}
+        </div>
+      </div>
+    </section>
+
+    <footer style="margin-top: var(--spacing-16); padding-top: var(--spacing-8); border-top: 1px solid var(--color-border-subtle); text-align: center; color: var(--color-text-secondary);">
+      <p>FanEngagement Design System v1.0</p>
+      <p style="font-size: var(--font-size-sm); margin-top: var(--spacing-2);">
+        For complete documentation, see <a href="design-system.md" style="color: var(--color-primary-600);">design-system.md</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
