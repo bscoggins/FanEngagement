@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mode Foundation Demo - FanEngagement Design System</title>
+  <style>
+    /* Import the actual design tokens from index.css */
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Brand Colors */
+      --color-primary-600: hsl(210, 100%, 50%);
+      --color-primary-700: hsl(210, 100%, 42%);
+      
+      /* Neutral Scale */
+      --color-neutral-50: hsl(0, 0%, 98%);
+      --color-neutral-100: hsl(0, 0%, 96%);
+      --color-neutral-200: hsl(0, 0%, 90%);
+      --color-neutral-300: hsl(0, 0%, 80%);
+      --color-neutral-400: hsl(0, 0%, 60%);
+      --color-neutral-500: hsl(0, 0%, 50%);
+      --color-neutral-600: hsl(0, 0%, 40%);
+      --color-neutral-700: hsl(0, 0%, 20%);
+      --color-neutral-800: hsl(0, 0%, 15%);
+      --color-neutral-900: hsl(0, 0%, 10%);
+      
+      /* Light Mode (Default) */
+      --color-background: hsl(0, 0%, 96%);
+      --color-surface: hsl(0, 0%, 100%);
+      --color-surface-elevated: hsl(0, 0%, 16.5%);
+      --color-surface-dark: hsl(0, 0%, 10%);
+      
+      --color-text-primary: var(--color-neutral-700);
+      --color-text-secondary: var(--color-neutral-600);
+      --color-text-tertiary: var(--color-neutral-400);
+      --color-text-inverse: hsl(0, 0%, 100%);
+      --color-text-on-primary: hsl(0, 0%, 100%);
+      
+      --color-border-subtle: var(--color-neutral-200);
+      --color-border-default: var(--color-neutral-300);
+      --color-border-strong: var(--color-neutral-400);
+      --color-border-dark: hsl(0, 0%, 27%);
+      
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      
+      --font-family-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --spacing-2: 0.5rem;
+      --spacing-3: 0.75rem;
+      --spacing-4: 1rem;
+      --spacing-6: 1.5rem;
+      --spacing-8: 2rem;
+      --radius-md: 0.375rem;
+      --radius-lg: 0.5rem;
+    }
+
+    /* Dark Mode via system preference */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background: var(--color-neutral-900);
+        --color-surface: var(--color-neutral-800);
+        --color-surface-elevated: var(--color-neutral-700);
+        --color-surface-dark: hsl(0, 0%, 8%);
+        
+        --color-text-primary: var(--color-neutral-50);
+        --color-text-secondary: var(--color-neutral-300);
+        --color-text-tertiary: var(--color-neutral-500);
+        --color-text-inverse: var(--color-neutral-900);
+        
+        --color-border-subtle: var(--color-neutral-700);
+        --color-border-default: var(--color-neutral-600);
+        --color-border-strong: var(--color-neutral-500);
+        --color-border-dark: var(--color-neutral-400);
+        
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    /* Manual dark mode override */
+    body.theme-dark {
+      --color-background: var(--color-neutral-900);
+      --color-surface: var(--color-neutral-800);
+      --color-surface-elevated: var(--color-neutral-700);
+      --color-surface-dark: hsl(0, 0%, 8%);
+      
+      --color-text-primary: var(--color-neutral-50);
+      --color-text-secondary: var(--color-neutral-300);
+      --color-text-tertiary: var(--color-neutral-500);
+      --color-text-inverse: var(--color-neutral-900);
+      
+      --color-border-subtle: var(--color-neutral-700);
+      --color-border-default: var(--color-neutral-600);
+      --color-border-strong: var(--color-neutral-500);
+      --color-border-dark: var(--color-neutral-400);
+      
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family-sans);
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing-8);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: var(--spacing-8);
+    }
+
+    .header h1 {
+      margin: 0 0 var(--spacing-3) 0;
+      color: var(--color-text-primary);
+    }
+
+    .header p {
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+
+    .toggle-controls {
+      display: flex;
+      gap: var(--spacing-4);
+      justify-content: center;
+      margin-bottom: var(--spacing-8);
+    }
+
+    .toggle-button {
+      padding: var(--spacing-3) var(--spacing-6);
+      background-color: var(--color-primary-600);
+      color: var(--color-text-on-primary);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+
+    .toggle-button:hover {
+      background-color: var(--color-primary-700);
+    }
+
+    .section {
+      margin-bottom: var(--spacing-8);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-primary);
+    }
+
+    .card {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-6);
+      box-shadow: var(--shadow-md);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .card h3 {
+      margin: 0 0 var(--spacing-3) 0;
+      color: var(--color-text-primary);
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--spacing-4);
+    }
+
+    .color-swatch {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-4);
+    }
+
+    .color-preview {
+      height: 80px;
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-3);
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    .color-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .color-value {
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+      font-family: monospace;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-4);
+    }
+
+    .theme-preview {
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .theme-preview-header {
+      padding: var(--spacing-4);
+      text-align: center;
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-border-subtle);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+    }
+
+    .theme-preview-content {
+      padding: var(--spacing-6);
+    }
+
+    .theme-preview.light {
+      background-color: hsl(0, 0%, 96%);
+      color: hsl(0, 0%, 20%);
+    }
+
+    .theme-preview.light .preview-card {
+      background-color: hsl(0, 0%, 100%);
+      border: 1px solid hsl(0, 0%, 90%);
+      color: hsl(0, 0%, 20%);
+    }
+
+    .theme-preview.dark {
+      background-color: hsl(0, 0%, 10%);
+      color: hsl(0, 0%, 98%);
+    }
+
+    .theme-preview.dark .preview-card {
+      background-color: hsl(0, 0%, 15%);
+      border: 1px solid hsl(0, 0%, 20%);
+      color: hsl(0, 0%, 98%);
+    }
+
+    .preview-card {
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-3);
+    }
+
+    .preview-card h4 {
+      margin: 0 0 var(--spacing-2) 0;
+      font-size: 1rem;
+    }
+
+    .preview-card p {
+      margin: 0;
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+
+    .token-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    .token-table th,
+    .token-table td {
+      padding: var(--spacing-3);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .token-table th {
+      background-color: var(--color-surface-elevated);
+      color: var(--color-text-inverse);
+      font-weight: 600;
+    }
+
+    .token-table td {
+      color: var(--color-text-primary);
+    }
+
+    .token-table td:first-child {
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+    }
+
+    .info-box {
+      background-color: var(--color-surface);
+      border-left: 4px solid var(--color-primary-600);
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: var(--spacing-2);
+      color: var(--color-text-primary);
+    }
+
+    .info-box p {
+      margin: 0;
+      color: var(--color-text-secondary);
+    }
+
+    code {
+      background-color: var(--color-surface-elevated);
+      color: var(--color-text-inverse);
+      padding: 0.125rem 0.375rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      font-family: monospace;
+    }
+
+    @media (max-width: 768px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌓 Dark Mode Foundation Demo</h1>
+      <p>Interactive demonstration of FanEngagement's dark mode token system</p>
+    </div>
+
+    <div class="toggle-controls">
+      <button class="toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode (Manual)</button>
+      <button class="toggle-button" onclick="showSystemPreference()">Check System Preference</button>
+    </div>
+
+    <div class="info-box">
+      <strong>About This Demo</strong>
+      <p>
+        This page demonstrates the dark mode foundation tokens defined in <code>frontend/src/index.css</code>. 
+        Dark mode can be activated via system preference (automatic) or manual toggle (class-based). 
+        The foundation is complete and ready for future UI implementation.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Activation Methods</h2>
+      
+      <div class="card">
+        <h3>🔄 System Preference (Automatic)</h3>
+        <p>
+          Dark mode automatically activates when your OS/browser is set to dark mode. 
+          Uses <code>@media (prefers-color-scheme: dark)</code> to detect system preference.
+        </p>
+        <p style="margin-top: 1rem;">
+          <strong>Current system preference:</strong> 
+          <span id="system-preference">Detecting...</span>
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🎛️ Manual Toggle (Class-Based)</h3>
+        <p>
+          Apply <code>.theme-dark</code> class to <code>&lt;body&gt;</code> to force dark mode 
+          regardless of system preference. Useful for in-app theme toggles.
+        </p>
+        <p style="margin-top: 1rem;">
+          <strong>Current manual override:</strong> 
+          <span id="manual-override">None</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Color Token Comparison</h2>
+      
+      <div class="comparison-grid">
+        <div class="theme-preview light">
+          <div class="theme-preview-header">Light Mode</div>
+          <div class="theme-preview-content">
+            <div class="preview-card">
+              <h4>Card Title</h4>
+              <p>This is how content looks in light mode with proper contrast and readability.</p>
+            </div>
+            <div class="preview-card">
+              <h4>Another Card</h4>
+              <p>Background: #f5f5f5 (light gray)<br>Surface: white<br>Text: #333333 (dark gray)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="theme-preview dark">
+          <div class="theme-preview-header">Dark Mode</div>
+          <div class="theme-preview-content">
+            <div class="preview-card">
+              <h4>Card Title</h4>
+              <p>This is how content looks in dark mode with inverted colors and adjusted contrast.</p>
+            </div>
+            <div class="preview-card">
+              <h4>Another Card</h4>
+              <p>Background: #1a1a1a (dark gray)<br>Surface: #262626<br>Text: #fafafa (light gray)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Surface Color Tokens</h2>
+      
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-preview" style="background-color: var(--color-background);"></div>
+          <div class="color-label">Background</div>
+          <div class="color-value">--color-background</div>
+        </div>
+        
+        <div class="color-swatch">
+          <div class="color-preview" style="background-color: var(--color-surface);"></div>
+          <div class="color-label">Surface</div>
+          <div class="color-value">--color-surface</div>
+        </div>
+        
+        <div class="color-swatch">
+          <div class="color-preview" style="background-color: var(--color-surface-elevated);"></div>
+          <div class="color-label">Surface Elevated</div>
+          <div class="color-value">--color-surface-elevated</div>
+        </div>
+        
+        <div class="color-swatch">
+          <div class="color-preview" style="background-color: var(--color-surface-dark);"></div>
+          <div class="color-label">Surface Dark</div>
+          <div class="color-value">--color-surface-dark</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Text Color Tokens</h2>
+      
+      <div class="card">
+        <p style="color: var(--color-text-primary); font-size: 1.125rem; margin-bottom: 0.5rem;">
+          <strong>Primary Text</strong> - Main content (--color-text-primary)
+        </p>
+        <p style="color: var(--color-text-secondary); font-size: 1rem; margin-bottom: 0.5rem;">
+          <strong>Secondary Text</strong> - Supporting content (--color-text-secondary)
+        </p>
+        <p style="color: var(--color-text-tertiary); font-size: 0.875rem;">
+          <strong>Tertiary Text</strong> - Muted/disabled content (--color-text-tertiary)
+        </p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Complete Token Reference</h2>
+      
+      <table class="token-table">
+        <thead>
+          <tr>
+            <th>Token Name</th>
+            <th>Light Mode</th>
+            <th>Dark Mode</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>--color-background</td>
+            <td>#f5f5f5</td>
+            <td>#1a1a1a</td>
+            <td>Main page background</td>
+          </tr>
+          <tr>
+            <td>--color-surface</td>
+            <td>white</td>
+            <td>#262626</td>
+            <td>Cards, panels, modals</td>
+          </tr>
+          <tr>
+            <td>--color-surface-elevated</td>
+            <td>#2a2a2a</td>
+            <td>#333333</td>
+            <td>Sidebar, elevated elements</td>
+          </tr>
+          <tr>
+            <td>--color-surface-dark</td>
+            <td>#1a1a1a</td>
+            <td>#141414</td>
+            <td>Header, dark surfaces</td>
+          </tr>
+          <tr>
+            <td>--color-text-primary</td>
+            <td>#333333</td>
+            <td>#fafafa</td>
+            <td>Main content text</td>
+          </tr>
+          <tr>
+            <td>--color-text-secondary</td>
+            <td>#666666</td>
+            <td>#cccccc</td>
+            <td>Secondary content</td>
+          </tr>
+          <tr>
+            <td>--color-text-tertiary</td>
+            <td>#999999</td>
+            <td>#808080</td>
+            <td>Muted/disabled text</td>
+          </tr>
+          <tr>
+            <td>--color-border-subtle</td>
+            <td>#e6e6e6</td>
+            <td>#333333</td>
+            <td>Subtle separators</td>
+          </tr>
+          <tr>
+            <td>--color-border-default</td>
+            <td>#cccccc</td>
+            <td>#666666</td>
+            <td>Default borders</td>
+          </tr>
+          <tr>
+            <td>--color-border-strong</td>
+            <td>#999999</td>
+            <td>#808080</td>
+            <td>Emphasized borders</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Implementation Status</h2>
+      
+      <div class="card">
+        <h3>✅ Phase 1: Foundation (Complete)</h3>
+        <ul style="color: var(--color-text-secondary); line-height: 1.8;">
+          <li>All dark mode color tokens defined</li>
+          <li>System preference support implemented</li>
+          <li>Class-based toggle support implemented</li>
+          <li>Documentation completed</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>⏳ Phase 2: UI Implementation (Future Epic)</h3>
+        <ul style="color: var(--color-text-secondary); line-height: 1.8;">
+          <li>Add dark mode toggle to user settings</li>
+          <li>Implement localStorage persistence</li>
+          <li>Create theme context/hook</li>
+          <li>Update component styles</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDarkMode() {
+      document.body.classList.toggle('theme-dark');
+      updateStatus();
+    }
+
+    function showSystemPreference() {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      alert(`System Preference: ${prefersDark ? 'Dark Mode' : 'Light Mode'}\n\nYour OS/browser is currently set to ${prefersDark ? 'dark' : 'light'} mode.`);
+    }
+
+    function updateStatus() {
+      // Check system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.getElementById('system-preference').textContent = prefersDark ? 'Dark Mode' : 'Light Mode';
+
+      // Check manual override
+      const hasOverride = document.body.classList.contains('theme-dark');
+      document.getElementById('manual-override').textContent = hasOverride ? 'Active (.theme-dark applied)' : 'None';
+    }
+
+    // Initialize status on load
+    updateStatus();
+
+    // Listen for system preference changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateStatus);
+  </script>
+</body>
+</html>

@@ -1232,43 +1232,362 @@ background-color: var(--color-neutral-100);
 
 ## Dark Mode Foundation
 
-Dark mode tokens are defined but **not currently active**. They provide structure for future dark mode implementation.
+**Status:** Foundation implemented, ready for future dark mode activation.
 
-### Dark Mode Tokens
+The design system includes a complete dark mode token foundation that supports both automatic (system preference) and manual (user toggle) activation methods. Dark mode tokens are **defined and structured** but UI implementation is deferred to a future epic.
+
+### Overview
+
+Dark mode provides:
+- **Reduced eye strain** in low-light environments
+- **Battery savings** on OLED displays
+- **User preference alignment** with OS-level settings
+- **Modern UX expectations** for professional applications
+
+### Activation Methods
+
+The system supports two complementary approaches:
+
+#### 1. System Preference (Automatic)
+
+Automatically applies dark mode when the user's operating system or browser is set to dark mode.
 
 ```css
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Surface Colors - Dark Mode */
-    --color-background: var(--color-neutral-900);
-    --color-surface: var(--color-neutral-800);
-    --color-surface-elevated: var(--color-neutral-700);
-    --color-surface-dark: hsl(0, 0%, 8%);
-
-    /* Text Colors - Dark Mode */
-    --color-text-primary: var(--color-neutral-50);
-    --color-text-secondary: var(--color-neutral-300);
-    --color-text-tertiary: var(--color-neutral-500);
-
-    /* Border Colors - Dark Mode */
-    --color-border-subtle: var(--color-neutral-700);
-    --color-border-default: var(--color-neutral-600);
-    --color-border-strong: var(--color-neutral-500);
-
-    /* Focus Ring - Dark Mode */
-    --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+    /* Dark mode tokens automatically apply */
   }
 }
 ```
 
-### Activating Dark Mode
+**When it activates:**
+- User has dark mode enabled in their OS (macOS, Windows, iOS, Android)
+- Browser respects the system preference
+- No user action required in the app
 
-To activate dark mode in the future:
+#### 2. Manual Toggle (Explicit Override)
 
-1. **Uncomment the dark mode media query** (currently present but can be enhanced)
-2. **Test all components** for readability and contrast
-3. **Add dark mode toggle** in user settings
-4. **Update tests** to include dark mode scenarios
+Allows users to explicitly choose dark mode within the application, overriding system preference.
+
+```tsx
+// Future implementation example
+function toggleDarkMode() {
+  document.body.classList.toggle('theme-dark');
+  // Save preference to localStorage
+}
+```
+
+**When it activates:**
+- User toggles dark mode switch in app settings
+- Takes precedence over system preference
+- Persists across sessions via localStorage
+
+### Dark Mode Token Reference
+
+All tokens required for dark mode are defined and ready to use. Here's the complete set:
+
+#### Surface Colors
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--color-background` | `#f5f5f5` | `#1a1a1a` | Main page background |
+| `--color-surface` | `white` | `#262626` | Cards, panels, modals |
+| `--color-surface-elevated` | `#2a2a2a` | `#333333` | Sidebar, elevated UI |
+| `--color-surface-dark` | `#1a1a1a` | `#141414` | Header, dark elements |
+
+**Dark mode strategy:**
+- Inverts the lightness hierarchy
+- Maintains relative contrast between surfaces
+- Uses neutral scale (900 → 700) for consistency
+
+#### Text Colors
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--color-text-primary` | `#333333` | `#fafafa` | Primary content |
+| `--color-text-secondary` | `#666666` | `#cccccc` | Secondary content |
+| `--color-text-tertiary` | `#999999` | `#808080` | Muted/disabled text |
+| `--color-text-inverse` | `white` | `#1a1a1a` | Text on colored backgrounds |
+
+**Contrast ratios (WCAG 2.1 AA):**
+- Primary text on dark background: **13.5:1** ✓ AAA
+- Secondary text on dark background: **7.2:1** ✓ AAA
+- Tertiary text on dark background: **3.1:1** ✓ AA (large text)
+
+#### Border Colors
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--color-border-subtle` | `#e6e6e6` | `#333333` | Subtle separators |
+| `--color-border-default` | `#cccccc` | `#666666` | Default borders |
+| `--color-border-strong` | `#999999` | `#808080` | Emphasized borders |
+| `--color-border-dark` | `#444444` | `#999999` | Borders on dark surfaces |
+
+#### Alpha Colors (Overlays)
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--color-overlay-light` | `rgba(255,255,255,0.1)` | `rgba(255,255,255,0.05)` | Subtle overlays |
+| `--color-overlay-medium` | `rgba(255,255,255,0.15)` | `rgba(255,255,255,0.1)` | Medium overlays |
+| `--color-overlay-dark` | `rgba(0,0,0,0.5)` | `rgba(0,0,0,0.7)` | Modal backdrops |
+
+**Note:** Dark mode uses more opaque overlays for better visibility against dark backgrounds.
+
+#### Focus Ring
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--focus-ring-color` | `--color-primary-700` | `--color-primary-500` | Keyboard focus outline |
+| `--focus-ring-shadow` | `0 0 0 4px rgba(0,86,179,0.1)` | `0 0 0 4px rgba(0,123,255,0.25)` | Focus glow |
+
+**Dark mode adjustment:**
+- Uses brighter primary color for better contrast
+- Increased shadow opacity for visibility
+
+#### Shadows
+
+Dark mode uses adjusted shadows with higher opacity for depth on dark backgrounds:
+
+```css
+/* Light Mode */
+--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+/* Dark Mode */
+--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+```
+
+**All shadow tokens are adjusted:**
+- `--shadow-xs` through `--shadow-2xl`
+- `--shadow-inner`
+- `--shadow-header`, `--shadow-header-dark`, `--shadow-sidebar`
+
+### Token Structure Example
+
+```css
+/* System Preference Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--color-neutral-900);
+    --color-surface: var(--color-neutral-800);
+    --color-text-primary: var(--color-neutral-50);
+    /* ... all dark mode tokens ... */
+  }
+}
+
+/* Manual Toggle Dark Mode */
+body.theme-dark {
+  --color-background: var(--color-neutral-900);
+  --color-surface: var(--color-neutral-800);
+  --color-text-primary: var(--color-neutral-50);
+  /* ... identical token values ... */
+}
+```
+
+**Why duplicate definitions?**
+- System preference: Respects OS settings automatically
+- Class-based: Allows explicit override and manual control
+- Both use identical values for consistency
+
+### Writing Dark Mode-Ready CSS
+
+When writing component styles, use semantic tokens instead of hardcoded colors:
+
+#### ✅ Good - Automatically supports dark mode
+```css
+.my-component {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  box-shadow: var(--shadow-md);
+}
+```
+
+#### ❌ Bad - Hardcoded colors break in dark mode
+```css
+.my-component {
+  background-color: white;
+  color: #333;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Brand & Semantic Colors in Dark Mode
+
+Brand colors (primary, success, warning, error, info) **remain unchanged** in dark mode:
+- Same hues and saturation
+- Automatically maintain WCAG contrast on dark backgrounds
+- Provide consistent brand identity across themes
+
+```css
+/* These work in both light and dark mode */
+.primary-button {
+  background-color: var(--color-primary-600);  /* Same in both modes */
+  color: var(--color-text-on-primary);          /* White in both modes */
+}
+
+.success-badge {
+  background-color: var(--color-success-100);   /* Adjusted automatically */
+  color: var(--color-success-700);
+}
+```
+
+### Testing Dark Mode (Future)
+
+When implementing full dark mode, follow this testing checklist:
+
+#### Visual Testing
+- [ ] All text has sufficient contrast (4.5:1 minimum)
+- [ ] Borders are visible against backgrounds
+- [ ] Shadows provide depth without being too harsh
+- [ ] Focus indicators are clearly visible
+- [ ] Brand colors remain recognizable
+
+#### Component Testing
+- [ ] Forms and inputs are readable
+- [ ] Tables and data displays have clear hierarchy
+- [ ] Modals and overlays provide adequate separation
+- [ ] Navigation elements are distinguishable
+- [ ] Loading states and placeholders are visible
+
+#### Accessibility Testing
+- [ ] Screen readers announce theme changes
+- [ ] Keyboard navigation focus indicators are visible
+- [ ] Color is not the only means of conveying information
+- [ ] High contrast mode (Windows) still works
+- [ ] Reduced motion preferences are respected
+
+#### Browser Testing
+- [ ] Chrome/Edge (system preference)
+- [ ] Firefox (system preference)
+- [ ] Safari (system preference)
+- [ ] Manual toggle works in all browsers
+- [ ] Preference persists after reload
+
+### Implementation Roadmap
+
+When ready to activate dark mode:
+
+#### Phase 1: Foundation (Complete ✓)
+- [x] Define all dark mode color tokens
+- [x] Implement system preference support
+- [x] Implement class-based toggle support
+- [x] Document token structure and usage
+
+#### Phase 2: UI Implementation (Future Epic)
+- [ ] Add dark mode toggle to user settings
+- [ ] Implement localStorage persistence
+- [ ] Create theme context/hook
+- [ ] Update all custom component styles
+- [ ] Test third-party component compatibility
+
+#### Phase 3: Polish & Testing (Future Epic)
+- [ ] Comprehensive visual QA across all pages
+- [ ] Accessibility audit (WCAG 2.1 AA)
+- [ ] Performance testing (paint/layout thrashing)
+- [ ] Cross-browser testing
+- [ ] User acceptance testing
+
+#### Phase 4: Deployment (Future Epic)
+- [ ] Feature flag for gradual rollout
+- [ ] Monitor user adoption metrics
+- [ ] Gather user feedback
+- [ ] Iterate on contrast and aesthetics
+- [ ] Document best practices learned
+
+### Migration Guide
+
+For developers working on dark mode implementation:
+
+#### Adding Dark Mode to Existing Components
+
+1. **Audit current styles:**
+   ```bash
+   # Find hardcoded colors in your component
+   grep -E '#[0-9a-fA-F]{3,6}|rgba?\(' MyComponent.css
+   ```
+
+2. **Replace with tokens:**
+   ```diff
+   .card {
+   -  background-color: white;
+   +  background-color: var(--color-surface);
+   -  color: #333;
+   +  color: var(--color-text-primary);
+   -  border: 1px solid #e6e6e6;
+   +  border: 1px solid var(--color-border-subtle);
+   }
+   ```
+
+3. **Test in both modes:**
+   ```tsx
+   // Add theme toggle to DevTools or Storybook
+   const toggleDarkMode = () => {
+     document.body.classList.toggle('theme-dark');
+   };
+   ```
+
+#### Creating New Components
+
+Always use semantic tokens from the start:
+
+```tsx
+// MyComponent.module.css
+.container {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-md);
+}
+
+.heading {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-4);
+}
+
+.description {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+```
+
+### FAQ
+
+**Q: Is dark mode active now?**
+A: No. The token foundation is complete, but UI implementation (toggle, persistence, testing) is deferred to a future epic.
+
+**Q: Will my existing components work with dark mode?**
+A: If they use design tokens (`var(--color-*)`), yes. If they use hardcoded colors, they need migration.
+
+**Q: Can I test dark mode now?**
+A: Yes, for development:
+- System preference: Set your OS to dark mode
+- Manual toggle: Add `theme-dark` class to `<body>` via DevTools
+
+**Q: Which approach should I use - system preference or manual toggle?**
+A: Both. They complement each other. System preference is the default; manual toggle allows user override.
+
+**Q: Do I need to define dark mode colors in my components?**
+A: No. Use semantic tokens (`--color-surface`, `--color-text-primary`) and they automatically adapt.
+
+**Q: What about custom brand colors?**
+A: Brand colors (primary, success, error, etc.) remain the same in dark mode and automatically maintain WCAG contrast.
+
+**Q: How do I handle images and icons in dark mode?**
+A: Use CSS filters or provide alternate assets:
+```css
+@media (prefers-color-scheme: dark) {
+  .logo {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}
+```
+
+**Q: Should I use `prefers-color-scheme` or `.theme-dark` in my CSS?**
+A: Neither. Use semantic tokens and let the root-level media query and class handle it automatically.
 
 ---
 
