@@ -19,7 +19,7 @@ export function createRoutes(polygonService: PolygonService): Router {
 
   // POST /v1/adapter/organizations
   router.post(
-      '/v1/adapter/organizations',
+    '/v1/adapter/organizations',
     createPostHandler({
       schema: createOrganizationSchema,
       execute: (data) =>
@@ -36,13 +36,13 @@ export function createRoutes(polygonService: PolygonService): Router {
         network: config.polygon.network,
         timestamp: new Date().toISOString(),
       }),
-        onError: handleError,
+      onError: handleError,
     })
   );
 
   // POST /v1/adapter/share-types
   router.post(
-      '/v1/adapter/share-types',
+    '/v1/adapter/share-types',
     createPostHandler({
       schema: createShareTypeSchema,
       execute: (data) =>
@@ -60,13 +60,13 @@ export function createRoutes(polygonService: PolygonService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
-        onError: handleError,
+      onError: handleError,
     })
   );
 
   // POST /v1/adapter/share-issuances
   router.post(
-      '/v1/adapter/share-issuances',
+    '/v1/adapter/share-issuances',
     createPostHandler({
       schema: recordShareIssuanceSchema,
       execute: (data) =>
@@ -85,13 +85,13 @@ export function createRoutes(polygonService: PolygonService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
-        onError: handleError,
+      onError: handleError,
     })
   );
 
   // POST /v1/adapter/proposals
   router.post(
-      '/v1/adapter/proposals',
+    '/v1/adapter/proposals',
     createPostHandler({
       schema: createProposalSchema,
       execute: (data) =>
@@ -110,13 +110,13 @@ export function createRoutes(polygonService: PolygonService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
-        onError: handleError,
+      onError: handleError,
     })
   );
 
   // POST /v1/adapter/votes
   router.post(
-      '/v1/adapter/votes',
+    '/v1/adapter/votes',
     createPostHandler({
       schema: recordVoteSchema,
       execute: (data) =>
@@ -133,13 +133,13 @@ export function createRoutes(polygonService: PolygonService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
-        onError: handleError,
+      onError: handleError,
     })
   );
 
   // POST /v1/adapter/proposal-results
   router.post(
-      '/v1/adapter/proposal-results',
+    '/v1/adapter/proposal-results',
     createPostHandler({
       schema: commitProposalResultsSchema,
       execute: (data) =>
@@ -155,7 +155,7 @@ export function createRoutes(polygonService: PolygonService): Router {
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
-        onError: handleError,
+      onError: handleError,
     })
   );
 
