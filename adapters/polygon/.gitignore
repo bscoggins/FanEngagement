@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+# package-lock.json stays tracked for deterministic installs (see docs/development.md)
 
 # Build output
 dist/

@@ -9,6 +9,12 @@ This guide helps you get up and running with the FanEngagement development envir
 - **.NET 9 SDK** (for backend development without Docker)
 - **PostgreSQL 16** (if running without Docker)
 
+## Node Dependency Management
+
+- Every Node-based project in this repo (frontend plus both adapters) keeps its `package-lock.json` committed so `npm ci` installs the exact dependency graph that CI and production use.
+- When adding or updating dependencies, run `npm install` (which refreshes the lockfile), commit the resulting `package-lock.json`, and verify `npm ci && npm test` succeed inside the package you touched.
+- CI workflows rely on `npm ci`, so missing or untracked lockfiles will fail builds—make sure new Node packages follow the same convention.
+
 ## Getting Started
 
 ### 1. Clone the Repository
@@ -97,6 +103,7 @@ git check-ignore .env.development
 
 # If the above command returns nothing, add `.env.development` to your .gitignore immediately.
 ```
+
 ### 3. Apply Migrations
 
 Migrations are automatically applied when the API starts. No manual steps needed.
@@ -106,11 +113,13 @@ Migrations are automatically applied when the API starts. No manual steps needed
 Use the Admin Dev Tools UI or the API to seed test data:
 
 **Via UI (Recommended):**
+
 1. Log in as admin (`admin@example.com` / `Admin123!`)
 2. Navigate to Admin → Dev Tools (`/admin/dev-tools`)
 3. Select a scenario and click "Seed"
 
 **Via API:**
+
 ```bash
 # Seed basic demo data
 curl -X POST http://localhost:5049/admin/seed-dev-data \
@@ -122,6 +131,7 @@ curl -X POST "http://localhost:5049/admin/seed-dev-data?scenario=HeavyProposals"
 ```
 
 **Available Scenarios:**
+
 - `BasicDemo` - Small but comprehensive dataset (default)
 - `HeavyProposals` - 50+ proposals for pagination testing
 - `WebhookFailures` - Webhook events with various statuses
