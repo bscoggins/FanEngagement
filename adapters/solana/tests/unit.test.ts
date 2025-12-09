@@ -163,13 +163,14 @@ describe('Solana Adapter Unit Tests', () => {
   describe('createPostHandler', () => {
     const schema = z.object({ value: z.string() });
     const buildResponse = jest.fn((result: Record<string, string>) => result);
+    type ExecuteResult = Record<string, string>;
 
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
     test('should validate input, execute task, and send response', async () => {
-      const execute = jest.fn(async (data: { value: string }) => ({ id: '123', ...data }));
+      const execute = jest.fn(async (data: { value: string }): Promise<ExecuteResult> => ({ id: '123', ...data }));
       const onError = jest.fn();
       const handler = createPostHandler({
         schema,
@@ -195,7 +196,7 @@ describe('Solana Adapter Unit Tests', () => {
     });
 
     test('should call onError when validation fails', async () => {
-      const execute = jest.fn();
+      const execute = jest.fn(async (_data: { value: string }): Promise<ExecuteResult> => ({ id: 'noop' }));
       const onError = jest.fn();
       const handler = createPostHandler({
         schema,
