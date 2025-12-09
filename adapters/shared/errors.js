@@ -7,5 +7,14 @@ export const serializeError = (error) => {
     };
   }
 
+  // For objects, attempt JSON serialization for better debuggability
+  if (typeof error === 'object' && error !== null) {
+    try {
+      return { message: JSON.stringify(error) };
+    } catch (e) {
+      return { message: String(error) };
+    }
+  }
+
   return { message: String(error) };
 };

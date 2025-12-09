@@ -9,6 +9,8 @@ cd "$ROOT_DIR"
 
 # Always load compose with our shared dev env vars when the file exists locally.
 # In CI the workflow sets the env vars directly, so fall back to default compose invocation.
+# Note: If .env.development exists but contains invalid syntax, Docker Compose will fail
+# with an error. Ensure the file is well-formed (key=value pairs, one per line).
 if [[ -f .env.development ]]; then
   echo "Using .env.development for docker compose overrides"
   COMPOSE_CMD=(docker compose --env-file .env.development)

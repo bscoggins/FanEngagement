@@ -95,7 +95,6 @@ solana balance "$(solana-keygen pubkey solana-devnet-keypair.json)" \
   --url https://api.devnet.solana.com
 
 # 4) Store the private key securely for development
-# DO NOT commit .env.development or any file containing private keys to version control!
 echo "SOLANA_PRIVATE_KEY=$(cat solana-devnet-keypair.json)" >> .env.development
 
 # 5) Verify .env.development is in .gitignore (it should already be)
@@ -103,6 +102,10 @@ git check-ignore .env.development
 
 # If the above command returns nothing, add `.env.development` to your .gitignore immediately.
 ```
+
+> **Note:**  
+> `.env.development` is intentionally listed in `.gitignore` and is safe to use for local development.  
+> However, it contains sensitive information (your Solana private key) and should **never** be committed to version control or shared outside your local environment.
 
 ### 3. Apply Migrations
 

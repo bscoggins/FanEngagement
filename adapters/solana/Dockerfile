@@ -1,4 +1,9 @@
 # Multi-stage build for Solana adapter
+#
+# NOTE: This Dockerfile must be built with the repository root as the build context
+# because it requires access to adapters/shared. Build from repo root with:
+#   docker build -f adapters/solana/Dockerfile -t solana-adapter .
+# Or use docker-compose which sets context: . automatically.
 
 # Stage 1: Builder
 FROM node:20-alpine AS builder
