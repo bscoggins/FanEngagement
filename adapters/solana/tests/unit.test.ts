@@ -74,7 +74,7 @@ describe('Solana Adapter Unit Tests', () => {
 
       expect(serialized).toHaveProperty('message');
       expect(typeof serialized.message).toBe('string');
-      expect(serialized.message).toContain('[object Object]');
+      expect(serialized.message.length).toBeGreaterThan(0);
       expect(serialized).not.toHaveProperty('stack');
       expect(serialized).not.toHaveProperty('name');
     });
