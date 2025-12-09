@@ -57,10 +57,15 @@ The Solana adapter and the local `solana-test-validator` live behind the `solana
 docker compose --profile solana up -d solana-adapter
 
 # Deterministic local testing: start adapter + validator and override RPC
-SOLANA_RPC_URL=http://solana-test-validator:8899 \
-  SOLANA_NETWORK=localnet \
-  docker compose --profile solana up -d solana-test-validator solana-adapter
+# Recommended: use an env file
+echo "SOLANA_RPC_URL=http://solana-test-validator:8899" > .env.local
+echo "SOLANA_NETWORK=localnet" >> .env.local
+docker compose --env-file .env.local --profile solana up -d solana-test-validator solana-adapter
 
+# Or export variables in your shell before running
+export SOLANA_RPC_URL=http://solana-test-validator:8899
+export SOLANA_NETWORK=localnet
+docker compose --profile solana up -d solana-test-validator solana-adapter
 # Tear everything down when finished
 docker compose --profile solana down
 ```
