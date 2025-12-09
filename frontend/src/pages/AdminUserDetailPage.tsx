@@ -297,7 +297,171 @@ export const AdminUserDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Password Management Section */}
+        <div style={{ 
+          backgroundColor: 'white', 
+          padding: '1.5rem', 
+          borderRadius: '8px', 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
+            Password Management
+          </h2>
+          <AdminPasswordSetForm userId={userId!} />
+        </div>
       </div>
     </div>
+  );
+};
+
+// Admin Password Set Form Component
+const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
+  const { showSuccess, showError } = useNotifications();
+  const [formData, setFormData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate passwords match
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Validate password length
+    if (formData.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      await usersApi.setUserPassword(userId, {
+        newPassword: formData.newPassword,
+      });
+
+      showSuccess('Password set successfully!');
+      
+      // Clear form
+      setFormData({
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (err: any) {
+      console.error('Failed to set password:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} data-testid="admin-password-set-form">
+      <p style={{ color: '#666', marginBottom: '1rem' }}>
+        Set a new password for this user. The current password is not required.
+      </p>
+
+      {error && (
+        <div
+          style={{
+            padding: '0.75rem',
+            backgroundColor: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: '4px',
+            color: '#c33',
+            marginBottom: '1rem',
+          }}
+          data-testid="password-error"
+        >
+          {error}
+        </div>
+      )}
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="newPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          New Password:
+        </label>
+        <input
+          type="password"
+          id="newPassword"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          minLength={8}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.5rem',
+            fontSize: '1rem',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+          }}
+          data-testid="new-password-input"
+        />
+        <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
+          Minimum 8 characters
+        </small>
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          Confirm New Password:
+        </label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          minLength={8}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.5rem',
+            fontSize: '1rem',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+          }}
+          data-testid="confirm-password-input"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        style={{
+          padding: '0.75rem 1.5rem',
+          fontSize: '1rem',
+          backgroundColor: isSubmitting ? '#ccc' : '#0066cc',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+        }}
+        data-testid="set-password-button"
+      >
+        {isSubmitting ? 'Setting Password...' : 'Set New Password'}
+      </button>
+    </form>
   );
 };

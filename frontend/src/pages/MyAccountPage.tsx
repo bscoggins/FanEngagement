@@ -254,8 +254,184 @@ export const MyAccountPage: React.FC = () => {
         </form>
       )}
 
+      {/* Password Change Section */}
+      <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #ddd' }}>
+        <h2 style={{ marginBottom: '1.5rem' }}>Change Password</h2>
+        <PasswordChangeForm />
+      </div>
+
       {/* MFA Settings - Only for Admin users */}
       {isAdmin && <MfaSettings />}
     </div>
+  );
+};
+
+// Password Change Form Component
+const PasswordChangeForm: React.FC = () => {
+  const { showSuccess, showError } = useNotifications();
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate passwords match
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    // Validate password length
+    if (formData.newPassword.length < 8) {
+      setError('New password must be at least 8 characters long');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      await usersApi.changeMyPassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+
+      showSuccess('Password changed successfully!');
+      
+      // Clear form
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (err: any) {
+      console.error('Failed to change password:', err);
+      const errorMessage = parseApiError(err);
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} data-testid="password-change-form">
+      {error && (
+        <div
+          style={{
+            padding: '1rem',
+            backgroundColor: '#f8d7da',
+            color: '#721c24',
+            border: '1px solid #f5c6cb',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+          }}
+          data-testid="password-error"
+        >
+          {error}
+        </div>
+      )}
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="currentPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          Current Password:
+        </label>
+        <input
+          type="password"
+          id="currentPassword"
+          name="currentPassword"
+          value={formData.currentPassword}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+          }}
+          data-testid="current-password-input"
+        />
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="newPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          New Password:
+        </label>
+        <input
+          type="password"
+          id="newPassword"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          minLength={8}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+          }}
+          data-testid="new-password-input"
+        />
+        <small style={{ color: '#6c757d', display: 'block', marginTop: '0.25rem' }}>
+          Minimum 8 characters
+        </small>
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          Confirm New Password:
+        </label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+          minLength={8}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+          }}
+          data-testid="confirm-password-input"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        style={{
+          padding: '0.5rem 1rem',
+          backgroundColor: isSubmitting ? '#6c757d' : '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+        }}
+        data-testid="change-password-button"
+      >
+        {isSubmitting ? 'Changing Password...' : 'Change Password'}
+      </button>
+    </form>
   );
 };

@@ -37,4 +37,14 @@ export const usersApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/users/${id}`);
   },
+
+  changeMyPassword: async (request: import('../types/api').ChangePasswordRequest): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>('/users/me/password', request);
+    return response.data;
+  },
+
+  setUserPassword: async (id: string, request: import('../types/api').SetPasswordRequest): Promise<{ message: string }> => {
+    const response = await apiClient.put<{ message: string }>(`/users/${id}/password`, request);
+    return response.data;
+  },
 };
