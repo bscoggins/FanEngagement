@@ -383,7 +383,7 @@ h6 {
     --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25); /* Enhanced visibility */
 
     /* ===== Shadows - Dark Mode ===== */
-    /* Adjusted shadows for dark backgrounds - more subtle and use lighter shadows */
+    /* Adjusted shadows for dark backgrounds - higher opacity for better depth perception */
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
@@ -432,7 +432,7 @@ body.theme-dark {
   --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25); /* Enhanced visibility */
 
   /* ===== Shadows - Dark Mode ===== */
-  /* Adjusted shadows for dark backgrounds - more subtle and use lighter shadows */
+  /* Adjusted shadows for dark backgrounds - higher opacity for better depth perception */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);

@@ -201,7 +201,7 @@ describe('AdminWebhookEventsPage', () => {
     });
     
     // Verify details are shown
-    expect(screen.getByText(/proposalId/)).toBeInTheDocument();
+    expect(await screen.findByText(/proposalId/)).toBeInTheDocument();
   });
 
   it('retries a failed event when Retry is clicked', async () => {
