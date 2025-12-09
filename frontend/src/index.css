@@ -340,29 +340,107 @@ h6 {
   }
 }
 
-/* ===== Dark Mode Foundation (Optional) ===== */
+/* ===== Dark Mode Foundation ===== */
 /*
-  Dark mode tokens foundation for future implementation. Attach the
-  `.theme-dark` class to the <body> element when we want to activate
-  dark mode explicitly; otherwise the light theme stays in place.
+  Dark mode tokens foundation for future implementation.
+  
+  Two activation methods:
+  1. System preference: Automatically applies when user's OS is in dark mode
+  2. Manual toggle: Apply `.theme-dark` class to <body> to override system preference
+  
+  The class-based approach takes precedence over system preference for explicit user choice.
+*/
+
+/* System Dark Mode - Auto-activates based on OS/browser preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* ===== Surface Colors - Dark Mode ===== */
+    --color-background: var(--color-neutral-900);           /* #1a1a1a - Main background */
+    --color-surface: var(--color-neutral-800);              /* #262626 - Cards, panels */
+    --color-surface-elevated: var(--color-neutral-700);     /* #333333 - Elevated elements */
+    --color-surface-dark: hsl(0, 0%, 8%);                   /* #141414 - Header, darker surfaces */
+
+    /* ===== Text Colors - Dark Mode ===== */
+    --color-text-primary: var(--color-neutral-50);          /* #fafafa - Main text */
+    --color-text-secondary: var(--color-neutral-300);       /* #cccccc - Secondary text */
+    --color-text-tertiary: var(--color-neutral-500);        /* #808080 - Tertiary/muted text */
+    --color-text-inverse: var(--color-neutral-900);         /* #1a1a1a - Text on light backgrounds */
+    /* --color-text-on-primary remains white for primary button text */
+
+    /* ===== Border Colors - Dark Mode ===== */
+    --color-border-subtle: var(--color-neutral-700);        /* #333333 - Subtle borders */
+    --color-border-default: var(--color-neutral-600);       /* #666666 - Default borders */
+    --color-border-strong: var(--color-neutral-500);        /* #808080 - Emphasized borders */
+    --color-border-dark: var(--color-neutral-400);          /* #999999 - Lighter borders on dark */
+
+    /* ===== Alpha Colors - Dark Mode ===== */
+    --color-overlay-light: rgba(255, 255, 255, 0.05);       /* Light overlay on dark surfaces */
+    --color-overlay-medium: rgba(255, 255, 255, 0.1);       /* Medium overlay */
+    --color-overlay-dark: rgba(0, 0, 0, 0.7);               /* Darker overlay for modals */
+
+    /* ===== Focus Ring - Dark Mode ===== */
+    --focus-ring-color: var(--color-primary-500);           /* Brighter blue for dark backgrounds */
+    --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25); /* Enhanced visibility */
+
+    /* ===== Shadows - Dark Mode ===== */
+    /* Adjusted shadows for dark backgrounds - higher opacity for better depth perception */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+    --shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+    --shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    --shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Manual Dark Mode Override - Explicit class-based toggle */
+/*
+  Apply this class to <body> to force dark mode regardless of system preference.
+  Useful for in-app dark mode toggle control.
 */
 body.theme-dark {
-  /* Surface Colors - Dark Mode */
-  --color-background: var(--color-neutral-900);
-  --color-surface: var(--color-neutral-800);
-  --color-surface-elevated: var(--color-neutral-700);
-  --color-surface-dark: hsl(0, 0%, 8%);
+  /* ===== Surface Colors - Dark Mode ===== */
+  --color-background: var(--color-neutral-900);           /* #1a1a1a - Main background */
+  --color-surface: var(--color-neutral-800);              /* #262626 - Cards, panels */
+  --color-surface-elevated: var(--color-neutral-700);     /* #333333 - Elevated elements */
+  --color-surface-dark: hsl(0, 0%, 8%);                   /* #141414 - Header, darker surfaces */
 
-  /* Text Colors - Dark Mode */
-  --color-text-primary: var(--color-neutral-50);
-  --color-text-secondary: var(--color-neutral-300);
-  --color-text-tertiary: var(--color-neutral-500);
+  /* ===== Text Colors - Dark Mode ===== */
+  --color-text-primary: var(--color-neutral-50);          /* #fafafa - Main text */
+  --color-text-secondary: var(--color-neutral-300);       /* #cccccc - Secondary text */
+  --color-text-tertiary: var(--color-neutral-500);        /* #808080 - Tertiary/muted text */
+  --color-text-inverse: var(--color-neutral-900);         /* #1a1a1a - Text on light backgrounds */
+  /* --color-text-on-primary remains white for primary button text */
 
-  /* Border Colors - Dark Mode */
-  --color-border-subtle: var(--color-neutral-700);
-  --color-border-default: var(--color-neutral-600);
-  --color-border-strong: var(--color-neutral-500);
+  /* ===== Border Colors - Dark Mode ===== */
+  --color-border-subtle: var(--color-neutral-700);        /* #333333 - Subtle borders */
+  --color-border-default: var(--color-neutral-600);       /* #666666 - Default borders */
+  --color-border-strong: var(--color-neutral-500);        /* #808080 - Emphasized borders */
+  --color-border-dark: var(--color-neutral-400);          /* #999999 - Lighter borders on dark */
 
-  /* Focus Ring - Dark Mode */
-  --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+  /* ===== Alpha Colors - Dark Mode ===== */
+  --color-overlay-light: rgba(255, 255, 255, 0.05);       /* Light overlay on dark surfaces */
+  --color-overlay-medium: rgba(255, 255, 255, 0.1);       /* Medium overlay */
+  --color-overlay-dark: rgba(0, 0, 0, 0.7);               /* Darker overlay for modals */
+
+  /* ===== Focus Ring - Dark Mode ===== */
+  --focus-ring-color: var(--color-primary-500);           /* Brighter blue for dark backgrounds */
+  --focus-ring-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25); /* Enhanced visibility */
+
+  /* ===== Shadows - Dark Mode ===== */
+  /* Adjusted shadows for dark backgrounds - higher opacity for better depth perception */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-header: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+  --shadow-header-dark: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+  --shadow-sidebar: 2px 0 4px 0 rgba(0, 0, 0, 0.4);
 }
