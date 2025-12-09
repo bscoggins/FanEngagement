@@ -29,7 +29,7 @@ services:
       # The API will fail to start if this variable is not set.
       Jwt__Issuer: FanEngagement
       Jwt__Audience: FanEngagement
-      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-dev-signing-key-change-in-production}
     ports:
       - "8080:8080"
     depends_on:
