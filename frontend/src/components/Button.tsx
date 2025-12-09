@@ -5,7 +5,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'dan
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type IconPosition = 'left' | 'right';
 
-export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**
    * Visual variant of the button
    * @default 'primary'
