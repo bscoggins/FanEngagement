@@ -76,7 +76,7 @@ For a visual, interactive reference of all design tokens, open the **design-toke
 **Finding the Right Token:**
 1. **Colors**: Use semantic names (`--color-text-primary`, `--color-success-600`)
 2. **Typography**: Start with `--font-size-base` (16px) and adjust up/down
-3. **Spacing**: Use multiples of 4px (`--spacing-2` = 8px, `--spacing-4` = 16px)
+3. **Spacing**: Use the spacing scale (primarily 4px-based: `--spacing-2` = 8px, `--spacing-4` = 16px; also includes 2px, 12px, etc.)
 4. **Shadows**: `--shadow-sm` for buttons, `--shadow-md` for cards, `--shadow-lg` for modals
 
 **🎨 [View All Tokens Interactively →](design-tokens-showcase.html)**
