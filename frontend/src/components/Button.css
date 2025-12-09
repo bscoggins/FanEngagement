@@ -200,11 +200,10 @@
 }
 
 .btn--danger:active:not(:disabled) {
-  background-color: var(--color-error-700);
-  border-color: var(--color-error-700);
+  background-color: var(--color-error-800);
+  border-color: var(--color-error-800);
   box-shadow: var(--shadow-xs);
   transform: translateY(1px);
-  filter: brightness(0.9);
 }
 
 /* ===== Button Icon ===== */

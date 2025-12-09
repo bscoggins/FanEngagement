@@ -146,11 +146,13 @@ export const UserCreatePage: React.FC = () => {
           >
             Create User
           </Button>
-          <Link to="/users">
-            <Button variant="secondary" type="button">
-              Cancel
-            </Button>
-          </Link>
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={() => navigate('/users')}
+          >
+            Cancel
+          </Button>
         </div>
       </form>
     </div>

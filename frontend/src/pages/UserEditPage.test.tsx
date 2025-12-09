@@ -243,6 +243,7 @@ describe('UserEditPage', () => {
   });
 
   it('navigates back to users list when cancel is clicked', async () => {
+    const user = userEvent.setup();
     vi.mocked(usersApi.getById).mockResolvedValueOnce(mockUser);
     
     renderUserEditPage();
@@ -252,7 +253,12 @@ describe('UserEditPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const cancelLink = screen.getByText('Cancel');
-    expect(cancelLink.closest('a')).toHaveAttribute('href', '/users');
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    await user.click(cancelButton);
+    
+    // Should navigate to /users route which shows "Users List Page"
+    await waitFor(() => {
+      expect(screen.getByText('Users List Page')).toBeInTheDocument();
+    });
   });
 });

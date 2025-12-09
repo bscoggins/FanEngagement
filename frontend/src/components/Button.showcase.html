@@ -9,8 +9,8 @@
     If styles don't load, ensure the paths to index.css and Button.css are correct
     relative to where this file is being served from.
   -->
-  <link rel="stylesheet" href="../src/index.css">
-  <link rel="stylesheet" href="../src/components/Button.css">
+  <link rel="stylesheet" href="../../index.css">
+  <link rel="stylesheet" href="./Button.css">
   <style>
     body {
       padding: var(--spacing-8);
@@ -111,26 +111,6 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-md);
       margin-bottom: var(--spacing-6);
-    }
-    
-    @keyframes btn-spin {
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-    
-    @keyframes btn-dash {
-      0% {
-        stroke-dashoffset: 28;
-      }
-      50% {
-        stroke-dashoffset: 7;
-        transform: rotate(135deg);
-      }
-      100% {
-        stroke-dashoffset: 28;
-        transform: rotate(450deg);
-      }
     }
   </style>
 </head>

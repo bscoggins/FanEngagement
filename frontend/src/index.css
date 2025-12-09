@@ -33,6 +33,7 @@
   --color-error-500: hsl(0, 70%, 50%);
   --color-error-600: hsl(0, 70%, 45%);
   --color-error-700: hsl(0, 70%, 40%);
+  --color-error-800: hsl(0, 70%, 35%);
   
   --color-info-50: hsl(210, 90%, 97%);
   --color-info-100: hsl(210, 90%, 92%);

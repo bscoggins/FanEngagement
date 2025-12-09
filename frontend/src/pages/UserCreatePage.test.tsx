@@ -168,10 +168,16 @@ describe('UserCreatePage', () => {
     });
   });
 
-  it('navigates back to users list when cancel is clicked', () => {
+  it('navigates back to users list when cancel is clicked', async () => {
+    const user = userEvent.setup();
     renderUserCreatePage();
     
-    const cancelLink = screen.getByText('Cancel');
-    expect(cancelLink.closest('a')).toHaveAttribute('href', '/users');
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    await user.click(cancelButton);
+    
+    // Should navigate to /users route which shows "Users List Page"
+    await waitFor(() => {
+      expect(screen.getByText('Users List Page')).toBeInTheDocument();
+    });
   });
 });

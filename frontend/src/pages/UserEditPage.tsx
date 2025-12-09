@@ -204,11 +204,13 @@ export const UserEditPage: React.FC = () => {
           >
             Save Changes
           </Button>
-          <Link to="/users">
-            <Button variant="secondary" type="button">
-              Cancel
-            </Button>
-          </Link>
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={() => navigate('/users')}
+          >
+            Cancel
+          </Button>
         </div>
       </form>
     </div>
