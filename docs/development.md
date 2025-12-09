@@ -89,8 +89,14 @@ solana balance "$(solana-keygen pubkey solana-devnet-keypair.json)" \
   --url https://api.devnet.solana.com
 ```
 
-Copy the JSON array from `solana-devnet-keypair.json` into `SOLANA_PRIVATE_KEY` within `.env.development` (or a more secure secret store) before starting the adapter.
+# 4) Store the private key securely for development
+# DO NOT commit .env.development or any file containing private keys to version control!
+echo "SOLANA_PRIVATE_KEY=$(cat solana-devnet-keypair.json)" >> .env.development
 
+# 5) Verify .env.development is in .gitignore (it should already be)
+git check-ignore .env.development
+
+# If the above command returns nothing, add `.env.development` to your .gitignore immediately.
 ### 3. Apply Migrations
 
 Migrations are automatically applied when the API starts. No manual steps needed.
