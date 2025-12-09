@@ -32,11 +32,6 @@ const serializeError = (error: unknown) => {
       name: error.name,
     };
   }
-
-  if (error === undefined) {
-    return { message: 'Unknown error' };
-  }
-
   return { message: String(error) };
 };
 
