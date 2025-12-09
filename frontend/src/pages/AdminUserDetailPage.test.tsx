@@ -46,6 +46,7 @@ describe('AdminUserDetailPage', () => {
     displayName: 'Test User',
     role: 'User',
     createdAt: '2024-01-01T00:00:00Z',
+    mfaRequired: false,
   };
 
   const mockMembershipsWithOrg: MembershipWithOrganizationDto[] = [
@@ -137,6 +138,7 @@ describe('AdminUserDetailPage', () => {
       email: 'updated@example.com',
       displayName: 'Updated User',
       role: 'Admin',
+      mfaRequired: false,
     };
 
     vi.mocked(usersApi.getById)
@@ -432,7 +434,7 @@ describe('AdminUserDetailPage', () => {
       await user.click(screen.getByTestId('set-password-button'));
 
       await waitFor(() => {
-        expect(screen.getByText(/User not found/i)).toBeInTheDocument();
+        expect(screen.getByTestId('password-error')).toHaveTextContent(/User not found/i);
       });
     });
   });

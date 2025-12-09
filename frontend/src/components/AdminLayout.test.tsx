@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -88,15 +89,9 @@ describe('AdminLayout', () => {
     });
   });
 
-  it('displays home link instead of back to main app', async () => {
+  it('does not render legacy home link in the header', () => {
     renderAdminLayout();
-    
-    await waitFor(() => {
-      const homeLink = screen.getByText('← Home');
-      expect(homeLink).toBeInTheDocument();
-      // Platform admin home route
-      expect(homeLink.closest('a')).toHaveAttribute('href', '/platform-admin/dashboard');
-    });
+    expect(screen.queryByText('← Home')).not.toBeInTheDocument();
   });
 
   it('renders child content in main area', () => {
@@ -197,6 +192,7 @@ describe('AdminLayout', () => {
     });
 
     it('displays org-scoped items when org is active', async () => {
+      const user = userEvent.setup();
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -233,16 +229,18 @@ describe('AdminLayout', () => {
       expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       
       // Should see org switcher with org name in header
-      expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
-      // The org name appears in the dropdown option
-      expect(screen.getByRole('option', { name: /Test Org/ })).toBeInTheDocument();
+      const orgDropdown = screen.getByTestId('admin-header-org-selector');
+      expect(orgDropdown).toBeInTheDocument();
+      const orgButton = screen.getByTestId('admin-header-org-selector-button');
+      await user.click(orgButton);
+      expect(await screen.findByTestId('org-option-org-1')).toBeInTheDocument();
       
       // Should see "Org Admin" badge in header
       expect(screen.getByTestId('org-admin-badge')).toBeInTheDocument();
       expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
     });
 
-    it('home link navigates to admin for org admin', async () => {
+    it('does not include a home link for org admins either', async () => {
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -260,16 +258,14 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        const homeLink = screen.getByText('← Home');
-        expect(homeLink).toBeInTheDocument();
-        // OrgAdmin home route
-        expect(homeLink.closest('a')).toHaveAttribute('href', '/admin');
+        expect(screen.queryByText('← Home')).not.toBeInTheDocument();
       });
     });
   });
 
   describe('Mixed-role user navigation', () => {
     it('displays all organizations in the switcher for mixed-role users', async () => {
+      const user = userEvent.setup();
       const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -302,13 +298,14 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        const orgSelector = screen.getByTestId('admin-header-org-selector');
-        expect(orgSelector).toBeInTheDocument();
-        
-        // Both orgs should be in the dropdown (without role suffix now)
-        expect(screen.getByRole('option', { name: /Admin Org/ })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: /Member Org/ })).toBeInTheDocument();
+        expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
       });
+
+      const orgButton = screen.getByTestId('admin-header-org-selector-button');
+      await user.click(orgButton);
+
+      expect(await screen.findByTestId('org-option-org-admin-org')).toBeInTheDocument();
+      expect(await screen.findByTestId('org-option-org-member-org')).toBeInTheDocument();
     });
 
     it('shows org admin nav items when admin org is selected', async () => {
@@ -432,10 +429,10 @@ describe('AdminLayout', () => {
         expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
       });
 
-      const selector = screen.getByTestId('admin-header-org-selector');
-      
-      // Switch to the member org
-      await user.selectOptions(selector, 'org-member');
+      const orgButton = screen.getByTestId('admin-header-org-selector-button');
+      await user.click(orgButton);
+      const memberOption = await screen.findByTestId('org-option-org-member');
+      await user.click(memberOption);
 
       // Should navigate to member home, not org detail page
       await waitFor(() => {
@@ -473,10 +470,10 @@ describe('AdminLayout', () => {
         expect(screen.getByTestId('admin-header-org-selector')).toBeInTheDocument();
       });
 
-      const selector = screen.getByTestId('admin-header-org-selector');
-      
-      // Switch to the admin org
-      await user.selectOptions(selector, 'org-admin');
+      const orgButton = screen.getByTestId('admin-header-org-selector-button');
+      await user.click(orgButton);
+      const adminOption = await screen.findByTestId('org-option-org-admin');
+      await user.click(adminOption);
 
       // Should navigate to admin org edit page
       await waitFor(() => {
@@ -651,13 +648,14 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        // Check that keyboard shortcuts are displayed (e.g., Ctrl1, Ctrl2, etc.)
         const overviewLink = screen.getByTestId('org-nav-orgOverview');
         expect(overviewLink).toBeInTheDocument();
-        expect(overviewLink).toHaveTextContent(/Ctrl1|⌘1/);
+        expect(overviewLink).not.toHaveTextContent(/Ctrl1|⌘1/);
+        expect(overviewLink).toHaveAttribute('aria-label', expect.stringMatching(/Shortcut (Ctrl|Cmd)\+1/));
         
         const membershipsLink = screen.getByTestId('org-nav-manageMemberships');
-        expect(membershipsLink).toHaveTextContent(/Ctrl2|⌘2/);
+        expect(membershipsLink).not.toHaveTextContent(/Ctrl2|⌘2/);
+        expect(membershipsLink).toHaveAttribute('aria-label', expect.stringMatching(/Shortcut (Ctrl|Cmd)\+2/));
       });
     });
 

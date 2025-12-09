@@ -18,7 +18,7 @@ export const LoginPage: React.FC = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigateToDefaultRoute(user);
+      void navigateToDefaultRoute(user);
     }
   }, [isAuthenticated, user, navigateToDefaultRoute]);
 
@@ -38,12 +38,6 @@ export const LoginPage: React.FC = () => {
       } else {
         // Normal login without MFA
         showSuccess('Login successful!');
-        
-        const storedUser = localStorage.getItem('authUser');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          await navigateToDefaultRoute(parsedUser);
-        }
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -66,12 +60,6 @@ export const LoginPage: React.FC = () => {
 
       await validateMfa({ userId: pendingUserId, code: mfaCode });
       showSuccess('Login successful!');
-      
-      const storedUser = localStorage.getItem('authUser');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        await navigateToDefaultRoute(parsedUser);
-      }
     } catch (err) {
       console.error('MFA validation error:', err);
       setError('Invalid MFA code. Please try again.');

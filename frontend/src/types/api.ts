@@ -56,6 +56,7 @@ export interface User {
   displayName: string;
   role: 'User' | 'Admin';
   createdAt: string;
+  mfaRequired?: boolean;
 }
 
 // UserProfile is used for displaying user account info where createdAt may not be available
@@ -66,6 +67,7 @@ export interface UserProfile {
   displayName: string;
   role: 'User' | 'Admin';
   createdAt?: string;
+  mfaRequired?: boolean;
 }
 
 export interface CreateUserRequest {
@@ -78,6 +80,7 @@ export interface UpdateUserRequest {
   email: string;
   displayName: string;
   role?: 'User' | 'Admin';
+  mfaRequired?: boolean;
 }
 
 export interface ChangePasswordRequest {
