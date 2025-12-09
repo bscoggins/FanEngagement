@@ -87,7 +87,6 @@ solana airdrop 2 "$(solana-keygen pubkey solana-devnet-keypair.json)" \
 # 3) Verify the balance
 solana balance "$(solana-keygen pubkey solana-devnet-keypair.json)" \
   --url https://api.devnet.solana.com
-```
 
 # 4) Store the private key securely for development
 # DO NOT commit .env.development or any file containing private keys to version control!
@@ -97,6 +96,7 @@ echo "SOLANA_PRIVATE_KEY=$(cat solana-devnet-keypair.json)" >> .env.development
 git check-ignore .env.development
 
 # If the above command returns nothing, add `.env.development` to your .gitignore immediately.
+```
 ### 3. Apply Migrations
 
 Migrations are automatically applied when the API starts. No manual steps needed.
