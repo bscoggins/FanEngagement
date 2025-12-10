@@ -16,231 +16,404 @@ This is an interim licensing stance. See the [LICENSE](LICENSE) file for complet
 
 ## Overview
 
-FanEngagement is a multi-tenant fan governance platform. Organizations issue share types to users for voting on proposals. The backend is a layered ASP.NET Core Web API using EF Core with PostgreSQL. The frontend is a React + TypeScript single-page application built with Vite.
+FanEngagement is a **multi-tenant fan governance platform** that enables organizations to issue shares to users and conduct transparent, on-chain or off-chain voting on proposals. The platform combines traditional web application architecture with optional blockchain integration for enhanced transparency.
 
-## Projects
+**Tech Stack:**
+- **Backend:** .NET 9 Web API with layered architecture (API → Application → Domain → Infrastructure)
+- **Database:** PostgreSQL 16 with Entity Framework Core
+- **Frontend:** React 19 + TypeScript with Vite
+- **Auth:** JWT-based authentication with role-based authorization
+- **Blockchain:** Optional integration with Solana and Polygon (via adapter containers)
 
-### Backend (under `/backend`)
-
-- FanEngagement.Api – HTTP endpoints, DI wiring
-- FanEngagement.Application – use cases, DTOs, validation
-- FanEngagement.Domain – entities, value objects
-- FanEngagement.Infrastructure – EF Core DbContext, migrations, repositories
-- FanEngagement.Tests – unit + integration tests
-
-### Frontend (under `/frontend`)
-
-- React + TypeScript SPA using Vite
-- React Router for routing
-- Axios for API calls
-- Vitest + Testing Library for testing
-
-## Prerequisites
-
-- .NET 9 SDK
-- Node.js 18+ and npm
-- Docker (for PostgreSQL)
-
-## Start PostgreSQL with Docker Compose
-
-From the repo root:
+## Quick Start
 
 ```bash
-docker compose up -d db
-```
-Default credentials (from `docker-compose.yml`): `fanengagement`/`fanengagement`, database `fanengagement`. Port `5432`.
+# Start the full stack with Docker Compose
+docker compose up --build
 
-## Database migrations
-
-1) Ensure Postgres is running (`docker compose up -d db`).
-2) From `/backend`, apply the initial migration:
-
-```bash
-dotnet ef database update -p FanEngagement.Infrastructure -s FanEngagement.Api
+# Or use the development script (backend + frontend in watch mode)
+./scripts/dev-up --full
 ```
 
-## Run the API
+**Access the application:**
+- Frontend: http://localhost:3000 (Docker) or http://localhost:5173 (dev script)
+- Backend API: http://localhost:8080 (Docker) or http://localhost:5049 (dev script)
+- Swagger UI: http://localhost:8080/swagger or http://localhost:5049/swagger
 
-From `/backend`:
-
-```bash
-dotnet run --project FanEngagement.Api
-```
-
-The API runs on `http://localhost:5049` by default.
-
-### API Documentation (Swagger UI)
-
-Swagger UI provides interactive API documentation with the ability to test endpoints directly in the browser.
-
-**Local Development:**
-- Start the API: `dotnet run --project FanEngagement.Api`
-- Open Swagger UI: `http://localhost:5049/swagger`
-
-**Docker Compose:**
-- Start the stack: `docker compose up --build`
-- Open Swagger UI: `http://localhost:8080/swagger`
-
-The Swagger UI includes:
-- All API endpoints with request/response schemas
-- JWT Bearer authentication support (click "Authorize" button to enter your token)
-- Ability to try out endpoints directly from the UI
-
-To authenticate in Swagger UI:
-1. First call `POST /auth/login` with valid credentials (e.g., `admin@example.com` / `Admin123!`)
-2. Copy the `token` from the response
-3. Click the "Authorize" button at the top of the page
-4. Enter just the token value (without "Bearer" prefix)
-5. Click "Authorize" to apply the token to all subsequent requests
-
-Key endpoints (current):
-
-- `GET /health`
-- `POST /auth/login` – Authenticate and get JWT token
-- `GET /users` – List all users (requires authentication)
-- `GET /users/{id}` – Get user by ID (requires authentication)
-- `GET /users/admin/stats` – Admin-only endpoint (requires Admin role)
-- `POST /users` – Create new user
-- `POST /organizations`
-- `GET /organizations`
-- `GET /organizations/{id}`
-- `POST /organizations/{orgId}/share-types`
-- `GET /organizations/{orgId}/share-types`
-
-### Authentication & Authorization
-
-The API uses JWT bearer authentication. In non-production modes (Development, Demo, Staging), an initial admin user is automatically ensured on startup:
-
-**Admin Credentials (non-production):**
+**Default Admin Account:**
 - Email: `admin@example.com`
 - Password: `Admin123!`
 
-The admin user has access to admin-only endpoints (marked with `[Authorize(Roles = "Admin")]`). Regular users are created with the `User` role by default.
+## Documentation
 
-To authenticate:
-1. Send a POST request to `/auth/login` with email and password
-2. Use the returned JWT token in the `Authorization: Bearer <token>` header for subsequent requests
-3. The JWT includes a role claim that is used for role-based authorization
+📚 **[Complete Documentation Index](docs/README.md)** - Full documentation organized by topic
 
-### Demo / Dev Seed Data
+**Quick Links:**
+- [Development Guide](docs/development.md) - Setup, testing, and workflows
+- [Architecture Overview](docs/architecture.md) - System design and governance model
+- [Design System](docs/frontend/design-system.md) - UI components and tokens
+- [Audit Logging](docs/audit/architecture.md) - Security and compliance
 
-For development and testing, you can seed the database with sample data using the admin endpoint:
+## Prerequisites
+
+- **Docker & Docker Compose** (recommended for all services)
+- **.NET 9 SDK** (for backend development without Docker)
+- **Node.js 20+** and npm (for frontend development)
+- **PostgreSQL 16** (if running without Docker)
+
+## Project Structure
+
+```
+FanEngagement/
+├── backend/                     # .NET 9 Web API
+│   ├── FanEngagement.Api        # HTTP endpoints, middleware, DI
+│   ├── FanEngagement.Application # Use cases, DTOs, validation
+│   ├── FanEngagement.Domain     # Entities, value objects, domain services
+│   ├── FanEngagement.Infrastructure # EF Core, repositories, background services
+│   └── FanEngagement.Tests      # Unit and integration tests
+├── frontend/                    # React 19 + TypeScript SPA
+│   ├── src/                     # Application source code
+│   ├── e2e/                     # Playwright end-to-end tests
+│   └── public/                  # Static assets
+├── adapters/                    # Blockchain adapter containers
+│   ├── solana/                  # Solana adapter (Node.js)
+│   ├── polygon/                 # Polygon adapter (Node.js)
+│   └── shared/                  # Shared adapter utilities
+├── docs/                        # 📚 Complete documentation
+│   ├── README.md                # Documentation index
+│   ├── architecture.md          # System architecture
+│   ├── development.md           # Development guide
+│   ├── audit/                   # Audit logging documentation
+│   ├── frontend/                # Frontend & design system docs
+│   └── ...                      # See docs/README.md for full structure
+├── scripts/                     # Development and deployment scripts
+└── docker-compose.yml           # Multi-service orchestration
+```
+
+## Development Workflows
+
+### Option 1: Docker Compose (Full Stack)
 
 ```bash
-# Login as admin first
+# Start all services (database + API + frontend)
+docker compose up --build
+
+# Or in detached mode
+docker compose up -d --build
+
+# View logs
+docker compose logs -f api frontend
+
+# Stop services (keeps data)
+docker compose down
+
+# Stop and remove all data
+docker compose down -v
+```
+
+### Option 2: Development Scripts (Watch Mode)
+
+```bash
+# Start database + backend in watch mode
+./scripts/dev-up
+
+# Start database + backend + frontend (all in watch mode)
+./scripts/dev-up --full
+
+# Stop development environment
+./scripts/dev-down
+
+# Stop and clean all data
+./scripts/dev-down --clean
+```
+
+### Option 3: Manual (No Docker)
+
+**Prerequisites:** PostgreSQL running locally
+
+```bash
+# 1. Apply migrations (first time only)
+cd backend
+dotnet ef database update -p FanEngagement.Infrastructure -s FanEngagement.Api
+
+# 2. Start backend
+dotnet run --project FanEngagement.Api
+
+# 3. Start frontend (in new terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+## API Documentation
+
+### Swagger UI
+
+Interactive API documentation is available via Swagger UI:
+
+- **Local Development:** http://localhost:5049/swagger
+- **Docker Compose:** http://localhost:8080/swagger
+
+**To authenticate in Swagger UI:**
+1. Call `POST /auth/login` with credentials (e.g., `admin@example.com` / `Admin123!`)
+2. Copy the `token` from the response
+3. Click "Authorize" button at the top
+4. Enter the token value (without "Bearer" prefix)
+5. Click "Authorize" to apply to all requests
+
+### Key Endpoints
+
+**Authentication:**
+- `POST /auth/login` - Authenticate and get JWT token
+
+**Organizations:**
+- `GET /organizations` - List all organizations (public)
+- `POST /organizations` - Create organization (Admin only)
+- `GET /organizations/{id}` - Get organization details
+- `PUT /organizations/{id}` - Update organization (OrgAdmin)
+
+**Memberships:**
+- `POST /organizations/{orgId}/memberships` - Add member (OrgAdmin)
+- `GET /organizations/{orgId}/memberships` - List members
+- `DELETE /organizations/{orgId}/memberships/{userId}` - Remove member (OrgAdmin)
+
+**Share Types & Issuance:**
+- `POST /organizations/{orgId}/share-types` - Create share type (OrgAdmin)
+- `GET /organizations/{orgId}/share-types` - List share types
+- `POST /organizations/{orgId}/share-issuances` - Issue shares (OrgAdmin)
+- `GET /organizations/{orgId}/users/{userId}/balances` - View balances
+
+**Proposals & Voting:**
+- `POST /organizations/{orgId}/proposals` - Create proposal
+- `GET /organizations/{orgId}/proposals` - List proposals
+- `POST /proposals/{id}/open` - Open proposal for voting
+- `POST /proposals/{id}/votes` - Cast vote
+- `POST /proposals/{id}/close` - Close proposal
+- `GET /proposals/{id}/results` - View results
+
+**Admin:**
+- `POST /admin/seed-dev-data` - Seed test data (Admin, Dev/Demo only)
+- `POST /admin/reset-dev-data` - Reset to seed data (Admin, Dev/Demo only)
+- `GET /users/admin/stats` - User statistics (Admin only)
+
+See [Swagger UI](http://localhost:5049/swagger) for complete API reference.
+
+## Authentication & Test Accounts
+
+The API uses JWT bearer authentication. In non-production environments (Development, Demo, Staging), a default admin account is automatically created on startup.
+
+**Default Admin:**
+- Email: `admin@example.com`
+- Password: `Admin123!`
+- Role: Platform Administrator (full access)
+
+### Seeding Test Data
+
+For development and testing, seed the database with sample organizations, users, shares, and proposals:
+
+**Option 1: Admin UI (Recommended)**
+1. Log in as admin
+2. Navigate to Admin → Dev Tools
+3. Select a scenario and click "Seed"
+
+**Option 2: API**
+```bash
+# Get admin token
 TOKEN=$(curl -s -X POST http://localhost:5049/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@example.com","password":"Admin123!"}' | jq -r '.token')
 
-# Seed demo data
+# Seed basic demo data
 curl -X POST http://localhost:5049/admin/seed-dev-data \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-This creates:
-- 2 platform admin accounts
-- 6 regular user accounts with various organization memberships
-- 3 organizations with share types, proposals, and votes
+**Seeded Test Accounts:**
 
-Quick reference for the seeded credentials:
+| Type | Email | Password | Organizations |
+|------|-------|----------|---------------|
+| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` | All (platform-wide) |
+| Platform Admin | `platform_admin@fanengagement.dev` | `PlatAdm1n!` | All (platform-wide) |
+| Org Admin | `alice@example.com` | `UserDemo1!` | Tech Innovators (Admin) |
+| Member | `bob@abefroman.net` | `UserDemo1!` | Tech Innovators (Member) |
+| Org Admin | `carlos@demo.co` | `UserDemo2!` | Green Energy United (Admin) |
+| Member | `dana@sample.io` | `UserDemo2!` | Green Energy United, City FC |
+| Org Admin | `erika@cityfc.support` | `UserDemo3!` | Green Energy United, City FC (Admin) |
+| Member | `frank@cityfc.support` | `UserDemo3!` | City FC Supporters Trust |
 
-| Type | Email | Password | Notes |
-|------|-------|----------|-------|
-| Platform Admin | `root_admin@platform.local` | `RootAdm1n!` | Platform superuser |
-| Platform Admin | `platform_admin@fanengagement.dev` | `PlatAdm1n!` | Secondary admin |
-| Default Admin | `admin@example.com` | `Admin123!` | Ensured automatically in non-production |
-| Org Admin | `alice@example.com` | `UserDemo1!` | Tech Innovators org admin |
-| Org Admin | `carlos@demo.co` | `UserDemo2!` | Green Energy United org admin |
-| Org Admin | `erika@cityfc.support` | `UserDemo3!` | Green Energy United + City FC org admin |
-| Member | `bob@abefroman.net` | `UserDemo1!` | Tech Innovators member |
-| Member | `dana@sample.io` | `UserDemo2!` | Member of Green Energy United + City FC |
-| Member | `frank@cityfc.support` | `UserDemo3!` | City FC Supporters Trust member |
+See [docs/demo-seed-data.md](docs/demo-seed-data.md) for complete details on seeded data, including share allocations and proposal scenarios.
 
-See [docs/demo-seed-data.md](docs/demo-seed-data.md) for complete details on all seeded accounts and test data.
+## Testing
 
-## Run the Frontend
-
-1. Install dependencies:
+### Backend Tests
 
 ```bash
-cd frontend
-npm install
-```
+# Run all backend tests
+./scripts/test-backend
 
-1. Start the development server:
+# Run with verbose output
+./scripts/test-backend --verbose
 
-```bash
-npm run dev
-```
+# Run specific tests
+./scripts/test-backend --filter "ProposalLifecycleTests"
 
-The frontend runs on `http://localhost:5173` by default and is configured to call the API at `http://localhost:5049`.
-
-### Frontend Configuration
-
-The frontend API base URL is configured via environment variables:
-
-- Development: `.env.development` contains `VITE_API_BASE_URL=http://localhost:5049`
-- The API client automatically attaches JWT tokens from localStorage as `Authorization: Bearer <token>` headers
-
-### Frontend Scripts
-
-From `/frontend`:
-
-- `npm run dev` – Start development server with hot reload
-- `npm run build` – Build for production
-- `npm run preview` – Preview production build locally
-- `npm test` – Run tests
-- `npm run test:watch` – Run tests in watch mode
-- `npm run lint` – Run ESLint
-
-### Frontend Routes
-
-- `/` – Home page
-- `/login` – Login page (implementation pending)
-- `/users` – Users list page (placeholder)
-- `/users/:id/edit` – User edit page (placeholder)
-
-## Run everything with Docker Compose
-
-Build the API image and start API + Postgres from the repo root:
-
-```bash
-docker compose up --build
-```
-
-API is available at `http://localhost:8080` and uses the `db` service connection string automatically.
-The API applies EF Core migrations on startup.
-Swagger UI is available at `http://localhost:8080/swagger` for API documentation and testing.
-
-### Compose Profiles
-
-- `solana` – Brings up the Solana adapter (now pointed at Solana devnet by default) and, only if you ask for it, the local `solana-test-validator`. For routine work run `docker compose --profile solana up -d solana-adapter` to talk to devnet. When you need the deterministic validator, include it in the command: `docker compose --profile solana up -d solana-test-validator solana-adapter` and override `SOLANA_RPC_URL` to `http://solana-test-validator:8899`.
-- **Note:** The `polygon-adapter` service now requires a `POLYGON_PRIVATE_KEY` environment variable to be set. If this variable is not configured, `docker compose up` will fail to start the service. Be sure to set `POLYGON_PRIVATE_KEY` in your environment or `.env` file before running `docker compose up`. If you do not need the Polygon adapter, you may wish to comment it out in the compose file or use a profile to avoid startup failures.
-- The backend unit/integration test runner is behind the `tests` profile. Run it on-demand with `docker compose --profile tests run --rm tests` (or `docker compose --profile tests up tests`).
-- The E2E test runner service is behind the `e2e` profile and will not start on a normal `docker compose up`.
-- A long-lived Playwright MCP helper is behind the `tools` profile and is also excluded by default.
-
-## Tests
-
-Run all tests from `/backend`:
-
-```bash
+# Or use dotnet directly
+cd backend
 dotnet test
 ```
 
-Or run tests in a container (requires Docker):
+### Frontend Tests
 
 ```bash
-docker compose --profile tests run --rm tests
+# Run all frontend tests
+./scripts/test-frontend
+
+# Run in watch mode
+./scripts/test-frontend --watch
+
+# Run with coverage
+./scripts/test-frontend --coverage
+
+# Or use npm directly
+cd frontend
+npm test
 ```
 
-### End-to-End (Playwright)
-
-- On-demand E2E run (starts stack, runs headless tests in container, cleans up test data on success, then stops services):
+### End-to-End Tests (Playwright)
 
 ```bash
+# Run E2E tests with automatic setup and teardown
 ./scripts/run-e2e.sh
+
+# This script:
+# - Starts the full stack (database, API, frontend)
+# - Waits for services to be healthy
+# - Resets database to seed data
+# - Runs Playwright tests headless
+# - Cleans up E2E test data on success
+# - Stops services
+
+# Or run manually (with backend already running)
+cd frontend
+VITE_API_BASE_URL=http://localhost:8080 npm run e2e
 ```
 
-- Internals: the script enables the `e2e` compose profile (`docker compose --profile e2e run --rm e2e`) and sets `CI=1` so Playwright runs headless in the Linux container.
+**Test Coverage:** 280+ tests covering domain logic, authorization, multi-tenancy, proposal lifecycle, and E2E workflows.
+
+See [docs/development.md](docs/development.md#running-tests) for detailed testing instructions.
  
+## Blockchain Integration (Optional)
+
+FanEngagement supports optional blockchain integration for governance transparency. Organizations can select their preferred blockchain (Solana, Polygon, or None) to record governance events on-chain.
+
+### Supported Blockchains
+
+- **Solana** - High throughput, low-cost transactions, SPL token standard
+- **Polygon** - Ethereum-compatible L2, ERC-20 tokens, lower gas fees
+- **None** - Off-chain only (default)
+
+### Starting Blockchain Adapters
+
+Adapters run as separate Docker containers and are enabled via compose profiles:
+
+**Solana Adapter (Devnet):**
+```bash
+# Start Solana adapter pointed at devnet
+docker compose --profile solana up -d solana-adapter
+
+# Or with local validator for deterministic testing
+export SOLANA_RPC_URL=http://solana-test-validator:8899
+export SOLANA_NETWORK=localnet
+docker compose --profile solana up -d solana-test-validator solana-adapter
+```
+
+**Polygon Adapter:**
+```bash
+# Requires POLYGON_PRIVATE_KEY environment variable
+export POLYGON_PRIVATE_KEY="your-private-key"
+docker compose up -d polygon-adapter
+```
+
+See [docs/blockchain/](docs/blockchain/) for complete blockchain integration documentation.
+
+## Environment Variables
+
+### Backend
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ConnectionStrings__DefaultConnection` | PostgreSQL connection string | See appsettings.json |
+| `Jwt__SigningKey` | JWT signing key (required) | See appsettings.Development.json |
+| `Jwt__Issuer` | JWT issuer | FanEngagement |
+| `Jwt__Audience` | JWT audience | FanEngagement |
+| `ASPNETCORE_ENVIRONMENT` | Environment name | Development |
+
+### Frontend
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | API base URL | `/api` (proxied to :5049) |
+
+### Blockchain Adapters
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SOLANA_PRIVATE_KEY` | Solana private key (JSON array) | For Solana adapter |
+| `SOLANA_RPC_URL` | Solana RPC URL | Defaults to devnet |
+| `POLYGON_PRIVATE_KEY` | Polygon private key (hex) | **Required** for Polygon adapter |
+| `POLYGON_RPC_URL` | Polygon RPC URL | Defaults to Amoy testnet |
+
+## Docker Compose Profiles
+
+Control which services start with compose profiles:
+
+| Profile | Services | Use Case |
+|---------|----------|----------|
+| (default) | db, api, frontend, polygon-adapter | Full stack with Polygon |
+| `solana` | solana-adapter, (optional) solana-test-validator | Solana blockchain integration |
+| `tests` | backend test runner | Run backend tests in container |
+| `e2e` | E2E test runner | Run Playwright tests |
+| `tools` | Playwright MCP helper | Development tools |
+
+**Examples:**
+```bash
+# Start default stack (no Solana, no tests)
+docker compose up -d
+
+# Start with Solana adapter
+docker compose --profile solana up -d solana-adapter
+
+# Run backend tests
+docker compose --profile tests run --rm tests
+
+# Run E2E tests
+docker compose --profile e2e run --rm e2e
+```
+
+## Development Scripts Reference
+
+| Script | Description |
+|--------|-------------|
+| `./scripts/dev-up` | Start Postgres + backend in watch mode |
+| `./scripts/dev-up --full` | Start Postgres + backend + frontend in watch mode |
+| `./scripts/dev-down` | Stop development environment |
+| `./scripts/dev-down --clean` | Stop and remove all data (volumes) |
+| `./scripts/test-backend` | Run backend tests |
+| `./scripts/test-frontend` | Run frontend tests |
+| `./scripts/run-tests.sh` | Run both backend and frontend tests |
+| `./scripts/run-e2e.sh` | Run end-to-end tests with full stack |
+
+## Additional Resources
+
+- 📚 **[Complete Documentation](docs/README.md)** - Full documentation index
+- 🏗️ **[Architecture Guide](docs/architecture.md)** - System design and governance model
+- 🔧 **[Development Guide](docs/development.md)** - Detailed development workflows
+- 🎨 **[Design System](docs/frontend/design-system.md)** - UI components and design tokens
+- 🔒 **[Audit Logging](docs/audit/architecture.md)** - Security and compliance
+- 🔗 **[Blockchain Integration](docs/blockchain/)** - Multi-chain adapter platform
+
+## License
+
+**Copyright © 2025 Brent Scoggins. All Rights Reserved.**
+
+This software is proprietary and confidential. See [LICENSE](LICENSE) file for complete terms.
