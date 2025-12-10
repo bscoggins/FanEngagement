@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
@@ -68,14 +68,14 @@ describe('AdminLayout', () => {
     );
   };
 
-  it('renders admin header with title', () => {
+  it('renders admin header with title', async () => {
     renderAdminLayout();
-    expect(screen.getByText('FanEngagement Admin')).toBeInTheDocument();
+    expect(await screen.findByText('FanEngagement Admin')).toBeInTheDocument();
   });
 
-  it('displays logout button', () => {
+  it('displays logout button', async () => {
     renderAdminLayout();
-    expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /logout/i })).toBeInTheDocument();
   });
 
   it('displays sidebar navigation links for platform admin', async () => {
@@ -89,14 +89,16 @@ describe('AdminLayout', () => {
     });
   });
 
-  it('does not render legacy home link in the header', () => {
+  it('does not render legacy home link in the header', async () => {
     renderAdminLayout();
-    expect(screen.queryByText('← Home')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('← Home')).not.toBeInTheDocument();
+    });
   });
 
-  it('renders child content in main area', () => {
+  it('renders child content in main area', async () => {
     renderAdminLayout('/admin');
-    expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
+    expect(await screen.findByText('Dashboard Content')).toBeInTheDocument();
   });
 
   it('navigates to users page when users link is clicked', async () => {
@@ -149,7 +151,9 @@ describe('AdminLayout', () => {
     renderAdminLayout();
     
     // Dispatch the auth:logout event (simulating a 401 from the API)
-    window.dispatchEvent(new CustomEvent('auth:logout'));
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Login Page')).toBeInTheDocument();
@@ -516,7 +520,9 @@ describe('AdminLayout', () => {
         ctrlKey: true,
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
@@ -556,7 +562,9 @@ describe('AdminLayout', () => {
         ctrlKey: true,
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Memberships Content')).toBeInTheDocument();
@@ -596,7 +604,9 @@ describe('AdminLayout', () => {
         ctrlKey: true,
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       // Check for keyboard help toast
       await waitFor(() => {
@@ -618,7 +628,9 @@ describe('AdminLayout', () => {
         ctrlKey: true,
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       // Should not show keyboard help (no org selected)
       expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
@@ -699,7 +711,9 @@ describe('AdminLayout', () => {
         metaKey: true,  // Use metaKey for Mac
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
@@ -745,7 +759,9 @@ describe('AdminLayout', () => {
         altKey: true,  // Alt key should prevent shortcut
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       // Should remain on dashboard, not navigate
       expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
@@ -786,7 +802,9 @@ describe('AdminLayout', () => {
         shiftKey: true,  // Shift key should prevent shortcut
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       // Should remain on dashboard, not navigate
       expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
@@ -828,7 +846,9 @@ describe('AdminLayout', () => {
         shiftKey: true,  // Multiple modifiers should prevent shortcut
         bubbles: true 
       });
-      document.dispatchEvent(event);
+      await act(async () => {
+        document.dispatchEvent(event);
+      });
 
       // Should remain on dashboard, not navigate
       expect(screen.getByText('Dashboard Content')).toBeInTheDocument();

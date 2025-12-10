@@ -1,0 +1,70 @@
+name: "Research Agent Request"
+description: "Engage the research-agent for architecture/code investigations that produce docs in docs/research/."
+title: "[Research] "
+labels:
+  - research
+  - documentation
+  - copilot
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        <!-- markdownlint-disable-next-line MD018 -->
+        #github-pull-request_copilot-coding-agent
+
+        This agent *only* generates documentation under `docs/research/` (no code changes).
+  - type: input
+    id: question
+    attributes:
+      label: Research Question / Hypothesis
+      description: One sentence describing what you need to learn or map.
+      placeholder: Map how webhook retries propagate from adapters to backend consumers
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Areas To Investigate
+      description: List code paths, services, or docs to inspect (backend, frontend, adapters, infra, etc.).
+      placeholder: |
+        - backend/FanEngagement.Api/Controllers/WebhooksController.cs
+        - adapters/solana/src/webhook
+        - docs/blockchain/solana-webhooks.md
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints / Guardrails
+      description: Mention time horizon, environments, or sensitive systems to avoid.
+      placeholder: |
+        - Focus on production-ready flows only
+        - Avoid hitting live RPC endpoints; use mock data
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Required Artifacts
+      description: Specify deliverables (sequence diagrams, call graphs, risk summary, open questions, etc.).
+      placeholder: |
+        - Sequence diagram covering OrgAdmin proposal sync
+        - Risk log referencing docs/blockchain/*
+  - type: textarea
+    id: allowed_files
+    attributes:
+      label: Files Allowed To Change
+      description: List the exact doc paths the agent may update or create.
+      placeholder: |
+        Allowed:
+        - docs/research/
+        - docs/architecture.md (only if explicitly mentioned)
+    validations:
+      required: true
+  - type: textarea
+    id: success
+    attributes:
+      label: Success Criteria
+      description: Clarify what reviewers expect (citations, diagrams, identified owners, etc.).
+      placeholder: |
+        - Document references source files + line ranges
+        - Lists at least 3 actionable follow-ups with owner suggestions

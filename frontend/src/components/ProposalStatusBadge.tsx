@@ -1,29 +1,41 @@
 import React from 'react';
 import type { ProposalStatus } from '../types/api';
-import { getStatusBadgeColor, getStatusLabel } from '../utils/proposalUtils';
+import { getStatusLabel } from '../utils/proposalUtils';
+import { Badge, type BadgeVariant } from './Badge';
 
 interface ProposalStatusBadgeProps {
   status: ProposalStatus;
   style?: React.CSSProperties;
+  className?: string;
 }
 
 /**
- * Displays a colored badge for proposal status
+ * Displays a colored badge for proposal status using the Badge component
  */
-export const ProposalStatusBadge: React.FC<ProposalStatusBadgeProps> = ({ status, style }) => {
+export const ProposalStatusBadge: React.FC<ProposalStatusBadgeProps> = ({ 
+  status, 
+  style, 
+  className 
+}) => {
+  // Map proposal status to badge variant
+  const getVariant = (status: ProposalStatus): BadgeVariant => {
+    switch (status) {
+      case 'Draft':
+        return 'neutral';
+      case 'Open':
+        return 'success';
+      case 'Closed':
+        return 'error';
+      case 'Finalized':
+        return 'default';
+      default:
+        return 'neutral';
+    }
+  };
+
   return (
-    <span
-      style={{
-        padding: '0.25rem 0.75rem',
-        backgroundColor: getStatusBadgeColor(status),
-        color: 'white',
-        borderRadius: '4px',
-        fontSize: '0.875rem',
-        fontWeight: 'bold',
-        ...style,
-      }}
-    >
+    <Badge variant={getVariant(status)} style={style} className={className}>
       {getStatusLabel(status)}
-    </span>
+    </Badge>
   );
 };

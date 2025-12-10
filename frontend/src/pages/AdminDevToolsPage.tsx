@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi, type DevDataSeedingResult, type TestDataResetResult, type SeedScenario, type SeedScenarioInfo } from '../api/adminApi';
 
+const DEFAULT_SCENARIOS: SeedScenarioInfo[] = [
+  { scenario: 'BasicDemo', name: 'Basic Demo', description: 'Basic demo data with organizations, users, and proposals.' },
+  { scenario: 'HeavyProposals', name: 'Heavy Proposals', description: 'Many proposals for pagination testing.' },
+  { scenario: 'WebhookFailures', name: 'Webhook Failures', description: 'Webhook events with various statuses for observability testing.' }
+];
+
 export const AdminDevToolsPage: React.FC = () => {
-  const [scenarios, setScenarios] = useState<SeedScenarioInfo[]>([]);
+  const [scenarios, setScenarios] = useState<SeedScenarioInfo[]>(DEFAULT_SCENARIOS);
   const [selectedScenario, setSelectedScenario] = useState<SeedScenario>('BasicDemo');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DevDataSeedingResult | null>(null);
@@ -15,14 +21,10 @@ export const AdminDevToolsPage: React.FC = () => {
     const fetchScenarios = async () => {
       try {
         const scenarioList = await adminApi.getSeedScenarios();
-        setScenarios(scenarioList);
+        setScenarios(scenarioList.length ? scenarioList : DEFAULT_SCENARIOS);
       } catch {
-        // If we can't fetch scenarios, use default list
-        setScenarios([
-          { scenario: 'BasicDemo', name: 'Basic Demo', description: 'Basic demo data with organizations, users, and proposals.' },
-          { scenario: 'HeavyProposals', name: 'Heavy Proposals', description: 'Many proposals for pagination testing.' },
-          { scenario: 'WebhookFailures', name: 'Webhook Failures', description: 'Webhook events with various statuses for observability testing.' }
-        ]);
+        // Ensure UI always has at least the default scenarios
+        setScenarios(DEFAULT_SCENARIOS);
       }
     };
     fetchScenarios();

@@ -209,24 +209,6 @@ export function checkVotingEligibility(
 }
 
 /**
- * Get status badge color for a proposal status
- */
-export function getStatusBadgeColor(status: ProposalStatus): string {
-  switch (status) {
-    case 'Draft':
-      return '#6c757d';
-    case 'Open':
-      return '#28a745';
-    case 'Closed':
-      return '#dc3545';
-    case 'Finalized':
-      return '#007bff';
-    default:
-      return '#6c757d';
-  }
-}
-
-/**
  * Get a descriptive label for a proposal status
  */
 export function getStatusLabel(status: ProposalStatus): string {

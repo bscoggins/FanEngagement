@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { usePermissions } from './usePermissions';
 import { useAuth } from '../auth/AuthContext';
 import { membershipsApi } from '../api/membershipsApi';
@@ -324,7 +324,9 @@ describe('usePermissions', () => {
 
     expect(membershipsApi.getByUserId).toHaveBeenCalledTimes(1);
 
-    await result.current.refreshMemberships();
+    await act(async () => {
+      await result.current.refreshMemberships();
+    });
 
     expect(membershipsApi.getByUserId).toHaveBeenCalledTimes(2);
   });
