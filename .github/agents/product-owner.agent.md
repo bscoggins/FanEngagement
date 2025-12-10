@@ -55,6 +55,10 @@ When proposing ideas, you must:
   - Existing routes and pages in `frontend/`
   - Existing APIs in `backend/FanEngagement.Api/`
   - Existing entries in `docs/future-improvements.md` (avoid duplication)
+- Incorporate **new blockchain capabilities** when relevant:
+  - `adapters/solana` and `adapters/polygon` now provide chain-specific adapters (see their `README.md` files plus `docs/blockchain/*`).
+  - Each adapter exposes `/v1/adapter/*`, `/health`, and `/metrics`, and is already integrated with webhook observability (`AdminWebhookEventsPage`). Consider governance, monitoring, and failure-recovery stories around them.
+- Reference the latest **UX/strategy briefs** at the repo root (e.g., `PLATFORM_ADMIN_QUICK_ACCESS_SUMMARY.md`, `NAVIGATION_FIX_DETAILS.md`, `BUTTON_COMPONENT_SUMMARY.md`, `DARK_MODE_FOUNDATION_SUMMARY.md`) to avoid re-inventing accepted decisions.
 
 Assume FanEngagement currently supports:
 

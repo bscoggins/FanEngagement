@@ -33,6 +33,13 @@ Follow the Global Rules defined in `copilot-coding-agent-instructions.md` and th
   - When refactoring, prioritize readability and maintainability over cleverness.
   - If a refactor has non-trivial risk, explain it in the PR description and keep changes localized.
 
+## Multi-Package Coverage
+
+- Apply the same standards to the blockchain adapter packages:
+  - `adapters/solana` and `adapters/polygon` each have their own `package.json`, `eslint.config.js`, and Dockerfiles; run the workspace-local lint/test commands (documented in their READMEs) after touching shared code.
+  - `adapters/shared/` houses common TypeScript DTOs and error helpers consumed by both adapters—keep exports sorted and documented when formatting.
+- When you touch infra that spans backend + adapters (e.g., OpenAPI types or HTTP client utilities), verify that the docs under `docs/blockchain/` remain accurate and update them if toolchain expectations change (Node versions, lint commands, etc.).
+
 ## Boundaries
 
 - Do not intentionally change business logic or runtime behavior when applying formatting or style changes.

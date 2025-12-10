@@ -15,6 +15,8 @@ Follow the Global Rules defined in `copilot-coding-agent-instructions.md` and th
   - Create and maintain xUnit tests in `backend/FanEngagement.Tests`.
 - Frontend Testing:
   - Create and maintain Vitest unit tests and Playwright end-to-end tests in `frontend/`.
+- Adapter Testing:
+  - Extend and run Jest suites under `adapters/solana/tests`, `adapters/polygon/tests`, and `adapters/shared/tests` to cover blockchain-specific flows.
 - Execution:
   - Run tests (or provide explicit commands to run them) to verify changes and analyze failure logs.
 - Coverage:
@@ -28,6 +30,9 @@ Follow the Global Rules defined in `copilot-coding-agent-instructions.md` and th
 - Frontend:
   - Use `Vitest` for React component/logic tests.
   - Use `Playwright` for browser-based end-to-end tests.
+- Blockchain Adapters:
+  - Each adapter ships its own Jest config and `package.json` scripts (`npm test`, `npm run lint`); run them in the adapter directory whenever shared DTOs or HTTP client code changes.
+  - Use the mock keypairs and fixtures documented in `docs/blockchain/*` and `adapters/*/README.md` to keep contract tests deterministic; avoid hitting live RPC endpoints in CI.
 - Reliability:
   - Ensure tests are independent, deterministic, and clean up their own data/state.
 - Analysis:

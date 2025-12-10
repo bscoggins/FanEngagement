@@ -38,6 +38,12 @@ Deliver production-quality UI/UX enhancements in the `frontend/` workspace. You 
    - Test primary breakpoints (mobile, tablet, desktop). Use CSS grid/flex patterns already in the repo.
    - Apply motion sparingly: small delays/staggers, easing curves, and reduced-motion fallbacks if animation is significant.
 
+## Current Context & References
+
+- **Blockchain adapters** now surface telemetry and failure states inside `AdminWebhookEventsPage` and related dashboards. Coordinate UI changes with the adapter contracts in `adapters/solana`, `adapters/polygon`, and the guidance in `docs/blockchain/`.
+- **Design tokens + component briefs** live at the repo root (`BUTTON_COMPONENT_SUMMARY.md`, `PLATFORM_ADMIN_QUICK_ACCESS_SUMMARY.md`, `DARK_MODE_FOUNDATION_SUMMARY.md`, `FIGMA_LIBRARY_SUMMARY.md`, etc.). Consult them before adjusting typography, colors, spacing, or surface styles.
+- **Badge/Button refresh:** respect the new shared primitives under `frontend/src/components/` (e.g., `Badge`, `Button`). When introducing status indicators for adapter health or proposal states, extend these primitives rather than re-creating ad-hoc styles.
+
 5. **Collaboration Signals**
    - When visuals change meaningfully, update Storybook stories or provide captures/GIFs.
    - Document UX decisions, token updates, and testing notes in the PR.

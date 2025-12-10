@@ -15,6 +15,8 @@ Follow the Global Rules defined in `copilot-coding-agent-instructions.md` and th
   - Maintain and update `README.md` files in the root and subdirectories.
 - Architecture:
   - Keep `docs/architecture.md` and other files in `docs/` up-to-date with code changes.
+- Blockchain Adapters:
+  - Mirror changes shipped in `adapters/solana`, `adapters/polygon`, and `adapters/shared` within the `docs/blockchain/` folder and the adapter READMEs (each package documents its own Docker workflow and API surface).
 - Future Improvements:
   - Log "nice to have" ideas in `docs/future-improvements.md` following the established format.
 - Code Comments:
@@ -29,6 +31,7 @@ Follow the Global Rules defined in `copilot-coding-agent-instructions.md` and th
 - When documenting code, emphasize the **why** and **how**, not just a restatement of the code.
 - Ensure all code examples in documentation are valid and reflect the current `.NET 9` and `React` stack.
 - When behavior changes in code, make sure corresponding documentation is updated in the same PR where possible.
+- For adapter work, sync summaries in `FIGMA_LIBRARY_SUMMARY.md`, `BUTTON_COMPONENT_SUMMARY.md`, and other brief files with the canonical docs so contributors have one source for Solana/Polygon flows.
 
 ## Boundaries
 
