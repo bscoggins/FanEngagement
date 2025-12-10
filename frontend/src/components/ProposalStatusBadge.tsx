@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ProposalStatus } from '../types/api';
 import { getStatusLabel } from '../utils/proposalUtils';
-import { Badge, BadgeVariant } from './Badge';
+import { Badge, type BadgeVariant } from './Badge';
 
 interface ProposalStatusBadgeProps {
   status: ProposalStatus;
