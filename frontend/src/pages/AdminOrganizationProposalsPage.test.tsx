@@ -269,8 +269,10 @@ describe('AdminOrganizationProposalsPage', () => {
     renderPage();
     
     await waitFor(() => {
-      // Look for status badges by checking for badge classes
-      const badges = screen.getAllByText(/^(Open|Draft)$/);
+      // Look for status badges by checking for badge__text class to avoid matching dropdown options
+      const badges = screen.getAllByText(/^(Open|Draft)$/).filter(el => 
+        el.classList.contains('badge__text')
+      );
       
       // Find the Open badge - should have success variant class
       const openBadge = badges.find(el => 

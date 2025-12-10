@@ -40,6 +40,11 @@ export interface BadgeProps {
   className?: string;
   
   /**
+   * Additional inline styles
+   */
+  style?: React.CSSProperties;
+  
+  /**
    * Test ID for testing
    */
   testId?: string;
@@ -70,6 +75,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       icon,
       dot = false,
       className = '',
+      style,
       testId,
       children,
     },
@@ -89,6 +95,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={classes}
+        style={style}
         data-testid={testId}
       >
         {icon && <span className="badge__icon" aria-hidden="true">{icon}</span>}

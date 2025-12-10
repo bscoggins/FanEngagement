@@ -34,10 +34,8 @@ export const ProposalStatusBadge: React.FC<ProposalStatusBadgeProps> = ({
   };
 
   return (
-    <span style={style} className={className}>
-      <Badge variant={getVariant(status)}>
-        {getStatusLabel(status)}
-      </Badge>
-    </span>
+    <Badge variant={getVariant(status)} style={style} className={className}>
+      {getStatusLabel(status)}
+    </Badge>
   );
 };

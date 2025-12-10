@@ -213,4 +213,13 @@ describe('Badge', () => {
       expect(badge?.querySelector('.badge__dot')).toBeInTheDocument();
     });
   });
+
+  describe('Style prop', () => {
+    it('should accept inline styles', () => {
+      const customStyle = { marginLeft: '10px', opacity: 0.8 };
+      render(<Badge style={customStyle}>Styled</Badge>);
+      const badge = screen.getByText('Styled').parentElement;
+      expect(badge).toHaveStyle({ marginLeft: '10px', opacity: '0.8' });
+    });
+  });
 });

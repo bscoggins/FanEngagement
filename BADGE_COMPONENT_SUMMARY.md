@@ -67,9 +67,9 @@ Successfully implemented a comprehensive Badge component for the FanEngagement a
 - **Neutral**: `--color-neutral-600` (gray)
 
 ### Size Specifications
-- **Small**: 10px vertical padding, 12px font size
-- **Medium**: 12px vertical padding, 14px font size
-- **Large**: 18px vertical padding, 16px font size
+- **Small**: 2px vertical padding, 12px font size
+- **Medium**: 4px vertical padding, 14px font size
+- **Large**: 6px vertical padding, 16px font size
 
 ### Border Radius
 - **Rounded**: 6px (`--radius-md`)
@@ -111,11 +111,11 @@ Successfully implemented a comprehensive Badge component for the FanEngagement a
 ## Files Changed
 
 1. **New Files**:
-   - `frontend/src/components/Badge.tsx` (92 lines)
-   - `frontend/src/components/Badge.css` (161 lines)
-   - `frontend/src/components/Badge.test.tsx` (215 lines)
-   - `frontend/src/components/Badge.showcase.html` (512 lines)
-   - `frontend/src/components/Badge.README.md` (275 lines)
+   - `frontend/src/components/Badge.tsx` (102 lines)
+   - `frontend/src/components/Badge.css` (164 lines)
+   - `frontend/src/components/Badge.test.tsx` (216 lines)
+   - `frontend/src/components/Badge.showcase.html` (478 lines)
+   - `frontend/src/components/Badge.README.md` (250 lines)
 
 2. **Updated Files**:
    - `frontend/src/components/ProposalStatusBadge.tsx` (refactored to use Badge)
