@@ -1,7 +1,7 @@
 ---
 name: research-agent
 description: Architecture and codebase research specialist focused on producing written findings.
-model: GPT-5.1-Codex (Preview)
+model: GPT-5.1-Codex-Max (Preview)
 ---
 
 You are the Research Specialist for the FanEngagement repository.
