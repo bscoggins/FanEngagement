@@ -9,6 +9,7 @@ public class User
     public string DisplayName { get; set; } = default!;
     public string PasswordHash { get; set; } = default!;
     public UserRole Role { get; set; } = UserRole.User;
+    public UserThemePreference ThemePreference { get; set; } = UserThemePreference.Light;
     public DateTimeOffset CreatedAt { get; set; }
 
     // MFA Properties

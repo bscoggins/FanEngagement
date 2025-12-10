@@ -29,7 +29,8 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             Email = request.Email,
             DisplayName = request.DisplayName,
             PasswordHash = authService.HashPassword(request.Password),
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
+            ThemePreference = UserThemePreference.Light
         };
 
         dbContext.Users.Add(user);
@@ -328,6 +329,41 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
         return true;
     }
 
+    public async Task<UserThemePreference?> UpdateThemePreferenceAsync(Guid userId, UserThemePreference themePreference, CancellationToken cancellationToken = default)
+    {
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user == null)
+        {
+            return null;
+        }
+
+        if (user.ThemePreference == themePreference)
+        {
+            return user.ThemePreference;
+        }
+
+        user.ThemePreference = themePreference;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await auditService.LogAsync(
+                new AuditEventBuilder()
+                    .WithActor(userId, user.DisplayName)
+                    .WithAction(AuditActionType.Updated)
+                    .WithResource(AuditResourceType.User, user.Id, user.Email)
+                    .WithDetails(new { Action = "THEME_PREFERENCE_UPDATED", themePreference = themePreference.ToString() })
+                    .AsSuccess(),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to audit theme preference update for {UserId}", userId);
+        }
+
+        return user.ThemePreference;
+    }
+
     private static UserDto MapToDto(User user)
     {
         return new UserDto
@@ -336,6 +372,7 @@ public class UserService(FanEngagementDbContext dbContext, IAuthService authServ
             Email = user.Email,
             DisplayName = user.DisplayName,
             Role = user.Role,
+            ThemePreference = user.ThemePreference,
             CreatedAt = user.CreatedAt
         };
     }

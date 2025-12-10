@@ -121,7 +121,7 @@ test.describe.serial('Admin and member governance flows', () => {
   test('admin creates and opens a proposal for an existing organization via UI', async ({ page }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.goto(`/admin/organizations/${existingOrgId}/proposals`);
-    await page.getByRole('button', { name: 'Create New Proposal' }).click();
+    await page.getByRole('button', { name: 'Create Proposal' }).click();
     await page.getByLabel('Title *').fill(proposalTitle);
     await page.getByLabel('Description').fill('UI-driven governance validation');
     const createProposalResponse = page.waitForResponse(

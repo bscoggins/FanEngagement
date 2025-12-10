@@ -9,6 +9,7 @@ import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import './AdminLayout.css';
+import '../pages/AdminPage.css';
 
 export const AdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();

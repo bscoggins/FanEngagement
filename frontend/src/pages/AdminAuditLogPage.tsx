@@ -1,12 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
 import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeStyle, getActionBadgeStyle, formatDate } from '../utils/auditUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ErrorMessage } from '../components/ErrorMessage';
-import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
@@ -18,17 +16,13 @@ export const AdminAuditLogPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter state
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedActionTypes, setSelectedActionTypes] = useState<string[]>([]);
   const [selectedResourceTypes, setSelectedResourceTypes] = useState<string[]>([]);
 
-  // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
-  // Expandable row state
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -59,34 +53,29 @@ export const AdminAuditLogPage: React.FC = () => {
       setOrganization(orgData);
       setAuditEvents(eventsData);
     } catch (err) {
-      console.error('Failed to fetch data:', err);
-      const errorMessage = parseApiError(err);
-      setError(errorMessage);
+      console.error('Failed to fetch audit data:', err);
+      setError(parseApiError(err));
     } finally {
       setIsLoading(false);
     }
   }, [orgId, page, pageSize, dateFrom, dateTo, selectedActionTypes, selectedResourceTypes]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const handleActionTypeChange = (actionType: string) => {
     setSelectedActionTypes((prev) =>
-      prev.includes(actionType)
-        ? prev.filter((t) => t !== actionType)
-        : [...prev, actionType]
+      prev.includes(actionType) ? prev.filter((t) => t !== actionType) : [...prev, actionType]
     );
-    setPage(1); // Reset to first page when filter changes
+    setPage(1);
   };
 
   const handleResourceTypeChange = (resourceType: string) => {
     setSelectedResourceTypes((prev) =>
-      prev.includes(resourceType)
-        ? prev.filter((t) => t !== resourceType)
-        : [...prev, resourceType]
+      prev.includes(resourceType) ? prev.filter((t) => t !== resourceType) : [...prev, resourceType]
     );
-    setPage(1); // Reset to first page when filter changes
+    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -104,8 +93,7 @@ export const AdminAuditLogPage: React.FC = () => {
 
   if (isLoading && !organization) {
     return (
-      <div>
-        <h1 data-testid="audit-log-heading">Audit Log</h1>
+      <div className="admin-page">
         <LoadingSpinner message="Loading audit log..." />
       </div>
     );
@@ -113,43 +101,51 @@ export const AdminAuditLogPage: React.FC = () => {
 
   if (!organization) {
     return (
-      <div>
-        <h1 data-testid="audit-log-heading">Audit Log</h1>
-        <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
+      <div className="admin-page">
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: 'var(--spacing-4)' }}>
+          {error || 'Organization not found'}
+        </div>
+        <button onClick={fetchData} className="admin-button admin-button-outline">
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 data-testid="audit-log-heading">Audit Log</h1>
-        <div style={{ color: '#666', fontSize: '1rem' }}>
-          Organization: {organization.name}
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1 data-testid="audit-log-heading">Audit Log</h1>
+          <div className="admin-page-subtitle">Organization: {organization.name}</div>
         </div>
       </div>
 
-      {error && <ErrorMessage message={error} onRetry={fetchData} />}
+      {error && (
+        <div
+          className="admin-alert admin-alert-error"
+          style={{
+            marginBottom: 'var(--spacing-4)',
+            display: 'flex',
+            gap: 'var(--spacing-4)',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>{error}</span>
+          <button onClick={fetchData} className="admin-button admin-button-outline">
+            Retry
+          </button>
+        </div>
+      )}
 
-      {/* Filters */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Filters</h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-          {/* Date range */}
+      <div className="admin-card" style={{ marginBottom: 'var(--spacing-5)' }}>
+        <h3 style={{ marginTop: 0, marginBottom: 'var(--spacing-4)' }}>Filters</h3>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
           <div>
-            <label
-              htmlFor="dateFrom"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
+            <label htmlFor="dateFrom" className="admin-form-label">
               From Date
             </label>
             <input
@@ -161,21 +157,11 @@ export const AdminAuditLogPage: React.FC = () => {
                 setDateFrom(e.target.value);
                 setPage(1);
               }}
-              style={{
-                padding: '0.5rem',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                width: '100%',
-              }}
+              className="admin-input"
             />
           </div>
-          
           <div>
-            <label
-              htmlFor="dateTo"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
+            <label htmlFor="dateTo" className="admin-form-label">
               To Date
             </label>
             <input
@@ -186,55 +172,25 @@ export const AdminAuditLogPage: React.FC = () => {
                 setDateTo(e.target.value);
                 setPage(1);
               }}
-              style={{
-                padding: '0.5rem',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                width: '100%',
-              }}
+              className="admin-input"
             />
           </div>
         </div>
 
-        {/* Action types */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
+        <div style={{ marginTop: 'var(--spacing-4)' }}>
+          <label className="admin-form-label" style={{ marginBottom: 'var(--spacing-2)' }}>
             Action Types
           </label>
-          <div
-            data-testid="audit-log-filter-action"
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
-            }}
-          >
+          <div className="admin-filter-group" data-testid="audit-log-filter-action">
             {ACTION_TYPES.map((actionType) => (
               <label
                 key={actionType}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: selectedActionTypes.includes(actionType) ? '#0066cc' : 'white',
-                  color: selectedActionTypes.includes(actionType) ? 'white' : '#333',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}
+                className={`admin-filter-chip ${selectedActionTypes.includes(actionType) ? 'selected' : ''}`}
               >
                 <input
                   type="checkbox"
                   checked={selectedActionTypes.includes(actionType)}
                   onChange={() => handleActionTypeChange(actionType)}
-                  style={{ margin: 0 }}
                 />
                 {actionType}
               </label>
@@ -242,44 +198,20 @@ export const AdminAuditLogPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Resource types */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
+        <div style={{ marginTop: 'var(--spacing-4)' }}>
+          <label className="admin-form-label" style={{ marginBottom: 'var(--spacing-2)' }}>
             Resource Types
           </label>
-          <div
-            data-testid="audit-log-filter-resource"
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
-            }}
-          >
+          <div className="admin-filter-group" data-testid="audit-log-filter-resource">
             {RESOURCE_TYPES.map((resourceType) => (
               <label
                 key={resourceType}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: selectedResourceTypes.includes(resourceType) ? '#0066cc' : 'white',
-                  color: selectedResourceTypes.includes(resourceType) ? 'white' : '#333',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}
+                className={`admin-filter-chip ${selectedResourceTypes.includes(resourceType) ? 'selected' : ''}`}
               >
                 <input
                   type="checkbox"
                   checked={selectedResourceTypes.includes(resourceType)}
                   onChange={() => handleResourceTypeChange(resourceType)}
-                  style={{ margin: 0 }}
                 />
                 {resourceType}
               </label>
@@ -288,39 +220,19 @@ export const AdminAuditLogPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Pagination controls */}
-      <div
-        data-testid="audit-log-pagination"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label htmlFor="pageSize" style={{ fontSize: '0.875rem', color: '#666' }}>
-            Items per page:
+      <div className="admin-table-meta" data-testid="audit-log-pagination">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+          <label htmlFor="pageSize" className="admin-form-label" style={{ marginBottom: 0 }}>
+            Items per page
           </label>
-          <select
-            id="pageSize"
-            value={pageSize}
-            onChange={handlePageSizeChange}
-            style={{
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-            }}
-          >
+          <select id="pageSize" value={pageSize} onChange={handlePageSizeChange} className="admin-select" style={{ minWidth: '5rem' }}>
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
         </div>
-
-        <div style={{ color: '#666', fontSize: '0.875rem' }}>
+        <div className="admin-meta-text">
           {auditEvents ? `${auditEvents.totalCount} total events` : '0 events'}
         </div>
       </div>
@@ -328,144 +240,98 @@ export const AdminAuditLogPage: React.FC = () => {
       {isLoading ? (
         <LoadingSpinner message="Loading audit events..." />
       ) : !auditEvents || auditEvents.items.length === 0 ? (
-        <EmptyState
-          message={
-            dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0
-              ? 'No audit events found matching your filters.'
-              : 'No audit events found for this organization.'
-          }
-        />
+        <div className="admin-empty-state">
+          {dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0
+            ? 'No audit events found matching your filters.'
+            : 'No audit events found for this organization.'}
+        </div>
       ) : (
         <>
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              overflow: 'hidden',
-            }}
-          >
-            <table data-testid="audit-log-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="admin-table-wrapper">
+            <table data-testid="audit-log-table" className="admin-table">
               <thead>
-                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, width: '30px' }}></th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Timestamp</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Actor</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Action</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Resource</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Outcome</th>
+                <tr>
+                  <th style={{ width: '40px' }}></th>
+                  <th>Timestamp</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>Outcome</th>
                 </tr>
               </thead>
               <tbody>
                 {auditEvents.items.map((event) => (
                   <React.Fragment key={event.id}>
-                    <tr 
-                      style={{ borderBottom: '1px solid #dee2e6', cursor: 'pointer' }}
-                      onClick={() => toggleRowExpansion(event.id)}
-                    >
-                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <tr onClick={() => toggleRowExpansion(event.id)} style={{ cursor: 'pointer' }}>
+                      <td>
                         <button
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '1.2rem',
-                            padding: 0,
-                            color: '#666',
-                          }}
+                          type="button"
+                          className="admin-button admin-button-ghost"
+                          style={{ padding: '0.25rem 0.5rem', minWidth: 'auto' }}
                           aria-label={expandedRowId === event.id ? 'Collapse details' : 'Expand details'}
                         >
                           {expandedRowId === event.id ? '▼' : '▶'}
                         </button>
                       </td>
-                      <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#666' }}>
-                        {formatDate(event.timestamp)}
-                      </td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontSize: '0.875rem' }}>
-                          {event.actorDisplayName || 'System'}
-                        </div>
+                      <td className="admin-secondary-text">{formatDate(event.timestamp)}</td>
+                      <td>
+                        <div>{event.actorDisplayName || 'System'}</div>
                         {event.actorUserId && (
-                          <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                          <div className="admin-meta-text" style={{ fontSize: '0.75rem' }}>
                             {event.actorUserId}
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={getActionBadgeStyle(event.actionType)}>
-                          {event.actionType}
-                        </span>
+                      <td>
+                        <span style={getActionBadgeStyle(event.actionType)}>{event.actionType}</span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                          {event.resourceType}
-                        </div>
+                      <td>
+                        <div style={{ fontWeight: 500 }}>{event.resourceType}</div>
                         {event.resourceName && (
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                          <div className="admin-secondary-text" style={{ fontSize: '0.8rem' }}>
                             {event.resourceName}
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={getOutcomeBadgeStyle(event.outcome)}>
-                          {event.outcome}
-                        </span>
+                      <td>
+                        <span style={getOutcomeBadgeStyle(event.outcome)}>{event.outcome}</span>
                       </td>
                     </tr>
                     {expandedRowId === event.id && (
-                      <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-                        <td colSpan={6} style={{ padding: '1.5rem' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <tr className="admin-table-expanded-row">
+                        <td colSpan={6} style={{ padding: 'var(--spacing-5)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
                                 Correlation ID
                               </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.correlationId || '-'}
-                              </div>
+                              <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{event.correlationId || '-'}</div>
                             </div>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
                                 IP Address
                               </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.actorIpAddress || '-'}
-                              </div>
+                              <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{event.actorIpAddress || '-'}</div>
                             </div>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
                                 Resource ID
                               </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.resourceId}
-                              </div>
+                              <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{event.resourceId}</div>
                             </div>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
+                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
                                 Organization
                               </label>
-                              <div style={{ fontSize: '0.875rem' }}>
-                                {event.organizationName || '-'}
-                              </div>
+                              <div>{event.organizationName || '-'}</div>
                             </div>
                           </div>
                           {event.failureReason && (
-                            <div style={{ marginTop: '1rem' }}>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
+                            <div style={{ marginTop: 'var(--spacing-4)' }}>
+                              <label className="admin-form-label" style={{ marginBottom: '0.5rem' }}>
                                 Failure Reason
                               </label>
-                              <div
-                                style={{
-                                  padding: '0.75rem',
-                                  backgroundColor: '#fee',
-                                  border: '1px solid #fcc',
-                                  borderRadius: '4px',
-                                  color: '#c33',
-                                  fontSize: '0.875rem',
-                                  whiteSpace: 'pre-wrap',
-                                  wordBreak: 'break-word',
-                                }}
-                              >
+                              <div className="admin-alert admin-alert-error" style={{ marginBottom: 0 }}>
                                 {event.failureReason}
                               </div>
                             </div>

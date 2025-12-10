@@ -11,6 +11,7 @@ import { RecentsDropdown } from './RecentsDropdown';
 import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import { isMacPlatform } from '../utils/platformUtils';
 import './PlatformAdminLayout.css';
+import '../pages/AdminPage.css';
 
 export const PlatformAdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();

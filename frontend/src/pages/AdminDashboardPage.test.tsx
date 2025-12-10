@@ -39,13 +39,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => true,
@@ -74,13 +75,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => true,
@@ -109,13 +111,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => true,
@@ -142,22 +145,23 @@ describe('AdminDashboardPage', () => {
     expect(screen.getByText('Organizations')).toBeInTheDocument();
     expect(screen.getByText('Dev Tools')).toBeInTheDocument();
     
-    expect(screen.getByText('Go to Users →')).toBeInTheDocument();
-    expect(screen.getByText('Go to Organizations →')).toBeInTheDocument();
-    expect(screen.getByText('Go to Dev Tools →')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Users' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Organizations' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Dev Tools' })).toBeInTheDocument();
   });
 
   it('has correct navigation links for GlobalAdmin', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => true,
@@ -180,9 +184,9 @@ describe('AdminDashboardPage', () => {
 
     renderAdminDashboard();
     
-    const usersLink = screen.getByText('Go to Users →').closest('a');
-    const orgsLink = screen.getByText('Go to Organizations →').closest('a');
-    const devToolsLink = screen.getByText('Go to Dev Tools →').closest('a');
+    const usersLink = screen.getByRole('link', { name: 'Go to Users' });
+    const orgsLink = screen.getByRole('link', { name: 'Go to Organizations' });
+    const devToolsLink = screen.getByRole('link', { name: 'Go to Dev Tools' });
     
     expect(usersLink).toHaveAttribute('href', '/admin/users');
     expect(orgsLink).toHaveAttribute('href', '/admin/organizations');
@@ -193,13 +197,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => false,
@@ -246,13 +251,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => false,
@@ -282,13 +288,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => false,
@@ -340,13 +347,14 @@ describe('AdminDashboardPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User',
       mfaRequired: false,
-      token: 'token' },
+      token: 'token', themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(usePermissions).mockReturnValue({
       isGlobalAdmin: () => false,

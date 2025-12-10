@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { outboundEventsApi } from '../api/outboundEventsApi';
 import type { OutboundEventsFilter } from '../api/outboundEventsApi';
@@ -6,29 +6,19 @@ import { organizationsApi } from '../api/organizationsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ErrorMessage } from '../components/ErrorMessage';
-import { EmptyState } from '../components/EmptyState';
 import { Modal } from '../components/Modal';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
-const getStatusBadgeStyle = (status: OutboundEventStatus): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    display: 'inline-block',
-  };
-
+const getStatusBadgeClass = (status: OutboundEventStatus): string => {
   switch (status) {
     case 'Pending':
-      return { ...baseStyle, backgroundColor: '#fff3cd', color: '#856404' };
+      return 'admin-pill admin-pill-warning';
     case 'Delivered':
-      return { ...baseStyle, backgroundColor: '#d4edda', color: '#155724' };
+      return 'admin-pill admin-pill-success';
     case 'Failed':
-      return { ...baseStyle, backgroundColor: '#f8d7da', color: '#721c24' };
+      return 'admin-pill admin-pill-danger';
     default:
-      return { ...baseStyle, backgroundColor: '#e9ecef', color: '#495057' };
+      return 'admin-pill';
   }
 };
 
@@ -150,13 +140,15 @@ export const AdminWebhookEventsPage: React.FC = () => {
     handleCloseModal();
   };
 
-  // Get unique event types for the filter dropdown
-  const uniqueEventTypes = [...new Set(events.map((e) => e.eventType))].sort();
+  const uniqueEventTypes = useMemo(() => {
+    const typeSet = new Set<string>();
+    events.forEach((evt) => typeSet.add(evt.eventType));
+    return Array.from(typeSet).sort();
+  }, [events]);
 
-  if (isLoading) {
+  if (isLoading && !organization) {
     return (
-      <div>
-        <h1>Webhook Events</h1>
+      <div className="admin-page">
         <LoadingSpinner message="Loading webhook events..." />
       </div>
     );
@@ -164,171 +156,132 @@ export const AdminWebhookEventsPage: React.FC = () => {
 
   if (!organization) {
     return (
-      <div>
-        <h1>Webhook Events</h1>
-        <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
+      <div className="admin-page">
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: 'var(--spacing-4)' }}>
+          {error || 'Organization not found'}
+        </div>
+        <button onClick={fetchData} className="admin-button admin-button-outline">
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1>Webhook Events</h1>
-        <div style={{ color: '#666', fontSize: '1rem' }}>
-          Organization: {organization.name}
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1>Webhook Events</h1>
+          <div className="admin-page-subtitle">Organization: {organization.name}</div>
         </div>
-      </div>
-
-      {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-        }}
-      >
-        <div>
-          <label
-            htmlFor="statusFilter"
-            style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-          >
-            Status
-          </label>
-          <select
-            id="statusFilter"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as OutboundEventStatus | '')}
-            style={{
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              backgroundColor: 'white',
-              minWidth: '150px',
-            }}
-          >
-            <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Failed">Failed</option>
-          </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor="eventTypeFilter"
-            style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-          >
-            Event Type
-          </label>
-          <select
-            id="eventTypeFilter"
-            value={eventTypeFilter}
-            onChange={(e) => setEventTypeFilter(e.target.value)}
-            style={{
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              backgroundColor: 'white',
-              minWidth: '200px',
-            }}
-          >
-            <option value="">All Event Types</option>
-            {uniqueEventTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={{ marginLeft: 'auto', color: '#666', fontSize: '0.875rem' }}>
+        <div className="admin-meta-text">
           {events.length} event{events.length !== 1 ? 's' : ''}
         </div>
       </div>
 
-      {events.length === 0 ? (
-        <EmptyState
-          message={
-            statusFilter || eventTypeFilter
-              ? 'No events found matching your filters.'
-              : 'No webhook events found for this organization.'
-          }
-        />
+      {error && (
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: 'var(--spacing-4)' }}>
+          {error}
+        </div>
+      )}
+
+      <div className="admin-card compact" style={{ marginBottom: 'var(--spacing-5)' }}>
+        <div className="admin-filter-row">
+          <div>
+            <label htmlFor="statusFilter" className="admin-form-label">
+              Status
+            </label>
+            <select
+              id="statusFilter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as OutboundEventStatus | '')}
+              className="admin-select"
+            >
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Failed">Failed</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="eventTypeFilter" className="admin-form-label">
+              Event Type
+            </label>
+            <select
+              id="eventTypeFilter"
+              value={eventTypeFilter}
+              onChange={(e) => setEventTypeFilter(e.target.value)}
+              className="admin-select"
+            >
+              <option value="">All Event Types</option>
+              {uniqueEventTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(statusFilter || eventTypeFilter) && (
+            <div className="admin-filter-group">
+              {statusFilter && (
+                <span className="admin-filter-chip selected">
+                  Status: {statusFilter}
+                </span>
+              )}
+              {eventTypeFilter && (
+                <span className="admin-filter-chip selected">
+                  Type: {eventTypeFilter}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <LoadingSpinner message="Loading webhook events..." />
+      ) : events.length === 0 ? (
+        <div className="admin-empty-state">
+          {statusFilter || eventTypeFilter
+            ? 'No events found matching your filters.'
+            : 'No webhook events found for this organization.'}
+        </div>
       ) : (
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            overflow: 'hidden',
-          }}
-        >
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
             <thead>
-              <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Event Type</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Status</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Attempts</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Last Attempt</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Last Error</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Actions</th>
+              <tr>
+                <th>Event Type</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'center' }}>Attempts</th>
+                <th>Last Attempt</th>
+                <th>Last Error</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {events.map((event) => (
-                <tr key={event.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '1rem' }}>{event.eventType}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={getStatusBadgeStyle(event.status)}>{event.status}</span>
+                <tr key={event.id}>
+                  <td>{event.eventType}</td>
+                  <td>
+                    <span className={getStatusBadgeClass(event.status)}>{event.status}</span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>{event.attemptCount}</td>
-                  <td style={{ padding: '1rem', color: '#666', fontSize: '0.9rem' }}>
-                    {formatDate(event.lastAttemptAt)}
-                  </td>
+                  <td style={{ textAlign: 'center' }}>{event.attemptCount}</td>
+                  <td className="admin-secondary-text">{formatDate(event.lastAttemptAt)}</td>
                   <td
-                    style={{
-                      padding: '1rem',
-                      color: event.lastError ? '#c33' : '#666',
-                      fontSize: '0.875rem',
-                      maxWidth: '200px',
-                    }}
+                    className="admin-secondary-text"
+                    style={{ color: event.lastError ? 'var(--color-error-600)' : undefined }}
                     title={event.lastError || undefined}
                   >
                     {truncateError(event.lastError)}
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                  <td>
+                    <div className="admin-table-actions">
                       <button
                         onClick={() => handleViewDetails(event.id)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#0066cc',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                        }}
+                        className="admin-button admin-button-primary"
                       >
                         View
                       </button>
@@ -336,15 +289,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
                         <button
                           onClick={() => handleRetry(event.id)}
                           disabled={retryingEventId === event.id}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: retryingEventId === event.id ? '#ccc' : '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: retryingEventId === event.id ? 'not-allowed' : 'pointer',
-                            fontSize: '0.875rem',
-                          }}
+                          className="admin-button admin-button-success"
                         >
                           {retryingEventId === event.id ? 'Retrying...' : 'Retry'}
                         </button>
@@ -358,92 +303,58 @@ export const AdminWebhookEventsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Detail Modal */}
-      <Modal
-        isOpen={showDetailModal}
-        onClose={handleCloseModal}
-        title="Event Details"
-      >
+      <Modal isOpen={showDetailModal} onClose={handleCloseModal} title="Event Details">
         {isDetailLoading ? (
           <LoadingSpinner message="Loading event details..." />
         ) : selectedEvent ? (
           <>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="admin-card compact" style={{ marginBottom: 'var(--spacing-4)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
                 <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                    Event Type
-                  </label>
+                  <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Event Type</label>
                   <div>{selectedEvent.eventType}</div>
                 </div>
                 <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                    Status
-                  </label>
-                  <span style={getStatusBadgeStyle(selectedEvent.status)}>{selectedEvent.status}</span>
+                  <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Status</label>
+                  <span className={getStatusBadgeClass(selectedEvent.status)}>{selectedEvent.status}</span>
                 </div>
                 <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                    Attempt Count
-                  </label>
+                  <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Attempt Count</label>
                   <div>{selectedEvent.attemptCount}</div>
                 </div>
                 <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                    Created At
-                  </label>
+                  <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Created At</label>
                   <div>{formatDate(selectedEvent.createdAt)}</div>
                 </div>
                 <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                    Last Attempt
-                  </label>
+                  <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Last Attempt</label>
                   <div>{formatDate(selectedEvent.lastAttemptAt)}</div>
                 </div>
                 <div>
-                  <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                    Event ID
-                  </label>
-                  <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>{selectedEvent.id}</div>
+                  <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Event ID</label>
+                  <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{selectedEvent.id}</div>
                 </div>
               </div>
             </div>
 
             {selectedEvent.lastError && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                  Last Error
-                </label>
-                <div
-                  style={{
-                    padding: '1rem',
-                    backgroundColor: '#fee',
-                    border: '1px solid #fcc',
-                    borderRadius: '4px',
-                    color: '#c33',
-                    fontSize: '0.875rem',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {selectedEvent.lastError}
-                </div>
+              <div className="admin-alert admin-alert-error" style={{ marginBottom: 'var(--spacing-4)' }}>
+                {selectedEvent.lastError}
               </div>
             )}
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                Payload
-              </label>
+            <div className="admin-card compact" style={{ marginBottom: 'var(--spacing-4)' }}>
+              <label className="admin-form-label" style={{ marginBottom: '0.5rem' }}>Payload</label>
               <pre
                 style={{
-                  padding: '1rem',
-                  backgroundColor: '#f8f9fa',
-                  border: '1px solid #dee2e6',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
+                  padding: 'var(--spacing-4)',
+                  backgroundColor: 'var(--color-surface)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-border-subtle)',
+                  margin: 0,
+                  maxHeight: '240px',
                   overflow: 'auto',
-                  maxHeight: '200px',
+                  fontSize: '0.85rem',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
                 }}
@@ -461,34 +372,17 @@ export const AdminWebhookEventsPage: React.FC = () => {
               </pre>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            <div className="admin-table-actions" style={{ justifyContent: 'flex-end' }}>
               {selectedEvent.status === 'Failed' && (
                 <button
                   onClick={handleRetryFromModal}
                   disabled={retryingEventId === selectedEvent.id}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: retryingEventId === selectedEvent.id ? '#ccc' : '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: retryingEventId === selectedEvent.id ? 'not-allowed' : 'pointer',
-                  }}
+                  className="admin-button admin-button-success"
                 >
                   {retryingEventId === selectedEvent.id ? 'Retrying...' : 'Retry Event'}
                 </button>
               )}
-              <button
-                onClick={handleCloseModal}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
+              <button onClick={handleCloseModal} className="admin-button admin-button-outline">
                 Close
               </button>
             </div>

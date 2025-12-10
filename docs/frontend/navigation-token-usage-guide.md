@@ -1,7 +1,7 @@
 # Navigation Design Token Usage Guide
 
-**Version:** 1.0  
-**Last Updated:** 2025-12-08  
+**Version:** 1.1  
+**Last Updated:** 2025-12-09  
 **Purpose:** Practical examples for using design tokens in navigation implementation  
 **Related:** [Navigation Design Specifications](./navigation-design-specifications.md)
 
@@ -29,44 +29,37 @@ This guide provides practical code examples for implementing navigation componen
 
 ### Essential Tokens for Navigation
 
+Copy these tokens into any navigation stylesheet. They automatically adapt in dark mode because the values are set at the `:root` level and overridden inside `body.theme-dark`.
+
 ```css
-/* Copy these into your component CSS file */
-/* Note: Some values are hardcoded as they don't exist as CSS custom properties in index.css */
+/* Core nav glow tokens */
+--nav-item-hover-bg: rgba(0, 0, 0, 0.06);
+--nav-item-hover-color: var(--color-primary-600);
+--nav-item-active-color: var(--color-primary-800);
+--nav-item-active-gradient: linear-gradient(120deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0));
+--nav-item-active-radial: radial-gradient(circle at 0% 50%, rgba(59, 130, 246, 0.35), transparent 60%);
+--nav-item-active-border: var(--color-primary-500);
+--nav-item-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 20px rgba(0, 0, 0, 0.35);
 
-/* Colors */
---color-primary-600: #007bff;
---color-primary-700: #0056b3;
---color-neutral-400: #999;
---color-neutral-600: #666;
---color-neutral-700: #333;
---color-background-elevated: #2a2a2a;
---focus-ring-color: #0056b3;
-
-/* Typography (from index.css) */
+/* Shared typography/spacing tokens from index.css */
+--font-size-xs: 0.75rem;
 --font-size-sm: 0.875rem;
 --font-size-base: 1rem;
 --font-weight-medium: 500;
 --font-weight-semibold: 600;
-
-/* Typography (hardcoded - not in index.css) */
-/* Use 0.7rem for extra small text (badges, shortcuts) */
-/* Use 1.25rem for large text (mobile nav title) */
-/* Use 700 for bold font weight */
-
-/* Spacing */
 --spacing-2: 0.5rem;
 --spacing-3: 0.75rem;
 --spacing-4: 1rem;
-
-/* Effects */
 --radius-md: 6px;
---shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
---shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
 --ease-out: cubic-bezier(0, 0, 0.2, 1);
-```
+--focus-ring-color: var(--focus-ring-color, #0056b3);
+```text
+
+> **Why not hardcode the gradient colors?** The `--nav-item-*` tokens are already defined in `AdminLayout.css` and `Layout.css`. Override them in a component scope only if you intentionally need a different visual treatment.
 
 ---
 
+<a id="desktop-navigation-examples"></a>
 ## Desktop Navigation Examples
 
 ### Navigation Link Component
@@ -74,46 +67,63 @@ This guide provides practical code examples for implementing navigation componen
 ```css
 /* NavLink.css */
 .nav-link {
-  /* Use spacing tokens for padding */
-  padding: var(--spacing-3, 0.75rem) 1.5rem;
-  
-  /* Use typography tokens */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2, 0.5rem);
+  padding: var(--spacing-3, 0.75rem) var(--spacing-4, 1rem);
+  color: var(--color-neutral-200, #d1d5db);
+  text-decoration: none;
+  border-left: 3px solid transparent;
   font-size: var(--font-size-base, 1rem);
   font-weight: var(--font-weight-medium, 500);
-  
-  /* Use color tokens */
-  color: #ddd;
-  
-  /* Border for active indicator */
-  border-left: 3px solid transparent;
-  
-  /* Use animation tokens */
-  transition: 
+  transition:
     background-color 0.15s var(--ease-out),
     color 0.15s var(--ease-out),
-    border-left-color 0.15s var(--ease-out);
+    border-left-color 0.15s var(--ease-out),
+    box-shadow 0.2s var(--ease-out);
+  position: relative;
+  isolation: isolate;
 }
 
 .nav-link:hover {
-  background-color: #333;
-  color: white;
+  background-color: var(--nav-item-hover-bg);
+  color: var(--nav-item-hover-color);
   border-left-color: var(--color-primary-600, #007bff);
 }
 
 .nav-link.active {
-  background-color: #333;
-  color: white;
-  border-left-color: var(--color-primary-600, #007bff);
+  background: var(--nav-item-active-gradient);
+  color: var(--nav-item-active-color);
+  border-left-color: var(--nav-item-active-border);
   font-weight: var(--font-weight-semibold, 600);
+  box-shadow: var(--nav-item-active-shadow);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+
+#### Dark Mode Behavior
+
+- `AppContent` toggles the `theme-dark` class on `<body>` when a user selects the Dark theme in My Account. No component-level state is required.
+- `AdminLayout.css`, `PlatformAdminLayout.css`, `Layout.css`, and `MobileNav.css` declare the `--nav-item-*` variables shown above and override them inside `body.theme-dark`.
+- If you create a new navigation surface, import these variables (or define overrides) and avoid hardcoding blues. Text automatically flips to `var(--color-text-primary)` in dark mode for both hover and selected states.
+- Org Admin links now stay legible because `body.theme-dark .admin-nav-link:hover, .admin-nav-link.active` force the bright text color. Use the same selector pattern if you introduce custom link classes.
+  inset: 0;
+  background: var(--nav-item-active-radial);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .nav-link:focus-visible {
   outline: 2px solid var(--focus-ring-color, #0056b3);
   outline-offset: -2px;
 }
-```
+```text
 
 **Usage in React:**
+
 ```tsx
 // NavLink.tsx
 import React from 'react';
@@ -182,6 +192,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ href, isActive, children }) =>
 ```
 
 **Usage in React:**
+
 ```tsx
 // NavLink with shortcut
 <Link to="/home" className="nav-link">
@@ -212,6 +223,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ href, isActive, children }) =>
 ```
 
 **Usage in React:**
+
 ```tsx
 // Navigation section
 <nav>
@@ -306,43 +318,35 @@ export const NavLink: React.FC<NavLinkProps> = ({ href, isActive, children }) =>
 ```css
 /* MobileNavLink.css */
 .mobile-nav-link {
-  /* Block display for full-width tap */
-  display: block;
-  
-  /* Use spacing tokens */
-  padding: 0.75rem 1.5rem;
-  
-  /* Touch target */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   min-height: 44px;
-  
-  /* Use typography tokens */
+  padding: 0.75rem 1.5rem;
   font-size: var(--font-size-base, 1rem);
   font-weight: var(--font-weight-medium, 500);
-  
-  /* Colors */
-  color: #ddd;
   text-decoration: none;
-  
-  /* Border for active indicator */
+  color: var(--color-neutral-200, #d1d5db);
   border-left: 3px solid transparent;
-  
-  /* Use animation tokens */
-  transition: 
-    background-color 0.2s ease,
-    color 0.2s ease;
+  transition:
+    background-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out),
+    border-left-color 0.2s var(--ease-out);
 }
 
 .mobile-nav-link:hover,
 .mobile-nav-link:active {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--nav-item-hover-bg);
+  color: var(--nav-item-hover-color);
+  border-left-color: var(--color-primary-600, #007bff);
 }
 
 .mobile-nav-link.active {
-  background-color: rgba(0, 123, 255, 0.2);
-  color: white;
-  border-left-color: var(--color-primary-600, #007bff);
+  background: var(--nav-item-active-gradient);
+  color: var(--nav-item-active-color);
+  border-left-color: var(--nav-item-active-border);
   font-weight: var(--font-weight-semibold, 600);
+  box-shadow: var(--nav-item-active-shadow);
 }
 ```
 
@@ -489,6 +493,7 @@ export const NavLink: React.FC<NavLinkProps> = ({ href, isActive, children }) =>
 ```
 
 **Usage in React:**
+
 ```tsx
 // RoleBadge component
 interface RoleBadgeProps {
@@ -712,6 +717,7 @@ export const RoleBadge: React.FC<RoleBadgeProps> = ({ role }) => {
 ```
 
 **Usage in React:**
+
 ```tsx
 // Breadcrumb component
 import React from 'react';
@@ -890,6 +896,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
 ### 1. Always Use Design Tokens
 
 **❌ Bad:**
+
 ```css
 .nav-link {
   color: #666;
@@ -900,6 +907,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
 ```
 
 **✅ Good:**
+
 ```css
 .nav-link {
   color: var(--color-neutral-600, #666);
@@ -920,11 +928,13 @@ color: var(--color-primary-600, #007bff);
 ### 3. Use Semantic Token Names
 
 **❌ Bad:**
+
 ```css
 color: var(--blue-500);
 ```
 
 **✅ Good:**
+
 ```css
 color: var(--color-primary-600);
 ```
@@ -1016,7 +1026,7 @@ useEffect(() => {
 
 ### 9. Test Color Contrast
 
-```
+```text
 Use tools to verify:
 - Normal text: 4.5:1 minimum
 - Large text: 3:1 minimum
@@ -1068,7 +1078,7 @@ When converting hardcoded values to tokens:
 
 ## Quick Reference Card
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │ Navigation Token Quick Reference                    │
 ├─────────────────────────────────────────────────────┤
@@ -1099,15 +1109,18 @@ When converting hardcoded values to tokens:
 ## Additional Resources
 
 ### Token Documentation
+
 - [Navigation Design Specifications](./navigation-design-specifications.md)
 - [Visual Mockup Guide](./navigation-visual-mockup-guide.md)
 
 ### Tools
+
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - [cubic-bezier.com](https://cubic-bezier.com) - Easing function visualizer
 - [Can I Use](https://caniuse.com) - Browser support checker
 
 ### Standards
+
 - [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 - [MDN CSS Custom Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/--*)
 
@@ -1116,6 +1129,7 @@ When converting hardcoded values to tokens:
 ## Version History
 
 ### Version 1.0 - 2025-12-08 (Current)
+
 - Initial token usage guide
 - Code examples for all navigation components
 - Common patterns and best practices

@@ -39,13 +39,14 @@ describe('usePermissions', () => {
 
   it('should return isGlobalAdmin as true for Admin users', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -60,13 +61,14 @@ describe('usePermissions', () => {
 
   it('should return isGlobalAdmin as false for non-Admin users', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -81,13 +83,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgAdmin as true for GlobalAdmins regardless of membership', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
 
@@ -102,13 +105,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgAdmin as true when user has OrgAdmin role for organization', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -123,13 +127,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgAdmin as false when user has Member role for organization', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -144,13 +149,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgAdmin as false when user has no membership', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -165,13 +171,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgMember as true for GlobalAdmins regardless of membership', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
 
@@ -186,13 +193,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgMember as true when user has any membership', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -208,13 +216,14 @@ describe('usePermissions', () => {
 
   it('should return isOrgMember as false when user has no membership', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -229,13 +238,14 @@ describe('usePermissions', () => {
 
   it('should fetch memberships on mount', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -251,13 +261,14 @@ describe('usePermissions', () => {
 
   it('should handle membership fetch errors gracefully', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockRejectedValue(new Error('Network error'));
 
@@ -284,6 +295,7 @@ describe('usePermissions', () => {
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
 
     renderHook(() => usePermissions());
@@ -293,13 +305,14 @@ describe('usePermissions', () => {
 
   it('should allow manual refresh of memberships', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
         validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
     vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships);
 
@@ -319,13 +332,14 @@ describe('usePermissions', () => {
   describe('hasAnyOrgAdminRole', () => {
     it('should return true when user has OrgAdmin role in any organization', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships); // Contains OrgAdmin role
 
@@ -340,13 +354,14 @@ describe('usePermissions', () => {
 
     it('should return false when user has no OrgAdmin roles', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       const memberOnlyMemberships: MembershipWithOrganizationDto[] = [
         {
@@ -371,13 +386,14 @@ describe('usePermissions', () => {
 
     it('should return false for GlobalAdmin who has no explicit OrgAdmin memberships', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
+        user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: true,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
 
@@ -395,13 +411,14 @@ describe('usePermissions', () => {
   describe('canAccessAdminArea', () => {
     it('should return true for GlobalAdmin', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
+        user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: true,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue([]);
 
@@ -416,13 +433,14 @@ describe('usePermissions', () => {
 
     it('should return true for OrgAdmin', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mockMemberships); // Contains OrgAdmin role
 
@@ -437,13 +455,14 @@ describe('usePermissions', () => {
 
     it('should return false for regular member with no admin roles', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       const memberOnlyMemberships: MembershipWithOrganizationDto[] = [
         {
@@ -489,13 +508,14 @@ describe('usePermissions', () => {
 
     it('should return isOrgAdmin true for org where user is admin', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
 
@@ -510,13 +530,14 @@ describe('usePermissions', () => {
 
     it('should return isOrgAdmin false for org where user is only member', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
 
@@ -531,13 +552,14 @@ describe('usePermissions', () => {
 
     it('should return isOrgMember true for both orgs', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
 
@@ -553,13 +575,14 @@ describe('usePermissions', () => {
 
     it('should correctly identify hasAnyOrgAdminRole when user is admin in at least one org', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
 
@@ -574,13 +597,14 @@ describe('usePermissions', () => {
 
     it('should allow access to admin area for mixed-role user', async () => {
       vi.mocked(useAuth).mockReturnValue({
-        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+        user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
         token: 'token',
         isAuthenticated: true,
         isAdmin: false,
         login: vi.fn(),
         validateMfa: vi.fn(),
         logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
       });
       vi.mocked(membershipsApi.getByUserId).mockResolvedValue(mixedRoleMemberships);
 
