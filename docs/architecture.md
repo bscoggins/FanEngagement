@@ -1,5 +1,17 @@
 # FanEngagement – Backend Architecture
 
+## Documentation Index
+
+This document provides a comprehensive overview of the FanEngagement backend architecture. For specialized topics, see:
+
+- **[Authorization Infrastructure](authorization.md)** - Policy-based authorization, roles, and permissions
+- **[Audit Logging](audit/architecture.md)** - Comprehensive audit system architecture and implementation
+- **[Blockchain Integration](blockchain/)** - Multi-chain adapter platform (Solana, Polygon)
+- **[Development Guide](development.md)** - Setup, testing, and development workflows
+- **[Frontend Documentation](frontend/README.md)** - React frontend, design system, and components
+- **[Technical Documentation](technical/)** - Specialized technical guides
+- **[Complete Documentation Index](README.md)** - Full repository documentation index
+
 ## Goal
 
 FanEngagement is a multi-tenant fan governance platform. Organizations (teams, clubs, etc.) can issue “shares” to users and use them for governance (voting on proposals). The platform manages users, organizations, shares, proposals, votes, and webhooks that notify external systems of outcomes.

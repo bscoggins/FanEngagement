@@ -1,5 +1,15 @@
 # Developer Quick Start
 
+## Documentation Index
+
+This guide covers local development setup, testing workflows, and troubleshooting. For other topics:
+
+- **[Architecture Overview](architecture.md)** - System design and governance model
+- **[Complete Documentation Index](README.md)** - Full documentation index
+- **[Frontend Documentation](frontend/README.md)** - React frontend and design system
+- **[Testing Login Flow](guides/testing-login-flow.md)** - Authentication testing guide
+- **[PostgreSQL Persistence](technical/postgres-persistence.md)** - Database persistence with Docker
+
 This guide helps you get up and running with the FanEngagement development environment quickly.
 
 ## Prerequisites
