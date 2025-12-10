@@ -33,6 +33,7 @@
   --color-error-500: hsl(0, 70%, 50%);
   --color-error-600: hsl(0, 70%, 45%);
   --color-error-700: hsl(0, 70%, 40%);
+  --color-error-800: hsl(0, 70%, 35%);
   
   --color-info-50: hsl(210, 90%, 97%);
   --color-info-100: hsl(210, 90%, 92%);
@@ -75,6 +76,7 @@
   --color-overlay-light: rgba(255, 255, 255, 0.1);
   --color-overlay-medium: rgba(255, 255, 255, 0.15);
   --color-overlay-dark: rgba(0, 0, 0, 0.5);
+  --color-primary-alpha-10: rgba(0, 123, 255, 0.1);  /* Primary color with 10% opacity */
 
   /* ===== Focus Ring ===== */
   --focus-ring-color: var(--color-primary-700);
@@ -117,7 +119,9 @@
   --spacing-0: 0;
   --spacing-0-5: 0.125rem;   /* 2px */
   --spacing-1: 0.25rem;      /* 4px */
+  --spacing-1-5: 0.375rem;   /* 6px */
   --spacing-2: 0.5rem;       /* 8px */
+  --spacing-2-5: 0.625rem;   /* 10px */
   --spacing-3: 0.75rem;      /* 12px */
   --spacing-4: 1rem;         /* 16px */
   --spacing-5: 1.25rem;      /* 20px */

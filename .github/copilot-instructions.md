@@ -169,3 +169,42 @@ This file defines **how GitHub Copilot Chat behaves** inside VS Code:
 - Respect repository architecture  
 - Reference deeper docs when needed  
 Technical details live in `.github/copilot-coding-agent-instructions.md`.
+
+---
+
+## 11. Local Environment & Docker Reference
+
+- `./scripts/dev-up` starts PostgreSQL via Docker Compose and then runs `dotnet watch` for the API; pass `--full` to also launch the Vite dev server so both ports (`5049`, `5173`) stay hot-reloading.
+- `docker compose up --build` (or `-d --build`) brings up the production-style stack on ports `8080` (API) and `3000` (frontend); use this before Playwright or when reproducing CI.
+- `docker compose up -d db` is the fastest way to ensure Postgres is available for backend tests or migrations without starting the whole stack.
+- `docker compose down --remove-orphans` stops services while preserving volumes; add `-v` or run `./scripts/dev-down --clean` when you need a clean database.
+- See `docs/development.md` for adapter-specific profiles (e.g., Solana) and for seeding/resetting dev data.
+- **Blockchain adapters**: Both Solana (`adapters/solana`) and Polygon (`adapters/polygon`) live in this repo. They each have Dockerfiles plus their own `docker-compose.yml` for standalone work, but the root `docker-compose.yml` exposes them via ports `3001` (Solana) and `3002` (Polygon). Use Compose profiles so you only start what you need:
+   - `docker compose --profile solana up -d solana-adapter` talks to Solana devnet by default; include `solana-test-validator` in the command if you need the local validator.
+   - The Polygon adapter runs without a profile (starts with the default stack) and **requires** `POLYGON_PRIVATE_KEY`; set it in `.env.development` or export it before invoking Compose to avoid startup failures.
+   - Both adapters read `API_KEY` for request authentication; keep development keys in `.env.development` (already gitignored) and never commit private keys.
+   - Health endpoints: `http://localhost:3001/v1/adapter/health` (Solana) and `http://localhost:3002/v1/adapter/health`.
+
+## 12. Testing & Troubleshooting Cheatsheet
+
+**Backend**  
+- Run `./scripts/test-backend [--verbose] [--filter "TestName"]` to build the solution and execute `FanEngagement.Tests` in Release mode.  
+- If integration tests fail to connect, ensure Postgres is running (`docker compose up -d db`) or point the tests at the correct connection string.  
+- For CI parity you can also run `docker compose --profile tests run --rm tests`.
+
+**Frontend**  
+- Run `./scripts/test-frontend [--watch] [--coverage]`; the script installs dependencies with `npm ci` if `node_modules` is missing.  
+- Keep `VITE_API_BASE_URL` aligned with the backend host when snapshotting fixtures; `docs/development.md` lists the default values.
+
+**End-to-End (Playwright)**  
+- Prefer `./scripts/run-e2e.sh`, which loads `.env.development`, rebuilds the Compose stack (db, api, frontend), waits for health checks, resets dev data via `/admin/reset-dev-data`, and then executes `docker compose --profile e2e run --rm e2e`.  
+- On success the script cleans up E2E artifacts; on failure it preserves state so you can inspect `frontend/test-results`, `frontend/playwright-report/index.html`, or run `npx playwright show-trace <trace.zip>`.  
+- If the script times out waiting for services, check for lingering containers (`docker ps -a | grep fanengagement`) and rerun after `docker compose down -v`.
+
+**Full unit suite**  
+- `./scripts/run-tests.sh` orchestrates both `test-backend` and `test-frontend`, running backend first and then frontend. Pass `--backend-only` or `--frontend-only` when you need to focus on one side without remembering the individual commands. Use the underlying scripts directly if you need watch mode, coverage, or `dotnet test` filters.
+
+**Adapters**  
+- Solana adapter tests live under `adapters/solana/tests` and run with the package-level npm scripts; most integration tests expect either Solana devnet or the optional `solana-test-validator` Compose profile.  
+- Polygon adapter tests live under `adapters/polygon/tests`; they require a funded Polygon Amoy testnet key (`POLYGON_PRIVATE_KEY`) plus `POLYGON_RPC_URL`.  
+- When E2E or backend workflows need blockchain adapters, document whether the caller must start them (e.g., `docker compose --profile solana up -d solana-adapter`). If a change depends on adapter behavior, call out which adapter(s) to run and which env vars must be set.

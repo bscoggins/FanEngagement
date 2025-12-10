@@ -7,6 +7,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Modal } from '../components/Modal';
+import { Button } from '../components/Button';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
 const getStatusBadgeClass = (status: OutboundEventStatus): string => {
@@ -279,20 +280,22 @@ export const AdminWebhookEventsPage: React.FC = () => {
                   </td>
                   <td>
                     <div className="admin-table-actions">
-                      <button
+                      <Button
                         onClick={() => handleViewDetails(event.id)}
-                        className="admin-button admin-button-primary"
+                        size="sm"
+                        variant="primary"
                       >
                         View
-                      </button>
+                      </Button>
                       {event.status === 'Failed' && (
-                        <button
+                        <Button
                           onClick={() => handleRetry(event.id)}
-                          disabled={retryingEventId === event.id}
-                          className="admin-button admin-button-success"
+                          isLoading={retryingEventId === event.id}
+                          size="sm"
+                          variant="secondary"
                         >
-                          {retryingEventId === event.id ? 'Retrying...' : 'Retry'}
-                        </button>
+                          Retry
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -374,17 +377,20 @@ export const AdminWebhookEventsPage: React.FC = () => {
 
             <div className="admin-table-actions" style={{ justifyContent: 'flex-end' }}>
               {selectedEvent.status === 'Failed' && (
-                <button
+                <Button
                   onClick={handleRetryFromModal}
-                  disabled={retryingEventId === selectedEvent.id}
-                  className="admin-button admin-button-success"
+                  isLoading={retryingEventId === selectedEvent.id}
+                  variant="secondary"
                 >
-                  {retryingEventId === selectedEvent.id ? 'Retrying...' : 'Retry Event'}
-                </button>
+                  Retry Event
+                </Button>
               )}
-              <button onClick={handleCloseModal} className="admin-button admin-button-outline">
+              <Button
+                onClick={handleCloseModal}
+                variant="ghost"
+              >
                 Close
-              </button>
+              </Button>
             </div>
           </>
         ) : null}

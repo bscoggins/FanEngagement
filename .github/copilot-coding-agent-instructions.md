@@ -163,6 +163,12 @@ Frontend:
 - Vitest unit tests, Playwright E2E
 - Strong permission model and route guards
 
+Blockchain adapters (under `/adapters`):
+
+- `adapters/solana` — Node 20 service using @solana/web3.js. Comes with its own Dockerfile and optional `solana-test-validator` profile. Exposes port `3001`, requires `SOLANA_PRIVATE_KEY` (or keypair path) and `API_KEY`.
+- `adapters/polygon` — Node 20 service using ethers.js. Exposes port `3002`, requires `POLYGON_PRIVATE_KEY`, `POLYGON_RPC_URL`, and `API_KEY`. Runs as part of the default Compose stack unless you remove/disable it.
+- Both adapters follow the shared adapter OpenAPI contract and expose `/v1/adapter/*` endpoints plus `/health` and `/metrics` for observability.
+
 Runtime:
 
 - .NET 9
@@ -177,8 +183,19 @@ Runtime:
 
 ```sh
 docker compose up --build
+docker compose up -d db
+docker compose down --remove-orphans
 docker compose down -v
 ```
+
+- `docker compose up --build` (or `-d --build`) brings up the production-style stack on ports `8080` (API) and `3000` (frontend) and is what CI uses before Playwright.
+- `docker compose up -d db` is the quickest way to ensure PostgreSQL is running for migrations or tests without starting the whole stack.
+- `docker compose down --remove-orphans` stops services while preserving data; add `-v` when you explicitly want to wipe the database.
+- The Solana adapter, Polygon adapter, and test runners sit behind Compose profiles—reference `docs/development.md` when you need to enable them.
+- To run blockchain adapters locally:
+  - `docker compose --profile solana up -d solana-adapter` targets Solana devnet; add `solana-test-validator` to that command (and export `SOLANA_PRIVATE_KEY`) when you need deterministic runs.
+  - The Polygon adapter participates in the default profile and therefore starts with `docker compose up`; ensure `POLYGON_PRIVATE_KEY` (or `POLYGON_PRIVATE_KEY_PATH`) plus `POLYGON_RPC_URL` are present in `.env.development` or your shell, otherwise the container will exit on boot.
+  - Both adapters read `API_KEY` for request authentication; never bake real secrets into Compose files.
 
 ### 6.2 Backend
 
@@ -209,7 +226,16 @@ Examples:
 ./scripts/dev-down
 ./scripts/test-backend
 ./scripts/test-frontend
+./scripts/run-tests.sh
+./scripts/run-e2e.sh
 ```
+
+- `./scripts/dev-up` starts PostgreSQL (via Compose) and runs `dotnet watch` for the API; pass `--full` to also launch the Vite dev server so both ports hot-reload. Use this for day-to-day development where you want fast rebuilds instead of containers.
+- `./scripts/dev-down` stops the Compose services that `dev-up` created; add `--clean` (or use `docker compose down -v`) to drop volumes for a clean database when tests require a fresh state.
+- `./scripts/test-backend [--verbose] [--filter TestName]` builds the solution and executes `FanEngagement.Tests` in Release mode so failures match CI logging.
+- `./scripts/test-frontend [--watch|--coverage]` runs Vitest; the helper runs `npm ci` automatically the first time to match CI’s dependency tree.
+- `./scripts/run-tests.sh [--backend-only|--frontend-only]` is a thin orchestrator that runs backend tests first and then frontend tests, matching the order used in CI gates; use it for quick local pre-flight checks when you do not need watch mode.
+- `./scripts/run-e2e.sh` loads `.env.development`, rebuilds the Compose stack (db, api, frontend), waits for health checks, resets dev data, runs Playwright inside the `e2e` profile, and only cleans up data when the suite passes.
 
 ---
 
@@ -346,6 +372,36 @@ Agent must:
 - Unit tests: Vitest + RTL
 - E2E: Playwright
 - Avoid brittle selectors; use test IDs as needed
+
+### 16.3 Command Reference & Troubleshooting
+
+#### Backend tests
+
+- Preferred command: `./scripts/test-backend [--verbose] [--filter "Namespace.Test"]`. The script performs a Release build (catching compile problems early) and then runs `dotnet test` against `FanEngagement.Tests` with any filter/verbosity you pass through.
+- If tests fail with connection errors, bring Postgres online via `docker compose up -d db` (or run the stack through `./scripts/dev-up`) before re-running.
+- For parity with CI, you can execute `docker compose --profile tests run --rm tests`, which launches the same container used in pipelines.
+
+#### Frontend tests
+
+- Use `./scripts/test-frontend [--watch] [--coverage]`. On the first run the helper executes `npm ci` to guarantee the same dependency graph as CI; afterward it proxies any Vitest CLI flags.
+- Watch mode is ideal for component work, but make sure to run the plain command before pushing so cached snapshots reset. If tests reference API data, align `VITE_API_BASE_URL` with the backend host you are hitting.
+
+#### End-to-end tests (Playwright)
+
+- Run `./scripts/run-e2e.sh` for the full workflow. It loads `.env.development` when present, builds the Compose images, starts db/api/frontend, waits for `/health/live` and the Vite host, logs in as the seeded admin, calls `/admin/reset-dev-data`, and then executes `docker compose --profile e2e run --rm e2e` so tests run inside the Playwright container.
+- When the suite passes the script triggers `/admin/cleanup-e2e-data`; when it fails it intentionally keeps containers and data running for inspection. Review artifacts under `frontend/test-results` or open `frontend/playwright-report/index.html`. Trace zips can be viewed with `npx playwright show-trace frontend/test-results/<test>/trace.zip`.
+- If the script appears stuck waiting for services, check for lingering containers (`docker ps -a | grep fanengagement`) and rerun after `docker compose down --remove-orphans` (add `-v` if the database must be wiped).
+
+#### Full unit suite
+
+- Use `./scripts/run-tests.sh` when you need to run backend and frontend unit tests back-to-back (the script prints clear section headers so failures are easy to spot). Pass `--backend-only` or `--frontend-only` to gate a subset, and drop to the underlying scripts if you need extra flags like watch mode or coverage.
+
+#### Blockchain adapters
+
+- Each adapter has its own npm scripts: `cd adapters/solana` (or `/polygon`) and run `npm test`, `npm run test:integration`, etc. Keep `npm ci` in sync with committed lockfiles before running.
+- Solana integration tests require either the devnet RPC (`SOLANA_RPC_URL=https://api.devnet.solana.com`) or the optional `solana-test-validator` Compose profile. Provide a funded `SOLANA_PRIVATE_KEY` (JSON array) or `SOLANA_KEYPAIR_PATH` plus `API_KEY`.
+- Polygon integration tests require `POLYGON_RPC_URL` (Amoy recommended) and a funded `POLYGON_PRIVATE_KEY`. Get test MATIC from https://faucet.polygon.technology/ before running.
+- Both adapters expose `/v1/adapter/health` and `/v1/adapter/metrics`; remind developers to verify those endpoints when troubleshooting blockchain issues.
 
 ---
 

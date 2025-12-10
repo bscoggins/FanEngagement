@@ -160,16 +160,24 @@ describe('UserCreatePage', () => {
     const submitButton = screen.getByRole('button', { name: /create user/i });
     await user.click(submitButton);
     
-    // Button should show loading state
+    // Button should be disabled and show aria-busy while loading
     await waitFor(() => {
-      expect(screen.getByText(/creating/i)).toBeInTheDocument();
+      const button = screen.getByRole('button', { name: /create user/i });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('aria-busy', 'true');
     });
   });
 
-  it('navigates back to users list when cancel is clicked', () => {
+  it('navigates back to users list when cancel is clicked', async () => {
+    const user = userEvent.setup();
     renderUserCreatePage();
     
-    const cancelLink = screen.getByText('Cancel');
-    expect(cancelLink.closest('a')).toHaveAttribute('href', '/users');
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    await user.click(cancelButton);
+    
+    // Should navigate to /users route which shows "Users List Page"
+    await waitFor(() => {
+      expect(screen.getByText('Users List Page')).toBeInTheDocument();
+    });
   });
 });

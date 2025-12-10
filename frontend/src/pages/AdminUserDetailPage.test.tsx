@@ -267,9 +267,11 @@ describe('AdminUserDetailPage', () => {
     const submitButton = screen.getByRole('button', { name: /save changes/i });
     await user.click(submitButton);
     
-    // Button should show loading state
+    // Button should be disabled and show aria-busy while loading
     await waitFor(() => {
-      expect(screen.getByText(/saving/i)).toBeInTheDocument();
+      const button = screen.getByRole('button', { name: /save changes/i });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('aria-busy', 'true');
     });
   });
 

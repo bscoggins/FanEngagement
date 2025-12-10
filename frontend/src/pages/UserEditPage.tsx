@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import type { UpdateUserRequest, User } from '../types/api';
+import { Button } from '../components/Button';
 
 export const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -196,36 +197,20 @@ export const UserEditPage: React.FC = () => {
         )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-          <button
+          <Button
             type="submit"
-            disabled={isSaving}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: isSaving ? '#ccc' : '#0066cc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: isSaving ? 'not-allowed' : 'pointer',
-            }}
+            isLoading={isSaving}
+            variant="primary"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
-          <Link
-            to="/users"
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: '#fff',
-              color: '#333',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
+            Save Changes
+          </Button>
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={() => navigate('/users')}
           >
             Cancel
-          </Link>
+          </Button>
         </div>
       </form>
     </div>
