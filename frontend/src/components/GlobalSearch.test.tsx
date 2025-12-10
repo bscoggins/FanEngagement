@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { GlobalSearch } from './GlobalSearch';
 
@@ -192,7 +192,9 @@ describe('GlobalSearch', () => {
       const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
       const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
       
-      input.dispatchEvent(event);
+      act(() => {
+        input.dispatchEvent(event);
+      });
       
       // When no results, preventDefault should not be called
       expect(preventDefaultSpy).not.toHaveBeenCalled();

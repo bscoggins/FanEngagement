@@ -74,8 +74,9 @@ describe('PlatformAdminAuditLogPage', () => {
 
   it('renders the page heading', async () => {
     render(<PlatformAdminAuditLogPage />);
-    
-    expect(screen.getByTestId('platform-audit-log-heading')).toHaveTextContent('Platform Audit Log');
+
+    const heading = await screen.findByTestId('platform-audit-log-heading');
+    expect(heading).toHaveTextContent('Platform Audit Log');
   });
 
   it('loads and displays audit events', async () => {
@@ -135,10 +136,12 @@ describe('PlatformAdminAuditLogPage', () => {
     expect(screen.getByText('2 total events')).toBeInTheDocument();
   });
 
-  it('shows loading spinner initially', () => {
+  it('shows loading spinner initially', async () => {
     render(<PlatformAdminAuditLogPage />);
-    
-    expect(screen.getByText('Loading audit log...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Loading audit log...')).toBeInTheDocument();
+    });
   });
 
   it('shows empty state when no events found', async () => {

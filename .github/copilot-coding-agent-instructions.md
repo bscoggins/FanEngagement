@@ -88,6 +88,8 @@ Before changing code, analyze:
 
 Once the task is complete:
 
+- Run the entire backend + frontend unit suites via `./scripts/run-tests.sh` (or the equivalent individual scripts) and fix every failure, even if it appears unrelated, before claiming completion.
+- Run the full Playwright end-to-end suite via `./scripts/run-e2e.sh` (or `./scripts/run-all-tests.sh` if you prefer a single command) and resolve every failure before handing off the work.
 - Stop modifying files.
 - Summarize all changes.
 - Provide explicit build/test instructions.
