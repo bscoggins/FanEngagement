@@ -100,6 +100,15 @@ describe('AdminOrganizationProposalsPage', () => {
     );
   };
 
+  const openCreateProposalForm = async () => {
+    const createButton = screen.getByRole('button', { name: 'Create Proposal' });
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
+    });
+  };
+
   it('renders proposals heading', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(proposalsApi.getByOrganizationPaged).mockResolvedValueOnce(mockPagedProposals);
@@ -175,12 +184,9 @@ describe('AdminOrganizationProposalsPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const createButtons = screen.getAllByText('Create New Proposal');
-    fireEvent.click(createButtons[0]); // Click the button, not the form heading
-    
-    await waitFor(() => {
-      expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    });
+    await openCreateProposalForm();
+
+    expect(screen.getByText('Create New Proposal')).toBeInTheDocument();
   });
 
   it('creates a new proposal successfully', async () => {
@@ -194,12 +200,7 @@ describe('AdminOrganizationProposalsPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const createButtons = screen.getAllByText('Create New Proposal');
-    fireEvent.click(createButtons[0]);
-    
-    await waitFor(() => {
-      expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    });
+    await openCreateProposalForm();
     
     const titleInput = screen.getByLabelText(/title/i);
     fireEvent.change(titleInput, { target: { value: 'New Test Proposal' } });
@@ -227,13 +228,8 @@ describe('AdminOrganizationProposalsPage', () => {
     await waitFor(() => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
-    
-    const createButtons = screen.getAllByText('Create New Proposal');
-    fireEvent.click(createButtons[0]);
-    
-    await waitFor(() => {
-      expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    });
+
+    await openCreateProposalForm();
     
     const titleInput = screen.getByLabelText(/title/i);
     fireEvent.change(titleInput, { target: { value: 'New Test Proposal' } });
@@ -256,13 +252,8 @@ describe('AdminOrganizationProposalsPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const createButtons = screen.getAllByText('Create New Proposal');
-    fireEvent.click(createButtons[0]);
-    
-    await waitFor(() => {
-      expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    });
-    
+    await openCreateProposalForm();
+
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
     

@@ -18,6 +18,7 @@ const renderWithAuth = (authUserData: any) => {
     email: authUserData.email,
     displayName: authUserData.displayName,
     role: authUserData.role,
+    themePreference: authUserData.themePreference ?? authUserData.preferredTheme ?? 'Light',
   };
   
   localStorage.setItem('authToken', mockUser.token);
@@ -48,6 +49,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -75,6 +77,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
       };
 
       renderWithAuth(mockUser);
@@ -98,6 +101,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -118,6 +122,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
       };
 
       renderWithAuth(mockUser);
@@ -138,6 +143,7 @@ describe('MyAccountPage', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         role: 'Admin' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -169,6 +175,7 @@ describe('MyAccountPage', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         role: 'Admin' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -224,6 +231,7 @@ describe('MyAccountPage', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         role: 'Admin' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -254,6 +262,7 @@ describe('MyAccountPage', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         role: 'Admin' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -285,6 +294,7 @@ describe('MyAccountPage', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         role: 'Admin' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -303,6 +313,7 @@ describe('MyAccountPage', () => {
         email: 'admin@example.com',
         displayName: 'Admin User',
         role: 'Admin' as const,
+        themePreference: 'Light' as const,
         createdAt: '2024-01-15T10:00:00Z',
       };
 
@@ -316,6 +327,85 @@ describe('MyAccountPage', () => {
     });
   });
 
+  describe('Theme Preference', () => {
+    it('renders controls with current theme pre-selected', async () => {
+      const mockUser = {
+        id: 'user-2',
+        email: 'theme@example.com',
+        displayName: 'Theme Tester',
+        role: 'User' as const,
+        themePreference: 'Light' as const,
+      };
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByText('Interface Theme')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('theme-light-button')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('theme-dark-button')).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('updates theme preference when toggled', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 'user-2',
+        email: 'theme@example.com',
+        displayName: 'Theme Tester',
+        role: 'User' as const,
+        themePreference: 'Light' as const,
+      };
+
+      vi.mocked(usersApi.updateMyThemePreference).mockResolvedValue({ themePreference: 'Dark' });
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('theme-dark-button')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId('theme-dark-button'));
+
+      await waitFor(() => {
+        expect(usersApi.updateMyThemePreference).toHaveBeenCalledWith({ themePreference: 'Dark' });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Dark mode enabled')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('theme-dark-button')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('shows inline error when update fails', async () => {
+      const user = userEvent.setup();
+      const mockUser = {
+        id: 'user-2',
+        email: 'theme@example.com',
+        displayName: 'Theme Tester',
+        role: 'User' as const,
+        themePreference: 'Light' as const,
+      };
+
+      vi.mocked(usersApi.updateMyThemePreference).mockRejectedValue({
+        response: { data: { message: 'Unable to save preference' } },
+      });
+
+      renderWithAuth(mockUser);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('theme-dark-button')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId('theme-dark-button'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('theme-error')).toHaveTextContent('Unable to save preference');
+      });
+    });
+  });
+
   describe('Password Change', () => {
     it('displays password change form for all users', async () => {
       const mockUser = {
@@ -323,6 +413,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
       };
 
       renderWithAuth(mockUser);
@@ -350,6 +441,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
       };
 
       vi.mocked(usersApi.changeMyPassword).mockResolvedValue({ message: 'Password changed successfully' });
@@ -393,6 +485,7 @@ describe('MyAccountPage', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         role: 'User' as const,
+        themePreference: 'Light' as const,
       };
 
       renderWithAuth(mockUser);

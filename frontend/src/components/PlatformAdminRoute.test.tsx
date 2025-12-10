@@ -16,13 +16,14 @@ describe('PlatformAdminRoute', () => {
 
   it('shows protected content for platform admin users', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false },
+      user: { userId: 'admin-1', email: 'admin@test.com', displayName: 'Admin', role: 'Admin', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: true,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
 
     render(
@@ -45,6 +46,7 @@ describe('PlatformAdminRoute', () => {
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
 
     render(
@@ -60,13 +62,14 @@ describe('PlatformAdminRoute', () => {
 
   it('redirects to member dashboard for non-admin users', () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false },
+      user: { userId: 'user-1', email: 'user@test.com', displayName: 'User', role: 'User', token: 'token', mfaRequired: false, themePreference: 'Light' },
       token: 'token',
       isAuthenticated: true,
       isAdmin: false,
       login: vi.fn(),
       validateMfa: vi.fn(),
       logout: vi.fn(),
+      setUserThemePreference: vi.fn(),
     });
 
     render(

@@ -7,6 +7,7 @@
 The FanEngagement application features a comprehensive, role-based navigation system designed for accessibility, mobile-friendliness, and clear user orientation. This document describes the navigation architecture, configuration system, and usage patterns.
 
 **Key Features:**
+
 - **Role-Based Visibility**: Navigation items automatically show/hide based on user roles (PlatformAdmin, OrgAdmin, Member)
 - **Organization Context**: Org-scoped items appear only when a user has selected an organization and has appropriate permissions
 - **Type-Safe Configuration**: Centralized configuration with TypeScript interfaces ensures consistency
@@ -19,6 +20,13 @@ The FanEngagement application features a comprehensive, role-based navigation sy
 3. **Context Awareness**: Navigation adapts based on user role, active organization, and current location
 4. **Visual Clarity**: Clear active states, role badges, and section labeling
 5. **Developer Experience**: Single source of truth with clear patterns for adding new items
+
+### Visual Treatments & Dark Mode
+
+- **Shared gradient tokens**: Sidebar links across Platform Admin, Org Admin, and member shells all consume the `--nav-item-*` variables defined in `AdminLayout.css` and `Layout.css`. These tokens encapsulate hover washes, radial glows, and the active border, so every role sees the same depth treatment.
+- **Automatic dark mode**: `App.tsx` toggles the `theme-dark` class on `<body>` based on the user's `themePreference`. When dark mode is active the navigation tokens are overridden (brighter text, deeper gradients) without any component-specific conditionals.
+- **Accessibility**: Org Admin hover/active states now force `var(--color-text-primary)` in dark mode, ensuring contrast against the deep blue gradient. Use the same selector pattern (`body.theme-dark .your-nav-link`) if you introduce new custom link classes.
+- **Extension guideline**: When creating a new navigation surface, import the token set instead of hardcoding colors. This guarantees platform parity and removes manual QA for theme changes.
 
 ---
 
@@ -65,6 +73,7 @@ Navigation items can have one of three scope types that determine when they appe
 | **User** | `'user'` | Always visible to authenticated users | Personal pages: My Account, My Activity, My Organizations |
 
 **Scope Behavior:**
+
 - Items with no scope default to being visible based solely on role requirements
 - Org-scoped items require BOTH an active organization AND OrgAdmin/PlatformAdmin role for that org
 - User-scoped items have no role restrictions (all authenticated users see them)
@@ -82,6 +91,7 @@ type NavRole = 'PlatformAdmin' | 'OrgAdmin' | 'Member';
 | `Member` | Basic authenticated user | All authenticated users |
 
 **Role Hierarchy:**
+
 - `PlatformAdmin` users also have `Member` role
 - `OrgAdmin` users also have `Member` role
 - Role checks use "has any of" logic: if `roles: ['PlatformAdmin', 'OrgAdmin']`, the item shows if user has EITHER role
@@ -131,6 +141,7 @@ export const navItems: NavItem[] = [
 ### Step 2: Choose Appropriate Scope and Roles
 
 **For Platform-Wide Features:**
+
 ```typescript
 {
   id: 'platformFeature',
@@ -143,6 +154,7 @@ export const navItems: NavItem[] = [
 ```
 
 **For Organization-Scoped Features:**
+
 ```typescript
 {
   id: 'orgFeature',
@@ -155,6 +167,7 @@ export const navItems: NavItem[] = [
 ```
 
 **For User-Personal Features:**
+
 ```typescript
 {
   id: 'userFeature',
@@ -203,12 +216,14 @@ import { AdminMyNewFeaturePage } from '../pages/AdminMyNewFeaturePage';
 ### Step 5: Verify Visibility
 
 The navigation system will automatically:
+
 - ✅ Show the item only to users with the specified roles
 - ✅ Apply scope-based visibility (global/org/user)
 - ✅ Resolve `:orgId` placeholders when rendering links
 - ✅ Sort items by the `order` property
 
 **Testing Checklist:**
+
 - [ ] Item appears for users with correct role
 - [ ] Item hidden for users without correct role
 - [ ] Org-scoped items only show when org selected
@@ -228,6 +243,7 @@ Guard components protect routes by checking authentication and authorization bef
 **Location:** `/frontend/src/components/ProtectedRoute.tsx`
 
 **Usage:**
+
 ```tsx
 <Route path="/me/profile" element={
   <ProtectedRoute>
@@ -237,6 +253,7 @@ Guard components protect routes by checking authentication and authorization bef
 ```
 
 **Behavior:**
+
 - ✅ Authenticated → Renders children
 - ❌ Not authenticated → Redirects to `/login`
 
@@ -251,6 +268,7 @@ Guard components protect routes by checking authentication and authorization bef
 **Location:** `/frontend/src/components/AdminRoute.tsx`
 
 **Usage:**
+
 ```tsx
 // Strict: Only PlatformAdmin
 <Route path="/admin/users" element={
@@ -268,16 +286,19 @@ Guard components protect routes by checking authentication and authorization bef
 ```
 
 **Props:**
+
 - `allowOrgAdmin?: boolean` (default: `false`)
   - `false` → Only GlobalAdmin/PlatformAdmin can access
   - `true` → GlobalAdmin OR any user with at least one OrgAdmin membership can access
 
 **Behavior:**
+
 - ✅ PlatformAdmin → Always renders children
 - ✅ OrgAdmin (if `allowOrgAdmin={true}`) → Renders children
 - ❌ Otherwise → Redirects to `/`
 
 **When to Use:**
+
 - Platform-wide admin pages: `allowOrgAdmin={false}`
 - Admin layout wrapper (shared by platform and org admins): `allowOrgAdmin={true}`
 
@@ -290,6 +311,7 @@ Guard components protect routes by checking authentication and authorization bef
 **Location:** `/frontend/src/components/OrgAdminRoute.tsx`
 
 **Usage:**
+
 ```tsx
 <Route path="/admin/organizations/:orgId/edit" element={
   <OrgAdminRoute>
@@ -299,12 +321,14 @@ Guard components protect routes by checking authentication and authorization bef
 ```
 
 **Behavior:**
+
 - ✅ PlatformAdmin → Always renders children (has access to all orgs)
 - ✅ OrgAdmin for `:orgId` in route → Renders children
 - ❌ Not OrgAdmin for this specific org → Redirects to `/`
 - Shows loading state while memberships are being fetched
 
 **How It Works:**
+
 - Extracts `:orgId` from route parameters using `useParams()`
 - Checks if user has OrgAdmin role for that specific organization
 - PlatformAdmin users bypass the check (have access to all orgs)
@@ -320,6 +344,7 @@ Guard components protect routes by checking authentication and authorization bef
 **Location:** `/frontend/src/components/PlatformAdminRoute.tsx`
 
 **Usage:**
+
 ```tsx
 <Route path="/platform-admin/dashboard" element={
   <PlatformAdminRoute>
@@ -329,6 +354,7 @@ Guard components protect routes by checking authentication and authorization bef
 ```
 
 **Behavior:**
+
 - ✅ PlatformAdmin → Renders children
 - ❌ Not PlatformAdmin → Redirects to `/me/home`
 
@@ -357,6 +383,7 @@ The `useNavigation` hook provides filtered, resolved navigation items based on c
 **Location:** `/frontend/src/navigation/useNavigation.ts`
 
 **Usage:**
+
 ```tsx
 import { useNavigation } from '../navigation/useNavigation';
 
@@ -380,6 +407,7 @@ const MyComponent: React.FC = () => {
 ```
 
 **Options:**
+
 ```typescript
 interface UseNavigationOptions {
   scope?: NavScope;          // Filter by scope: 'global', 'org', or 'user'
@@ -389,6 +417,7 @@ interface UseNavigationOptions {
 ```
 
 **Returns:**
+
 ```typescript
 {
   navItems: ResolvedNavItem[];     // Filtered items with resolved paths
@@ -401,6 +430,7 @@ interface UseNavigationOptions {
 ```
 
 **Path Resolution:**
+
 - `:orgId` placeholders are replaced with `activeOrgId` from context
 - The special `home` item resolves to role-appropriate dashboard
 
@@ -409,6 +439,7 @@ interface UseNavigationOptions {
 `AdminLayout.tsx` demonstrates production usage of the navigation system:
 
 **Global Navigation (Platform-Wide):**
+
 ```tsx
 const globalNavItems = useMemo(() => {
   const items = getVisibleNavItems(navContext, { scope: 'global' });
@@ -417,6 +448,7 @@ const globalNavItems = useMemo(() => {
 ```
 
 **Organization Navigation (Org-Scoped):**
+
 ```tsx
 const orgNavItems = useMemo(() => {
   const items = getVisibleNavItems(navContext, { scope: 'org' });
@@ -425,6 +457,7 @@ const orgNavItems = useMemo(() => {
 ```
 
 **Rendering:**
+
 - Global items always appear in sidebar
 - Org items only appear when organization is selected AND user is OrgAdmin for that org
 - Items are automatically sorted by `order` property
@@ -443,6 +476,7 @@ Navigation items are sorted by their `order` property (lower values appear first
 | `30+` | Future Extensions | Reserved for additional sections |
 
 **Best Practices:**
+
 - Leave gaps between items (e.g., 10, 15, 20) to allow inserting items later
 - Group related items with similar order values
 - Use consistent ordering across global, org, and user scopes
@@ -459,12 +493,14 @@ Navigation items are sorted by their `order` property (lower values appear first
 1. ✅ **Check authentication:** User must be logged in
 2. ✅ **Check roles:** If item has `roles`, user must have at least one matching role
 3. ✅ **Check scope:** 
+
    - Org-scoped items require active organization AND OrgAdmin role for that org
    - Verify user has selected an organization via OrganizationSelector
 4. ✅ **Check spelling:** Ensure `id` is unique and not excluded elsewhere
 5. ✅ **Clear cache:** Hard refresh browser (`Cmd+Shift+R` / `Ctrl+Shift+R`)
 
 **Debugging:**
+
 ```tsx
 // Temporarily log navigation context
 const { navContext, navItems } = useNavigation();
@@ -480,14 +516,17 @@ console.log('Visible Items:', navItems);
 
 **Fixes:**
 1. **Add/update roles array:**
+
    ```typescript
    roles: ['PlatformAdmin', 'OrgAdmin'],  // Explicitly list allowed roles
    ```
 2. **Add appropriate scope:**
+
    ```typescript
    scope: 'org',  // Ensure org context is required
    ```
 3. **Verify route has matching guard:**
+
    ```tsx
    <OrgAdminRoute>  // Guard must match nav item requirements
      <YourPage />
@@ -504,17 +543,20 @@ console.log('Visible Items:', navItems);
 1. ✅ **User selected organization:** Check OrganizationSelector shows an org
 2. ✅ **User has OrgAdmin role:** Verify membership role for selected org
 3. ✅ **Path includes :orgId:** Org-scoped paths should use placeholder:
+
    ```typescript
    path: '/admin/organizations/:orgId/memberships',  // ✅ Correct
    path: '/admin/memberships',                        // ❌ Missing placeholder
    ```
 4. ✅ **Roles include OrgAdmin or PlatformAdmin:**
+
    ```typescript
    roles: ['PlatformAdmin', 'OrgAdmin'],  // ✅ Correct
    roles: ['Member'],                      // ❌ Wrong role
    ```
 
 **Debugging:**
+
 ```tsx
 const { activeOrg, navContext } = useNavigation();
 console.log('Active Org:', activeOrg);
@@ -529,12 +571,14 @@ console.log('Active Org Role:', navContext.activeOrgRole);
 
 **Common Causes:**
 1. **Wrong guard component for scope:**
+
    - Platform-wide pages → `PlatformAdminRoute`
    - Org-specific pages → `OrgAdminRoute`
    - Any admin page → `AdminRoute` with `allowOrgAdmin` prop
    - Any authenticated page → `ProtectedRoute`
 
 2. **Guard too strict:**
+
    ```tsx
    // ❌ Too strict—locks out OrgAdmins
    <AdminRoute allowOrgAdmin={false}>
@@ -548,6 +592,7 @@ console.log('Active Org Role:', navContext.activeOrgRole);
    ```
 
 3. **Missing orgId in route:**
+
    ```tsx
    // ❌ OrgAdminRoute can't extract orgId
    <Route path="/admin/memberships" element={...} />
@@ -563,6 +608,7 @@ console.log('Active Org Role:', navContext.activeOrgRole);
 **Symptoms:** Links show `:orgId` literal text instead of actual organization ID.
 
 **Fix:** Use resolved path from navigation hook:
+
 ```tsx
 // ❌ Wrong—uses raw path
 <Link to={item.path}>
@@ -582,6 +628,7 @@ The `getResolvedNavItem()` function automatically replaces `:orgId` with the act
 **Cause:** Navigation context is memoized and depends on `activeOrgId` and `activeOrgRole`.
 
 **Fix:** Ensure `OrgContext` properly updates and triggers re-renders:
+
 ```tsx
 // This should already work—check if OrgContext is properly provided
 const { activeOrg, setActiveOrg } = useActiveOrganization();
@@ -597,10 +644,12 @@ If the issue persists, check that:
 ## Best Practices
 
 ### 1. Keep Navigation Configuration Centralized
+
 - ❌ Don't hardcode nav items in components
 - ✅ Always define items in `navConfig.ts`
 
 ### 2. Use Descriptive IDs
+
 ```typescript
 // ❌ Bad
 id: 'page1',
@@ -610,6 +659,7 @@ id: 'manageMemberships',
 ```
 
 ### 3. Match Route Guards to Nav Item Roles
+
 ```typescript
 // navConfig.ts
 {
@@ -627,6 +677,7 @@ id: 'manageMemberships',
 ```
 
 ### 4. Use Consistent Path Patterns
+
 - Platform admin: `/platform-admin/*`
 - Organization admin: `/admin/organizations/:orgId/*`
 - Global admin pages: `/admin/*`
@@ -634,6 +685,7 @@ id: 'manageMemberships',
 
 ### 5. Test Role Combinations
 When adding new nav items, test with:
+
 - PlatformAdmin user
 - OrgAdmin user (with multiple org memberships)
 - Regular Member user
@@ -641,6 +693,7 @@ When adding new nav items, test with:
 
 ### 6. Document Complex Visibility Logic
 If a nav item has unusual visibility requirements, add a comment:
+
 ```typescript
 {
   id: 'specialFeature',
@@ -659,27 +712,32 @@ If a nav item has unusual visibility requirements, add a comment:
 ## Related Files
 
 ### Core Configuration
+
 - **`frontend/src/navigation/navConfig.ts`** - Central navigation configuration, item definitions, filtering logic
 - **`frontend/src/navigation/useNavigation.ts`** - React hook for accessing filtered navigation items
 - **`frontend/src/navigation/index.ts`** - Public exports for navigation system
 
 ### Guard Components
+
 - **`frontend/src/components/ProtectedRoute.tsx`** - Ensures authentication
 - **`frontend/src/components/AdminRoute.tsx`** - Platform/org admin guard with flexibility
 - **`frontend/src/components/OrgAdminRoute.tsx`** - Organization-specific admin guard
 - **`frontend/src/components/PlatformAdminRoute.tsx`** - Strict platform admin guard
 
 ### Layout & Rendering
+
 - **`frontend/src/components/AdminLayout.tsx`** - Admin UI with sidebar navigation
 - **`frontend/src/components/MobileNav.tsx`** - Mobile navigation drawer
 - **`frontend/src/routes/index.tsx`** - Route definitions with guards
 
 ### Context & State
+
 - **`frontend/src/contexts/OrgContext.tsx`** - Active organization state management
 - **`frontend/src/hooks/usePermissions.tsx`** - User permissions and memberships
 - **`frontend/src/auth/AuthContext.tsx`** - Authentication state
 
 ### Related Documentation
+
 - **`docs/frontend/keyboard-navigation.md`** - Keyboard shortcuts and accessibility
 - **`docs/architecture.md`** - Overall system architecture
 - **`docs/authorization.md`** - Authorization rules and patterns

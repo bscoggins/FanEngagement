@@ -112,6 +112,101 @@ const formatActivityDescription = (event: AuditEvent): string => {
   return `${actionType} ${resourceType}${resourceName ? ` "${resourceName}"` : ''}${organizationName ? ` in ${organizationName}` : ''}`;
 };
 
+const pageContainerStyle: React.CSSProperties = {
+  padding: '2rem',
+  maxWidth: '1200px',
+  margin: '0 auto',
+};
+
+const subtitleStyle: React.CSSProperties = {
+  color: 'var(--color-text-secondary)',
+  marginBottom: '2rem',
+};
+
+const filterGroupStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '0.5rem',
+  marginBottom: '2rem',
+  flexWrap: 'wrap',
+};
+
+const filterButtonBase: React.CSSProperties = {
+  padding: '0.5rem 1rem',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid transparent',
+  cursor: 'pointer',
+  fontWeight: 500,
+  transition: 'background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out)',
+};
+
+const filterButtonActive: React.CSSProperties = {
+  backgroundColor: 'var(--color-primary-600)',
+  color: 'var(--color-text-on-primary)',
+  borderColor: 'var(--color-primary-600)',
+  boxShadow: '0 0 0 6px rgba(0, 123, 255, 0.15)',
+};
+
+const filterButtonInactive: React.CSSProperties = {
+  backgroundColor: 'var(--color-surface)',
+  color: 'var(--color-primary-600)',
+  borderColor: 'var(--color-primary-200)',
+};
+
+const summaryTextStyle: React.CSSProperties = {
+  marginBottom: '1rem',
+  color: 'var(--color-text-secondary)',
+  fontSize: '0.9rem',
+};
+
+const activityListStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1rem',
+};
+
+const activityCardStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '1rem',
+  padding: '1rem',
+  border: '1px solid var(--color-border-default)',
+  borderRadius: 'var(--radius-md)',
+  backgroundColor: 'var(--color-surface)',
+  alignItems: 'flex-start',
+  boxShadow: 'var(--shadow-xs)',
+};
+
+const activityIconStyle: React.CSSProperties = {
+  fontSize: '1.5rem',
+  flexShrink: 0,
+};
+
+const activityDescriptionStyle: React.CSSProperties = {
+  margin: 0,
+  marginBottom: '0.25rem',
+  fontWeight: 500,
+  color: 'var(--color-text-primary)',
+};
+
+const activityMetaStyle: React.CSSProperties = {
+  fontSize: '0.875rem',
+  color: 'var(--color-text-secondary)',
+  display: 'flex',
+  gap: '1rem',
+  flexWrap: 'wrap',
+};
+
+const outcomeStyles: Record<'failure' | 'warning', React.CSSProperties> = {
+  failure: { color: 'var(--color-error-600)', fontWeight: 600 },
+  warning: { color: 'var(--color-warning-600)', fontWeight: 600 },
+};
+
+const paginationWrapperStyle: React.CSSProperties = { marginTop: '2rem' };
+
+const getFilterButtonStyle = (isActive: boolean): React.CSSProperties => ({
+  ...filterButtonBase,
+  ...(isActive ? filterButtonActive : filterButtonInactive),
+});
+
 export const MyActivityPage: React.FC = () => {
   const [activities, setActivities] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,35 +263,22 @@ export const MyActivityPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }} data-testid="my-activity-page">
+    <div style={pageContainerStyle} data-testid="my-activity-page">
       <h1>My Activity</h1>
-      <p style={{ color: '#6c757d', marginBottom: '2rem' }}>
+      <p style={subtitleStyle}>
         View your recent actions and activities across the platform.
       </p>
 
       {/* Date Filter */}
       <div
-        style={{
-          display: 'flex',
-          gap: '0.5rem',
-          marginBottom: '2rem',
-          flexWrap: 'wrap',
-        }}
+        style={filterGroupStyle}
         data-testid="activity-date-filters"
       >
         {(['7days', '30days', 'all'] as DateFilter[]).map((filter) => (
           <button
             key={filter}
             onClick={() => handleDateFilterChange(filter)}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: dateFilter === filter ? '#007bff' : 'white',
-              color: dateFilter === filter ? 'white' : '#007bff',
-              border: '1px solid #007bff',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: dateFilter === filter ? 'bold' : 'normal',
-            }}
+            style={getFilterButtonStyle(dateFilter === filter)}
             data-testid={`filter-${filter}`}
           >
             {getDateFilterLabel(filter)}
@@ -206,7 +288,7 @@ export const MyActivityPage: React.FC = () => {
 
       {/* Activity Count */}
       {totalCount > 0 && (
-        <div style={{ marginBottom: '1rem', color: '#6c757d', fontSize: '0.9rem' }}>
+        <div style={summaryTextStyle}>
           Showing {activities.length} of {totalCount} activities
         </div>
       )}
@@ -223,65 +305,37 @@ export const MyActivityPage: React.FC = () => {
       ) : (
         <>
           <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem',
-            }}
+            style={activityListStyle}
             data-testid="activity-list"
           >
             {activities.map((event) => (
               <div
                 key={event.id}
-                style={{
-                  display: 'flex',
-                  gap: '1rem',
-                  padding: '1rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  backgroundColor: 'white',
-                  alignItems: 'flex-start',
-                }}
+                style={activityCardStyle}
                 data-testid={`activity-item-${event.id}`}
               >
                 <span
-                  style={{
-                    fontSize: '1.5rem',
-                    flexShrink: 0,
-                  }}
+                  style={activityIconStyle}
                   aria-label={`${event.actionType} ${event.resourceType}`}
                 >
                   {getIconForAction(event.actionType, event.resourceType)}
                 </span>
                 <div style={{ flex: 1 }}>
                   <p
-                    style={{
-                      margin: 0,
-                      marginBottom: '0.25rem',
-                      fontWeight: 500,
-                    }}
+                    style={activityDescriptionStyle}
                     data-testid="activity-description"
                   >
                     {formatActivityDescription(event)}
                   </p>
                   <div
-                    style={{
-                      fontSize: '0.875rem',
-                      color: '#6c757d',
-                      display: 'flex',
-                      gap: '1rem',
-                      flexWrap: 'wrap',
-                    }}
+                    style={activityMetaStyle}
                   >
                     <span data-testid="activity-time">
                       {formatRelativeTime(event.timestamp)}
                     </span>
                     {event.outcome && event.outcome !== 'Success' && (
                       <span
-                        style={{
-                          color: event.outcome === 'Failure' || event.outcome === 'Denied' ? '#dc3545' : '#ffc107',
-                          fontWeight: 500,
-                        }}
+                        style={event.outcome === 'Failure' || event.outcome === 'Denied' ? outcomeStyles.failure : outcomeStyles.warning}
                         data-testid="activity-outcome"
                       >
                         {event.outcome}
@@ -295,7 +349,7 @@ export const MyActivityPage: React.FC = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div style={{ marginTop: '2rem' }}>
+            <div style={paginationWrapperStyle}>
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}

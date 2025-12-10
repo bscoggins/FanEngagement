@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { User, CreateUserRequest, UpdateUserRequest, PagedResult, ChangePasswordRequest, SetPasswordRequest } from '../types/api';
+import type { User, CreateUserRequest, UpdateUserRequest, PagedResult, ChangePasswordRequest, SetPasswordRequest, UpdateThemePreferenceRequest, ThemePreference } from '../types/api';
 
 export const usersApi = {
   getAll: async (): Promise<User[]> => {
@@ -45,6 +45,11 @@ export const usersApi = {
 
   setUserPassword: async (id: string, request: SetPasswordRequest): Promise<{ message: string }> => {
     const response = await apiClient.put<{ message: string }>(`/users/${id}/password`, request);
+    return response.data;
+  },
+
+  updateMyThemePreference: async (request: UpdateThemePreferenceRequest): Promise<{ themePreference: ThemePreference }> => {
+    const response = await apiClient.put<{ themePreference: ThemePreference }>('/users/me/theme', request);
     return response.data;
   },
 };

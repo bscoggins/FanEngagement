@@ -8,6 +8,48 @@ import { EmptyState } from '../components/EmptyState';
 import { parseApiError } from '../utils/errorUtils';
 import type { MembershipWithOrganizationDto } from '../types/api';
 
+const pageContainerStyle: React.CSSProperties = {
+  padding: '2rem',
+  maxWidth: '960px',
+  margin: '0 auto',
+};
+
+const organizationsGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gap: '1rem',
+  marginTop: '1rem',
+};
+
+const organizationCardStyle: React.CSSProperties = {
+  padding: '1.5rem',
+  border: '1px solid var(--color-border-default)',
+  borderRadius: 'var(--radius-md)',
+  backgroundColor: 'var(--color-surface)',
+  boxShadow: 'var(--shadow-xs)',
+};
+
+const organizationLinkStyle: React.CSSProperties = {
+  color: 'var(--color-primary-600)',
+  textDecoration: 'none',
+};
+
+const organizationMetaStyle: React.CSSProperties = {
+  marginTop: '0.5rem',
+  color: 'var(--color-text-secondary)',
+};
+
+const viewDetailsButtonStyle: React.CSSProperties = {
+  display: 'inline-block',
+  marginTop: '1rem',
+  padding: '0.5rem 1rem',
+  backgroundColor: 'var(--color-primary-600)',
+  color: 'var(--color-text-on-primary)',
+  textDecoration: 'none',
+  borderRadius: 'var(--radius-sm)',
+  fontWeight: 600,
+  transition: 'background-color var(--duration-fast) var(--ease-out)',
+};
+
 export const MyOrganizationsPage: React.FC = () => {
   const { user } = useAuth();
   const [memberships, setMemberships] = useState<MembershipWithOrganizationDto[]>([]);
@@ -45,53 +87,39 @@ export const MyOrganizationsPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={pageContainerStyle}>
       <h1>My Organizations</h1>
 
       {memberships.length === 0 ? (
         <EmptyState message="You are not a member of any organizations yet." />
       ) : (
-        <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
+        <div style={organizationsGridStyle}>
           {memberships.map((membership) => (
             <div
               key={membership.id}
-              style={{
-                padding: '1.5rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                backgroundColor: 'white',
-              }}
+              style={organizationCardStyle}
             >
               <h2 style={{ marginTop: 0 }}>
                 <Link
                   to={`/me/organizations/${membership.organizationId}`}
-                  style={{ color: '#007bff', textDecoration: 'none' }}
+                  style={organizationLinkStyle}
                 >
                   {membership.organizationName}
                 </Link>
               </h2>
-              <div style={{ marginTop: '0.5rem' }}>
+              <div style={organizationMetaStyle}>
                 <strong>Role:</strong> {membership.role}
               </div>
-              <div style={{ marginTop: '0.5rem', color: '#6c757d' }}>
+              <div style={organizationMetaStyle}>
                 <strong>Joined:</strong>{' '}
                 {new Date(membership.createdAt).toLocaleDateString()}
               </div>
-              <div style={{ marginTop: '1rem' }}>
-                <Link
-                  to={`/me/organizations/${membership.organizationId}`}
-                  style={{
-                    display: 'inline-block',
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '4px',
-                  }}
-                >
-                  View Details
-                </Link>
-              </div>
+              <Link
+                to={`/me/organizations/${membership.organizationId}`}
+                style={viewDetailsButtonStyle}
+              >
+                View Details
+              </Link>
             </div>
           ))}
         </div>

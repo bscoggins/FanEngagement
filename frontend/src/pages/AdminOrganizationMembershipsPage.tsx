@@ -122,7 +122,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="admin-page">
         <h1>Manage Memberships</h1>
         <LoadingSpinner message="Loading memberships..." />
       </div>
@@ -131,7 +131,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
 
   if (!organization) {
     return (
-      <div>
+      <div className="admin-page">
         <h1>Manage Memberships</h1>
         <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
       </div>
@@ -139,58 +139,37 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
           <h1>Memberships</h1>
-          <div style={{ color: '#666', fontSize: '1rem' }}>
+          <div className="admin-page-subtitle">
             Organization: {organization.name}
           </div>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: showAddForm ? '#6c757d' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          {showAddForm ? 'Cancel' : 'Add Member'}
-        </button>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={() => setShowAddForm(!showAddForm)}
+            className={`admin-button ${showAddForm ? 'admin-button-neutral' : 'admin-button-success'}`}
+          >
+            {showAddForm ? 'Cancel' : 'Add Member'}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-        >
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem' }}>
           {error}
         </div>
       )}
 
       {showAddForm && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            padding: '1.5rem',
-            marginBottom: '1.5rem',
-          }}
-        >
+        <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Add New Member</h2>
           <form onSubmit={handleAddMembership}>
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="userId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+              <label htmlFor="userId" className="admin-form-label">
                 Select User *
               </label>
               <select
@@ -199,13 +178,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
+                className="admin-select"
               >
                 <option value="">-- Select a user --</option>
                 {availableUsers.map((user) => (
@@ -217,7 +190,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="role" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+              <label htmlFor="role" className="admin-form-label">
                 Role *
               </label>
               <select
@@ -225,13 +198,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
                 value={selectedRole}
                 onChange={handleRoleChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
+                className="admin-select"
               >
                 <option value="Member">Member</option>
                 <option value="OrgAdmin">Organization Admin</option>
@@ -241,14 +208,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
             <button
               type="submit"
               disabled={isAdding || !selectedUserId}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: isAdding || !selectedUserId ? '#ccc' : '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isAdding || !selectedUserId ? 'not-allowed' : 'pointer',
-              }}
+              className="admin-button admin-button-success"
             >
               {isAdding ? 'Adding...' : 'Add Member'}
             </button>
@@ -259,57 +219,44 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       {memberships.length === 0 ? (
         <EmptyState message="No members found. Add members to this organization." />
       ) : (
-        <div style={{ 
-          backgroundColor: 'white', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          overflow: 'hidden'
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
             <thead>
-              <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Name</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Email</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Role</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Joined</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Actions</th>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {memberships.map((membership) => (
-                <tr key={membership.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '1rem' }}>{membership.userDisplayName}</td>
-                  <td style={{ padding: '1rem' }}>{membership.userEmail}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '12px',
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      backgroundColor: membership.role === 'OrgAdmin' ? '#e3f2fd' : '#f5f5f5',
-                      color: membership.role === 'OrgAdmin' ? '#1976d2' : '#666',
-                    }}>
+                <tr key={membership.id}>
+                  <td>{membership.userDisplayName}</td>
+                  <td>{membership.userEmail}</td>
+                  <td>
+                    <span
+                      className={`admin-pill ${membership.role === 'OrgAdmin' ? 'admin-pill-accent' : ''}`}
+                    >
                       {getRoleFullName(membership.role)}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem', color: '#666', fontSize: '0.9rem' }}>
-                    {new Date(membership.createdAt).toLocaleDateString()}
+                  <td>
+                    <span className="admin-secondary-text">
+                      {new Date(membership.createdAt).toLocaleDateString()}
+                    </span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <button
-                      onClick={() => handleRemoveMembership(membership.userId, membership.userDisplayName)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      Remove
-                    </button>
+                  <td>
+                    <div className="admin-table-actions">
+                      <button
+                        type="button"
+                        className="admin-button admin-button-danger"
+                        onClick={() => handleRemoveMembership(membership.userId, membership.userDisplayName)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

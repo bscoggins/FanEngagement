@@ -8,5 +8,6 @@ public class UserDto
     public string Email { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public UserRole Role { get; set; }
+    public UserThemePreference ThemePreference { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
