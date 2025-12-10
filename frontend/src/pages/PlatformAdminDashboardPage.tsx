@@ -205,7 +205,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
         <QuickActionCard
           to="/admin/organizations/new"
           icon="➕"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-light-blue"
           title="Create Organization"
           description="Set up a new organization with custom governance and share types."
           actionText="Create new"
@@ -215,7 +215,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
         <QuickActionCard
           to="/admin/users"
           icon="👥"
-          iconBackground="#f3e5f5"
+          iconBgClass="bg-light-purple"
           title="Manage Users"
           description="View, create, and manage user accounts across the platform."
           actionText="Go to Users"
@@ -225,7 +225,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
         <QuickActionCard
           to="/admin/organizations"
           icon="🏢"
-          iconBackground="#e8f5e9"
+          iconBgClass="bg-light-green"
           title="View Organizations"
           description="Browse and configure all organizations and their settings."
           actionText="Go to Organizations"
@@ -235,7 +235,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
         <QuickActionCard
           to="/admin/dev-tools"
           icon="🛠️"
-          iconBackground="#fff3e0"
+          iconBgClass="bg-light-orange"
           title="Dev Tools"
           description="Development utilities for seeding data and testing."
           actionText="Go to Dev Tools"

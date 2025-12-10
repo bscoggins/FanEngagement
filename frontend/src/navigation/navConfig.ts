@@ -111,10 +111,18 @@ export const navItems: NavItem[] = [
   {
     id: 'adminDashboard',
     label: 'Admin Dashboard',
-    path: '/admin',
+    path: '/admin/dashboard',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'global',
     order: 12,
+  },
+  {
+    id: 'adminMyAccount',
+    label: 'My Account',
+    path: '/admin/my-account',
+    roles: ['PlatformAdmin', 'OrgAdmin'],
+    scope: 'global',
+    order: 16,
   },
   {
     id: 'manageUsers',
@@ -255,7 +263,7 @@ export const getDefaultHomeRoute = (context: NavContext): string => {
   if (context.activeOrgId && context.activeOrgRole) {
     // OrgAdmin for active org goes to admin dashboard
     if (context.activeOrgRole === 'OrgAdmin') {
-      return '/admin';
+      return '/admin/dashboard';
     }
     // Member of active org goes to member dashboard
     return '/me/home';
@@ -263,7 +271,7 @@ export const getDefaultHomeRoute = (context: NavContext): string => {
 
   // No active org selected - check if user is OrgAdmin in any org
   if (context.memberships.some(m => m.role === 'OrgAdmin')) {
-    return '/admin';
+    return '/admin/dashboard';
   }
 
   // Regular members go to member dashboard

@@ -55,6 +55,11 @@ body.theme-dark .admin-page {
   padding: var(--spacing-4);
 }
 
+.admin-card.admin-card-access {
+  background-color: var(--color-info-alpha-12);
+  border-color: var(--color-info-alpha-25);
+}
+
 .admin-alert {
   border-radius: var(--radius-md);
   padding: var(--spacing-4);
@@ -396,6 +401,87 @@ body.theme-dark .admin-textarea:disabled {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-subtle);
   background-color: var(--color-background);
+}
+
+.admin-dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.admin-dashboard-stat-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* StatCard accent color variants */
+.admin-dashboard-stat-card.accent-blue {
+  border-top: 3px solid var(--color-accent-blue);
+}
+
+.admin-dashboard-stat-card.accent-teal {
+  border-top: 3px solid var(--color-accent-teal);
+}
+
+.admin-dashboard-stat-card.accent-orange {
+  border-top: 3px solid var(--color-accent-orange);
+}
+
+.admin-dashboard-stat-card.accent-pink {
+  border-top: 3px solid var(--color-accent-pink);
+}
+
+.admin-dashboard-stat-value {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.admin-dashboard-stat-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.admin-dashboard-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.admin-dashboard-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-6);
+}
+
+.admin-dashboard-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--spacing-4) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.admin-dashboard-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.admin-dashboard-list-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 body.theme-dark .admin-info-grid {

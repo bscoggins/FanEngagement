@@ -80,7 +80,7 @@ describe('useRoleBasedNavigation', () => {
     await result.current.navigateToDefaultRoute(orgAdminUser);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/admin', undefined);
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/dashboard', undefined);
     });
     expect(membershipsApi.getByUserId).toHaveBeenCalledWith('orgadmin-123');
   });
