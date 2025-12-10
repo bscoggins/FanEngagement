@@ -277,7 +277,7 @@ describe('LoginPage', () => {
 
     // Button should be disabled and show aria-busy while loading
     await waitFor(() => {
-      const button = screen.getByRole('button', { name: /log in/i });
+      const button = screen.getByRole('button', { name: /logging in/i });
       expect(button).toBeDisabled();
       expect(button).toHaveAttribute('aria-busy', 'true');
     });
