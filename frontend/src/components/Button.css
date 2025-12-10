@@ -310,6 +310,7 @@
 }
 
 /* ===== Dark Mode Support (Foundation) ===== */
+/* Combines both prefers-color-scheme and manual theme toggle */
 @media (prefers-color-scheme: dark) {
   .btn--secondary {
     background-color: var(--color-neutral-700);
@@ -336,12 +337,13 @@
   }
   
   .btn--outline:hover:not(:disabled) {
-    background-color: rgba(0, 123, 255, 0.1);
+    background-color: var(--color-primary-alpha-10);
     color: var(--color-primary-300);
     border-color: var(--color-primary-300);
   }
 }
 
+/* Manual theme toggle support */
 body.theme-dark .btn--secondary {
   background-color: var(--color-neutral-700);
   color: var(--color-text-inverse);
@@ -367,7 +369,7 @@ body.theme-dark .btn--outline {
 }
 
 body.theme-dark .btn--outline:hover:not(:disabled) {
-  background-color: rgba(0, 123, 255, 0.1);
+  background-color: var(--color-primary-alpha-10);
   color: var(--color-primary-300);
   border-color: var(--color-primary-300);
 }

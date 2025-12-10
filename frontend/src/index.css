@@ -76,6 +76,7 @@
   --color-overlay-light: rgba(255, 255, 255, 0.1);
   --color-overlay-medium: rgba(255, 255, 255, 0.15);
   --color-overlay-dark: rgba(0, 0, 0, 0.5);
+  --color-primary-alpha-10: rgba(0, 123, 255, 0.1);  /* Primary color with 10% opacity */
 
   /* ===== Focus Ring ===== */
   --focus-ring-color: var(--color-primary-700);
