@@ -198,7 +198,7 @@ Potential improvements for future iterations:
 
 ## Testing Coverage
 
-**27 test cases** covering:
+**28 test cases** covering:
 - ✅ All 6 variants
 - ✅ All 3 sizes
 - ✅ All 2 shapes
