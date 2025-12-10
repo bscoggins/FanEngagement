@@ -269,17 +269,21 @@ describe('AdminOrganizationProposalsPage', () => {
     renderPage();
     
     await waitFor(() => {
-      // Look for status badges within the proposals, not the filter dropdown
-      const openBadge = screen.getByText((content, element) => {
-        return element?.tagName === 'SPAN' && 
-               (element as HTMLElement)?.style.backgroundColor === 'rgb(40, 167, 69)' && 
-               content === 'Open';
-      });
-      const draftBadge = screen.getByText((content, element) => {
-        return element?.tagName === 'SPAN' && 
-               (element as HTMLElement)?.style.backgroundColor === 'rgb(108, 117, 125)' && 
-               content === 'Draft';
-      });
+      // Look for status badges by checking for badge classes
+      const badges = screen.getAllByText(/^(Open|Draft)$/);
+      
+      // Find the Open badge - should have success variant class
+      const openBadge = badges.find(el => 
+        el.textContent === 'Open' && 
+        el.parentElement?.classList.contains('badge--success')
+      );
+      
+      // Find the Draft badge - should have neutral variant class
+      const draftBadge = badges.find(el => 
+        el.textContent === 'Draft' && 
+        el.parentElement?.classList.contains('badge--neutral')
+      );
+      
       expect(openBadge).toBeInTheDocument();
       expect(draftBadge).toBeInTheDocument();
     });

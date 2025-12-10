@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badge Component Showcase - FanEngagement Design System</title>
+  <!-- 
+    Note: This file expects to be served from the repository root or via a dev server.
+    If styles don't load, ensure the paths to index.css and Badge.css are correct
+    relative to where this file is being served from.
+  -->
+  <link rel="stylesheet" href="../../index.css">
+  <link rel="stylesheet" href="./Badge.css">
+  <style>
+    body {
+      padding: var(--spacing-8);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .showcase-section {
+      margin-bottom: var(--spacing-12);
+    }
+    
+    .showcase-section h2 {
+      margin-bottom: var(--spacing-6);
+      padding-bottom: var(--spacing-3);
+      border-bottom: 2px solid var(--color-border-default);
+      color: var(--color-text-primary);
+    }
+    
+    .showcase-section h3 {
+      margin-top: var(--spacing-6);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-lg);
+    }
+    
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-6);
+      align-items: center;
+    }
+    
+    .badge-demo {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+      padding: var(--spacing-4);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .badge-demo-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .code-block {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-inverse);
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      overflow-x: auto;
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .example-section {
+      padding: var(--spacing-6);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--spacing-6);
+    }
+
+    .example-section h4 {
+      margin-top: 0;
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-primary);
+      font-size: var(--font-size-base);
+    }
+    
+    .theme-toggle {
+      position: fixed;
+      top: var(--spacing-4);
+      right: var(--spacing-4);
+      padding: var(--spacing-2) var(--spacing-4);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-family: var(--font-family-sans);
+      font-size: var(--font-size-sm);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-toggle:hover {
+      background: var(--color-neutral-100);
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+  
+  <header style="margin-bottom: var(--spacing-12);">
+    <h1 style="margin-bottom: var(--spacing-2);">Badge Component Showcase</h1>
+    <p style="color: var(--color-text-secondary); font-size: var(--font-size-lg);">
+      Status indicators and labels for the FanEngagement Design System
+    </p>
+  </header>
+
+  <!-- Variants Section -->
+  <section class="showcase-section">
+    <h2>Variants</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Six semantic variants for different contexts
+    </p>
+    
+    <div class="badge-row">
+      <div class="badge-demo">
+        <span class="badge-demo-label">Default</span>
+        <span class="badge badge--default badge--md badge--rounded">
+          <span class="badge__text">Default</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Success</span>
+        <span class="badge badge--success badge--md badge--rounded">
+          <span class="badge__text">Success</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Warning</span>
+        <span class="badge badge--warning badge--md badge--rounded">
+          <span class="badge__text">Warning</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Error</span>
+        <span class="badge badge--error badge--md badge--rounded">
+          <span class="badge__text">Error</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Info</span>
+        <span class="badge badge--info badge--md badge--rounded">
+          <span class="badge__text">Info</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Neutral</span>
+        <span class="badge badge--neutral badge--md badge--rounded">
+          <span class="badge__text">Neutral</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="code-block">
+&lt;Badge variant="default"&gt;Default&lt;/Badge&gt;
+&lt;Badge variant="success"&gt;Success&lt;/Badge&gt;
+&lt;Badge variant="warning"&gt;Warning&lt;/Badge&gt;
+&lt;Badge variant="error"&gt;Error&lt;/Badge&gt;
+&lt;Badge variant="info"&gt;Info&lt;/Badge&gt;
+&lt;Badge variant="neutral"&gt;Neutral&lt;/Badge&gt;
+    </div>
+  </section>
+
+  <!-- Sizes Section -->
+  <section class="showcase-section">
+    <h2>Sizes</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Three sizes: small (sm), medium (md - default), and large (lg)
+    </p>
+    
+    <div class="badge-row">
+      <div class="badge-demo">
+        <span class="badge-demo-label">Small</span>
+        <span class="badge badge--success badge--sm badge--rounded">
+          <span class="badge__text">Small Badge</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Medium (default)</span>
+        <span class="badge badge--success badge--md badge--rounded">
+          <span class="badge__text">Medium Badge</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Large</span>
+        <span class="badge badge--success badge--lg badge--rounded">
+          <span class="badge__text">Large Badge</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="code-block">
+&lt;Badge variant="success" size="sm"&gt;Small Badge&lt;/Badge&gt;
+&lt;Badge variant="success" size="md"&gt;Medium Badge&lt;/Badge&gt;
+&lt;Badge variant="success" size="lg"&gt;Large Badge&lt;/Badge&gt;
+    </div>
+  </section>
+
+  <!-- Shapes Section -->
+  <section class="showcase-section">
+    <h2>Shapes</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Two shape options: rounded (default) and pill
+    </p>
+    
+    <div class="badge-row">
+      <div class="badge-demo">
+        <span class="badge-demo-label">Rounded (default)</span>
+        <span class="badge badge--info badge--md badge--rounded">
+          <span class="badge__text">Rounded</span>
+        </span>
+      </div>
+      
+      <div class="badge-demo">
+        <span class="badge-demo-label">Pill</span>
+        <span class="badge badge--info badge--md badge--pill">
+          <span class="badge__text">Pill Shape</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="code-block">
+&lt;Badge variant="info" shape="rounded"&gt;Rounded&lt;/Badge&gt;
+&lt;Badge variant="info" shape="pill"&gt;Pill Shape&lt;/Badge&gt;
+    </div>
+  </section>
+
+  <!-- Icon Support Section -->
+  <section class="showcase-section">
+    <h2>Icon Support</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Optional icons can be added before the text
+    </p>
+    
+    <div class="badge-row">
+      <span class="badge badge--success badge--md badge--rounded">
+        <span class="badge__icon" aria-hidden="true">✓</span>
+        <span class="badge__text">Verified</span>
+      </span>
+      
+      <span class="badge badge--warning badge--md badge--rounded">
+        <span class="badge__icon" aria-hidden="true">⚠️</span>
+        <span class="badge__text">Warning</span>
+      </span>
+      
+      <span class="badge badge--error badge--md badge--rounded">
+        <span class="badge__icon" aria-hidden="true">✗</span>
+        <span class="badge__text">Failed</span>
+      </span>
+      
+      <span class="badge badge--info badge--md badge--rounded">
+        <span class="badge__icon" aria-hidden="true">ℹ️</span>
+        <span class="badge__text">Info</span>
+      </span>
+      
+      <span class="badge badge--default badge--md badge--rounded">
+        <span class="badge__icon" aria-hidden="true">🔔</span>
+        <span class="badge__text">Notification</span>
+      </span>
+    </div>
+
+    <div class="code-block">
+&lt;Badge variant="success" icon="✓"&gt;Verified&lt;/Badge&gt;
+&lt;Badge variant="warning" icon="⚠️"&gt;Warning&lt;/Badge&gt;
+&lt;Badge variant="error" icon="✗"&gt;Failed&lt;/Badge&gt;
+&lt;Badge variant="info" icon="ℹ️"&gt;Info&lt;/Badge&gt;
+&lt;Badge variant="default" icon="🔔"&gt;Notification&lt;/Badge&gt;
+    </div>
+  </section>
+
+  <!-- Dot Indicator Section -->
+  <section class="showcase-section">
+    <h2>Dot Indicator</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Compact status display with a dot indicator
+    </p>
+    
+    <div class="badge-row">
+      <span class="badge badge--success badge--sm badge--pill">
+        <span class="badge__dot" aria-hidden="true"></span>
+        <span class="badge__text">Online</span>
+      </span>
+      
+      <span class="badge badge--error badge--sm badge--pill">
+        <span class="badge__dot" aria-hidden="true"></span>
+        <span class="badge__text">Offline</span>
+      </span>
+      
+      <span class="badge badge--warning badge--sm badge--pill">
+        <span class="badge__dot" aria-hidden="true"></span>
+        <span class="badge__text">Away</span>
+      </span>
+      
+      <span class="badge badge--neutral badge--sm badge--pill">
+        <span class="badge__dot" aria-hidden="true"></span>
+        <span class="badge__text">Inactive</span>
+      </span>
+    </div>
+
+    <div class="code-block">
+&lt;Badge variant="success" size="sm" shape="pill" dot&gt;Online&lt;/Badge&gt;
+&lt;Badge variant="error" size="sm" shape="pill" dot&gt;Offline&lt;/Badge&gt;
+&lt;Badge variant="warning" size="sm" shape="pill" dot&gt;Away&lt;/Badge&gt;
+&lt;Badge variant="neutral" size="sm" shape="pill" dot&gt;Inactive&lt;/Badge&gt;
+    </div>
+  </section>
+
+  <!-- Real-world Examples Section -->
+  <section class="showcase-section">
+    <h2>Real-world Examples</h2>
+    
+    <div class="example-section">
+      <h4>Proposal Status Badges</h4>
+      <div class="badge-row">
+        <span class="badge badge--neutral badge--md badge--rounded">
+          <span class="badge__text">Draft</span>
+        </span>
+        <span class="badge badge--success badge--md badge--rounded">
+          <span class="badge__text">Open</span>
+        </span>
+        <span class="badge badge--error badge--md badge--rounded">
+          <span class="badge__text">Closed</span>
+        </span>
+        <span class="badge badge--default badge--md badge--rounded">
+          <span class="badge__text">Finalized</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="example-section">
+      <h4>User Status Indicators</h4>
+      <div class="badge-row">
+        <span class="badge badge--success badge--sm badge--pill">
+          <span class="badge__dot" aria-hidden="true"></span>
+          <span class="badge__text">Active</span>
+        </span>
+        <span class="badge badge--warning badge--sm badge--pill">
+          <span class="badge__dot" aria-hidden="true"></span>
+          <span class="badge__text">Pending</span>
+        </span>
+        <span class="badge badge--error badge--sm badge--pill">
+          <span class="badge__dot" aria-hidden="true"></span>
+          <span class="badge__text">Suspended</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="example-section">
+      <h4>Notification Badges</h4>
+      <div class="badge-row">
+        <span class="badge badge--error badge--sm badge--pill">
+          <span class="badge__text">3</span>
+        </span>
+        <span class="badge badge--info badge--sm badge--pill">
+          <span class="badge__text">12</span>
+        </span>
+        <span class="badge badge--default badge--sm badge--pill">
+          <span class="badge__text">99+</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="example-section">
+      <h4>Feature Tags</h4>
+      <div class="badge-row">
+        <span class="badge badge--info badge--sm badge--pill">
+          <span class="badge__text">New</span>
+        </span>
+        <span class="badge badge--success badge--sm badge--pill">
+          <span class="badge__icon" aria-hidden="true">✓</span>
+          <span class="badge__text">Beta</span>
+        </span>
+        <span class="badge badge--warning badge--sm badge--pill">
+          <span class="badge__text">Experimental</span>
+        </span>
+        <span class="badge badge--neutral badge--sm badge--pill">
+          <span class="badge__text">Deprecated</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- All Combinations Section -->
+  <section class="showcase-section">
+    <h2>All Combinations</h2>
+    <p style="margin-bottom: var(--spacing-6); color: var(--color-text-secondary);">
+      Comprehensive view of all variants, sizes, and shapes
+    </p>
+    
+    <h3>Small Size</h3>
+    <div class="badge-row">
+      <span class="badge badge--default badge--sm badge--rounded"><span class="badge__text">Default</span></span>
+      <span class="badge badge--success badge--sm badge--rounded"><span class="badge__text">Success</span></span>
+      <span class="badge badge--warning badge--sm badge--rounded"><span class="badge__text">Warning</span></span>
+      <span class="badge badge--error badge--sm badge--rounded"><span class="badge__text">Error</span></span>
+      <span class="badge badge--info badge--sm badge--rounded"><span class="badge__text">Info</span></span>
+      <span class="badge badge--neutral badge--sm badge--rounded"><span class="badge__text">Neutral</span></span>
+    </div>
+    
+    <div class="badge-row">
+      <span class="badge badge--default badge--sm badge--pill"><span class="badge__text">Default</span></span>
+      <span class="badge badge--success badge--sm badge--pill"><span class="badge__text">Success</span></span>
+      <span class="badge badge--warning badge--sm badge--pill"><span class="badge__text">Warning</span></span>
+      <span class="badge badge--error badge--sm badge--pill"><span class="badge__text">Error</span></span>
+      <span class="badge badge--info badge--sm badge--pill"><span class="badge__text">Info</span></span>
+      <span class="badge badge--neutral badge--sm badge--pill"><span class="badge__text">Neutral</span></span>
+    </div>
+
+    <h3>Medium Size (Default)</h3>
+    <div class="badge-row">
+      <span class="badge badge--default badge--md badge--rounded"><span class="badge__text">Default</span></span>
+      <span class="badge badge--success badge--md badge--rounded"><span class="badge__text">Success</span></span>
+      <span class="badge badge--warning badge--md badge--rounded"><span class="badge__text">Warning</span></span>
+      <span class="badge badge--error badge--md badge--rounded"><span class="badge__text">Error</span></span>
+      <span class="badge badge--info badge--md badge--rounded"><span class="badge__text">Info</span></span>
+      <span class="badge badge--neutral badge--md badge--rounded"><span class="badge__text">Neutral</span></span>
+    </div>
+    
+    <div class="badge-row">
+      <span class="badge badge--default badge--md badge--pill"><span class="badge__text">Default</span></span>
+      <span class="badge badge--success badge--md badge--pill"><span class="badge__text">Success</span></span>
+      <span class="badge badge--warning badge--md badge--pill"><span class="badge__text">Warning</span></span>
+      <span class="badge badge--error badge--md badge--pill"><span class="badge__text">Error</span></span>
+      <span class="badge badge--info badge--md badge--pill"><span class="badge__text">Info</span></span>
+      <span class="badge badge--neutral badge--md badge--pill"><span class="badge__text">Neutral</span></span>
+    </div>
+
+    <h3>Large Size</h3>
+    <div class="badge-row">
+      <span class="badge badge--default badge--lg badge--rounded"><span class="badge__text">Default</span></span>
+      <span class="badge badge--success badge--lg badge--rounded"><span class="badge__text">Success</span></span>
+      <span class="badge badge--warning badge--lg badge--rounded"><span class="badge__text">Warning</span></span>
+      <span class="badge badge--error badge--lg badge--rounded"><span class="badge__text">Error</span></span>
+      <span class="badge badge--info badge--lg badge--rounded"><span class="badge__text">Info</span></span>
+      <span class="badge badge--neutral badge--lg badge--rounded"><span class="badge__text">Neutral</span></span>
+    </div>
+    
+    <div class="badge-row">
+      <span class="badge badge--default badge--lg badge--pill"><span class="badge__text">Default</span></span>
+      <span class="badge badge--success badge--lg badge--pill"><span class="badge__text">Success</span></span>
+      <span class="badge badge--warning badge--lg badge--pill"><span class="badge__text">Warning</span></span>
+      <span class="badge badge--error badge--lg badge--pill"><span class="badge__text">Error</span></span>
+      <span class="badge badge--info badge--lg badge--pill"><span class="badge__text">Info</span></span>
+      <span class="badge badge--neutral badge--lg badge--pill"><span class="badge__text">Neutral</span></span>
+    </div>
+  </section>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('theme-dark');
+    }
+  </script>
+</body>
+</html>
