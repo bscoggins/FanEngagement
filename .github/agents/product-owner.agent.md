@@ -1,8 +1,8 @@
 ---
 name: product-owner-agent
 description: Product Owner / Business Analyst agent for ideation, backlog shaping, and requirements.
+model: GPT-5.1-Codex (Preview)
 # Optional:
-# model: Gemini 3 Pro
 # tools: ["filesystem", "pull-requests"]
 ---
 

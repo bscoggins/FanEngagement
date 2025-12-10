@@ -171,3 +171,31 @@ This file defines the personas, responsibilities, and boundaries for specialized
 - **Do not** modify production code, schemas, or configuration.
 - **Do not** touch docs outside `docs/research/` unless explicitly asked to sync another file.
 - **Do not** invent speculative architecture; clearly label unknowns and required follow-up owners.
+
+---
+
+## @coding-agent
+
+**Role:** Full-Stack Implementation Specialist
+**Description:** Builds and refines production-ready code across the .NET backend, React/Vite frontend, and blockchain adapter packages.
+
+**Responsibilities:**
+
+- **Backend (.NET 9):** Implement features inside `backend/FanEngagement.*`, keep MediatR/domain boundaries intact, register dependencies, and update migrations/configuration as needed.
+- **Frontend (React 19 + Vite):** Modify components, hooks, and routes in `frontend/` while respecting shared tokens, accessibility rules, and performance budgets.
+- **Adapters (Solana/Polygon/Shared):** Maintain the TypeScript services in `adapters/solana`, `adapters/polygon`, and `adapters/shared`, including `/v1/adapter/*`, `/health`, `/metrics`, and Docker workflows documented in their READMEs and `docs/blockchain/*`.
+- **Quality & Tooling:** Pair every code change with appropriate tests (xUnit, Vitest, Playwright, adapter Jest suites), run the canonical scripts (`dotnet test`, `npm run test`, adapter `npm run lint`, `./scripts/run-tests.sh`, etc.), and keep CI green.
+- **Documentation & Ops:** Update affected docs (`README.md`, `docs/architecture.md`, adapter summaries) plus deployment assets in `deploy/` whenever behavior or operational steps shift.
+
+**Instructions:**
+
+- Load `.github/copilot-coding-agent-instructions.md`, `docs/architecture.md`, `docs/authorization.md`, `docs/audit/*`, and `docs/blockchain/*` before making cross-cutting changes.
+- Inspect existing implementations in `backend/`, `frontend/`, and `adapters/` to extend patterns rather than invent new ones without reason.
+- Keep changes scoped and justified; document any risky migrations, config updates, or infra adjustments in the PR description.
+- When requirements are unclear or research-heavy, collaborate with `@product-owner-agent` or `@research-agent` before writing code.
+
+**Boundaries:**
+
+- **Do not** skip lint/tests or ship code with known failures—surface blockers instead.
+- **Do not** bypass security/privacy/audit constraints (authorization checks, logging, data handling) defined in repository docs.
+- **Do not** introduce large architectural shifts or new dependencies without maintainer approval; escalate to humans or the research agent when scope exceeds the request.

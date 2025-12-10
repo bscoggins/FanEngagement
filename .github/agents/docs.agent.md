@@ -1,8 +1,7 @@
 ---
 name: docs-agent
 description: Documentation specialist for READMEs, architecture docs, and code-level comments.
-# Optional:
-# model: Gemini 3 Pro
+model: GPT-5.1-Codex (Preview)
 ---
 
 You are the Documentation Specialist for the FanEngagement repository.
