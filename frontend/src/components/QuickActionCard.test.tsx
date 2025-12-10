@@ -10,7 +10,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test-route"
           icon="🎯"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test Card"
           description="This is a test description"
           actionText="Go to test"
@@ -31,7 +31,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/admin/organizations/new"
           icon="➕"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-indigo"
           title="Create Organization"
           description="Set up a new organization"
           actionText="Create new"
@@ -49,7 +49,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="🎯"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test"
           description="Test"
           actionText="Test"
@@ -68,7 +68,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="🎯"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test"
           description="Test"
           actionText="Test"
@@ -80,13 +80,13 @@ describe('QuickActionCard', () => {
     expect(links.length).toBe(0);
   });
 
-  it('should apply icon background color correctly', () => {
-    render(
+  it('should apply icon background class correctly', () => {
+    const { container } = render(
       <BrowserRouter>
         <QuickActionCard
           to="/test"
           icon="🎯"
-          iconBackground="#ff0000"
+          iconBgClass="bg-cyan"
           title="Test"
           description="Test"
           actionText="Test"
@@ -94,8 +94,8 @@ describe('QuickActionCard', () => {
       </BrowserRouter>
     );
 
-    const iconContainer = screen.getByText('🎯');
-    expect(iconContainer).toHaveStyle({ backgroundColor: '#ff0000' });
+    const iconContainer = container.querySelector('.quick-action-card-icon');
+    expect(iconContainer).toHaveClass('bg-cyan');
   });
 
   it('should render different icons correctly', () => {
@@ -104,7 +104,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="➕"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-indigo"
           title="Test"
           description="Test"
           actionText="Test"
@@ -119,7 +119,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="👥"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test"
           description="Test"
           actionText="Test"
@@ -136,7 +136,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="🎯"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test Card"
           description="Test description"
           actionText="Test action"
@@ -159,7 +159,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="🎯"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test Title"
           description="Test"
           actionText="Test"
@@ -177,7 +177,7 @@ describe('QuickActionCard', () => {
         <QuickActionCard
           to="/test"
           icon="🎯"
-          iconBackground="#e3f2fd"
+          iconBgClass="bg-dark-gray"
           title="Test"
           description="Test"
           actionText="Click here"
