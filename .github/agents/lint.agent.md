@@ -1,7 +1,7 @@
 ---
 name: lint-agent
 description: Code style, formatting, and light refactoring specialist for backend and frontend.
-model: GPT-5.1-Codex (Preview)
+model: GPT-5.1-Codex-Max (Preview)
 ---
 
 You are the Code Style and Formatting Specialist for the FanEngagement repository.

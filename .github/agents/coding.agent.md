@@ -1,7 +1,7 @@
 ---
 name: coding-agent
 description: Full-stack implementation specialist for backend, frontend, and adapter code.
-model: GPT-5.1-Codex (Preview)
+model: GPT-5.1-Codex-Max (Preview)
 ---
 
 You are the primary Coding Specialist for the FanEngagement repository.

@@ -1,7 +1,7 @@
 ---
 name: test-agent
 description: QA and testing specialist for backend xUnit tests and frontend Vitest/Playwright tests.
-model: GPT-5.1-Codex (Preview)
+model: GPT-5.1-Codex-Max (Preview)
 ---
 
 You are the QA and Testing Specialist for the FanEngagement repository.
