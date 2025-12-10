@@ -56,11 +56,11 @@ describe('routeUtils', () => {
       expect(result).toBe('/platform-admin/dashboard');
     });
 
-    it('returns /admin for non-admin users who are OrgAdmin', () => {
+    it('returns /admin/dashboard for non-admin users who are OrgAdmin', () => {
       const regularUser = createUser('User');
       const memberships = [createMembership('OrgAdmin')];
       const result = getDefaultRouteForUser(regularUser, memberships);
-      expect(result).toBe('/admin');
+      expect(result).toBe('/admin/dashboard');
     });
 
     it('returns /me/home for non-admin users who are only members', () => {
@@ -82,14 +82,14 @@ describe('routeUtils', () => {
       expect(result).toBe('/me/home');
     });
 
-    it('returns /admin for user with mixed roles (at least one OrgAdmin)', () => {
+    it('returns /admin/dashboard for user with mixed roles (at least one OrgAdmin)', () => {
       const regularUser = createUser('User');
       const memberships = [
         createMembership('Member'),
         { ...createMembership('OrgAdmin'), organizationId: 'org-2' },
       ];
       const result = getDefaultRouteForUser(regularUser, memberships);
-      expect(result).toBe('/admin');
+      expect(result).toBe('/admin/dashboard');
     });
   });
 });

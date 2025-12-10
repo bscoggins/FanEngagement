@@ -34,7 +34,8 @@ describe('HomePage', () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<div>Login Page</div>} />
-              <Route path="/admin" element={<div>Admin Page</div>} />
+              <Route path="/admin" element={<div>Legacy Admin Page</div>} />
+              <Route path="/admin/dashboard" element={<div>Admin Page</div>} />
               <Route path="/platform-admin/dashboard" element={<div>Platform Admin Dashboard</div>} />
               <Route path="/me/home" element={<div>Member Dashboard</div>} />
             </Routes>
@@ -78,7 +79,7 @@ describe('HomePage', () => {
     });
   });
 
-  it('redirects authenticated OrgAdmin to /admin', async () => {
+  it('redirects authenticated OrgAdmin to /admin/dashboard', async () => {
     // Simulate existing auth session for regular user who is OrgAdmin
     localStorage.setItem('authToken', 'orgadmin-token');
     localStorage.setItem('authUser', JSON.stringify({

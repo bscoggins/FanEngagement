@@ -195,7 +195,7 @@ describe('Layout', () => {
       // Should see Platform Admin badge and Administration section with nav items
       await waitFor(() => {
         expect(screen.getByTestId('platform-admin-badge')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /my account/i })).toBeInTheDocument();
+        expect(screen.getByTestId('nav-myAccount')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /my organizations/i })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /platform overview/i })).toBeInTheDocument();
       });
@@ -251,10 +251,14 @@ describe('Layout', () => {
       await waitFor(() => {
         const myAccountLink = screen.getByTestId('nav-myAccount');
         const myOrgsLink = screen.getByTestId('nav-myOrganizations');
+        const adminDashboardLink = screen.getByTestId('admin-nav-adminDashboard');
+        const adminMyAccountLink = screen.getByTestId('admin-nav-adminMyAccount');
         const platformOverviewLink = screen.getByTestId('admin-nav-platformDashboard');
 
         expect(myAccountLink).toHaveAttribute('href', '/me');
         expect(myOrgsLink).toHaveAttribute('href', '/me/organizations');
+        expect(adminDashboardLink).toHaveAttribute('href', '/admin/dashboard');
+        expect(adminMyAccountLink).toHaveAttribute('href', '/admin/my-account');
         expect(platformOverviewLink).toHaveAttribute('href', '/platform-admin/dashboard');
       });
     });

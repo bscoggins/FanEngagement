@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../auth/AuthContext';
 import { OrgProvider } from '../contexts/OrgContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
@@ -49,11 +49,13 @@ describe('AdminLayout', () => {
             <OrgProvider isAuthenticated={true}>
               <Routes>
                 <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<div>Dashboard Content</div>} />
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<div>Dashboard Content</div>} />
                   <Route path="users" element={<div>Users Content</div>} />
                   <Route path="organizations" element={<div>Organizations Content</div>} />
                   <Route path="organizations/:orgId/edit" element={<div>Org Edit Content</div>} />
                   <Route path="organizations/:orgId/memberships" element={<div>Memberships Content</div>} />
+                  <Route path="my-account" element={<div>My Account Content</div>} />
                   <Route path="dev-tools" element={<div>Dev Tools Content</div>} />
                 </Route>
                 <Route path="/" element={<div>Home Page</div>} />
@@ -83,6 +85,7 @@ describe('AdminLayout', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('My Account')).toBeInTheDocument();
       expect(screen.getByText('Users')).toBeInTheDocument();
       expect(screen.getByText('Organizations')).toBeInTheDocument();
       expect(screen.getByText('Dev Tools')).toBeInTheDocument();
@@ -119,16 +122,36 @@ describe('AdminLayout', () => {
     });
   });
 
+  it('navigates to my account page when link is clicked', async () => {
+    renderAdminLayout('/admin');
+    const user = userEvent.setup();
+
+    await waitFor(() => {
+      expect(screen.getByText('My Account')).toBeInTheDocument();
+    });
+
+    const myAccountLink = screen.getByText('My Account').closest('a');
+    expect(myAccountLink).toHaveAttribute('href', '/admin/my-account');
+
+    await user.click(myAccountLink!);
+
+    await waitFor(() => {
+      expect(screen.getByText('My Account Content')).toBeInTheDocument();
+    });
+  });
+
   it('has correct navigation link hrefs for platform admin', async () => {
     renderAdminLayout();
     
     await waitFor(() => {
       const dashboardLink = screen.getByText('Admin Dashboard').closest('a');
+      const myAccountLink = screen.getByText('My Account').closest('a');
       const usersLink = screen.getByText('Users').closest('a');
       const orgsLink = screen.getByText('Organizations').closest('a');
       const devToolsLink = screen.getByText('Dev Tools').closest('a');
       
-      expect(dashboardLink).toHaveAttribute('href', '/admin');
+      expect(dashboardLink).toHaveAttribute('href', '/admin/dashboard');
+      expect(myAccountLink).toHaveAttribute('href', '/admin/my-account');
       expect(usersLink).toHaveAttribute('href', '/admin/users');
       expect(orgsLink).toHaveAttribute('href', '/admin/organizations');
       expect(devToolsLink).toHaveAttribute('href', '/admin/dev-tools');
@@ -187,6 +210,7 @@ describe('AdminLayout', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('My Account')).toBeInTheDocument();
       });
       
       // Should NOT see platform admin items

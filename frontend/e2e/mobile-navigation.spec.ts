@@ -44,7 +44,8 @@ test.describe('Mobile navigation', () => {
     
     // Should see navigation links
     await expect(drawer.getByRole('link', { name: 'Home' })).toBeVisible();
-    await expect(drawer.getByRole('link', { name: 'My Account' })).toBeVisible();
+    const primaryMyAccountLink = drawer.getByRole('link', { name: 'My Account' }).first();
+    await expect(primaryMyAccountLink).toBeVisible();
   });
 
   test('mobile drawer closes when backdrop is clicked', async ({ page }) => {
@@ -98,8 +99,8 @@ test.describe('Mobile navigation', () => {
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
     await waitForVisible(drawer);
     
-    // Click a navigation link
-    await drawer.getByRole('link', { name: 'My Account' }).click();
+    // Click the first My Account link (user scope) to avoid strict-mode clashes with the admin link
+    await drawer.getByRole('link', { name: 'My Account' }).first().click();
     
     // Drawer should disappear
     await expect(drawer).not.toBeVisible();

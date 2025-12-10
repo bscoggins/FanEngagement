@@ -45,7 +45,8 @@ describe('LoginPage', () => {
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/admin" element={<div>Admin Page</div>} />
+              <Route path="/admin" element={<div>Legacy Admin Page</div>} />
+              <Route path="/admin/dashboard" element={<div>Admin Page</div>} />
               <Route path="/platform-admin/dashboard" element={<div>Platform Admin Dashboard</div>} />
               <Route path="/me/home" element={<div>Member Dashboard</div>} />
             </Routes>
