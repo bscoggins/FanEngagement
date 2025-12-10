@@ -191,7 +191,7 @@ export const LoginPage: React.FC = () => {
           variant="primary"
           fullWidth
         >
-          Log In
+          {isLoading ? 'Logging in...' : 'Log In'}
         </Button>
       </form>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import type { CreateUserRequest } from '../types/api';
 import { InfoBox } from '../components/InfoBox';
