@@ -90,6 +90,12 @@
   --color-icon-bg-brown: hsl(16, 75%, 13%);         /* #7c2d12 - Proposals icon */
   --color-icon-bg-cyan: hsl(192, 63%, 20%);         /* #164e63 - Webhooks icon */
   --color-icon-bg-slate: hsl(215, 16%, 28%);        /* #374151 - Audit log icon */
+  
+  /* Platform Admin Icon Backgrounds (light pastel shades) */
+  --color-icon-bg-light-blue: hsl(207, 89%, 95%);   /* #e3f2fd - Create org icon */
+  --color-icon-bg-light-purple: hsl(291, 47%, 94%); /* #f3e5f5 - Manage users icon */
+  --color-icon-bg-light-green: hsl(123, 38%, 95%);  /* #e8f5e9 - View orgs icon */
+  --color-icon-bg-light-orange: hsl(36, 100%, 94%); /* #fff3e0 - Dev tools icon */
 
   /* Admin Info Card Alpha Colors */
   --color-info-alpha-12: rgba(59, 130, 246, 0.12);

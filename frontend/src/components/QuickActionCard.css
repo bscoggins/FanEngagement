@@ -63,6 +63,22 @@
   background-color: var(--color-icon-bg-slate);
 }
 
+.quick-action-card-icon.bg-light-blue {
+  background-color: var(--color-icon-bg-light-blue);
+}
+
+.quick-action-card-icon.bg-light-purple {
+  background-color: var(--color-icon-bg-light-purple);
+}
+
+.quick-action-card-icon.bg-light-green {
+  background-color: var(--color-icon-bg-light-green);
+}
+
+.quick-action-card-icon.bg-light-orange {
+  background-color: var(--color-icon-bg-light-orange);
+}
+
 .quick-action-card-title {
   margin: 0;
   font-size: var(--font-size-lg);
