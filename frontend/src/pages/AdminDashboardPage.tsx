@@ -33,7 +33,7 @@ interface StatCardProps {
 }
 
 const formatStatValue = (value: number | undefined): string => {
-  if (value === undefined || value === null) {
+  if (value == null) {
     return '—';
   }
   return value.toLocaleString();
