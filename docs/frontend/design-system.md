@@ -1232,13 +1232,20 @@ background-color: var(--color-neutral-100);
 
 ## Dark Mode Foundation
 
-**Status:** Foundation implemented, ready for future dark mode activation.
+**Status:** Fully implemented across admin/unified/member layouts (2025-12 rollout).
 
-The design system includes a complete dark mode token foundation that supports both automatic (system preference) and manual (user toggle) activation methods. Dark mode tokens are **defined and structured** but UI implementation is deferred to a future epic.
+The design system ships with a complete dark mode token foundation that now powers every authenticated surface. `App.tsx` applies the `theme-dark` class to `<body>` whenever a user selects the Dark theme from **My Account → Preferences**, and all shell/layout styles read their colors exclusively through tokens. System preference support remains available for future use, but the manual toggle is the primary activation path today.
+
+### Implementation Notes
+
+- **Preference source:** `user.themePreference` is hydrated from the auth profile and toggled via the My Account page; the selection is persisted server-side so every session reuses the same mode.
+- **Runtime hook:** `AppContent` listens for preference changes and executes `document.body.classList.toggle('theme-dark', prefersDark);`, so any stylesheet that keys off `body.theme-dark` automatically updates without component-level state.
+- **Token-only styling:** New admin/unified/mobile navigation styles consume shared `--nav-item-*` variables which define gradients, glow, and text colors for both themes, removing the need for hard-coded blues.
 
 ### Overview
 
 Dark mode provides:
+
 - **Reduced eye strain** in low-light environments
 - **Battery savings** on OLED displays
 - **User preference alignment** with OS-level settings
@@ -1261,6 +1268,7 @@ Automatically applies dark mode when the user's operating system or browser is s
 ```
 
 **When it activates:**
+
 - User has dark mode enabled in their OS (macOS, Windows, iOS, Android)
 - Browser respects the system preference
 - No user action required in the app
@@ -1278,13 +1286,14 @@ function toggleDarkMode() {
 ```
 
 **When it activates:**
+
 - User toggles dark mode switch in app settings
 - Takes precedence over system preference
 - Persists across sessions via localStorage
 
 ### Dark Mode Token Reference
 
-All tokens required for dark mode are defined and ready to use. Here's the complete set:
+All tokens required for dark mode are defined and actively used. Here's the complete set:
 
 #### Surface Colors
 
@@ -1296,6 +1305,7 @@ All tokens required for dark mode are defined and ready to use. Here's the compl
 | `--color-surface-dark` | `#1a1a1a` | `#141414` | Header, dark elements |
 
 **Dark mode strategy:**
+
 - Inverts the lightness hierarchy
 - Maintains relative contrast between surfaces
 - Uses neutral scale (900 → 700) for consistency
@@ -1310,6 +1320,7 @@ All tokens required for dark mode are defined and ready to use. Here's the compl
 | `--color-text-inverse` | `white` | `#1a1a1a` | Text on colored backgrounds |
 
 **Contrast ratios (WCAG 2.1 AA):**
+
 - Primary text on dark background: **13.5:1** ✓ AAA
 - Secondary text on dark background: **7.2:1** ✓ AAA
 - Tertiary text on dark background: **3.1:1** ✓ AA (large text)
@@ -1341,6 +1352,7 @@ All tokens required for dark mode are defined and ready to use. Here's the compl
 | `--focus-ring-shadow` | `0 0 0 4px rgba(0,86,179,0.1)` | `0 0 0 4px rgba(0,123,255,0.25)` | Focus glow |
 
 **Dark mode adjustment:**
+
 - Uses brighter primary color for better contrast
 - Increased shadow opacity for visibility
 
@@ -1357,9 +1369,26 @@ Dark mode uses adjusted shadows with higher opacity for depth on dark background
 ```
 
 **All shadow tokens are adjusted:**
+
 - `--shadow-xs` through `--shadow-2xl`
 - `--shadow-inner`
 - `--shadow-header`, `--shadow-header-dark`, `--shadow-sidebar`
+
+#### Navigation Glow Tokens
+
+To keep sidebar links visually consistent across Platform Admin, Org Admin, and member experiences we expose a dedicated set of navigation tokens:
+
+| Token | Light Mode | Dark Mode | Purpose |
+|-------|------------|-----------|---------|
+| `--nav-item-hover-bg` | `rgba(0,0,0,0.06)` | `rgba(59,130,246,0.12)` | Soft wash behind hovered links |
+| `--nav-item-hover-color` | `var(--color-primary-600)` | `var(--color-text-primary)` | Text color on hover |
+| `--nav-item-active-color` | `var(--color-primary-800)` | `var(--color-text-primary)` | Selected text color |
+| `--nav-item-active-gradient` | `linear-gradient(120deg, rgba(59,130,246,0.25), rgba(59,130,246,0))` | `linear-gradient(120deg, rgba(59,130,246,0.35), rgba(11,20,38,0.95))` | Base gradient band |
+| `--nav-item-active-radial` | `radial-gradient(circle at 0% 50%, rgba(59,130,246,0.35), transparent 60%)` | `radial-gradient(circle at 0% 50%, rgba(59,130,246,0.45), transparent 65%)` | Glow highlight |
+| `--nav-item-active-border` | `var(--color-primary-500)` | `var(--color-primary-500)` | Accent border/indicator |
+| `--nav-item-active-shadow` | `inset 0 1px rgba(255,255,255,0.05), 0 10px 20px rgba(0,0,0,0.35)` | `0 18px 32px rgba(5,8,20,0.65)` | Depth + bloom |
+
+Use these tokens (already imported into `AdminLayout.css`, `Layout.css`, and `MobileNav.css`) whenever you build a new navigation surface so that gradient, glow, and text contrast stay in sync with the active theme.
 
 ### Token Structure Example
 
@@ -1384,6 +1413,7 @@ body.theme-dark {
 ```
 
 **Why duplicate definitions?**
+
 - System preference: Respects OS settings automatically
 - Class-based: Allows explicit override and manual control
 - Both use identical values for consistency
@@ -1393,6 +1423,7 @@ body.theme-dark {
 When writing component styles, use semantic tokens instead of hardcoded colors:
 
 #### ✅ Good - Automatically supports dark mode
+
 ```css
 .my-component {
   background-color: var(--color-surface);
@@ -1403,6 +1434,7 @@ When writing component styles, use semantic tokens instead of hardcoded colors:
 ```
 
 #### ❌ Bad - Hardcoded colors break in dark mode
+
 ```css
 .my-component {
   background-color: white;
@@ -1415,6 +1447,7 @@ When writing component styles, use semantic tokens instead of hardcoded colors:
 ### Brand & Semantic Colors in Dark Mode
 
 Brand colors (primary, success, warning, error, info) **remain unchanged** in dark mode:
+
 - Same hues and saturation
 - Automatically maintain WCAG contrast on dark backgrounds
 - Provide consistent brand identity across themes
@@ -1437,6 +1470,7 @@ Brand colors (primary, success, warning, error, info) **remain unchanged** in da
 When implementing full dark mode, follow this testing checklist:
 
 #### Visual Testing
+
 - [ ] All text has sufficient contrast (4.5:1 minimum)
 - [ ] Borders are visible against backgrounds
 - [ ] Shadows provide depth without being too harsh
@@ -1444,6 +1478,7 @@ When implementing full dark mode, follow this testing checklist:
 - [ ] Brand colors remain recognizable
 
 #### Component Testing
+
 - [ ] Forms and inputs are readable
 - [ ] Tables and data displays have clear hierarchy
 - [ ] Modals and overlays provide adequate separation
@@ -1451,6 +1486,7 @@ When implementing full dark mode, follow this testing checklist:
 - [ ] Loading states and placeholders are visible
 
 #### Accessibility Testing
+
 - [ ] Screen readers announce theme changes
 - [ ] Keyboard navigation focus indicators are visible
 - [ ] Color is not the only means of conveying information
@@ -1458,6 +1494,7 @@ When implementing full dark mode, follow this testing checklist:
 - [ ] Reduced motion preferences are respected
 
 #### Browser Testing
+
 - [ ] Chrome/Edge (system preference)
 - [ ] Firefox (system preference)
 - [ ] Safari (system preference)
@@ -1469,12 +1506,14 @@ When implementing full dark mode, follow this testing checklist:
 When ready to activate dark mode:
 
 #### Phase 1: Foundation (Complete ✓)
+
 - [x] Define all dark mode color tokens
 - [x] Implement system preference support
 - [x] Implement class-based toggle support
 - [x] Document token structure and usage
 
 #### Phase 2: UI Implementation (Future Epic)
+
 - [ ] Add dark mode toggle to user settings
 - [ ] Implement localStorage persistence
 - [ ] Create theme context/hook
@@ -1482,6 +1521,7 @@ When ready to activate dark mode:
 - [ ] Test third-party component compatibility
 
 #### Phase 3: Polish & Testing (Future Epic)
+
 - [ ] Comprehensive visual QA across all pages
 - [ ] Accessibility audit (WCAG 2.1 AA)
 - [ ] Performance testing (paint/layout thrashing)
@@ -1489,6 +1529,7 @@ When ready to activate dark mode:
 - [ ] User acceptance testing
 
 #### Phase 4: Deployment (Future Epic)
+
 - [ ] Feature flag for gradual rollout
 - [ ] Monitor user adoption metrics
 - [ ] Gather user feedback
@@ -1502,12 +1543,14 @@ For developers working on dark mode implementation:
 #### Adding Dark Mode to Existing Components
 
 1. **Audit current styles:**
+
    ```bash
    # Find hardcoded colors in your component
    grep -E '#[0-9a-fA-F]{3,6}|rgba?\(' MyComponent.css
    ```
 
 2. **Replace with tokens:**
+
    ```diff
    .card {
    -  background-color: white;
@@ -1520,6 +1563,7 @@ For developers working on dark mode implementation:
    ```
 
 3. **Test in both modes:**
+
    ```tsx
    // Add theme toggle to DevTools or Storybook
    const toggleDarkMode = () => {
@@ -1564,6 +1608,7 @@ A: If they use design tokens (`var(--color-*)`), yes. If they use hardcoded colo
 
 **Q: Can I test dark mode now?**
 A: Yes, for development:
+
 - System preference: Set your OS to dark mode
 - Manual toggle: Add `theme-dark` class to `<body>` via DevTools
 
@@ -1578,6 +1623,7 @@ A: Brand colors (primary, success, error, etc.) remain the same in dark mode and
 
 **Q: How do I handle images and icons in dark mode?**
 A: Use CSS filters or provide alternate assets:
+
 ```css
 @media (prefers-color-scheme: dark) {
   .logo {

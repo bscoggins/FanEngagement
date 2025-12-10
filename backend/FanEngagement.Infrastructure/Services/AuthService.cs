@@ -56,7 +56,8 @@ public class AuthService(
                 Email = user.Email,
                 DisplayName = user.DisplayName,
                 Role = user.Role.ToString(),
-                MfaRequired = true
+                MfaRequired = true,
+                ThemePreference = user.ThemePreference
             };
         }
 
@@ -72,7 +73,8 @@ public class AuthService(
             Email = user.Email,
             DisplayName = user.DisplayName,
             Role = user.Role.ToString(),
-            MfaRequired = false
+            MfaRequired = false,
+            ThemePreference = user.ThemePreference
         };
     }
 
@@ -135,7 +137,8 @@ public class AuthService(
             Email = user.Email,
             DisplayName = user.DisplayName,
             Role = user.Role.ToString(),
-            MfaRequired = false
+            MfaRequired = false,
+            ThemePreference = user.ThemePreference
         };
     }
 

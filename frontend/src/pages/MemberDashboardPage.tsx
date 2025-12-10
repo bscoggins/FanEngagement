@@ -42,6 +42,147 @@ const getTargetOrganization = (
   return targetOrg;
 };
 
+const pageStyle: React.CSSProperties = {
+  padding: '2rem',
+  maxWidth: '1200px',
+  margin: '0 auto',
+};
+
+const welcomeHeadingStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: '2rem',
+  color: 'var(--color-text-primary)',
+};
+
+const welcomeSubheadingStyle: React.CSSProperties = {
+  color: 'var(--color-text-secondary)',
+  marginTop: '0.5rem',
+};
+
+const cardGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+  gap: '1.5rem',
+};
+
+const cardStyle: React.CSSProperties = {
+  backgroundColor: 'var(--color-surface)',
+  borderRadius: 'var(--radius-lg)',
+  border: '1px solid var(--color-border-default)',
+  boxShadow: 'var(--shadow-md)',
+  padding: '1.5rem',
+};
+
+const cardHeaderStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: '1rem',
+};
+
+const cardTitleStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: '1.25rem',
+  color: 'var(--color-text-primary)',
+};
+
+const mutedTextStyle: React.CSSProperties = {
+  color: 'var(--color-text-secondary)',
+  marginBottom: '1rem',
+};
+
+const listStyle: React.CSSProperties = {
+  listStyle: 'none',
+  padding: 0,
+  margin: '0 0 1rem 0',
+};
+
+const listItemStyle: React.CSSProperties = {
+  padding: '0.5rem 0',
+  borderBottom: '1px solid var(--color-border-subtle)',
+};
+
+const listOverflowStyle: React.CSSProperties = {
+  padding: '0.5rem 0',
+  color: 'var(--color-text-secondary)',
+  fontStyle: 'italic',
+};
+
+const metaTextStyle: React.CSSProperties = {
+  fontSize: '0.75rem',
+  color: 'var(--color-text-secondary)',
+  marginTop: '0.25rem',
+};
+
+const inlineLinkStyle: React.CSSProperties = {
+  color: 'var(--color-primary-500)',
+  textDecoration: 'none',
+  fontWeight: 500,
+};
+
+const buttonBaseStyle: React.CSSProperties = {
+  display: 'inline-block',
+  padding: '0.5rem 1rem',
+  borderRadius: 'var(--radius-md)',
+  fontSize: '0.875rem',
+  textDecoration: 'none',
+  fontWeight: 600,
+  transition: 'filter var(--duration-fast) var(--ease-out)',
+};
+
+const buttonVariants: Record<'primary' | 'success' | 'neutral', React.CSSProperties> = {
+  primary: {
+    backgroundColor: 'var(--color-primary-600)',
+    color: 'var(--color-text-on-primary)',
+  },
+  success: {
+    backgroundColor: 'var(--color-success-600)',
+    color: 'var(--color-text-inverse)',
+  },
+  neutral: {
+    backgroundColor: 'var(--color-border-dark)',
+    color: 'var(--color-text-inverse)',
+  },
+};
+
+const badgeBaseStyle: React.CSSProperties = {
+  marginLeft: '0.5rem',
+  fontSize: '0.75rem',
+  padding: '0.125rem 0.375rem',
+  borderRadius: 'var(--radius-sm)',
+  fontWeight: 600,
+  textTransform: 'capitalize',
+  border: '1px solid transparent',
+};
+
+const orgAdminBadgeStyle: React.CSSProperties = {
+  backgroundColor: 'rgba(0, 123, 255, 0.18)',
+  borderColor: 'rgba(0, 123, 255, 0.45)',
+  color: 'var(--color-primary-50)',
+};
+
+const memberBadgeStyle: React.CSSProperties = {
+  backgroundColor: 'rgba(148, 163, 184, 0.22)',
+  borderColor: 'var(--color-border-default)',
+  color: 'var(--color-text-secondary)',
+};
+
+const emptyStateStyle: React.CSSProperties = {
+  marginTop: '2rem',
+  padding: '2rem',
+  backgroundColor: 'var(--color-surface)',
+  border: '1px dashed var(--color-border-default)',
+  borderRadius: 'var(--radius-lg)',
+  textAlign: 'center',
+};
+
+const getRoleBadgeStyle = (role: string): React.CSSProperties => {
+  if (role === 'OrgAdmin') {
+    return { ...badgeBaseStyle, ...orgAdminBadgeStyle };
+  }
+
+  return { ...badgeBaseStyle, ...memberBadgeStyle };
+};
+
 export const MemberDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { activeOrg } = useActiveOrganization();
@@ -117,130 +258,91 @@ export const MemberDashboardPage: React.FC = () => {
   const displayName = user?.displayName || user?.email || 'Member';
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }} data-testid="member-dashboard">
+    <div style={pageStyle} data-testid="member-dashboard">
       {/* Welcome Section */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ margin: 0, fontSize: '2rem', color: '#333' }} data-testid="welcome-message">
+        <h1 style={welcomeHeadingStyle} data-testid="welcome-message">
           Welcome, {displayName}!
         </h1>
-        <p style={{ color: '#666', marginTop: '0.5rem' }}>
+        <p style={welcomeSubheadingStyle}>
           Here's an overview of your fan engagement activity.
         </p>
       </div>
 
       {/* Dashboard Grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '1.5rem',
-        }}
-      >
+      <div style={cardGridStyle}>
         {/* My Organizations Card */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            padding: '1.5rem',
-          }}
-          data-testid="organizations-card"
-        >
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={cardStyle} data-testid="organizations-card">
+          <div style={cardHeaderStyle}>
             <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>🏢</span>
-            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>My Organizations</h2>
+            <h2 style={cardTitleStyle}>My Organizations</h2>
           </div>
           
           {displayedMemberships.length > 0 ? (
             <>
-              <p style={{ color: '#666', marginBottom: '1rem' }}>
+              <p style={mutedTextStyle}>
                 You are a member of <strong>{displayedMemberships.length}</strong> organization{displayedMemberships.length !== 1 ? 's' : ''}.
               </p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+              <ul style={listStyle}>
                 {displayedMemberships.slice(0, 3).map((membership) => (
-                  <li key={membership.id} style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
+                  <li key={membership.id} style={listItemStyle}>
                     <Link
                       to={`/me/organizations/${membership.organizationId}`}
-                      style={{ color: '#007bff', textDecoration: 'none' }}
+                      style={inlineLinkStyle}
                     >
                       {membership.organizationName}
                     </Link>
-                    <span
-                      style={{
-                        marginLeft: '0.5rem',
-                        fontSize: '0.75rem',
-                        padding: '0.125rem 0.375rem',
-                        backgroundColor: membership.role === 'OrgAdmin' ? '#cce5ff' : '#e9ecef',
-                        borderRadius: '4px',
-                        color: membership.role === 'OrgAdmin' ? '#004085' : '#6c757d',
-                      }}
-                    >
+                    <span style={getRoleBadgeStyle(membership.role)}>
                       {membership.role}
                     </span>
                   </li>
                 ))}
                 {displayedMemberships.length > 3 && (
-                  <li style={{ padding: '0.5rem 0', color: '#666', fontStyle: 'italic' }}>
+                  <li style={listOverflowStyle}>
                     and {displayedMemberships.length - 3} more...
                   </li>
                 )}
               </ul>
             </>
           ) : (
-            <p style={{ color: '#666', marginBottom: '1rem' }} data-testid="no-organizations">
+            <p style={mutedTextStyle} data-testid="no-organizations">
               You are not a member of any organizations yet.
             </p>
           )}
           
           <Link
             to="/me/organizations"
-            style={{
-              display: 'inline-block',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-            }}
+            style={{ ...buttonBaseStyle, ...buttonVariants.primary }}
           >
             View All Organizations →
           </Link>
         </div>
 
         {/* Active Proposals Card */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            padding: '1.5rem',
-          }}
-          data-testid="active-proposals-card"
-        >
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={cardStyle} data-testid="active-proposals-card">
+          <div style={cardHeaderStyle}>
             <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>🗳️</span>
-            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Active Proposals</h2>
+            <h2 style={cardTitleStyle}>Active Proposals</h2>
           </div>
           
           {data?.activeProposals && data.activeProposals.length > 0 ? (
             <>
-              <p style={{ color: '#666', marginBottom: '1rem' }}>
+              <p style={mutedTextStyle}>
                 You have <strong>{data.activeProposals.length}</strong> proposal{data.activeProposals.length !== 1 ? 's' : ''} open for voting.
               </p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+              <ul style={listStyle}>
                 {data.activeProposals.slice(0, 3).map((item) => (
                   <li
                     key={item.proposal.id}
-                    style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}
+                    style={listItemStyle}
                   >
                     <Link
                       to={`/me/proposals/${item.proposal.id}`}
-                      style={{ color: '#007bff', textDecoration: 'none' }}
+                      style={inlineLinkStyle}
                     >
                       {item.proposal.title}
                     </Link>
-                    <div style={{ fontSize: '0.75rem', color: '#6c757d', marginTop: '0.25rem' }}>
+                    <div style={metaTextStyle}>
                       {item.organizationName}
                       {item.proposal.endAt && (
                         <> · Ends {new Date(item.proposal.endAt).toLocaleDateString()}</>
@@ -249,14 +351,14 @@ export const MemberDashboardPage: React.FC = () => {
                   </li>
                 ))}
                 {data.activeProposals.length > 3 && (
-                  <li style={{ padding: '0.5rem 0', color: '#666', fontStyle: 'italic' }}>
+                  <li style={listOverflowStyle}>
                     and {data.activeProposals.length - 3} more...
                   </li>
                 )}
               </ul>
             </>
           ) : (
-            <p style={{ color: '#666', marginBottom: '1rem' }} data-testid="no-active-proposals">
+            <p style={mutedTextStyle} data-testid="no-active-proposals">
               No active proposals right now. Check back later!
             </p>
           )}
@@ -268,15 +370,7 @@ export const MemberDashboardPage: React.FC = () => {
             return (
               <Link
                 to={`/me/organizations/${targetOrg.organizationId}`}
-                style={{
-                  display: 'inline-block',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                }}
+                style={{ ...buttonBaseStyle, ...buttonVariants.success }}
                 data-testid="explore-org-button"
               >
                 Explore {targetOrg.organizationName} →
@@ -286,40 +380,24 @@ export const MemberDashboardPage: React.FC = () => {
         </div>
 
         {/* My Account Card */}
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            padding: '1.5rem',
-          }}
-          data-testid="account-card"
-        >
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={cardStyle} data-testid="account-card">
+          <div style={cardHeaderStyle}>
             <span style={{ fontSize: '2rem', marginRight: '0.75rem' }}>👤</span>
-            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>My Account</h2>
+            <h2 style={cardTitleStyle}>My Account</h2>
           </div>
           
-          <p style={{ color: '#666', marginBottom: '1rem' }}>
+          <p style={mutedTextStyle}>
             View and manage your account settings and profile information.
           </p>
           
-          <div style={{ marginBottom: '1rem', color: '#666', fontSize: '0.875rem' }}>
+          <div style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
             <div><strong>Email:</strong> {user?.email}</div>
             <div><strong>Display Name:</strong> {user?.displayName}</div>
           </div>
           
           <Link
             to="/me"
-            style={{
-              display: 'inline-block',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-            }}
+            style={{ ...buttonBaseStyle, ...buttonVariants.neutral }}
           >
             Manage Account →
           </Link>
@@ -329,17 +407,11 @@ export const MemberDashboardPage: React.FC = () => {
       {/* Quick Actions Section */}
       {data?.memberships && data.memberships.length === 0 && (
         <div
-          style={{
-            marginTop: '2rem',
-            padding: '2rem',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            textAlign: 'center',
-          }}
+          style={emptyStateStyle}
           data-testid="getting-started-section"
         >
           <h2 style={{ marginTop: 0 }}>Getting Started</h2>
-          <p style={{ color: '#666' }}>
+          <p style={{ ...mutedTextStyle, marginBottom: 0 }}>
             You're not a member of any organizations yet. Contact your organization administrator
             to get invited, or reach out to a platform administrator if you need help.
           </p>

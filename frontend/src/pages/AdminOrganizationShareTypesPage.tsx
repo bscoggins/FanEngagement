@@ -171,7 +171,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="admin-page">
         <h1>Manage Share Types</h1>
         <LoadingSpinner message="Loading share types..." />
       </div>
@@ -180,7 +180,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
 
   if (!organization) {
     return (
-      <div>
+      <div className="admin-page">
         <h1>Manage Share Types</h1>
         <ErrorMessage message={error || 'Organization not found'} onRetry={fetchData} />
       </div>
@@ -188,54 +188,33 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
           <h1>Share Types</h1>
-          <div style={{ color: '#666', fontSize: '1rem' }}>
+          <div className="admin-page-subtitle">
             Organization: {organization.name}
           </div>
         </div>
-        <button
-          onClick={showForm ? handleCancel : handleCreateNew}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: showForm ? '#6c757d' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
-          {showForm ? 'Cancel' : 'Create Share Type'}
-        </button>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            onClick={showForm ? handleCancel : handleCreateNew}
+            className={`admin-button ${showForm ? 'admin-button-neutral' : 'admin-button-success'}`}
+          >
+            {showForm ? 'Cancel' : 'Create Share Type'}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-        >
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem' }}>
           {error}
         </div>
       )}
 
       {showForm && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            padding: '1.5rem',
-            marginBottom: '1.5rem',
-          }}
-        >
+        <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
             {editingId ? 'Edit Share Type' : 'Create New Share Type'}
           </h2>
@@ -255,8 +234,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
+                    border: '1px solid var(--color-border-default)',
+                    borderRadius: 'var(--radius-md)',
                     fontSize: '1rem',
                   }}
                 />
@@ -276,8 +255,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
+                    border: '1px solid var(--color-border-default)',
+                    borderRadius: 'var(--radius-md)',
                     fontSize: '1rem',
                   }}
                 />
@@ -297,8 +276,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
+                  border: '1px solid var(--color-border-default)',
+                  borderRadius: 'var(--radius-md)',
                   fontSize: '1rem',
                   fontFamily: 'inherit',
                 }}
@@ -322,8 +301,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
+                    border: '1px solid var(--color-border-default)',
+                    borderRadius: 'var(--radius-md)',
                     fontSize: '1rem',
                   }}
                 />
@@ -344,8 +323,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
+                    border: '1px solid var(--color-border-default)',
+                    borderRadius: 'var(--radius-md)',
                     fontSize: '1rem',
                   }}
                 />
@@ -363,8 +342,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
+                    border: '1px solid var(--color-border-default)',
+                    borderRadius: 'var(--radius-md)',
                     fontSize: '1rem',
                   }}
                 >
@@ -377,14 +356,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
             <button
               type="submit"
               disabled={isSaving}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: isSaving ? '#ccc' : '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isSaving ? 'not-allowed' : 'pointer',
-              }}
+              className="admin-button admin-button-success"
             >
               {isSaving ? 'Saving...' : (editingId ? 'Update Share Type' : 'Create Share Type')}
             </button>
@@ -395,61 +367,60 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       {shareTypes.length === 0 ? (
         <EmptyState message="No share types found. Create one to get started." />
       ) : (
-        <div style={{ 
-          backgroundColor: 'white', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          overflow: 'hidden'
-        }}>
-          <table data-testid="share-types-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="admin-table-wrapper">
+          <table data-testid="share-types-table" className="admin-table">
             <thead>
-              <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Name</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Symbol</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Voting Weight</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Max Supply</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Transferable</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Actions</th>
+              <tr>
+                <th>Name</th>
+                <th>Symbol</th>
+                <th>Voting Weight</th>
+                <th>Max Supply</th>
+                <th style={{ textAlign: 'center' }}>Transferable</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {shareTypes.map((shareType) => (
-                <tr key={shareType.id} data-testid="share-type-row" style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '1rem' }}>
+                <tr key={shareType.id} data-testid="share-type-row">
+                  <td>
                     <span data-testid="share-type-name">{shareType.name}</span>
                   </td>
-                  <td style={{ padding: '1rem', fontWeight: 500 }}>{shareType.symbol}</td>
-                  <td style={{ padding: '1rem' }}>{shareType.votingWeight}</td>
-                  <td style={{ padding: '1rem' }}>
-                    {shareType.maxSupply !== null && shareType.maxSupply !== undefined ? shareType.maxSupply : <em style={{ color: '#999' }}>Unlimited</em>}
+                  <td style={{ fontWeight: 500 }}>{shareType.symbol}</td>
+                  <td>{shareType.votingWeight}</td>
+                  <td>
+                    {shareType.maxSupply !== null && shareType.maxSupply !== undefined ? shareType.maxSupply : <em style={{ color: 'var(--color-text-tertiary)' }}>Unlimited</em>}
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '12px',
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      backgroundColor: shareType.isTransferable ? '#e7f5e7' : '#fee',
-                      color: shareType.isTransferable ? '#2d5a2d' : '#c33',
-                    }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <span
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        backgroundColor: shareType.isTransferable ? 'var(--color-success-50)' : 'var(--color-error-50)',
+                        color: shareType.isTransferable ? 'var(--color-success-700)' : 'var(--color-error-700)',
+                      }}
+                    >
                       {shareType.isTransferable ? 'Yes' : 'No'}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <button
-                      onClick={() => handleEdit(shareType)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#0066cc',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      Edit
-                    </button>
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="admin-table-actions">
+                      <button
+                        type="button"
+                        className="admin-button admin-button-primary"
+                        onClick={() => handleEdit(shareType)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-button admin-button-outline"
+                        onClick={() => handleCancel()}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { usersApi } from '../api/usersApi';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -7,10 +7,10 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { MfaSettings } from '../components/MfaSettings';
 import { Button } from '../components/Button';
-import type { UserProfile } from '../types/api';
+import type { UserProfile, ThemePreference } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
-  const { user: authUser, isAdmin } = useAuth();
+  const { user: authUser, isAdmin, setUserThemePreference } = useAuth();
   const { showSuccess, showError } = useNotifications();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,9 @@ export const MyAccountPage: React.FC = () => {
     displayName: '',
     email: '',
   });
+  const [themePreference, setThemePreference] = useState<ThemePreference>('Light');
+  const [themeError, setThemeError] = useState('');
+  const [isUpdatingTheme, setIsUpdatingTheme] = useState(false);
 
   // Create user data from auth context for non-admin users
   // Admin users will fetch from API to get full data including createdAt
@@ -30,6 +33,7 @@ export const MyAccountPage: React.FC = () => {
       email: authUser.email,
       displayName: authUser.displayName,
       role: authUser.role,
+      themePreference: authUser.themePreference,
       // createdAt is intentionally omitted - not available from auth context
     };
   }, [authUser]);
@@ -46,6 +50,7 @@ export const MyAccountPage: React.FC = () => {
           displayName: authUserData.displayName,
           email: authUserData.email,
         });
+        setThemePreference(authUserData.themePreference ?? 'Light');
       }
       setLoading(false);
       return;
@@ -61,6 +66,7 @@ export const MyAccountPage: React.FC = () => {
         displayName: userData.displayName,
         email: userData.email,
       });
+      setThemePreference(userData.themePreference ?? 'Light');
     } catch (err) {
       console.error('Failed to fetch user:', err);
       const errorMessage = parseApiError(err);
@@ -74,6 +80,28 @@ export const MyAccountPage: React.FC = () => {
     fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser?.userId, isAdmin, authUserData]);
+
+  const handleThemeChange = useCallback(async (preference: ThemePreference) => {
+    if (preference === themePreference || isUpdatingTheme) {
+      return;
+    }
+
+    try {
+      setThemeError('');
+      setIsUpdatingTheme(true);
+      await usersApi.updateMyThemePreference({ themePreference: preference });
+      setThemePreference(preference);
+      setUser((prev) => (prev ? { ...prev, themePreference: preference } : prev));
+      setUserThemePreference(preference);
+      showSuccess(preference === 'Dark' ? 'Dark mode enabled' : 'Light mode enabled');
+    } catch (err) {
+      const errorMessage = parseApiError(err);
+      setThemeError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsUpdatingTheme(false);
+    }
+  }, [themePreference, isUpdatingTheme, showSuccess, showError, setUserThemePreference]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,6 +261,95 @@ export const MyAccountPage: React.FC = () => {
           </div>
         </form>
       )}
+
+      {/* Theme Preference Section */}
+      <section
+        style={{
+          marginTop: '3rem',
+          padding: '2rem',
+          borderRadius: '12px',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border-subtle)',
+          boxShadow: 'var(--shadow-md)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            alignItems: 'baseline',
+          }}
+        >
+          <div>
+            <h2 style={{ marginBottom: '0.25rem' }}>Interface Theme</h2>
+            <p style={{ margin: 0, maxWidth: '48ch', color: 'var(--color-text-secondary)' }}>
+              Tune the dashboard to match your working style. Theme changes take effect instantly and persist for every login.
+            </p>
+          </div>
+          <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>Current: {themePreference}</span>
+        </div>
+
+        {themeError && (
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              backgroundColor: '#f8d7da',
+              color: '#721c24',
+              border: '1px solid #f5c6cb',
+            }}
+            data-testid="theme-error"
+          >
+            {themeError}
+          </div>
+        )}
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '1rem',
+            marginTop: '1.5rem',
+          }}
+        >
+          {(['Light', 'Dark'] as ThemePreference[]).map((option) => {
+            const isActive = themePreference === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => handleThemeChange(option)}
+                disabled={isUpdatingTheme}
+                aria-pressed={isActive}
+                data-testid={`theme-${option.toLowerCase()}-button`}
+                style={{
+                  padding: '1.25rem',
+                  textAlign: 'left',
+                  borderRadius: '12px',
+                  border: isActive ? '2px solid var(--color-primary-600)' : '2px solid var(--color-border-default)',
+                  background: isActive ? 'var(--color-primary-50)' : 'var(--color-surface)',
+                  boxShadow: isActive ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+                  color: isActive ? 'var(--color-primary-700)' : 'var(--color-text-primary)',
+                  cursor: isUpdatingTheme ? 'not-allowed' : 'pointer',
+                  transition: 'all var(--duration-normal) var(--ease-in-out)',
+                }}
+              >
+                <span style={{ display: 'block', fontWeight: 600, letterSpacing: '0.02em' }}>
+                  {option === 'Light' ? 'Sunrise' : 'Midnight'} Mode
+                </span>
+                <span style={{ display: 'block', marginTop: '0.25rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
+                  {option === 'Light'
+                    ? 'Clean panels with crisp neutrals and bold accents.'
+                    : 'Deep graphite surfaces with saturated electric blues.'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Password Change Section */}
       <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #ddd' }}>

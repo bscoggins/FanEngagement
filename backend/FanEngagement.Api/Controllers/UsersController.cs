@@ -94,6 +94,24 @@ public class UsersController(
         return Ok(memberships);
     }
 
+    [HttpPut("me/theme")]
+    public async Task<ActionResult> UpdateMyThemePreference([FromBody] UpdateThemePreferenceRequest request, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var updatedTheme = await userService.UpdateThemePreferenceAsync(userId, request.ThemePreference, cancellationToken);
+        if (updatedTheme is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new { themePreference = updatedTheme.ToString() });
+    }
+
     [HttpGet("{id:guid}/memberships")]
     public async Task<ActionResult> GetUserMemberships(Guid id, CancellationToken cancellationToken)
     {

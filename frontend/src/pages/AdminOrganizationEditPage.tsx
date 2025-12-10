@@ -5,6 +5,47 @@ import { shareTypesApi } from '../api/shareTypesApi';
 import { proposalsApi } from '../api/proposalsApi';
 import type { UpdateOrganizationRequest, Organization } from '../types/api';
 
+const adminLabelStyle: React.CSSProperties = {
+  display: 'block',
+  marginBottom: '0.5rem',
+  fontWeight: 500,
+};
+
+const adminInputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.75rem',
+  border: '1px solid var(--color-border-default)',
+  borderRadius: 'var(--radius-md)',
+  fontSize: '1rem',
+  backgroundColor: 'var(--color-background)',
+  color: 'var(--color-text-primary)',
+};
+
+const adminTextareaStyle: React.CSSProperties = {
+  ...adminInputStyle,
+  fontFamily: 'inherit',
+};
+
+const adminSelectStyle: React.CSSProperties = {
+  ...adminInputStyle,
+  cursor: 'pointer',
+};
+
+const adminInfoTextStyle: React.CSSProperties = {
+  marginTop: '0.5rem',
+  fontSize: '0.875rem',
+  color: 'var(--color-text-secondary)',
+};
+
+const adminColorInputStyle: React.CSSProperties = {
+  width: '50px',
+  height: '40px',
+  border: '1px solid var(--color-border-default)',
+  borderRadius: 'var(--radius-md)',
+  cursor: 'pointer',
+  backgroundColor: 'var(--color-surface)',
+};
+
 export const AdminOrganizationEditPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
@@ -129,7 +170,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="admin-page">
         <h1>Edit Organization</h1>
         <div style={{ padding: '2rem', textAlign: 'center' }}>Loading organization...</div>
       </div>
@@ -138,32 +179,18 @@ export const AdminOrganizationEditPage: React.FC = () => {
 
   if (fetchError) {
     return (
-      <div>
+      <div className="admin-page">
         <h1>Edit Organization</h1>
         <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginTop: '1rem',
-          }}
+          className="admin-alert admin-alert-error"
+          style={{ marginTop: '1rem' }}
         >
           {fetchError}
         </div>
         <div style={{ marginTop: '1rem' }}>
           <Link
             to="/admin/organizations"
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
+            className="admin-link-button"
           >
             Back to Organizations
           </Link>
@@ -173,58 +200,33 @@ export const AdminOrganizationEditPage: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="admin-page">
       <h1>Organization Overview</h1>
 
       {organization && (
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+          <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             <div>Created: {new Date(organization.createdAt).toLocaleString()}</div>
           </div>
         </div>
       )}
 
       {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-        >
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem' }}>
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#e7f5e7',
-            border: '1px solid #b3e0b3',
-            borderRadius: '4px',
-            color: '#2d5a2d',
-            marginBottom: '1rem',
-          }}
-        >
+        <div className="admin-alert admin-alert-success" style={{ marginBottom: '1rem' }}>
           {successMessage}
         </div>
       )}
 
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          padding: '2rem',
-        }}
-      >
+      <div className="admin-card" style={{ padding: '2rem' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+            <label htmlFor="name" style={adminLabelStyle}>
               Name *
             </label>
             <input
@@ -234,18 +236,12 @@ export const AdminOrganizationEditPage: React.FC = () => {
               value={formData.name}
               onChange={handleChange}
               required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem',
-              }}
+              style={adminInputStyle}
             />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+            <label htmlFor="description" style={adminLabelStyle}>
               Description
             </label>
             <textarea
@@ -254,22 +250,15 @@ export const AdminOrganizationEditPage: React.FC = () => {
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                fontFamily: 'inherit',
-              }}
+              style={adminTextareaStyle}
             />
           </div>
 
-          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border-subtle)' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Blockchain Configuration</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="blockchainType" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+              <label htmlFor="blockchainType" style={adminLabelStyle}>
                 Blockchain Platform
               </label>
               <select
@@ -279,12 +268,8 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 onChange={handleChange}
                 disabled={hasExistingData}
                 style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  backgroundColor: hasExistingData ? '#f5f5f5' : 'white',
+                  ...adminSelectStyle,
+                  backgroundColor: hasExistingData ? 'var(--color-background)' : 'var(--color-surface)',
                   cursor: hasExistingData ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -293,21 +278,21 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 <option value="Polygon">Polygon</option>
               </select>
               {hasExistingData && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                <div style={adminInfoTextStyle}>
                   Blockchain type cannot be changed after shares or proposals are created.
                 </div>
               )}
-              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+              <div style={adminInfoTextStyle}>
                 Select a blockchain platform for governance transparency. This setting determines where governance actions are recorded.
               </div>
             </div>
           </div>
 
-          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+          <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border-subtle)' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Branding</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="logoUrl" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+              <label htmlFor="logoUrl" style={adminLabelStyle}>
                 Logo URL
               </label>
               <input
@@ -317,27 +302,21 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 value={formData.logoUrl}
                 onChange={handleChange}
                 placeholder="https://example.com/logo.png"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
+                style={adminInputStyle}
               />
               {formData.logoUrl && (
                 <div style={{ marginTop: '0.75rem' }}>
-                  <div style={{ fontSize: '0.875rem', color: '#666', marginBottom: '0.5rem' }}>Preview:</div>
+                  <div style={{ ...adminInfoTextStyle, marginBottom: '0.5rem' }}>Preview:</div>
                   <img 
                     src={formData.logoUrl} 
                     alt="Organization logo preview" 
                     style={{ 
                       maxWidth: '200px', 
                       maxHeight: '100px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
+                      border: '1px solid var(--color-border-default)',
+                      borderRadius: 'var(--radius-md)',
                       padding: '0.5rem',
-                      backgroundColor: '#f9f9f9',
+                      backgroundColor: 'var(--color-surface)',
                     }}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
@@ -349,7 +328,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <label htmlFor="primaryColor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                <label htmlFor="primaryColor" style={adminLabelStyle}>
                   Primary Color
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -358,13 +337,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     id="primaryColorPicker"
                     value={formData.primaryColor || '#0066cc'}
                     onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
-                    style={{
-                      width: '50px',
-                      height: '40px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    style={adminColorInputStyle}
                   />
                   <input
                     type="text"
@@ -373,19 +346,13 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     value={formData.primaryColor || ''}
                     onChange={handleChange}
                     placeholder="#0066cc (default)"
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
+                    style={{ ...adminInputStyle, flex: 1 }}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="secondaryColor" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                <label htmlFor="secondaryColor" style={adminLabelStyle}>
                   Secondary Color
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -394,13 +361,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     id="secondaryColorPicker"
                     value={formData.secondaryColor || '#6c757d'}
                     onChange={(e) => setFormData(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                    style={{
-                      width: '50px',
-                      height: '40px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    style={adminColorInputStyle}
                   />
                   <input
                     type="text"
@@ -409,13 +370,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     value={formData.secondaryColor || ''}
                     onChange={handleChange}
                     placeholder="#6c757d (default)"
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
+                    style={{ ...adminInputStyle, flex: 1 }}
                   />
                 </div>
               </div>
@@ -426,30 +381,14 @@ export const AdminOrganizationEditPage: React.FC = () => {
             <button
               type="submit"
               disabled={isSaving}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: isSaving ? '#ccc' : '#0066cc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                cursor: isSaving ? 'not-allowed' : 'pointer',
-              }}
+              className="admin-button admin-button-primary"
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/admin/organizations')}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                cursor: 'pointer',
-              }}
+              className="admin-button admin-button-neutral"
             >
               Cancel
             </button>

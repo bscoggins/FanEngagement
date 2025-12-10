@@ -314,8 +314,13 @@ describe('AdminOrganizationShareTypesPage', () => {
     expect(screen.getByText('Create New Share Type')).toBeInTheDocument();
     
     // Cancel
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
+    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
+    const headerCancelButton = cancelButtons.find((button) =>
+      (button as HTMLButtonElement).classList.contains('admin-button-neutral')
+    );
+
+    expect(headerCancelButton).toBeDefined();
+    fireEvent.click(headerCancelButton!);
     
     expect(screen.queryByText('Create New Share Type')).not.toBeInTheDocument();
   });

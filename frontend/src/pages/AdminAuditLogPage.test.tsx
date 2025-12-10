@@ -97,8 +97,9 @@ describe('AdminAuditLogPage', () => {
 
     renderWithRouter();
 
-    expect(screen.getByTestId('audit-log-heading')).toBeInTheDocument();
-    expect(screen.getByTestId('audit-log-heading')).toHaveTextContent('Audit Log');
+    const heading = await screen.findByTestId('audit-log-heading');
+    expect(heading).toBeInTheDocument();
+    expect(heading).toHaveTextContent('Audit Log');
   });
 
   it('displays loading state initially', async () => {
@@ -164,7 +165,7 @@ describe('AdminAuditLogPage', () => {
       expect(screen.getByTestId('audit-log-pagination')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Items per page:')).toBeInTheDocument();
+    expect(screen.getByText('Items per page')).toBeInTheDocument();
     expect(screen.getByText('3 total events')).toBeInTheDocument();
   });
 

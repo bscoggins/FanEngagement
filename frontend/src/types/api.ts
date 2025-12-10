@@ -1,3 +1,5 @@
+export type ThemePreference = 'Light' | 'Dark';
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -10,6 +12,11 @@ export interface LoginResponse {
   displayName: string;
   role: 'User' | 'Admin';
   mfaRequired: boolean;
+  themePreference: ThemePreference;
+  /**
+   * @deprecated Legacy field retained for localStorage backward compatibility. Use themePreference instead.
+   */
+  preferredTheme?: ThemePreference;
 }
 
 export interface MfaValidateRequest {
@@ -57,6 +64,7 @@ export interface User {
   role: 'User' | 'Admin';
   createdAt: string;
   mfaRequired?: boolean;
+  themePreference: ThemePreference;
 }
 
 // UserProfile is used for displaying user account info where createdAt may not be available
@@ -68,6 +76,7 @@ export interface UserProfile {
   role: 'User' | 'Admin';
   createdAt?: string;
   mfaRequired?: boolean;
+  themePreference?: ThemePreference;
 }
 
 export interface CreateUserRequest {
@@ -81,6 +90,10 @@ export interface UpdateUserRequest {
   displayName: string;
   role?: 'User' | 'Admin';
   mfaRequired?: boolean;
+}
+
+export interface UpdateThemePreferenceRequest {
+  themePreference: ThemePreference;
 }
 
 export interface ChangePasswordRequest {

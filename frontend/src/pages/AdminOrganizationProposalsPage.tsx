@@ -175,13 +175,18 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="admin-page">
+        <h1>Proposals</h1>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+      </div>
+    );
   }
 
   if (error && !organization) {
     return (
-      <div>
-        <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>
+      <div className="admin-page">
+        <div style={{ color: 'var(--color-error-700)', marginBottom: '1rem' }}>{error}</div>
         <Link to="/admin/organizations">← Back to Organizations</Link>
       </div>
     );
@@ -190,109 +195,81 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
   const proposals = pagedResult?.items || [];
 
   return (
-    <div>
-      <h1>Proposals</h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
-        Organization: {organization?.name}
-      </p>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1>Proposals</h1>
+          <div className="admin-page-subtitle">
+            Organization: {organization?.name}
+          </div>
+        </div>
+        <div className="admin-page-actions">
+          <button
+            type="button"
+            className={`admin-button ${showForm ? 'admin-button-neutral' : 'admin-button-primary'}`}
+            onClick={showForm ? handleCancel : handleCreateNew}
+          >
+            {showForm ? 'Close Form' : 'Create Proposal'}
+          </button>
+        </div>
+      </div>
 
       {successMessage && (
-        <div style={{
-          padding: '1rem',
-          marginBottom: '1rem',
-          backgroundColor: '#d4edda',
-          color: '#155724',
-          borderRadius: '4px',
-          border: '1px solid #c3e6cb'
-        }}>
+        <div className="admin-alert admin-alert-success">
           {successMessage}
         </div>
       )}
 
       {error && (
-        <div style={{
-          padding: '1rem',
-          marginBottom: '1rem',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          borderRadius: '4px',
-          border: '1px solid #f5c6cb'
-        }}>
+        <div className="admin-alert admin-alert-error">
           {error}
         </div>
       )}
 
       {!showForm && (
-        <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <button
-            onClick={handleCreateNew}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 500,
-            }}
-          >
-            Create New Proposal
-          </button>
-
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <SearchInput
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search proposals by title..."
-            />
-          </div>
-
-          <div>
-            <label htmlFor="statusFilter" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.875rem' }}>
-              Status
-            </label>
-            <select
-              id="statusFilter"
-              value={statusFilter}
-              onChange={(e) => handleStatusFilterChange(e.target.value as ProposalStatus | '')}
-              style={{
-                padding: '0.5rem',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="">All Statuses</option>
-              <option value="Draft">Draft</option>
-              <option value="Open">Open</option>
-              <option value="Closed">Closed</option>
-              <option value="Finalized">Finalized</option>
-            </select>
-          </div>
-
-          {pagedResult && (
-            <div style={{ color: '#666', fontSize: '0.875rem', marginLeft: 'auto' }}>
-              {pagedResult.totalCount} proposal{pagedResult.totalCount !== 1 ? 's' : ''} total
+        <div className="admin-card compact">
+          <div className="admin-filter-row">
+            <div style={{ flex: 1, minWidth: '250px' }}>
+              <SearchInput
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search proposals by title..."
+              />
             </div>
-          )}
+
+            <div style={{ minWidth: '200px' }}>
+              <label htmlFor="statusFilter" className="admin-form-label">
+                Status
+              </label>
+              <select
+                id="statusFilter"
+                value={statusFilter}
+                onChange={(e) => handleStatusFilterChange(e.target.value as ProposalStatus | '')}
+                className="admin-select"
+              >
+                <option value="">All Statuses</option>
+                <option value="Draft">Draft</option>
+                <option value="Open">Open</option>
+                <option value="Closed">Closed</option>
+                <option value="Finalized">Finalized</option>
+              </select>
+            </div>
+
+            {pagedResult && (
+              <div className="admin-meta-text" style={{ marginLeft: 'auto' }}>
+                {pagedResult.totalCount} proposal{pagedResult.totalCount !== 1 ? 's' : ''} total
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {showForm && (
-        <div style={{
-          backgroundColor: '#f8f9fa',
-          border: '1px solid #dee2e6',
-          borderRadius: '8px',
-          padding: '2rem',
-          marginBottom: '2rem'
-        }}>
-          <h2>Create New Proposal</h2>
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Create New Proposal</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="title" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="title" className="admin-form-label">
                 Title *
               </label>
               <input
@@ -300,33 +277,21 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
+                className="admin-input"
                 required
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="description" className="admin-form-label">
                 Description
               </label>
               <textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  minHeight: '100px',
-                }}
+                className="admin-textarea"
+                style={{ minHeight: '100px' }}
               />
             </div>
 
@@ -337,7 +302,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
               marginBottom: '1rem'
             }}>
               <div>
-                <label htmlFor="startAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="startAt" className="admin-form-label">
                   Start Date & Time
                 </label>
                 <input
@@ -345,18 +310,12 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   id="startAt"
                   value={formData.startAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, startAt: e.target.value || undefined })}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    border: '1px solid #ced4da',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                  }}
+                  className="admin-input"
                 />
               </div>
 
               <div>
-                <label htmlFor="endAt" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label htmlFor="endAt" className="admin-form-label">
                   End Date & Time
                 </label>
                 <input
@@ -364,19 +323,13 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   id="endAt"
                   value={formData.endAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, endAt: e.target.value || undefined })}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    border: '1px solid #ced4da',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                  }}
+                  className="admin-input"
                 />
               </div>
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="quorumRequirement" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label htmlFor="quorumRequirement" className="admin-form-label">
                 Quorum Requirement (%)
               </label>
               <input
@@ -390,30 +343,15 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   ...formData,
                   quorumRequirement: e.target.value ? parseFloat(e.target.value) : undefined
                 })}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ced4da',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
+                className="admin-input"
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <button
                 type="submit"
                 disabled={isSaving}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: isSaving ? '#6c757d' : '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: isSaving ? 'not-allowed' : 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                }}
+                className="admin-button admin-button-success"
               >
                 {isSaving ? 'Creating...' : 'Create Proposal'}
               </button>
@@ -421,16 +359,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 type="button"
                 onClick={handleCancel}
                 disabled={isSaving}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: 'white',
-                  color: '#6c757d',
-                  border: '1px solid #6c757d',
-                  borderRadius: '4px',
-                  cursor: isSaving ? 'not-allowed' : 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                }}
+                className="admin-button admin-button-outline"
               >
                 Cancel
               </button>
@@ -440,89 +369,64 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       )}
 
       {proposals.length === 0 ? (
-        <div style={{
-          padding: '3rem',
-          textAlign: 'center',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #dee2e6'
-        }}>
-          <p style={{ color: '#6c757d', fontSize: '1.1rem' }}>
-            {searchQuery || statusFilter ? "No proposals found matching your filters." : "No proposals found for this organization."}
+        <div className="admin-empty-state">
+          <p style={{ fontSize: '1.05rem', margin: 0 }}>
+            {searchQuery || statusFilter ? 'No proposals found matching your filters.' : 'No proposals found for this organization.'}
           </p>
         </div>
       ) : (
         <>
-          <div style={{
-            display: 'grid',
-            gap: '1rem',
-          }}>
+          <div style={{ display: 'grid', gap: '1rem' }}>
             {proposals.map((proposal) => (
-            <div
-              key={proposal.id}
-              style={{
-                border: '1px solid #dee2e6',
-                borderRadius: '8px',
-                padding: '1.5rem',
-                backgroundColor: 'white',
-                transition: 'box-shadow 0.2s',
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '1rem'
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <h3 style={{ marginTop: 0, marginBottom: 0 }}>{proposal.title}</h3>
-                    <ProposalStatusBadge status={proposal.status} />
-                  </div>
-                  {proposal.description && (
-                    <p style={{ color: '#666', marginBottom: '0.5rem', marginTop: '0.5rem' }}>{proposal.description}</p>
-                  )}
-                  <ProposalTimingInfo
-                    status={proposal.status}
-                    startAt={proposal.startAt}
-                    endAt={proposal.endAt}
-                    style={{ marginBottom: '0.5rem' }}
-                  />
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.875rem', color: '#6c757d' }}>
-                    <span><strong>Start:</strong> {formatDate(proposal.startAt)}</span>
-                    <span><strong>End:</strong> {formatDate(proposal.endAt)}</span>
-                    {proposal.quorumRequirement !== null && proposal.quorumRequirement !== undefined && (
-                      <span><strong>Quorum:</strong> {proposal.quorumRequirement}%</span>
+              <div
+                key={proposal.id}
+                className="admin-card"
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  marginBottom: '1rem'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                      <h3 style={{ marginTop: 0, marginBottom: 0 }}>{proposal.title}</h3>
+                      <ProposalStatusBadge status={proposal.status} />
+                    </div>
+                    {proposal.description && (
+                      <p className="admin-secondary-text" style={{ margin: '0.5rem 0' }}>{proposal.description}</p>
                     )}
-                    {proposal.quorumMet !== undefined && proposal.quorumMet !== null && (
-                      <span style={{ 
-                        color: proposal.quorumMet ? '#28a745' : '#dc3545',
-                        fontWeight: 'bold'
-                      }}>
-                        {proposal.quorumMet ? '✓ Quorum Met' : '✗ Quorum Not Met'}
-                      </span>
-                    )}
+                    <ProposalTimingInfo
+                      status={proposal.status}
+                      startAt={proposal.startAt}
+                      endAt={proposal.endAt}
+                      style={{ marginBottom: '0.5rem' }}
+                    />
+                    <div className="admin-meta-text" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      <span><strong>Start:</strong> {formatDate(proposal.startAt)}</span>
+                      <span><strong>End:</strong> {formatDate(proposal.endAt)}</span>
+                      {proposal.quorumRequirement !== null && proposal.quorumRequirement !== undefined && (
+                        <span><strong>Quorum:</strong> {proposal.quorumRequirement}%</span>
+                      )}
+                      {proposal.quorumMet !== undefined && proposal.quorumMet !== null && (
+                        <span className={`admin-pill ${proposal.quorumMet ? 'admin-pill-success' : 'admin-pill-danger'}`}>
+                          {proposal.quorumMet ? '✓ Quorum Met' : '✗ Quorum Not Met'}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div style={{ marginLeft: '1rem' }}>
-                  <Link
-                    to={`/admin/organizations/${orgId}/proposals/${proposal.id}`}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#007bff',
-                      color: 'white',
-                      textDecoration: 'none',
-                      borderRadius: '4px',
-                      display: 'inline-block',
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    View/Edit
-                  </Link>
+                  <div>
+                    <Link
+                      to={`/admin/organizations/${orgId}/proposals/${proposal.id}`}
+                      className="admin-link-button"
+                    >
+                      View/Edit
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
           </div>
 
           {pagedResult && (
