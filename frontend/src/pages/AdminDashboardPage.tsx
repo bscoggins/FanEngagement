@@ -28,7 +28,7 @@ interface StatCardProps {
   label: string;
   value: number | undefined;
   description?: string;
-  accentColor: string;
+  accentClass: string;
   testId: string;
 }
 
@@ -39,11 +39,10 @@ const formatStatValue = (value: number | undefined): string => {
   return value.toLocaleString();
 };
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, description, accentColor, testId }) => (
+const StatCard: React.FC<StatCardProps> = ({ label, value, description, accentClass, testId }) => (
   <div
-    className="admin-dashboard-stat-card"
+    className={`admin-dashboard-stat-card ${accentClass}`}
     data-testid={testId}
-    style={{ borderTop: `3px solid ${accentColor}` }}
   >
     <div className="admin-secondary-text">{label}</div>
     <div className="admin-dashboard-stat-value">{formatStatValue(value)}</div>
@@ -226,14 +225,14 @@ export const AdminDashboardPage: React.FC = () => {
                   label="Members"
                   value={stats?.totalMembers}
                   description={stats ? `${stats.orgAdmins} org admins` : 'Counting members...'}
-                  accentColor="#4c6ef5"
+                  accentClass="accent-blue"
                   testId="members-stat-card"
                 />
                 <StatCard
                   label="Share Types"
                   value={stats?.shareTypes}
                   description={stats && stats.shareTypes > 0 ? 'Governance-ready' : 'Define share classes'}
-                  accentColor="#0ca678"
+                  accentClass="accent-teal"
                   testId="share-types-stat-card"
                 />
                 <StatCard
@@ -244,14 +243,14 @@ export const AdminDashboardPage: React.FC = () => {
                       ? `${stats.draftProposals} draft${stats.draftProposals === 1 ? '' : 's'} ready`
                       : 'Track participation'
                   }
-                  accentColor="#e8590c"
+                  accentClass="accent-orange"
                   testId="active-proposals-stat-card"
                 />
                 <StatCard
                   label="Failed Webhooks (7d)"
                   value={stats?.failedWebhooks7d}
                   description="Keep integrations healthy"
-                  accentColor="#c2255c"
+                  accentClass="accent-pink"
                   testId="webhook-failures-stat-card"
                 />
               </div>
@@ -261,7 +260,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <QuickActionCard
                   to={`/admin/organizations/${activeOrg.id}/memberships`}
                   icon="👥"
-                  iconBackground="#1f2937"
+                  iconBgClass="bg-dark-gray"
                   title="Manage Members"
                   description="Invite members, update roles, and keep your roster current."
                   actionText="Go to Members"
@@ -270,7 +269,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <QuickActionCard
                   to={`/admin/organizations/${activeOrg.id}/share-types`}
                   icon="⚖️"
-                  iconBackground="#312e81"
+                  iconBgClass="bg-indigo"
                   title="Share Types"
                   description="Configure voting power, supply caps, and transfer rules."
                   actionText="Edit Share Types"
@@ -279,7 +278,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <QuickActionCard
                   to={`/admin/organizations/${activeOrg.id}/proposals`}
                   icon="🗳️"
-                  iconBackground="#7c2d12"
+                  iconBgClass="bg-brown"
                   title="Proposals"
                   description="Draft, open, and finalize governance decisions."
                   actionText="Manage Proposals"
@@ -288,7 +287,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <QuickActionCard
                   to={`/admin/organizations/${activeOrg.id}/webhook-events`}
                   icon="🔔"
-                  iconBackground="#164e63"
+                  iconBgClass="bg-cyan"
                   title="Webhook Events"
                   description="Monitor outbound events and retry failed deliveries."
                   actionText="Review Events"
@@ -297,7 +296,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <QuickActionCard
                   to={`/admin/organizations/${activeOrg.id}/audit-log`}
                   icon="📜"
-                  iconBackground="#374151"
+                  iconBgClass="bg-slate"
                   title="Audit Log"
                   description="Trace critical changes and export compliance records."
                   actionText="View Audit Log"
@@ -397,7 +396,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="admin-card" data-testid="org-admin-access-card" style={{ backgroundColor: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.25)' }}>
+              <div className="admin-card admin-card-access" data-testid="org-admin-access-card">
                 <h3 style={{ marginTop: 0 }}>Organization Administrator Access</h3>
                 <p style={{ marginBottom: '0.5rem' }}>
                   You are responsible for day-to-day governance, membership, and integrations for {activeOrg.name}.

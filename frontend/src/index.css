@@ -78,6 +78,29 @@
   --color-overlay-dark: rgba(0, 0, 0, 0.5);
   --color-primary-alpha-10: rgba(0, 123, 255, 0.1);  /* Primary color with 10% opacity */
 
+  /* ===== Dashboard Accent Colors ===== */
+  --color-accent-blue: hsl(225, 89%, 62%);          /* #4c6ef5 - Members stat */
+  --color-accent-teal: hsl(162, 90%, 41%);          /* #0ca678 - Share types stat */
+  --color-accent-orange: hsl(22, 92%, 48%);         /* #e8590c - Proposals stat */
+  --color-accent-pink: hsl(340, 72%, 46%);          /* #c2255c - Webhooks stat */
+  
+  /* Dashboard Icon Backgrounds */
+  --color-icon-bg-dark-gray: hsl(217, 33%, 17%);    /* #1f2937 - Members icon */
+  --color-icon-bg-indigo: hsl(245, 58%, 21%);       /* #312e81 - Share types icon */
+  --color-icon-bg-brown: hsl(16, 75%, 13%);         /* #7c2d12 - Proposals icon */
+  --color-icon-bg-cyan: hsl(192, 63%, 20%);         /* #164e63 - Webhooks icon */
+  --color-icon-bg-slate: hsl(215, 16%, 28%);        /* #374151 - Audit log icon */
+  
+  /* Platform Admin Icon Backgrounds (light pastel shades) */
+  --color-icon-bg-light-blue: hsl(207, 89%, 95%);   /* #e3f2fd - Create org icon */
+  --color-icon-bg-light-purple: hsl(291, 47%, 94%); /* #f3e5f5 - Manage users icon */
+  --color-icon-bg-light-green: hsl(123, 38%, 95%);  /* #e8f5e9 - View orgs icon */
+  --color-icon-bg-light-orange: hsl(36, 100%, 94%); /* #fff3e0 - Dev tools icon */
+
+  /* Admin Info Card Alpha Colors */
+  --color-info-alpha-12: rgba(59, 130, 246, 0.12);
+  --color-info-alpha-25: rgba(59, 130, 246, 0.25);
+
   /* ===== Focus Ring ===== */
   --focus-ring-color: var(--color-primary-700);
   --focus-ring-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);

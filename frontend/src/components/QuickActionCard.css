@@ -42,6 +42,43 @@
   flex-shrink: 0;
 }
 
+/* Icon background color variants */
+.quick-action-card-icon.bg-dark-gray {
+  background-color: var(--color-icon-bg-dark-gray);
+}
+
+.quick-action-card-icon.bg-indigo {
+  background-color: var(--color-icon-bg-indigo);
+}
+
+.quick-action-card-icon.bg-brown {
+  background-color: var(--color-icon-bg-brown);
+}
+
+.quick-action-card-icon.bg-cyan {
+  background-color: var(--color-icon-bg-cyan);
+}
+
+.quick-action-card-icon.bg-slate {
+  background-color: var(--color-icon-bg-slate);
+}
+
+.quick-action-card-icon.bg-light-blue {
+  background-color: var(--color-icon-bg-light-blue);
+}
+
+.quick-action-card-icon.bg-light-purple {
+  background-color: var(--color-icon-bg-light-purple);
+}
+
+.quick-action-card-icon.bg-light-green {
+  background-color: var(--color-icon-bg-light-green);
+}
+
+.quick-action-card-icon.bg-light-orange {
+  background-color: var(--color-icon-bg-light-orange);
+}
+
 .quick-action-card-title {
   margin: 0;
   font-size: var(--font-size-lg);

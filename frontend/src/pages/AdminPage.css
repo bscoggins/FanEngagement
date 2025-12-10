@@ -55,6 +55,11 @@ body.theme-dark .admin-page {
   padding: var(--spacing-4);
 }
 
+.admin-card.admin-card-access {
+  background-color: var(--color-info-alpha-12);
+  border-color: var(--color-info-alpha-25);
+}
+
 .admin-alert {
   border-radius: var(--radius-md);
   padding: var(--spacing-4);
@@ -413,6 +418,23 @@ body.theme-dark .admin-textarea:disabled {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
+}
+
+/* StatCard accent color variants */
+.admin-dashboard-stat-card.accent-blue {
+  border-top: 3px solid var(--color-accent-blue);
+}
+
+.admin-dashboard-stat-card.accent-teal {
+  border-top: 3px solid var(--color-accent-teal);
+}
+
+.admin-dashboard-stat-card.accent-orange {
+  border-top: 3px solid var(--color-accent-orange);
+}
+
+.admin-dashboard-stat-card.accent-pink {
+  border-top: 3px solid var(--color-accent-pink);
 }
 
 .admin-dashboard-stat-value {

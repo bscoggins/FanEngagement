@@ -5,7 +5,7 @@ import './QuickActionCard.css';
 interface QuickActionCardProps {
   to: string;
   icon: string;
-  iconBackground: string;
+  iconBgClass?: string;
   title: string;
   description: string;
   actionText: string;
@@ -15,7 +15,7 @@ interface QuickActionCardProps {
 export const QuickActionCard: React.FC<QuickActionCardProps> = ({
   to,
   icon,
-  iconBackground,
+  iconBgClass,
   title,
   description,
   actionText,
@@ -29,7 +29,7 @@ export const QuickActionCard: React.FC<QuickActionCardProps> = ({
     >
       <div className="quick-action-card">
         <div className="quick-action-card-header">
-          <div className="quick-action-card-icon" style={{ backgroundColor: iconBackground }}>
+          <div className={`quick-action-card-icon ${iconBgClass || ''}`}>
             {icon}
           </div>
           <h3 className="quick-action-card-title">{title}</h3>
