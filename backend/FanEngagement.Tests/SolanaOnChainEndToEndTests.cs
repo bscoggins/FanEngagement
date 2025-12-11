@@ -292,7 +292,7 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                 if (retries++ >= MaxTransactionWaitRetries)
                 {
                     throw new TimeoutException(
-                        $"Transaction {signature} was not found or did not match predicate after {MaxTransactionWaitRetries} retries.");
+                        $"Transaction {signature} was not found or did not match predicate after {MaxTransactionWaitRetries} attempts.");
                 }
 
                 var transaction = await TryGetTransactionAsync(signature, cancellationToken);
@@ -650,7 +650,9 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
 
     private static ulong ToScaledQuantity(decimal quantity, int decimals)
     {
-        var scaled = quantity * (decimal)Math.Pow(10, decimals);
+        // Use decimal.Parse to create exact multiplier, avoiding floating-point precision issues
+        var multiplier = decimal.Parse("1" + new string('0', decimals));
+        var scaled = quantity * multiplier;
         return checked((ulong)scaled);
     }
 
