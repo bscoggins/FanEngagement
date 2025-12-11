@@ -135,6 +135,10 @@ export const router = createBrowserRouter([
         path: 'audit-log',
         element: <PlatformAdminAuditLogPage />,
       },
+      {
+        path: 'my-account',
+        element: <MyAccountPage />,
+      },
     ],
   },
   {
