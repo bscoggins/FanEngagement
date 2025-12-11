@@ -17,6 +17,7 @@ namespace FanEngagement.Tests;
 /// </summary>
 public class HashNormalizationIntegrationTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>
 {
+    private static readonly Regex HashValidationRegex = new(@"^[a-f0-9]{64}$", RegexOptions.Compiled);
     private readonly HttpClient _client;
     private readonly SolanaOnChainTestWebApplicationFactory _factory;
 
@@ -166,8 +167,8 @@ public class HashNormalizationIntegrationTests : IClassFixture<SolanaOnChainTest
             var normalized = hash.StartsWith("0x") ? hash[2..] : hash;
             normalized = normalized.ToLowerInvariant();
             
-            // Check format: 64 lowercase hex characters using regex (more efficient)
-            if (!Regex.IsMatch(normalized, @"^[a-f0-9]{64}$"))
+            // Check format: 64 lowercase hex characters using precompiled regex
+            if (!HashValidationRegex.IsMatch(normalized))
             {
                 return false;
             }

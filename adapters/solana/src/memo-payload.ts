@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer';
 const MEMO_SCHEMA_VERSION = 1;
 const MAX_MEMO_BYTES = 566;
 const MAX_TITLE_LENGTH = 120;
+const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/;
 
 export interface ProposalMemoInput {
   organizationId: string;
@@ -130,9 +131,8 @@ function validateHash(value: string | undefined, fieldName: string): void {
 
   // Normalize first: remove 0x prefix and convert to lowercase
   const normalized = value.startsWith('0x') ? value.slice(2) : value;
-  const hexPattern = /^[a-f0-9]{64}$/;
   
-  if (!hexPattern.test(normalized)) {
+  if (!SHA256_HEX_PATTERN.test(normalized)) {
     throw new Error(
       `Invalid SHA-256 hash for ${fieldName}: must be 64 hex characters (got: ${value}). ` +
       `Ensure hash is correctly formatted before submitting to avoid wasting transaction fees.`

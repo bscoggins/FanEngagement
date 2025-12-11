@@ -367,8 +367,8 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                     }
                 }
 
-                attempts++;
                 var delay = CalculateRetryDelay(attempts);
+                attempts++;
                 await Task.Delay(delay, cancellationToken);
             }
         }
@@ -419,8 +419,8 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                     // ignore transient parsing issues and retry
                 }
 
-                attempts++;
                 var delay = CalculateRetryDelay(attempts);
+                attempts++;
                 await Task.Delay(delay, cancellationToken);
             }
         }
@@ -476,8 +476,8 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                     // ignore and retry
                 }
 
-                attempts++;
                 var delay = CalculateRetryDelay(attempts);
+                attempts++;
                 await Task.Delay(delay, cancellationToken);
             }
         }
