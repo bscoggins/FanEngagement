@@ -8,6 +8,7 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
+import { Card } from '../components/Card';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
 const getStatusBadgeClass = (status: OutboundEventStatus): string => {
@@ -186,7 +187,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="admin-card compact" style={{ marginBottom: 'var(--spacing-5)' }}>
+      <Card padding="compact" style={{ marginBottom: 'var(--spacing-5)' }}>
         <div className="admin-filter-row">
           <div>
             <label htmlFor="statusFilter" className="admin-form-label">
@@ -239,7 +240,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {isLoading ? (
         <LoadingSpinner message="Loading webhook events..." />
@@ -311,7 +312,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
           <LoadingSpinner message="Loading event details..." />
         ) : selectedEvent ? (
           <>
-            <div className="admin-card compact" style={{ marginBottom: 'var(--spacing-4)' }}>
+            <Card padding="compact" style={{ marginBottom: 'var(--spacing-4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
                 <div>
                   <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>Event Type</label>
@@ -338,7 +339,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
                   <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{selectedEvent.id}</div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {selectedEvent.lastError && (
               <div className="admin-alert admin-alert-error" style={{ marginBottom: 'var(--spacing-4)' }}>
@@ -346,7 +347,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
               </div>
             )}
 
-            <div className="admin-card compact" style={{ marginBottom: 'var(--spacing-4)' }}>
+            <Card padding="compact" style={{ marginBottom: 'var(--spacing-4)' }}>
               <label className="admin-form-label" style={{ marginBottom: '0.5rem' }}>Payload</label>
               <pre
                 style={{
@@ -373,7 +374,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
                   }
                 })()}
               </pre>
-            </div>
+            </Card>
 
             <div className="admin-table-actions" style={{ justifyContent: 'flex-end' }}>
               {selectedEvent.status === 'Failed' && (

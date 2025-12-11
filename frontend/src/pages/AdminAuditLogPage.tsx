@@ -6,6 +6,7 @@ import { parseApiError } from '../utils/errorUtils';
 import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeStyle, getActionBadgeStyle, formatDate } from '../utils/auditUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Pagination } from '../components/Pagination';
+import { Card } from '../components/Card';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
 export const AdminAuditLogPage: React.FC = () => {
@@ -140,7 +141,7 @@ export const AdminAuditLogPage: React.FC = () => {
         </div>
       )}
 
-      <div className="admin-card" style={{ marginBottom: 'var(--spacing-5)' }}>
+      <Card style={{ marginBottom: 'var(--spacing-5)' }}>
         <h3 style={{ marginTop: 0, marginBottom: 'var(--spacing-4)' }}>Filters</h3>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
@@ -218,7 +219,7 @@ export const AdminAuditLogPage: React.FC = () => {
             ))}
           </div>
         </div>
-      </div>
+      </Card>
 
       <div className="admin-table-meta" data-testid="audit-log-pagination">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
