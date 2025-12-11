@@ -22,6 +22,11 @@ public record CreateShareTypeCommand(
 
 public record CreateShareTypeResult(string TransactionId, string MintAddress);
 
+/// <summary>
+/// Records a share issuance on the blockchain.
+/// If RecipientAddress is null or empty, the adapter may use a default address
+/// (e.g., in test environments, the adapter signer's address may be used as a fallback).
+/// </summary>
 public record RecordShareIssuanceCommand(
     Guid IssuanceId,
     string ShareTypeAddress,

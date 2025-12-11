@@ -282,6 +282,9 @@ export class SolanaService {
       const [proposalPda] = await this.findProposalPDA(proposalId);
 
       // Create memo transaction with proposal data
+      // IMPORTANT: Memos are irrevocable on Solana. Once a transaction with a memo is confirmed,
+      // the memo data is permanently recorded on-chain and cannot be undone or modified.
+      // Ensure memo correctness before submission.
       // In production, this would call a deployed Solana program
         const rentLamports = await this.getRentExemptionLamports();
       const memoInstruction = this.createMemoInstruction(buildProposalMemo({
