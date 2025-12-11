@@ -201,7 +201,6 @@ const columns: TableColumn<User>[] = [
 | `sortable` | `boolean` | `false` | If true, this column is sortable |
 | `sortKey` | `string` | - | Sort key (defaults to column key) |
 | `width` | `string` | - | Optional width for this column |
-| `hideOnMobile` | `boolean` | `false` | Hide on mobile (for card layout) |
 
 ## Responsive Behavior
 

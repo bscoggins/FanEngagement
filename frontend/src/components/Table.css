@@ -244,11 +244,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-.table-empty-hint {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
-}
-
 /* ===== Responsive Breakpoints (as CSS comments for reference) ===== */
 /* Mobile breakpoint: 768px */
 /* These values align with the design system's responsive breakpoints */
