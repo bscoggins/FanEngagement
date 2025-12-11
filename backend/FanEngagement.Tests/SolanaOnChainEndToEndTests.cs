@@ -566,12 +566,10 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                 throw new InvalidOperationException($"Transaction {signature} missing instructions block.");
             }
 
-            foreach (var instruction in instructions.EnumerateArray().Where(i => IsMemoInstruction(i)))
+            if (!instructions.EnumerateArray().Any(i => IsMemoInstruction(i)))
             {
-                return;
+                throw new InvalidOperationException($"Transaction {signature} does not contain a memo instruction.");
             }
-
-            throw new InvalidOperationException($"Transaction {signature} does not contain a memo instruction.");
         }
 
         private static void EnsureTransactionFinalized(JsonElement result, string signature)

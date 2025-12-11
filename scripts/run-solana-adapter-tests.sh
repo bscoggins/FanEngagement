@@ -23,7 +23,7 @@ require_cmd() {
 
 cleanup() {
   if [[ $COMPOSE_STARTED -eq 1 ]]; then
-    echo "\nStopping Solana validator and cleaning up..."
+    echo -e "\nStopping Solana validator and cleaning up..."
     docker compose -f "$COMPOSE_FILE" down --remove-orphans >/dev/null 2>&1 || true
   fi
 }
@@ -75,7 +75,8 @@ fi
 PUBKEY="$(solana-keygen pubkey "$KEYPAIR_FILE")"
 echo "Funding adapter keypair ($PUBKEY) via airdrop..."
 if ! solana airdrop 2 "$PUBKEY" --url "$RPC_URL" >/dev/null 2>&1; then
-  echo "Warning: Unable to airdrop SOL to $PUBKEY. Continuing anyway." >&2
+  echo "Error: Unable to airdrop SOL to $PUBKEY. Tests will likely fail without funded accounts." >&2
+  exit 1
 fi
 
 solana balance "$PUBKEY" --url "$RPC_URL" || true
@@ -92,12 +93,12 @@ export SOLANA_NETWORK="${SOLANA_NETWORK:-localnet}"
 export SOLANA_PRIVATE_KEY="$(tr -d '\n' < "$KEYPAIR_FILE")"
 export API_KEY="${SOLANA_ADAPTER_API_KEY:-dev-api-key-change-in-production}"
 
-echo "\nRunning Solana adapter unit tests..."
+echo -e "\nRunning Solana adapter unit tests..."
 npm test
 
-echo "\nRunning Solana adapter integration tests..."
+echo -e "\nRunning Solana adapter integration tests..."
 npm run test:integration
 
 popd >/dev/null
 
-echo "\nSolana adapter tests completed successfully."
+echo -e "\nSolana adapter tests completed successfully."
