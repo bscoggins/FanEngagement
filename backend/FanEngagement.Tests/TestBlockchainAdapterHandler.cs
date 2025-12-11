@@ -47,11 +47,14 @@ internal sealed class TestBlockchainAdapterHandler : HttpMessageHandler
             _ => "{}"
         };
 
-        // HttpResponseMessage is disposed by the caller (HttpClient)
+        // HttpResponseMessage is disposed by HttpClient after SendAsync completes.
+        // This is the standard pattern for HttpMessageHandler implementations.
+#pragma warning disable CA2000 // Dispose objects before losing scope
         var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(responsePayload, Encoding.UTF8, "application/json")
         };
+#pragma warning restore CA2000
 
         return Task.FromResult(response);
     }

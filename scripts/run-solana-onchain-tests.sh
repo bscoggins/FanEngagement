@@ -27,6 +27,7 @@ require_cmd() {
 }
 
 cleanup() {
+  local exit_status=$?
   if [[ $COMPOSE_STARTED -eq 1 ]]; then
     echo -e "\nStopping Solana adapter stack..."
     docker compose -f "$COMPOSE_FILE" down --remove-orphans >/dev/null 2>&1 || true
@@ -34,8 +35,11 @@ cleanup() {
 
   # Keep the local environment tidy between runs.
   docker container prune -f >/dev/null 2>&1 || true
-  # WARNING: This prunes ALL dangling images system-wide, not just those from this test run
+  # WARNING: This prunes ALL dangling images system-wide, not just those from this test run.
+  # This affects all Docker projects on the developer's machine.
   docker image prune -f >/dev/null 2>&1 || true
+  
+  exit $exit_status
 }
 
 trap cleanup EXIT
