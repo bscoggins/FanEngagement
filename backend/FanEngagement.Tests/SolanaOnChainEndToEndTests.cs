@@ -260,6 +260,7 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
     private sealed class SolanaRpcClient : IDisposable
     {
         private const string MemoProgramId = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+        private const int MaxTransactionWaitRetries = 300; // 5 minutes at 1 second intervals
         private readonly HttpClient _httpClient;
         private int _requestId;
 
@@ -282,17 +283,16 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
             CancellationToken cancellationToken,
             string[]? expectedKeys = null)
         {
-            const int maxRetries = 300; // 5 minutes at 1 second intervals
             var retries = 0;
             
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 
-                if (++retries > maxRetries)
+                if (retries++ >= MaxTransactionWaitRetries)
                 {
                     throw new TimeoutException(
-                        $"Transaction {signature} was not found or did not match predicate after {maxRetries} retries.");
+                        $"Transaction {signature} was not found or did not match predicate after {MaxTransactionWaitRetries} retries.");
                 }
 
                 var transaction = await TryGetTransactionAsync(signature, cancellationToken);
