@@ -107,7 +107,7 @@ export const AdminUsersPage: React.FC = () => {
         key: 'created',
         label: 'Created',
         render: (user) => (
-          <span style={{ color: 'var(--color-text-secondary)' }}>
+          <span className="text-secondary-color text-sm">
             {new Date(user.createdAt).toLocaleDateString()}
           </span>
         ),

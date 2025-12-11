@@ -35,6 +35,9 @@ export const loginThroughUi = async (
 /**
  * Helper to get the organization ID for an existing organization by name.
  * This requires the user to already be logged in as an admin.
+ * 
+ * Note: The fallback method (clicking Proposals button) will navigate away from the current page.
+ * Use the primary method (data-row-key attribute) when possible to avoid navigation side effects.
  */
 export const getExistingOrgId = async (
   page: Page,
@@ -43,25 +46,46 @@ export const getExistingOrgId = async (
   await page.goto('/admin/organizations');
   const orgRow = page.locator('tbody tr', { hasText: orgName }).first();
   await waitForVisible(orgRow);
-  // Prefer the stable row key that the shared Table component sets on each <tr>
+  
+  // Primary method: Use the stable row key that the shared Table component sets on each <tr>
   const rowKey = await orgRow.getAttribute('data-row-key');
   if (rowKey) {
     return rowKey;
   }
 
   // Fallback: click the proposals action button to navigate and parse the URL
+  // WARNING: This will navigate away from the current page
   const proposalsButton = orgRow.getByRole('button', { name: 'Proposals' });
-  if (await proposalsButton.count()) {
-    await Promise.all([
-      page.waitForURL(/\/admin\/organizations\/[^/]+\/proposals/),
-      proposalsButton.click(),
-    ]);
-    const urlSegments = page.url().split('/');
-    const orgIndex = urlSegments.findIndex((segment) => segment === 'organizations');
-    if (orgIndex > -1 && urlSegments[orgIndex + 1]) {
-      return urlSegments[orgIndex + 1];
-    }
+  const buttonCount = await proposalsButton.count();
+  
+  if (buttonCount === 0) {
+    throw new Error(
+      `Unable to determine organization id for "${orgName}": ` +
+      `data-row-key attribute missing and Proposals button not found`
+    );
   }
 
-  throw new Error(`Unable to determine organization id for ${orgName}`);
+  try {
+    await Promise.all([
+      page.waitForURL(/\/admin\/organizations\/[^/]+\/proposals/, { timeout: 5000 }),
+      proposalsButton.click(),
+    ]);
+  } catch (error) {
+    throw new Error(
+      `Unable to determine organization id for "${orgName}": ` +
+      `navigation to proposals page failed - ${error instanceof Error ? error.message : 'unknown error'}`
+    );
+  }
+
+  const urlSegments = page.url().split('/');
+  const orgIndex = urlSegments.findIndex((segment) => segment === 'organizations');
+  
+  if (orgIndex === -1 || !urlSegments[orgIndex + 1]) {
+    throw new Error(
+      `Unable to determine organization id for "${orgName}": ` +
+      `failed to parse organization ID from URL: ${page.url()}`
+    );
+  }
+
+  return urlSegments[orgIndex + 1];
 };
