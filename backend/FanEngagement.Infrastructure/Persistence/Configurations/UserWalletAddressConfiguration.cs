@@ -26,7 +26,6 @@ public class UserWalletAddressConfiguration : IEntityTypeConfiguration<UserWalle
         builder.Property(x => x.UpdatedAt).IsRequired();
 
         builder.HasIndex(x => x.Address).IsUnique();
-        builder.HasIndex(x => new { x.UserId, x.BlockchainType });
         builder.HasIndex(x => new { x.UserId, x.BlockchainType })
             .HasFilter("\"IsPrimary\" = TRUE")
             .IsUnique()

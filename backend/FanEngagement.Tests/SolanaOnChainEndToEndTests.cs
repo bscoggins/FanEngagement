@@ -285,12 +285,9 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
 
                         if (expectedKeys is not null)
                         {
-                            foreach (var required in expectedKeys)
+                            foreach (var required in expectedKeys.Where(k => !memo.TryGetProperty(k, out _)))
                             {
-                                if (!memo.TryGetProperty(required, out _))
-                                {
-                                    throw new InvalidOperationException($"Memo for transaction {signature} missing required field '{required}'.");
-                                }
+                                throw new InvalidOperationException($"Memo for transaction {signature} missing required field '{required}'.");
                             }
                         }
 
@@ -380,12 +377,9 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                             info.TryGetProperty("tokenAmount", out var tokenAmount))
                         {
                             var amountString = tokenAmount.GetProperty("amount").GetString();
-                            if (ulong.TryParse(amountString, out var amount))
+                            if (ulong.TryParse(amountString, out var amount) && amount >= expectedBalance)
                             {
-                                if (amount >= expectedBalance)
-                                {
-                                    return amount;
-                                }
+                                return amount;
                             }
                         }
                     }
@@ -572,12 +566,9 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                 throw new InvalidOperationException($"Transaction {signature} missing instructions block.");
             }
 
-            foreach (var instruction in instructions.EnumerateArray())
+            foreach (var instruction in instructions.EnumerateArray().Where(i => IsMemoInstruction(i)))
             {
-                if (IsMemoInstruction(instruction))
-                {
-                    return;
-                }
+                return;
             }
 
             throw new InvalidOperationException($"Transaction {signature} does not contain a memo instruction.");

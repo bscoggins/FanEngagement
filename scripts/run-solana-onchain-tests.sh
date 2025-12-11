@@ -34,6 +34,7 @@ cleanup() {
 
   # Keep the local environment tidy between runs.
   docker container prune -f >/dev/null 2>&1 || true
+  # WARNING: This prunes ALL dangling images system-wide, not just those from this test run
   docker image prune -f >/dev/null 2>&1 || true
 }
 
@@ -59,6 +60,14 @@ fi
 if [[ ! -f $KEYPAIR_FILE ]]; then
   echo "Generating Solana test keypair at $KEYPAIR_FILE..."
   solana-keygen new --outfile "$KEYPAIR_FILE" --no-bip39-passphrase >/dev/null
+fi
+
+# Warn if keypair file permissions are too permissive
+if [[ -f "$KEYPAIR_FILE" ]]; then
+  KEYPAIR_PERMS=$(stat -c '%a' "$KEYPAIR_FILE" 2>/dev/null || stat -f '%OLp' "$KEYPAIR_FILE" 2>/dev/null)
+  if [[ "$KEYPAIR_PERMS" != "600" && "$KEYPAIR_PERMS" != "400" ]]; then
+    echo "WARNING: Keypair file $KEYPAIR_FILE has permissions $KEYPAIR_PERMS. Consider using 'chmod 600 $KEYPAIR_FILE' to restrict access."
+  fi
 fi
 
 PUBKEY="$(solana-keygen pubkey "$KEYPAIR_FILE")"

@@ -126,8 +126,11 @@ function truncate(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength - 3)}...`;
 }
 
-function toIsoString(value?: Date): string {
-  const iso = (value ?? new Date()).toISOString();
+function toIsoString(value?: Date): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const iso = value.toISOString();
   return iso.replace(/\.\d{3}Z$/, 'Z');
 }
 

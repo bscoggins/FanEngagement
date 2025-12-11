@@ -47,6 +47,7 @@ internal sealed class TestBlockchainAdapterHandler : HttpMessageHandler
             _ => "{}"
         };
 
+        // HttpResponseMessage is disposed by the caller (HttpClient)
         var response = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(responsePayload, Encoding.UTF8, "application/json")
