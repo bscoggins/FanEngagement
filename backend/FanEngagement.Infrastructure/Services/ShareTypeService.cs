@@ -88,6 +88,9 @@ public class ShareTypeService(
                 await transaction.RollbackAsync(cancellationToken);
             }
 
+            // Detach entity from context to prevent issues on retry
+            dbContext.Entry(shareType).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
             throw;
         }
         finally

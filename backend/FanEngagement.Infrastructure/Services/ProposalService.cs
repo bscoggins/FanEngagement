@@ -1096,7 +1096,7 @@ public class ProposalService(
             title = proposal.Title,
             description = proposal.Description ?? string.Empty,
             options = proposal.Options
-                .OrderBy(o => o.Id)
+                .OrderBy(o => o.Text)
                 .Select(o => new { optionId = o.Id, text = o.Text, description = o.Description ?? string.Empty })
         };
 
