@@ -1,0 +1,221 @@
+/* ===== Card Base Styles ===== */
+.card {
+  /* Reset default styles */
+  font-family: var(--font-family-sans);
+  color: var(--color-text-primary);
+  
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  
+  /* Transitions */
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out);
+  
+  /* Focus styles */
+  outline: none;
+  position: relative;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+/* ===== Card Variants ===== */
+
+/* Default variant - simple card with shadow */
+.card--default {
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* Interactive variant - enhanced hover states */
+.card--interactive {
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+}
+
+/* Clickable cards (any card with onClick or href) */
+.card--clickable {
+  cursor: pointer;
+}
+
+.card--interactive:hover {
+  transform: translateY(-2px);
+}
+
+.card--interactive:active {
+  transform: translateY(0);
+}
+
+/* Bordered variant - emphasized border */
+.card--bordered {
+  border: 2px solid var(--color-border-default);
+}
+
+/* ===== Card Padding Options ===== */
+
+.card--padding-compact {
+  padding: var(--spacing-4);
+}
+
+.card--padding-default {
+  padding: var(--spacing-6);
+}
+
+.card--padding-spacious {
+  padding: var(--spacing-8);
+}
+
+/* ===== Card Elevation Levels ===== */
+
+.card--elevation-none {
+  box-shadow: none;
+}
+
+.card--elevation-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.card--elevation-md {
+  box-shadow: var(--shadow-md);
+}
+
+.card--elevation-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+.card--elevation-xl {
+  box-shadow: var(--shadow-xl);
+}
+
+/* Enhanced elevation on hover for interactive cards */
+.card--interactive.card--elevation-none:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.card--interactive.card--elevation-sm:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card--interactive.card--elevation-md:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.card--interactive.card--elevation-lg:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+.card--interactive.card--elevation-xl:hover {
+  box-shadow: var(--shadow-2xl);
+}
+
+/* ===== Link Wrapper ===== */
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.card-link:focus {
+  outline: none;
+}
+
+.card-link:focus-visible .card {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+/* ===== Dark Mode Support ===== */
+
+/* Prefer color scheme dark */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: var(--color-surface-elevated);
+    border-color: var(--color-border-dark);
+  }
+  
+  .card--default {
+    border-color: var(--color-border-dark);
+  }
+  
+  .card--interactive {
+    border-color: var(--color-border-dark);
+  }
+  
+  .card--interactive:hover {
+    background-color: var(--color-overlay-subtle);
+  }
+  
+  .card--bordered {
+    border-color: var(--color-border-dark);
+  }
+}
+
+/* Theme class dark */
+body.theme-dark .card {
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-border-dark);
+}
+
+body.theme-dark .card--default {
+  border-color: var(--color-border-dark);
+}
+
+body.theme-dark .card--interactive {
+  border-color: var(--color-border-dark);
+}
+
+body.theme-dark .card--interactive:hover {
+  background-color: var(--color-overlay-subtle);
+}
+
+body.theme-dark .card--bordered {
+  border-color: var(--color-border-dark);
+}
+
+/* ===== Reduced Motion Support ===== */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  
+  .card--interactive:hover {
+    transform: none;
+  }
+  
+  .card--interactive:active {
+    transform: none;
+  }
+}
+
+/* ===== Responsive Adjustments ===== */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+  .card--padding-default {
+    padding: var(--spacing-5);
+  }
+  
+  .card--padding-spacious {
+    padding: var(--spacing-6);
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .card--padding-compact {
+    padding: var(--spacing-3);
+  }
+  
+  .card--padding-default {
+    padding: var(--spacing-4);
+  }
+  
+  .card--padding-spacious {
+    padding: var(--spacing-5);
+  }
+}

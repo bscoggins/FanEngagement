@@ -5,6 +5,7 @@ import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
 import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import { QuorumInfo } from '../components/QuorumInfo';
 import { parseApiError } from '../utils/errorUtils';
+import { Card } from '../components/Card';
 import type {
   ProposalDetails,
   UpdateProposalRequest,
@@ -266,7 +267,7 @@ export const AdminProposalDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="admin-page">
-        <div className="admin-card">Loading...</div>
+        <Card>Loading...</Card>
       </div>
     );
   }

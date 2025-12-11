@@ -7,6 +7,7 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { Card } from '../components/Card';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
@@ -214,7 +215,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       )}
 
       {showForm && (
-        <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
+        <Card style={{ marginBottom: '1.5rem' }}>
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
             {editingId ? 'Edit Share Type' : 'Create New Share Type'}
           </h2>
@@ -361,7 +362,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
               {isSaving ? 'Saving...' : (editingId ? 'Update Share Type' : 'Create Share Type')}
             </button>
           </form>
-        </div>
+        </Card>
       )}
 
       {shareTypes.length === 0 ? (
