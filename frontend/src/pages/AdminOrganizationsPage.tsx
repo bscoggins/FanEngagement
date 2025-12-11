@@ -30,13 +30,14 @@ export const AdminOrganizationsPage: React.FC = () => {
     name: '',
     description: '',
   });
-  const pageSize = 10;
 
   const fetchOrganizations = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      // Fetch all organizations for client-side sorting and pagination
+      // Fetch all organizations for client-side sorting, filtering, and pagination
+      // This approach provides consistent sorting across all pages and immediate search feedback
+      // Trade-off: Performance may degrade with very large datasets (consider server-side for 1000+ orgs)
       const data = await organizationsApi.getAll();
       setAllOrganizations(data);
     } catch (err) {
@@ -148,14 +149,15 @@ export const AdminOrganizationsPage: React.FC = () => {
     return sorted;
   }, [filteredOrganizations, sortConfig]);
 
-  // Paginate the sorted organizations
+  // Pagination
+  const PAGE_SIZE = 10;
   const paginatedOrganizations = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
     return sortedOrganizations.slice(startIndex, endIndex);
-  }, [sortedOrganizations, currentPage, pageSize]);
+  }, [sortedOrganizations, currentPage]);
 
-  const totalPages = Math.ceil(sortedOrganizations.length / pageSize);
+  const totalPages = Math.ceil(sortedOrganizations.length / PAGE_SIZE);
   const hasPreviousPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
 
@@ -369,7 +371,7 @@ export const AdminOrganizationsPage: React.FC = () => {
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
           <span>
-            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
+            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * PAGE_SIZE + 1) : 0} - {Math.min(currentPage * PAGE_SIZE, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
           </span>
         </div>
       </div>

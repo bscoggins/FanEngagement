@@ -23,13 +23,14 @@ export const AdminUsersPage: React.FC = () => {
     key: 'name',
     direction: 'asc',
   });
-  const pageSize = 10;
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      // Fetch all users for client-side sorting and pagination
+      // Fetch all users for client-side sorting, filtering, and pagination
+      // This approach provides consistent sorting across all pages and immediate search feedback
+      // Trade-off: Performance may degrade with very large datasets (consider server-side for 1000+ users)
       const data = await usersApi.getAll();
       setAllUsers(data);
     } catch (err) {
@@ -121,14 +122,15 @@ export const AdminUsersPage: React.FC = () => {
     return sorted;
   }, [filteredUsers, sortConfig]);
 
-  // Paginate the sorted users
+  // Pagination
+  const PAGE_SIZE = 10;
   const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
     return sortedUsers.slice(startIndex, endIndex);
-  }, [sortedUsers, currentPage, pageSize]);
+  }, [sortedUsers, currentPage]);
 
-  const totalPages = Math.ceil(sortedUsers.length / pageSize);
+  const totalPages = Math.ceil(sortedUsers.length / PAGE_SIZE);
   const hasPreviousPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
 
@@ -224,7 +226,7 @@ export const AdminUsersPage: React.FC = () => {
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
           <span>
-            Showing {paginatedUsers.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, sortedUsers.length)} of {sortedUsers.length} users
+            Showing {paginatedUsers.length > 0 ? ((currentPage - 1) * PAGE_SIZE + 1) : 0} - {Math.min(currentPage * PAGE_SIZE, sortedUsers.length)} of {sortedUsers.length} users
           </span>
         </div>
       </div>

@@ -40,11 +40,6 @@ export interface TableColumn<T> {
    * Optional width for this column
    */
   width?: string;
-  
-  /**
-   * Hide on mobile (for card layout)
-   */
-  hideOnMobile?: boolean;
 }
 
 export interface TableProps<T> {
