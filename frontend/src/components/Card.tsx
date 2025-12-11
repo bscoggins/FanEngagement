@@ -94,17 +94,19 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     },
     ref
   ) => {
+    const isInteractive = variant === 'interactive' || onClick || href;
+    
     const classes = [
       'card',
       `card--${variant}`,
       `card--padding-${padding}`,
       `card--elevation-${elevation}`,
+      isInteractive && 'card--clickable',
       className,
     ]
       .filter(Boolean)
       .join(' ');
 
-    const isInteractive = variant === 'interactive' || onClick || href;
     const role = isInteractive && !href ? 'button' : undefined;
     const effectiveTabIndex = isInteractive ? (tabIndex !== undefined ? tabIndex : 0) : undefined;
 
@@ -114,20 +116,21 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={classes}
         style={style}
         data-testid={testId}
-        onClick={onClick}
         role={role}
-        tabIndex={effectiveTabIndex}
-        aria-label={ariaLabel}
-        onKeyDown={
-          isInteractive && onClick
-            ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onClick();
+        {...(!href && {
+          onClick,
+          tabIndex: effectiveTabIndex,
+          'aria-label': ariaLabel,
+          onKeyDown:
+            isInteractive && onClick
+              ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onClick();
+                  }
                 }
-              }
-            : undefined
-        }
+              : undefined,
+        })}
         {...rest}
       >
         {children}

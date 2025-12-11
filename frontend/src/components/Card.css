@@ -38,6 +38,11 @@
   cursor: pointer;
 }
 
+/* Clickable cards (any card with onClick or href) */
+.card--clickable {
+  cursor: pointer;
+}
+
 .card--interactive:hover {
   transform: translateY(-2px);
 }
@@ -142,7 +147,7 @@
   }
   
   .card--interactive:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--color-overlay-subtle);
   }
   
   .card--bordered {
@@ -165,7 +170,7 @@ body.theme-dark .card--interactive {
 }
 
 body.theme-dark .card--interactive:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--color-overlay-subtle);
 }
 
 body.theme-dark .card--bordered {
