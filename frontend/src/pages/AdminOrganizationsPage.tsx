@@ -121,8 +121,21 @@ export const AdminOrganizationsPage: React.FC = () => {
           bValue = new Date(b.createdAt);
           break;
         default:
-          console.warn(`AdminOrganizationsPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Items will not be sorted. Please update the sort logic to handle this key.`);
-          return 0;
+          console.warn(`AdminOrganizationsPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Falling back to generic comparison.`);
+          aValue = (a as any)[sortConfig.key];
+          bValue = (b as any)[sortConfig.key];
+          // Handle null/undefined values
+          if (aValue == null && bValue == null) return 0;
+          if (aValue == null) return 1;
+          if (bValue == null) return -1;
+          // Convert to string for comparison if not already comparable
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+          }
+          if (typeof bValue === 'string') {
+            bValue = bValue.toLowerCase();
+          }
+          break;
       }
 
       if (aValue < bValue) {
