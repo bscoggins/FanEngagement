@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -23,7 +24,7 @@ using Xunit;
 
 namespace FanEngagement.Tests;
 
-public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>
+public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>, IDisposable
 {
     private readonly HttpClient _client;
     private readonly SolanaOnChainTestWebApplicationFactory _factory;
@@ -39,6 +40,12 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
         _solanaRpcClient = new SolanaRpcClient(rpcUrl);
         _adapterApiKey = Environment.GetEnvironmentVariable("SOLANA_ADAPTER_API_KEY") ?? "dev-api-key-change-in-production";
         _adapterBaseUrl = Environment.GetEnvironmentVariable("SOLANA_ADAPTER_BASE_URL") ?? "http://localhost:3001/v1/adapter/";
+    }
+
+    public void Dispose()
+    {
+        _solanaRpcClient.Dispose();
+        _client.Dispose();
     }
 
     [SolanaOnChainFact]
@@ -250,7 +257,7 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
             ?? throw new InvalidOperationException("Vote response could not be parsed.");
     }
 
-    private sealed class SolanaRpcClient
+    private sealed class SolanaRpcClient : IDisposable
     {
         private const string MemoProgramId = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
         private readonly HttpClient _httpClient;
@@ -264,15 +271,29 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
             };
         }
 
+        public void Dispose()
+        {
+            _httpClient.Dispose();
+        }
+
         public async Task<JsonElement> WaitForMemoBySignatureAsync(
             string signature,
             Func<JsonElement, bool> predicate,
             CancellationToken cancellationToken,
             string[]? expectedKeys = null)
         {
+            const int maxRetries = 300; // 5 minutes at 1 second intervals
+            var retries = 0;
+            
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                
+                if (++retries > maxRetries)
+                {
+                    throw new TimeoutException(
+                        $"Transaction {signature} was not found or did not match predicate after {maxRetries} retries.");
+                }
 
                 var transaction = await TryGetTransactionAsync(signature, cancellationToken);
                 if (transaction is not null && transaction.RootElement.TryGetProperty("result", out var resultElement) && resultElement.ValueKind != JsonValueKind.Null)
@@ -545,9 +566,10 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                             var decoded = Convert.FromBase64String(raw);
                             return Encoding.UTF8.GetString(decoded);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // ignore malformed base64 payloads
+                            // Log malformed base64 data but continue processing
+                            Debug.WriteLine($"Failed to decode base64 memo data: {ex.Message}");
                         }
                     }
                 }
@@ -628,12 +650,7 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
 
     private static ulong ToScaledQuantity(decimal quantity, int decimals)
     {
-        var scaled = quantity;
-        for (var i = 0; i < decimals; i++)
-        {
-            scaled *= 10;
-        }
-
+        var scaled = quantity * (decimal)Math.Pow(10, decimals);
         return checked((ulong)scaled);
     }
 

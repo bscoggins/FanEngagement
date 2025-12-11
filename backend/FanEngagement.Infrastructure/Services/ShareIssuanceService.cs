@@ -121,6 +121,12 @@ public class ShareIssuanceService(
 
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
                 var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organization.BlockchainType, cancellationToken);
+                
+                if (string.IsNullOrWhiteSpace(recipientWalletAddress))
+                {
+                    throw new InvalidOperationException(
+                        $"User {request.UserId} does not have a primary wallet address configured for {organization.BlockchainType}.");
+                }
 
                 var onChainResult = await adapter.RecordShareIssuanceAsync(
                     new RecordShareIssuanceCommand(
