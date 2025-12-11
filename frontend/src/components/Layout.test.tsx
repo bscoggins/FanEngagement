@@ -181,6 +181,31 @@ describe('Layout', () => {
       // Users link should never be visible for OrgAdmins (only GlobalAdmins)
       expect(screen.queryByRole('link', { name: /^users$/i })).not.toBeInTheDocument();
     });
+
+    it('shows only the admin-scoped My Account link for OrgAdmin users', async () => {
+      const mockMemberships: MembershipWithOrganizationDto[] = [
+        {
+          id: 'membership-1',
+          organizationId: 'org-1',
+          organizationName: 'Org Admin Org',
+          userId: 'user-123',
+          role: 'OrgAdmin',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      renderLayout({ isAuthenticated: true, role: 'User' }, mockMemberships);
+
+      await waitFor(() => {
+        expect(membershipsApi.getByUserId).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        const adminMyAccountLink = screen.getByTestId('admin-nav-adminMyAccount');
+        expect(adminMyAccountLink).toHaveAttribute('href', '/admin/my-account');
+        expect(screen.queryByTestId('admin-nav-platformMyAccount')).not.toBeInTheDocument();
+      });
+    });
   });
 
   describe('Navigation visibility for PlatformAdmin (GlobalAdmin) users', () => {
@@ -198,6 +223,8 @@ describe('Layout', () => {
         expect(screen.getByTestId('nav-myAccount')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /my organizations/i })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: /platform overview/i })).toBeInTheDocument();
+        expect(screen.getByTestId('admin-nav-platformMyAccount')).toBeInTheDocument();
+        expect(screen.queryByTestId('admin-nav-adminMyAccount')).not.toBeInTheDocument();
       });
     });
 
@@ -252,14 +279,15 @@ describe('Layout', () => {
         const myAccountLink = screen.getByTestId('nav-myAccount');
         const myOrgsLink = screen.getByTestId('nav-myOrganizations');
         const adminDashboardLink = screen.getByTestId('admin-nav-adminDashboard');
-        const adminMyAccountLink = screen.getByTestId('admin-nav-adminMyAccount');
+        const platformMyAccountLink = screen.getByTestId('admin-nav-platformMyAccount');
         const platformOverviewLink = screen.getByTestId('admin-nav-platformDashboard');
 
         expect(myAccountLink).toHaveAttribute('href', '/me');
         expect(myOrgsLink).toHaveAttribute('href', '/me/organizations');
         expect(adminDashboardLink).toHaveAttribute('href', '/admin/dashboard');
-        expect(adminMyAccountLink).toHaveAttribute('href', '/admin/my-account');
+        expect(platformMyAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
         expect(platformOverviewLink).toHaveAttribute('href', '/platform-admin/dashboard');
+        expect(screen.queryByTestId('admin-nav-adminMyAccount')).not.toBeInTheDocument();
       });
     });
   });

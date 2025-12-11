@@ -35,7 +35,13 @@ export const Layout: React.FC = () => {
 
   // Get visible global-scoped nav items (for admin links)
   const globalNavItems = useMemo(() => {
-    const items = getVisibleNavItems(navContext, { scope: 'global' });
+    const items = getVisibleNavItems(navContext, { scope: 'global' })
+      .filter(item => {
+        if (navContext.isPlatformAdmin) {
+          return item.id !== 'adminMyAccount';
+        }
+        return item.id !== 'platformMyAccount';
+      });
     return items.map(item => getResolvedNavItem(item, navContext));
   }, [navContext]);
 
