@@ -83,24 +83,6 @@ export const AdminUsersPage: React.FC = () => {
     setSearchQuery(value);
   };
 
-  if (isLoading) {
-    return (
-      <div>
-        <h1 data-testid="users-heading">User Management</h1>
-        <LoadingSpinner message="Loading users..." />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <h1 data-testid="users-heading">User Management</h1>
-        <ErrorMessage message={error} onRetry={() => fetchUsers()} />
-      </div>
-    );
-  }
-
   const columns = useMemo<TableColumn<User>[]>(
     () => [
       {
@@ -157,6 +139,24 @@ export const AdminUsersPage: React.FC = () => {
     ],
     [navigate]
   );
+
+  if (isLoading) {
+    return (
+      <div>
+        <h1 data-testid="users-heading">User Management</h1>
+        <LoadingSpinner message="Loading users..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h1 data-testid="users-heading">User Management</h1>
+        <ErrorMessage message={error} onRetry={() => fetchUsers()} />
+      </div>
+    );
+  }
 
   return (
     <div>

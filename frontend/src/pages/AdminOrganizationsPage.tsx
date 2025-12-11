@@ -113,24 +113,6 @@ export const AdminOrganizationsPage: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div>
-        <h1>Organization Management</h1>
-        <LoadingSpinner message="Loading organizations..." />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div>
-        <h1>Organization Management</h1>
-        <ErrorMessage message={error} onRetry={() => fetchOrganizations()} />
-      </div>
-    );
-  }
-
   const columns = useMemo<TableColumn<Organization>[]>(
     () => [
       {
@@ -210,6 +192,24 @@ export const AdminOrganizationsPage: React.FC = () => {
     ],
     [navigate]
   );
+
+  if (isLoading) {
+    return (
+      <div>
+        <h1>Organization Management</h1>
+        <LoadingSpinner message="Loading organizations..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <h1>Organization Management</h1>
+        <ErrorMessage message={error} onRetry={() => fetchOrganizations()} />
+      </div>
+    );
+  }
 
   return (
     <div>
