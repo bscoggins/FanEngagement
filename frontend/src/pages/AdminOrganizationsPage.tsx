@@ -109,14 +109,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       key: 'description',
       label: 'Description',
       render: (org) => (
-        <span style={{ 
-          color: org.description ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-          maxWidth: '300px',
-          display: 'block',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
+        <span className={org.description ? 'text-truncate' : 'text-secondary'}>
           {org.description || 'No description'}
         </span>
       ),
@@ -125,7 +118,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       key: 'created',
       label: 'Created',
       render: (org) => (
-        <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+        <span className="text-secondary">
           {new Date(org.createdAt).toLocaleDateString()}
         </span>
       ),
