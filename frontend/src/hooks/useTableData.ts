@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 export interface SortConfig {
   key: string;
@@ -66,6 +66,7 @@ export function useTableData<T>({
 }: UseTableDataOptions<T>): UseTableDataResult<T> {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<SortConfig>(initialSortConfig);
+  const warnedKeys = useRef<Set<string>>(new Set());
 
   const handleSort = useCallback((key: string) => {
     setSortConfig((prevConfig) => ({
@@ -88,16 +89,17 @@ export function useTableData<T>({
       const fields = searchFields(item);
       return fields.some(field => field && field.toLowerCase().includes(query));
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- searchFields is expected to be stable (memoized with useCallback) at the call site
-  }, [data, searchQuery]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- searchFields should be memoized with useCallback at the call site for performance, but is included here to ensure correctness
+  }, [data, searchQuery, searchFields]);
 
   // Sort data based on sortConfig
   const sortedData = useMemo(() => {
     const sorted = [...filteredData];
     
-    // Log warning once if using generic fallback (not per comparison)
-    if (!customSortFields[sortConfig.key]) {
+    // Log warning once per unknown key (use useRef to track)
+    if (!customSortFields[sortConfig.key] && !warnedKeys.current.has(sortConfig.key)) {
       console.warn(`${componentName}: Unknown sort key "${sortConfig.key}" encountered in sort logic. Attempting generic comparison. Please update the sort logic to handle this key.`);
+      warnedKeys.current.add(sortConfig.key);
     }
     
     sorted.sort((a, b) => {

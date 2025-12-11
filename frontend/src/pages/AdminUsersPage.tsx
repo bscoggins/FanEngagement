@@ -13,6 +13,8 @@ import { parseApiError } from '../utils/errorUtils';
 import { useTableData } from '../hooks/useTableData';
 import type { User } from '../types/api';
 
+const PAGE_SIZE = 10;
+
 export const AdminUsersPage: React.FC = () => {
   const navigate = useNavigate();
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -68,7 +70,7 @@ export const AdminUsersPage: React.FC = () => {
     searchFields,
     initialSortConfig: { key: 'name', direction: 'asc' },
     customSortFields,
-    pageSize: 10,
+    pageSize: PAGE_SIZE,
     componentName: 'AdminUsersPage',
   });
 
@@ -173,7 +175,7 @@ export const AdminUsersPage: React.FC = () => {
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
           <span>
-            Showing {paginatedUsers.length > 0 ? ((currentPage - 1) * 10 + 1) : 0} - {Math.min(currentPage * 10, sortedUsers.length)} of {sortedUsers.length} users
+            Showing {paginatedUsers.length > 0 ? ((currentPage - 1) * PAGE_SIZE + 1) : 0} - {Math.min(currentPage * PAGE_SIZE, sortedUsers.length)} of {sortedUsers.length} users
           </span>
         </div>
       </div>

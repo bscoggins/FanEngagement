@@ -13,6 +13,8 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useTableData } from '../hooks/useTableData';
 import type { Organization, CreateOrganizationRequest } from '../types/api';
 
+const PAGE_SIZE = 10;
+
 export const AdminOrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotifications();
@@ -74,7 +76,7 @@ export const AdminOrganizationsPage: React.FC = () => {
     searchFields,
     initialSortConfig: { key: 'name', direction: 'asc' },
     customSortFields,
-    pageSize: 10,
+    pageSize: PAGE_SIZE,
     componentName: 'AdminOrganizationsPage',
   });
 
@@ -321,7 +323,7 @@ export const AdminOrganizationsPage: React.FC = () => {
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
           <span>
-            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * 10 + 1) : 0} - {Math.min(currentPage * 10, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
+            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * PAGE_SIZE + 1) : 0} - {Math.min(currentPage * PAGE_SIZE, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
           </span>
         </div>
       </div>
