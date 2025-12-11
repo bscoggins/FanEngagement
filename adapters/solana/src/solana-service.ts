@@ -630,6 +630,12 @@ export class SolanaService {
    * 
    * Note: Node.js is single-threaded, so Map operations are atomic.
    * No additional synchronization is needed for concurrent access.
+   * 
+   * Cache Lifetime: Values are cached for the lifetime of the service instance.
+   * If the minimum rent exemption changes (e.g., due to Solana network upgrades),
+   * cached values will become stale. A service restart is required to refresh cached values.
+   * This is acceptable since rent exemption changes are rare and typically require
+   * application updates regardless.
    */
   private async getRentExemptionLamports(space = 0): Promise<number> {
     if (!this.rentExemptionCache.has(space)) {
