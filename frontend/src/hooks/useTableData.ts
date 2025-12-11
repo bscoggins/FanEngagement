@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 
 export interface SortConfig {
   key: string;
@@ -74,6 +74,11 @@ export function useTableData<T>({
     }));
     setCurrentPage(1); // Reset to first page when sort changes
   }, []);
+
+  // Reset to first page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Filter data based on search query
   const filteredData = useMemo(() => {

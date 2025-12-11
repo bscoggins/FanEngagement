@@ -51,6 +51,7 @@ export const AdminOrganizationsPage: React.FC = () => {
 
   const {
     paginatedData: paginatedOrganizations,
+    sortedData: sortedOrganizations,
     currentPage,
     totalPages,
     hasPreviousPage,
@@ -314,7 +315,7 @@ export const AdminOrganizationsPage: React.FC = () => {
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
           <span>
-            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * PAGE_SIZE + 1) : 0} - {Math.min(currentPage * PAGE_SIZE, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
+            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * 10 + 1) : 0} - {Math.min(currentPage * 10, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
           </span>
         </div>
       </div>
