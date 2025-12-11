@@ -286,7 +286,7 @@ export class SolanaService {
       // the memo data is permanently recorded on-chain and cannot be undone or modified.
       // Ensure memo correctness before submission.
       // In production, this would call a deployed Solana program
-        const rentLamports = await this.getRentExemptionLamports();
+      const rentLamports = await this.getRentExemptionLamports();
       const memoInstruction = this.createMemoInstruction(buildProposalMemo({
           organizationId,
           proposalId,
