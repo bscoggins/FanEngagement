@@ -270,6 +270,7 @@ describe('navConfig', () => {
         
         // Should see platform admin items
         expect(items.find(i => i.id === 'platformDashboard')).toBeDefined();
+        expect(items.find(i => i.id === 'platformMyAccount')).toBeDefined();
         expect(items.find(i => i.id === 'adminDashboard')).toBeDefined();
         expect(items.find(i => i.id === 'manageUsers')).toBeDefined();
         expect(items.find(i => i.id === 'manageOrganizations')).toBeDefined();
@@ -426,6 +427,7 @@ describe('navConfig', () => {
         'myAccount',
         'myOrganizations',
         'platformDashboard',
+        'platformMyAccount',
         'adminDashboard',
         'manageUsers',
         'manageOrganizations',

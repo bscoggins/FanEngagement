@@ -47,7 +47,14 @@ export const AdminLayout: React.FC = () => {
 
   // Get visible global nav items (platform-wide)
   const globalNavItems = useMemo(() => {
-    const items = getVisibleNavItems(navContext, { scope: 'global' });
+    // Platform admins: show platform-scoped My Account; OrgAdmins: show admin-scoped My Account
+    const items = getVisibleNavItems(navContext, { scope: 'global' })
+      .filter(item => {
+        if (navContext.isPlatformAdmin) {
+          return item.id !== 'adminMyAccount';
+        }
+        return item.id !== 'platformMyAccount';
+      });
     return items.map(item => getResolvedNavItem(item, navContext));
   }, [navContext]);
 
@@ -267,6 +274,7 @@ export const AdminLayout: React.FC = () => {
                   key={item.id}
                   to={item.resolvedPath}
                   className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
+                  data-testid={`admin-nav-${item.id}`}
                   aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
                 >
                   {item.label}

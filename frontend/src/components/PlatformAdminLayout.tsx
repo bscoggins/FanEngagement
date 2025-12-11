@@ -34,7 +34,9 @@ export const PlatformAdminLayout: React.FC = () => {
 
   // Get visible global nav items (platform-wide)
   const globalNavItems = useMemo(() => {
-    const items = getVisibleNavItems(navContext, { scope: 'global' });
+    const items = getVisibleNavItems(navContext, { scope: 'global' })
+      // Avoid duplicating My Account; platform admins should see the platform-scoped entry here
+      .filter(item => item.id !== 'adminMyAccount');
     return items.map(item => getResolvedNavItem(item, navContext));
   }, [navContext]);
 
