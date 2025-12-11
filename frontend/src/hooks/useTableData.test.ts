@@ -220,4 +220,28 @@ describe('useTableData', () => {
     expect(result.current.filteredData).toHaveLength(1);
     expect(result.current.filteredData[0].displayName).toBe('Alice Smith');
   });
+
+  it('should reset page to 1 when search query changes', () => {
+    const { result, rerender } = renderHook(
+      ({ searchQuery }) =>
+        useTableData({
+          data: mockUsers,
+          searchQuery,
+          searchFields: (user) => [user.displayName, user.email],
+          initialSortConfig: { key: 'name', direction: 'asc' },
+          pageSize: 2,
+        }),
+      { initialProps: { searchQuery: '' } }
+    );
+
+    // Go to page 2
+    act(() => {
+      result.current.setCurrentPage(2);
+    });
+    expect(result.current.currentPage).toBe(2);
+
+    // Change search query - should reset to page 1
+    rerender({ searchQuery: 'alice' });
+    expect(result.current.currentPage).toBe(1);
+  });
 });

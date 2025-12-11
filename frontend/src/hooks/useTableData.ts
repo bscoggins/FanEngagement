@@ -88,11 +88,18 @@ export function useTableData<T>({
       const fields = searchFields(item);
       return fields.some(field => field && field.toLowerCase().includes(query));
     });
-  }, [data, searchQuery, searchFields]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- searchFields is expected to be stable (memoized with useCallback) at the call site
+  }, [data, searchQuery]);
 
   // Sort data based on sortConfig
   const sortedData = useMemo(() => {
     const sorted = [...filteredData];
+    
+    // Log warning once if using generic fallback (not per comparison)
+    if (!customSortFields[sortConfig.key]) {
+      console.warn(`${componentName}: Unknown sort key "${sortConfig.key}" encountered in sort logic. Attempting generic comparison. Please update the sort logic to handle this key.`);
+    }
+    
     sorted.sort((a, b) => {
       let aValue: string | Date;
       let bValue: string | Date;
@@ -104,7 +111,6 @@ export function useTableData<T>({
         bValue = sortFn(b);
       } else {
         // Generic fallback: access property dynamically
-        console.warn(`${componentName}: Unknown sort key "${sortConfig.key}" encountered in sort logic. Attempting generic comparison. Please update the sort logic to handle this key.`);
         const rawA = (a as any)[sortConfig.key];
         const rawB = (b as any)[sortConfig.key];
         

@@ -276,6 +276,29 @@ describe('Table', () => {
       expect(handleSort).toHaveBeenCalledWith('name');
     });
 
+    it('should support keyboard navigation on sortable headers with Space key', async () => {
+      const user = userEvent.setup();
+      const handleSort = vi.fn();
+      const columns: TableColumn<TestData>[] = [
+        { key: 'name', label: 'Name', render: (item) => item.name, sortable: true },
+      ];
+
+      render(
+        <Table
+          data={mockData}
+          columns={columns}
+          getRowKey={(item) => item.id}
+          onSort={handleSort}
+        />
+      );
+
+      const nameHeader = screen.getByRole('button', { name: /Name/i });
+      nameHeader.focus();
+      await user.keyboard(' ');
+
+      expect(handleSort).toHaveBeenCalledWith('name');
+    });
+
     it('should display ascending sort icon', () => {
       const columns: TableColumn<TestData>[] = [
         { key: 'name', label: 'Name', render: (item) => item.name, sortable: true },
@@ -384,6 +407,26 @@ describe('Table', () => {
       const firstRow = screen.getByRole('button', { name: /Alice Johnson/i });
       firstRow.focus();
       await user.keyboard('{Enter}');
+
+      expect(handleRowClick).toHaveBeenCalledWith(mockData[0], 0);
+    });
+
+    it('should support keyboard navigation on clickable rows with Space key', async () => {
+      const user = userEvent.setup();
+      const handleRowClick = vi.fn();
+
+      render(
+        <Table
+          data={mockData}
+          columns={baseColumns}
+          getRowKey={(item) => item.id}
+          onRowClick={handleRowClick}
+        />
+      );
+
+      const firstRow = screen.getByRole('button', { name: /Alice Johnson/i });
+      firstRow.focus();
+      await user.keyboard(' ');
 
       expect(handleRowClick).toHaveBeenCalledWith(mockData[0], 0);
     });

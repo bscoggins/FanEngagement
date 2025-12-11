@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -42,6 +42,16 @@ export const AdminUsersPage: React.FC = () => {
     fetchUsers();
   }, []);
 
+  // Memoize search fields function to prevent unnecessary recalculations
+  const searchFields = useCallback((user: User) => [user.displayName, user.email], []);
+
+  // Memoize custom sort fields to prevent unnecessary recalculations
+  const customSortFields = useMemo(() => ({
+    name: (user: User) => user.displayName.toLowerCase(),
+    email: (user: User) => user.email.toLowerCase(),
+    created: (user: User) => new Date(user.createdAt),
+  }), []);
+
   const {
     paginatedData: paginatedUsers,
     sortedData: sortedUsers,
@@ -55,13 +65,9 @@ export const AdminUsersPage: React.FC = () => {
   } = useTableData({
     data: allUsers,
     searchQuery,
-    searchFields: (user) => [user.displayName, user.email],
+    searchFields,
     initialSortConfig: { key: 'name', direction: 'asc' },
-    customSortFields: {
-      name: (user) => user.displayName.toLowerCase(),
-      email: (user) => user.email.toLowerCase(),
-      created: (user) => new Date(user.createdAt),
-    },
+    customSortFields,
     pageSize: 10,
     componentName: 'AdminUsersPage',
   });

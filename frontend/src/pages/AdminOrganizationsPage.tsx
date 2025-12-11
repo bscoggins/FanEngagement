@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -49,6 +49,15 @@ export const AdminOrganizationsPage: React.FC = () => {
     fetchOrganizations();
   }, []);
 
+  // Memoize search fields function to prevent unnecessary recalculations
+  const searchFields = useCallback((org: Organization) => [org.name, org.description || ''], []);
+
+  // Memoize custom sort fields to prevent unnecessary recalculations
+  const customSortFields = useMemo(() => ({
+    name: (org: Organization) => org.name.toLowerCase(),
+    created: (org: Organization) => new Date(org.createdAt),
+  }), []);
+
   const {
     paginatedData: paginatedOrganizations,
     sortedData: sortedOrganizations,
@@ -62,12 +71,9 @@ export const AdminOrganizationsPage: React.FC = () => {
   } = useTableData({
     data: allOrganizations,
     searchQuery,
-    searchFields: (org) => [org.name, org.description || ''],
+    searchFields,
     initialSortConfig: { key: 'name', direction: 'asc' },
-    customSortFields: {
-      name: (org) => org.name.toLowerCase(),
-      created: (org) => new Date(org.createdAt),
-    },
+    customSortFields,
     pageSize: 10,
     componentName: 'AdminOrganizationsPage',
   });
