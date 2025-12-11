@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -165,18 +166,10 @@ public class HashNormalizationIntegrationTests : IClassFixture<SolanaOnChainTest
             var normalized = hash.StartsWith("0x") ? hash[2..] : hash;
             normalized = normalized.ToLowerInvariant();
             
-            // Check format: 64 lowercase hex characters
-            if (normalized.Length != 64)
+            // Check format: 64 lowercase hex characters using regex (more efficient)
+            if (!Regex.IsMatch(normalized, @"^[a-f0-9]{64}$"))
             {
                 return false;
-            }
-
-            foreach (var c in normalized)
-            {
-                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')))
-                {
-                    return false;
-                }
             }
 
             // Verify it matches what the backend produced (if not invalid)

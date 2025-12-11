@@ -128,8 +128,9 @@ function validateHash(value: string | undefined, fieldName: string): void {
     return; // Optional hashes are allowed
   }
 
+  // Normalize first: remove 0x prefix and convert to lowercase
   const normalized = value.startsWith('0x') ? value.slice(2) : value;
-  const hexPattern = /^[a-fA-F0-9]{64}$/;
+  const hexPattern = /^[a-f0-9]{64}$/;
   
   if (!hexPattern.test(normalized)) {
     throw new Error(
