@@ -26,6 +26,17 @@
   background-color: var(--color-neutral-100);
 }
 
+/* Dark mode overrides for sticky header */
+@media (prefers-color-scheme: dark) {
+  .table-container--sticky-header .data-table thead {
+    background-color: var(--color-surface-elevated);
+  }
+}
+
+body.theme-dark .table-container--sticky-header .data-table thead {
+  background-color: var(--color-surface-elevated);
+}
+
 /* ===== Base Table ===== */
 .data-table {
   width: 100%;

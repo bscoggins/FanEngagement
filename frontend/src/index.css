@@ -442,7 +442,12 @@ body.theme-dark {
   font-size: var(--font-size-sm);
 }
 
-/* Text truncation utility */
+/* Text truncation utility 
+ * Note: The base .text-truncate class provides ellipsis behavior but requires
+ * a size variant (.text-truncate-sm, .text-truncate-md, or .text-truncate-lg)
+ * to set the max-width constraint. Use both classes together:
+ * className="text-truncate text-truncate-md"
+ */
 .text-truncate {
   display: block;
   overflow: hidden;
