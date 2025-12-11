@@ -101,59 +101,62 @@ export const AdminUsersPage: React.FC = () => {
     );
   }
 
-  const columns: TableColumn<User>[] = [
-    {
-      key: 'name',
-      label: 'Name',
-      render: (user) => user.displayName,
-      sortable: true,
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      render: (user) => user.email,
-      sortable: true,
-    },
-    {
-      key: 'role',
-      label: 'Role',
-      render: (user) => (
-        <Badge variant={user.role === 'Admin' ? 'info' : 'neutral'}>
-          {user.role}
-        </Badge>
-      ),
-      align: 'left',
-    },
-    {
-      key: 'created',
-      label: 'Created',
-      render: (user) => (
-        <span style={{ color: 'var(--color-text-secondary)' }}>
-          {new Date(user.createdAt).toLocaleDateString()}
-        </span>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      align: 'center',
-      render: (user) => (
-        <div className="table-actions">
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/users/${user.id}`);
-            }}
-          >
-            Edit
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = useMemo<TableColumn<User>[]>(
+    () => [
+      {
+        key: 'name',
+        label: 'Name',
+        render: (user) => user.displayName,
+        sortable: true,
+      },
+      {
+        key: 'email',
+        label: 'Email',
+        render: (user) => user.email,
+        sortable: true,
+      },
+      {
+        key: 'role',
+        label: 'Role',
+        render: (user) => (
+          <Badge variant={user.role === 'Admin' ? 'info' : 'neutral'}>
+            {user.role}
+          </Badge>
+        ),
+        align: 'left',
+      },
+      {
+        key: 'created',
+        label: 'Created',
+        render: (user) => (
+          <span style={{ color: 'var(--color-text-secondary)' }}>
+            {new Date(user.createdAt).toLocaleDateString()}
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        key: 'actions',
+        label: 'Actions',
+        align: 'center',
+        render: (user) => (
+          <div className="table-actions">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/users/${user.id}`);
+              }}
+            >
+              Edit
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [navigate]
+  );
 
   return (
     <div>
