@@ -441,3 +441,16 @@ body.theme-dark {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Text alignment utilities */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}

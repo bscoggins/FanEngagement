@@ -54,20 +54,20 @@ describe('AdminUsersPage', () => {
   };
 
   it('renders user management heading', () => {
-    vi.mocked(usersApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(usersApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminUsersPage();
     expect(screen.getByText('User Management')).toBeInTheDocument();
   });
 
   it('displays loading state initially', () => {
-    vi.mocked(usersApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(usersApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminUsersPage();
     
     expect(screen.getByText(/loading users/i)).toBeInTheDocument();
   });
 
   it('displays users list after loading', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -83,7 +83,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays user roles correctly', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -97,7 +97,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays edit links for each user', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -113,7 +113,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays create user button', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -127,7 +127,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays error message when API call fails', async () => {
-    vi.mocked(usersApi.getAllPaged).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(usersApi.getAll).mockRejectedValueOnce(new Error('Network error'));
     
     renderAdminUsersPage();
     
@@ -139,15 +139,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays empty state when no users exist', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce({
-      items: [],
-      totalCount: 0,
-      page: 1,
-      pageSize: 10,
-      totalPages: 0,
-      hasPreviousPage: false,
-      hasNextPage: false,
-    });
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce([]);
     
     renderAdminUsersPage();
     

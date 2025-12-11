@@ -65,14 +65,6 @@
   user-select: none;
 }
 
-.data-table th.text-center {
-  text-align: center;
-}
-
-.data-table th.text-right {
-  text-align: right;
-}
-
 /* Sortable column headers */
 .data-table th[role="button"] {
   cursor: pointer;

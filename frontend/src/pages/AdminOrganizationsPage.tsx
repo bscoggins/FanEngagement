@@ -10,12 +10,12 @@ import { Table, type TableColumn } from '../components/Table';
 import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
-import type { Organization, PagedResult, CreateOrganizationRequest } from '../types/api';
+import type { Organization, CreateOrganizationRequest } from '../types/api';
 
 export const AdminOrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotifications();
-  const [pagedResult, setPagedResult] = useState<PagedResult<Organization> | null>(null);
+  const [allOrganizations, setAllOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,12 +32,13 @@ export const AdminOrganizationsPage: React.FC = () => {
   });
   const pageSize = 10;
 
-  const fetchOrganizations = async (page: number, search: string) => {
+  const fetchOrganizations = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await organizationsApi.getAllPaged(page, pageSize, search || undefined);
-      setPagedResult(data);
+      // Fetch all organizations for client-side sorting and pagination
+      const data = await organizationsApi.getAll();
+      setAllOrganizations(data);
     } catch (err) {
       console.error('Failed to fetch organizations:', err);
       const errorMessage = parseApiError(err);
@@ -48,8 +49,8 @@ export const AdminOrganizationsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchOrganizations(currentPage, searchQuery);
-  }, [currentPage, searchQuery]);
+    fetchOrganizations();
+  }, [searchQuery]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -78,6 +79,9 @@ export const AdminOrganizationsPage: React.FC = () => {
       setShowCreateForm(false);
       setCreateFormData({ name: '', description: '' });
       
+      // Refresh the list to include the new organization
+      await fetchOrganizations();
+      
       // Navigate to the edit page for the new organization
       navigate(`/admin/organizations/${newOrg.id}/edit`);
     } catch (err) {
@@ -89,11 +93,19 @@ export const AdminOrganizationsPage: React.FC = () => {
     }
   };
 
-  const organizations = pagedResult?.items || [];
+  // Filter organizations based on search query
+  const filteredOrganizations = useMemo(() => {
+    if (!searchQuery) return allOrganizations;
+    const query = searchQuery.toLowerCase();
+    return allOrganizations.filter(org => 
+      org.name.toLowerCase().includes(query) ||
+      (org.description && org.description.toLowerCase().includes(query))
+    );
+  }, [allOrganizations, searchQuery]);
 
   // Sort organizations based on sortConfig
   const sortedOrganizations = useMemo(() => {
-    const sorted = [...organizations];
+    const sorted = [...filteredOrganizations];
     sorted.sort((a, b) => {
       let aValue: string | Date;
       let bValue: string | Date;
@@ -120,7 +132,18 @@ export const AdminOrganizationsPage: React.FC = () => {
       return 0;
     });
     return sorted;
-  }, [organizations, sortConfig]);
+  }, [filteredOrganizations, sortConfig.key, sortConfig.direction]);
+
+  // Paginate the sorted organizations
+  const paginatedOrganizations = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sortedOrganizations.slice(startIndex, endIndex);
+  }, [sortedOrganizations, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(sortedOrganizations.length / pageSize);
+  const hasPreviousPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
 
   if (isLoading) {
     return (
@@ -135,7 +158,7 @@ export const AdminOrganizationsPage: React.FC = () => {
     return (
       <div>
         <h1>Organization Management</h1>
-        <ErrorMessage message={error} onRetry={() => fetchOrganizations(currentPage, searchQuery)} />
+        <ErrorMessage message={error} onRetry={() => fetchOrganizations()} />
       </div>
     );
   }
@@ -331,20 +354,18 @@ export const AdminOrganizationsPage: React.FC = () => {
           placeholder="Search by organization name..."
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-          {pagedResult && (
-            <span>
-              Showing {organizations.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, pagedResult.totalCount)} of {pagedResult.totalCount} organizations
-            </span>
-          )}
+          <span>
+            Showing {paginatedOrganizations.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, sortedOrganizations.length)} of {sortedOrganizations.length} organizations
+          </span>
         </div>
       </div>
       
-      {sortedOrganizations.length === 0 ? (
+      {paginatedOrganizations.length === 0 ? (
         <EmptyState message={searchQuery ? "No organizations found matching your search." : "No organizations found."} />
       ) : (
         <>
           <Table
-            data={sortedOrganizations}
+            data={paginatedOrganizations}
             columns={columns}
             getRowKey={(org) => org.id}
             mobileLayout="card"
@@ -354,15 +375,13 @@ export const AdminOrganizationsPage: React.FC = () => {
             caption="List of organizations in the system"
           />
 
-          {pagedResult && (
-            <Pagination
-              currentPage={pagedResult.page}
-              totalPages={pagedResult.totalPages}
-              onPageChange={handlePageChange}
-              hasPreviousPage={pagedResult.hasPreviousPage}
-              hasNextPage={pagedResult.hasNextPage}
-            />
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
+          />
         </>
       )}
     </div>

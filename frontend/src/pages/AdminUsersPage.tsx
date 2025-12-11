@@ -10,11 +10,11 @@ import { Table, type TableColumn } from '../components/Table';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
-import type { User, PagedResult } from '../types/api';
+import type { User } from '../types/api';
 
 export const AdminUsersPage: React.FC = () => {
   const navigate = useNavigate();
-  const [pagedResult, setPagedResult] = useState<PagedResult<User> | null>(null);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,12 +25,13 @@ export const AdminUsersPage: React.FC = () => {
   });
   const pageSize = 10;
 
-  const fetchUsers = async (page: number, search: string) => {
+  const fetchUsers = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await usersApi.getAllPaged(page, pageSize, search || undefined);
-      setPagedResult(data);
+      // Fetch all users for client-side sorting and pagination
+      const data = await usersApi.getAll();
+      setAllUsers(data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
       const errorMessage = parseApiError(err);
@@ -41,8 +42,8 @@ export const AdminUsersPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUsers(currentPage, searchQuery);
-  }, [currentPage, searchQuery]);
+    fetchUsers();
+  }, [searchQuery]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -61,11 +62,19 @@ export const AdminUsersPage: React.FC = () => {
     }));
   };
 
-  const users = pagedResult?.items || [];
+  // Filter users based on search query
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return allUsers;
+    const query = searchQuery.toLowerCase();
+    return allUsers.filter(user => 
+      user.displayName.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query)
+    );
+  }, [allUsers, searchQuery]);
 
   // Sort users based on sortConfig
   const sortedUsers = useMemo(() => {
-    const sorted = [...users];
+    const sorted = [...filteredUsers];
     sorted.sort((a, b) => {
       let aValue: string | Date;
       let bValue: string | Date;
@@ -96,7 +105,18 @@ export const AdminUsersPage: React.FC = () => {
       return 0;
     });
     return sorted;
-  }, [users, sortConfig]);
+  }, [filteredUsers, sortConfig.key, sortConfig.direction]);
+
+  // Paginate the sorted users
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sortedUsers.slice(startIndex, endIndex);
+  }, [sortedUsers, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(sortedUsers.length / pageSize);
+  const hasPreviousPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
 
   if (isLoading) {
     return (
@@ -111,7 +131,7 @@ export const AdminUsersPage: React.FC = () => {
     return (
       <div>
         <h1 data-testid="users-heading">User Management</h1>
-        <ErrorMessage message={error} onRetry={() => fetchUsers(currentPage, searchQuery)} />
+        <ErrorMessage message={error} onRetry={() => fetchUsers()} />
       </div>
     );
   }
@@ -189,20 +209,18 @@ export const AdminUsersPage: React.FC = () => {
           placeholder="Search by name or email..."
         />
         <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-          {pagedResult && (
-            <span>
-              Showing {users.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, pagedResult.totalCount)} of {pagedResult.totalCount} users
-            </span>
-          )}
+          <span>
+            Showing {paginatedUsers.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, sortedUsers.length)} of {sortedUsers.length} users
+          </span>
         </div>
       </div>
       
-      {sortedUsers.length === 0 ? (
+      {paginatedUsers.length === 0 ? (
         <EmptyState message={searchQuery ? "No users found matching your search." : "No users found."} />
       ) : (
         <>
           <Table
-            data={sortedUsers}
+            data={paginatedUsers}
             columns={columns}
             getRowKey={(user) => user.id}
             mobileLayout="card"
@@ -212,15 +230,13 @@ export const AdminUsersPage: React.FC = () => {
             caption="List of users in the system"
           />
 
-          {pagedResult && (
-            <Pagination
-              currentPage={pagedResult.page}
-              totalPages={pagedResult.totalPages}
-              onPageChange={handlePageChange}
-              hasPreviousPage={pagedResult.hasPreviousPage}
-              hasNextPage={pagedResult.hasNextPage}
-            />
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
+          />
         </>
       )}
     </div>
