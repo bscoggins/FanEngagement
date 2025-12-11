@@ -342,6 +342,16 @@
 }
 
 /* ===== Dark Mode Support ===== */
+/* 
+ * Dual Activation Pattern: Dark mode styles are intentionally duplicated in both
+ * @media (prefers-color-scheme: dark) and body.theme-dark selectors.
+ * This ensures dark mode works both for:
+ * 1. System preference (prefers-color-scheme)
+ * 2. Manual theme toggle (body.theme-dark class)
+ * While this creates duplication, it ensures consistent dark mode behavior
+ * across all user preference scenarios. Any changes to dark mode styles
+ * must be applied to both blocks.
+ */
 @media (prefers-color-scheme: dark) {
   .data-table thead {
     background-color: var(--color-surface-elevated);

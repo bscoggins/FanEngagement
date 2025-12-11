@@ -186,7 +186,7 @@ export function Table<T>({
     
     const sortKey = column.sortKey || column.key;
     const isActive = sortConfig?.key === sortKey;
-    const direction = isActive ? sortConfig?.direction : null;
+    const direction = sortConfig && isActive ? sortConfig.direction : null;
     
     return (
       <span className="table__sort-icon" aria-hidden="true">

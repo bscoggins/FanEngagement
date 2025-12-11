@@ -122,19 +122,18 @@ export const AdminOrganizationsPage: React.FC = () => {
           break;
         default:
           console.warn(`AdminOrganizationsPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Falling back to generic comparison.`);
-          aValue = (a as any)[sortConfig.key];
-          bValue = (b as any)[sortConfig.key];
+          // Generic fallback: access property dynamically
+          const rawA = (a as any)[sortConfig.key];
+          const rawB = (b as any)[sortConfig.key];
+          
           // Handle null/undefined values
-          if (aValue == null && bValue == null) return 0;
-          if (aValue == null) return 1;
-          if (bValue == null) return -1;
-          // Convert to string for comparison if not already comparable
-          if (typeof aValue === 'string') {
-            aValue = aValue.toLowerCase();
-          }
-          if (typeof bValue === 'string') {
-            bValue = bValue.toLowerCase();
-          }
+          if (rawA == null && rawB == null) return 0;
+          if (rawA == null) return 1;
+          if (rawB == null) return -1;
+          
+          // Convert to comparable values
+          aValue = typeof rawA === 'string' ? rawA.toLowerCase() : rawA;
+          bValue = typeof rawB === 'string' ? rawB.toLowerCase() : rawB;
           break;
       }
 
@@ -147,7 +146,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       return 0;
     });
     return sorted;
-  }, [filteredOrganizations, sortConfig.key, sortConfig.direction]);
+  }, [filteredOrganizations, sortConfig]);
 
   // Paginate the sorted organizations
   const paginatedOrganizations = useMemo(() => {
@@ -189,7 +188,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       key: 'description',
       label: 'Description',
       render: (org) => (
-        <span className={org.description ? 'text-truncate' : 'text-secondary'}>
+        <span className={org.description ? 'text-truncate text-truncate-md' : 'text-secondary'}>
           {org.description || 'No description'}
         </span>
       ),
