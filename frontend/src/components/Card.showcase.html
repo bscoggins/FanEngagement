@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Component Showcase - FanEngagement Design System</title>
+  <!-- 
+    Note: This file expects to be served from the repository root or via a dev server.
+    If styles don't load, ensure the paths to index.css and Card.css are correct
+    relative to where this file is being served from.
+  -->
+  <link rel="stylesheet" href="../../index.css">
+  <link rel="stylesheet" href="./Card.css">
+  <style>
+    body {
+      padding: var(--spacing-8);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .showcase-header {
+      margin-bottom: var(--spacing-12);
+    }
+    
+    .showcase-header h1 {
+      margin-bottom: var(--spacing-3);
+      color: var(--color-text-primary);
+    }
+    
+    .showcase-header p {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-lg);
+    }
+    
+    .showcase-section {
+      margin-bottom: var(--spacing-12);
+    }
+    
+    .showcase-section h2 {
+      margin-bottom: var(--spacing-6);
+      padding-bottom: var(--spacing-3);
+      border-bottom: 2px solid var(--color-border-default);
+      color: var(--color-text-primary);
+    }
+    
+    .showcase-section h3 {
+      margin-top: var(--spacing-6);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-lg);
+    }
+    
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-6);
+      margin-bottom: var(--spacing-8);
+    }
+    
+    .card-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-8);
+    }
+    
+    .demo-label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-tertiary);
+      font-weight: var(--font-weight-medium);
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+    
+    .card-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin: 0;
+    }
+    
+    .card-text {
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin: 0;
+    }
+    
+    .card-footer {
+      margin-top: var(--spacing-2);
+      padding-top: var(--spacing-3);
+      border-top: 1px solid var(--color-border-subtle);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-tertiary);
+    }
+    
+    .code-block {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-inverse);
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-sm);
+      overflow-x: auto;
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .theme-toggle {
+      position: fixed;
+      top: var(--spacing-4);
+      right: var(--spacing-4);
+      padding: var(--spacing-3) var(--spacing-5);
+      background: var(--color-primary-600);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: var(--font-weight-medium);
+      box-shadow: var(--shadow-lg);
+      transition: background-color var(--duration-normal) var(--ease-out);
+    }
+    
+    .theme-toggle:hover {
+      background: var(--color-primary-700);
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+
+  <div class="showcase-header">
+    <h1>Card Component Showcase</h1>
+    <p>A flexible card component with variants, elevation levels, and padding options</p>
+  </div>
+
+  <!-- Variants Section -->
+  <section class="showcase-section">
+    <h2>Card Variants</h2>
+    <p class="card-text" style="margin-bottom: var(--spacing-6);">
+      Cards support three variants: <code>default</code>, <code>interactive</code>, and <code>bordered</code>.
+    </p>
+
+    <div class="card-grid">
+      <div>
+        <div class="demo-label">Default</div>
+        <div class="card card--default card--padding-default card--elevation-md">
+          <div class="card-content">
+            <h3 class="card-title">Default Card</h3>
+            <p class="card-text">
+              A simple card with subtle border and shadow. Use for static content displays.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Interactive (hover me)</div>
+        <div class="card card--interactive card--padding-default card--elevation-md" 
+             role="button" 
+             tabindex="0"
+             onclick="alert('Card clicked!')"
+             style="cursor: pointer;">
+          <div class="card-content">
+            <h3 class="card-title">Interactive Card</h3>
+            <p class="card-text">
+              Enhanced hover effects with scale and shadow. Use for clickable cards or navigation.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Bordered</div>
+        <div class="card card--bordered card--padding-default card--elevation-md">
+          <div class="card-content">
+            <h3 class="card-title">Bordered Card</h3>
+            <p class="card-text">
+              Emphasized border for visual separation. Use when you need stronger visual distinction.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Elevation Levels Section -->
+  <section class="showcase-section">
+    <h2>Elevation Levels</h2>
+    <p class="card-text" style="margin-bottom: var(--spacing-6);">
+      Cards support five elevation levels using shadow tokens: <code>none</code>, <code>sm</code>, <code>md</code>, <code>lg</code>, and <code>xl</code>.
+    </p>
+
+    <div class="card-grid">
+      <div>
+        <div class="demo-label">None</div>
+        <div class="card card--default card--padding-default card--elevation-none">
+          <div class="card-content">
+            <h3 class="card-title">No Shadow</h3>
+            <p class="card-text">Flat appearance without shadow elevation.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Small (sm)</div>
+        <div class="card card--default card--padding-default card--elevation-sm">
+          <div class="card-content">
+            <h3 class="card-title">Small Shadow</h3>
+            <p class="card-text">Subtle elevation for minimal depth.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Medium (md) - Default</div>
+        <div class="card card--default card--padding-default card--elevation-md">
+          <div class="card-content">
+            <h3 class="card-title">Medium Shadow</h3>
+            <p class="card-text">Standard elevation for most cards.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Large (lg)</div>
+        <div class="card card--default card--padding-default card--elevation-lg">
+          <div class="card-content">
+            <h3 class="card-title">Large Shadow</h3>
+            <p class="card-text">Prominent elevation for emphasis.</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Extra Large (xl)</div>
+        <div class="card card--default card--padding-default card--elevation-xl">
+          <div class="card-content">
+            <h3 class="card-title">Extra Large Shadow</h3>
+            <p class="card-text">Maximum elevation for dramatic effect.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Padding Options Section -->
+  <section class="showcase-section">
+    <h2>Padding Options</h2>
+    <p class="card-text" style="margin-bottom: var(--spacing-6);">
+      Cards support three padding sizes: <code>compact</code>, <code>default</code>, and <code>spacious</code>.
+    </p>
+
+    <div class="card-grid">
+      <div>
+        <div class="demo-label">Compact</div>
+        <div class="card card--default card--padding-compact card--elevation-md">
+          <div class="card-content">
+            <h3 class="card-title">Compact Padding</h3>
+            <p class="card-text">
+              Minimal padding for dense layouts or small cards.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Default</div>
+        <div class="card card--default card--padding-default card--elevation-md">
+          <div class="card-content">
+            <h3 class="card-title">Default Padding</h3>
+            <p class="card-text">
+              Standard padding for balanced spacing and readability.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-label">Spacious</div>
+        <div class="card card--default card--padding-spacious card--elevation-md">
+          <div class="card-content">
+            <h3 class="card-title">Spacious Padding</h3>
+            <p class="card-text">
+              Extra padding for emphasis or larger content areas.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Examples Section -->
+  <section class="showcase-section">
+    <h2>Interactive Examples</h2>
+    <p class="card-text" style="margin-bottom: var(--spacing-6);">
+      Interactive cards have enhanced hover states with elevation and scale animations.
+    </p>
+
+    <div class="card-grid">
+      <div class="card card--interactive card--padding-default card--elevation-sm" 
+           role="button" 
+           tabindex="0"
+           onclick="alert('Navigate to profile')"
+           style="cursor: pointer;">
+        <div class="card-content">
+          <h3 class="card-title">👤 User Profile</h3>
+          <p class="card-text">
+            View and edit your profile settings
+          </p>
+          <div class="card-footer">Click to navigate →</div>
+        </div>
+      </div>
+
+      <div class="card card--interactive card--padding-default card--elevation-sm" 
+           role="button" 
+           tabindex="0"
+           onclick="alert('View analytics')"
+           style="cursor: pointer;">
+        <div class="card-content">
+          <h3 class="card-title">📊 Analytics</h3>
+          <p class="card-text">
+            Track performance and metrics
+          </p>
+          <div class="card-footer">Click to navigate →</div>
+        </div>
+      </div>
+
+      <div class="card card--interactive card--padding-default card--elevation-sm" 
+           role="button" 
+           tabindex="0"
+           onclick="alert('Manage settings')"
+           style="cursor: pointer;">
+        <div class="card-content">
+          <h3 class="card-title">⚙️ Settings</h3>
+          <p class="card-text">
+            Configure application preferences
+          </p>
+          <div class="card-footer">Click to navigate →</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Complex Content Example -->
+  <section class="showcase-section">
+    <h2>Complex Content Example</h2>
+    <p class="card-text" style="margin-bottom: var(--spacing-6);">
+      Cards can contain any content structure.
+    </p>
+
+    <div class="card card--default card--padding-spacious card--elevation-lg" style="max-width: 600px;">
+      <div class="card-content">
+        <div style="display: flex; align-items: center; gap: var(--spacing-3); margin-bottom: var(--spacing-4);">
+          <div style="width: 60px; height: 60px; border-radius: var(--radius-full); background: var(--color-primary-600); display: flex; align-items: center; justify-content: center; font-size: var(--font-size-2xl);">
+            🎉
+          </div>
+          <div>
+            <h3 class="card-title" style="margin-bottom: var(--spacing-1);">New Feature Released</h3>
+            <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm); margin: 0;">2 hours ago</p>
+          </div>
+        </div>
+        <p class="card-text">
+          We've just launched our new card component library! This includes support for multiple variants, 
+          elevation levels, and padding options. All components follow our design system tokens for 
+          consistent styling across the application.
+        </p>
+        <div style="display: flex; gap: var(--spacing-3); margin-top: var(--spacing-4);">
+          <button style="padding: var(--spacing-2) var(--spacing-4); background: var(--color-primary-600); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: var(--font-weight-medium);">
+            Learn More
+          </button>
+          <button style="padding: var(--spacing-2) var(--spacing-4); background: transparent; color: var(--color-primary-600); border: 1px solid var(--color-primary-600); border-radius: var(--radius-md); cursor: pointer; font-weight: var(--font-weight-medium);">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Usage Examples Section -->
+  <section class="showcase-section">
+    <h2>Usage Examples</h2>
+    
+    <h3>Basic Card</h3>
+    <pre class="code-block">&lt;Card&gt;
+  &lt;h3&gt;Card Title&lt;/h3&gt;
+  &lt;p&gt;Card content goes here&lt;/p&gt;
+&lt;/Card&gt;</pre>
+
+    <h3>Interactive Card</h3>
+    <pre class="code-block">&lt;Card variant="interactive" onClick={handleClick}&gt;
+  &lt;h3&gt;Clickable Card&lt;/h3&gt;
+  &lt;p&gt;Click me to perform an action&lt;/p&gt;
+&lt;/Card&gt;</pre>
+
+    <h3>Card as Link</h3>
+    <pre class="code-block">&lt;Card variant="interactive" href="/details"&gt;
+  &lt;h3&gt;Navigation Card&lt;/h3&gt;
+  &lt;p&gt;Navigate to details page&lt;/p&gt;
+&lt;/Card&gt;</pre>
+
+    <h3>Custom Padding and Elevation</h3>
+    <pre class="code-block">&lt;Card 
+  variant="bordered" 
+  padding="compact" 
+  elevation="lg"
+&gt;
+  &lt;h3&gt;Customized Card&lt;/h3&gt;
+  &lt;p&gt;With compact padding and large elevation&lt;/p&gt;
+&lt;/Card&gt;</pre>
+  </section>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('theme-dark');
+    }
+  </script>
+</body>
+</html>
