@@ -24,6 +24,9 @@ public class Proposal
     public bool? QuorumMet { get; set; }
     public decimal? TotalVotesCast { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
+    public string? BlockchainProposalAddress { get; set; }
+    public string? LatestContentHash { get; set; }
+    public string? LatestResultsHash { get; set; }
     
     public Guid CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

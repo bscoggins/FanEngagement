@@ -40,6 +40,16 @@ The Solana Adapter is a containerized service that provides blockchain functiona
 └──────────────────┘                    └──────────────────┘                  └──────────────┘
 ```
 
+### Transparency Payloads
+
+Every proposal, vote, and result transaction now carries a memo (≤566 bytes) that encodes the minimum transparency data needed for public verification. The FanEngagement backend **must** supply the following fields when calling the adapter so these memos stay deterministic:
+
+- **Proposals**: `contentHash` (SHA-256), optional `proposalTextHash`, `expectationsHash`, `votingOptionsHash`, and the `createdByUserId` that initiated the proposal.
+- **Votes**: `organizationId`, `proposalId`, `voteId`, `userId`, `optionId`, `votingPower`, plus optional `voterAddress` and ISO `timestamp`.
+- **Proposal results**: `organizationId`, `resultsHash` (SHA-256), `totalVotesCast`, `quorumMet`, and optional `winningOptionId`.
+
+Hash any large/free-form blobs (proposal text, expectation statements, ballot definitions) with SHA-256 before invoking the adapter. After a transaction settles, observers can query Solana Explorer or `getTransaction` to read the memo JSON and confirm it matches the backend’s data.
+
 ---
 
 ## Prerequisites
@@ -67,6 +77,25 @@ The Solana Adapter is a containerized service that provides blockchain functiona
 ---
 
 ## Local Development Setup
+
+### Quick on-chain E2E test (backend + adapter + validator)
+
+Run the full Solana on-chain integration in one command from the repo root:
+
+```bash
+./scripts/run-solana-onchain-tests.sh
+```
+
+What it does: stops any previous adapter/validator containers, prunes stopped containers and dangling images, starts the local `solana-test-validator` + `solana-adapter`, funds the adapter keypair via airdrop, waits for health, and runs `SolanaOnChainEndToEndTests` against the backend.
+
+Key env overrides (optional):
+
+- `SOLANA_TEST_KEYPAIR` – path to the keypair JSON array (defaults to `test-keypair.json`).
+- `SOLANA_ADAPTER_BASE_URL` – adapter base URL (default `http://localhost:3001/v1/adapter/`).
+- `SOLANA_ON_CHAIN_RPC_URL` – validator RPC URL (default `http://localhost:8899`).
+- `SOLANA_ADAPTER_API_KEY` – adapter API key (default `dev-api-key-change-in-production`).
+
+After the run, the script stops the stack and prunes stopped containers/dangling images to keep local Docker tidy.
 
 ### 1. Generate Keypair
 
@@ -444,7 +473,7 @@ SOLANA_KEYPAIR_PATH=/tmp/dev-keypair.json
 
 Use one of these secure methods:
 
-**Option 1: Kubernetes Secrets**
+#### Option 1: Kubernetes Secrets
 
 ```bash
 # Create secret from file
@@ -459,7 +488,7 @@ volumeMounts:
   readOnly: true
 ```
 
-**Option 2: AWS Secrets Manager**
+#### Option 2: AWS Secrets Manager
 
 ```bash
 # Store keypair
@@ -471,7 +500,7 @@ aws secretsmanager create-secret \
 # (requires AWS SDK and IAM permissions)
 ```
 
-**Option 3: HashiCorp Vault**
+#### Option 3: HashiCorp Vault
 
 ```bash
 # Store keypair
@@ -618,9 +647,10 @@ kubectl logs -n fanengagement -l app=solana-adapter | grep -i error
 **Solutions:**
 
 1. **Insufficient SOL**: Fund keypair with SOL for transaction fees
-   ```bash
-   solana airdrop 1 <PUBLIC_KEY> --url devnet
-   ```
+
+    ```bash
+    solana airdrop 1 <PUBLIC_KEY> --url devnet
+    ```
 
 2. **RPC Rate Limit**: Use dedicated RPC provider or increase limits
 

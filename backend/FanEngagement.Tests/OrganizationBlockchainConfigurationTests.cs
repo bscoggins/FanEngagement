@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
@@ -18,6 +19,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     {
         _factory = factory;
         _client = factory.CreateClient();
+        _client.BaseAddress ??= factory.Server.BaseAddress;
         _output = output;
     }
 
@@ -33,7 +35,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
             Name = $"Test Org {Guid.NewGuid()}",
             Description = "Test Organization with blockchain",
             BlockchainType = BlockchainType.Solana,
-            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001\",\"network\":\"devnet\"}"
+            BlockchainConfig = BuildSolanaConfig()
         };
 
         // Act
@@ -166,7 +168,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
             Name = $"Test Org {Guid.NewGuid()}",
             Description = "Test Organization",
             BlockchainType = BlockchainType.Solana,
-            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001\"}"
+            BlockchainConfig = BuildSolanaConfig()
         };
         var createResponse = await _client.PostAsJsonAsync("/organizations", createRequest);
         var createdOrg = await createResponse.Content.ReadFromJsonAsync<Organization>();
@@ -196,7 +198,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
             Name = $"Test Org {Guid.NewGuid()}",
             Description = "Test Organization",
             BlockchainType = BlockchainType.Solana,
-            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001\"}"
+            BlockchainConfig = BuildSolanaConfig()
         };
         var createResponse = await _client.PostAsJsonAsync("/organizations", createRequest);
         var organization = await createResponse.Content.ReadFromJsonAsync<Organization>();
@@ -267,5 +269,18 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, updateResponse.StatusCode);
+    }
+
+    private static string BuildSolanaConfig()
+    {
+        var adapterUrl = Environment.GetEnvironmentVariable("SOLANA_ADAPTER_BASE_URL") ?? "http://localhost:3001/v1/adapter/";
+        var apiKey = Environment.GetEnvironmentVariable("SOLANA_ADAPTER_API_KEY") ?? "dev-api-key-change-in-production";
+
+        return JsonSerializer.Serialize(new
+        {
+            adapterUrl,
+            apiKey,
+            network = "localnet"
+        });
     }
 }

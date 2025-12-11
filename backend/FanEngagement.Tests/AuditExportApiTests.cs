@@ -200,8 +200,8 @@ public class AuditExportApiTests : IClassFixture<TestWebApplicationFactory>
         var jsonContent = await response.Content.ReadAsStringAsync();
         var events = System.Text.Json.JsonSerializer.Deserialize<List<AuditEventDto>>(jsonContent);
         Assert.NotNull(events);
-        Assert.Equal(1, events.Count);
-        Assert.Equal(AuditActionType.Created, events[0].ActionType);
+        var singleEvent = Assert.Single(events);
+        Assert.Equal(AuditActionType.Created, singleEvent.ActionType);
     }
 
     [Fact]

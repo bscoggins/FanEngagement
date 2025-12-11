@@ -8,4 +8,5 @@ public class VoteDto
     public Guid UserId { get; set; }
     public decimal VotingPower { get; set; }
     public DateTimeOffset CastAt { get; set; }
+    public string? BlockchainTransactionId { get; set; }
 }

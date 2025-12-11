@@ -96,7 +96,14 @@ export function createRoutes(solanaService: SolanaService): Router {
           data.title,
           data.contentHash,
           new Date(data.startAt),
-          new Date(data.endAt)
+          new Date(data.endAt),
+          {
+            createdByUserId: data.createdByUserId,
+            proposalTextHash: data.proposalTextHash,
+            expectationsHash: data.expectationsHash,
+            votingOptionsHash: data.votingOptionsHash,
+            eligibleVotingPower: data.eligibleVotingPower,
+          }
         ),
       buildResponse: (result) => ({
         transactionId: result.transactionSignature,
@@ -117,9 +124,14 @@ export function createRoutes(solanaService: SolanaService): Router {
         solanaService.recordVote(
           data.voteId,
           data.proposalId,
+          data.organizationId,
           data.userId,
           data.optionId,
-          data.votingPower
+          data.votingPower,
+          {
+            voterAddress: data.voterAddress,
+            castAt: data.timestamp ? new Date(data.timestamp) : undefined,
+          }
         ),
       buildResponse: (result) => ({
         transactionId: result.transactionSignature,
@@ -138,9 +150,14 @@ export function createRoutes(solanaService: SolanaService): Router {
       execute: (data) =>
         solanaService.commitProposalResults(
           data.proposalId,
+          data.organizationId,
           data.resultsHash,
           data.winningOptionId || '',
-          data.totalVotesCast
+          data.totalVotesCast,
+          {
+            quorumMet: data.quorumMet,
+            closedAt: new Date(data.closedAt),
+          }
         ),
       buildResponse: (result) => ({
         transactionId: result.transactionSignature,

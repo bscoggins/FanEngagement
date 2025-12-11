@@ -24,6 +24,9 @@ public class ProposalConfiguration : IEntityTypeConfiguration<Proposal>
         builder.Property(x => x.QuorumMet);
         builder.Property(x => x.TotalVotesCast).HasColumnType("numeric(18,2)");
         builder.Property(x => x.ClosedAt);
+        builder.Property(x => x.BlockchainProposalAddress).HasMaxLength(128);
+        builder.Property(x => x.LatestContentHash).HasMaxLength(64);
+        builder.Property(x => x.LatestResultsHash).HasMaxLength(64);
         
         builder.Property(x => x.CreatedAt).IsRequired();
 

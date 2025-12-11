@@ -10,6 +10,8 @@ public class ShareType
     public decimal VotingWeight { get; set; }
     public decimal? MaxSupply { get; set; }
     public bool IsTransferable { get; set; }
+    public int TokenDecimals { get; set; }
+    public string? BlockchainMintAddress { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
     public Organization? Organization { get; set; }

@@ -75,8 +75,8 @@ services:
       NODE_ENV: development
       PORT: 3001
       LOG_LEVEL: debug
-      SOLANA_NETWORK: devnet
-      SOLANA_RPC_URL: https://api.devnet.solana.com
+      SOLANA_NETWORK: localnet
+      SOLANA_RPC_URL: http://solana-test-validator:8899
       SOLANA_COMMITMENT: confirmed
       SOLANA_CONFIRM_TIMEOUT: 30000
       SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY}
