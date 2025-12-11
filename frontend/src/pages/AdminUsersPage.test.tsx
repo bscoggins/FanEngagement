@@ -9,7 +9,6 @@ import type { User } from '../types/api';
 vi.mock('../api/usersApi', () => ({
   usersApi: {
     getAll: vi.fn(),
-    getAllPaged: vi.fn(),
   },
 }));
 

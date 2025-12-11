@@ -21,7 +21,6 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../api/organizationsApi', () => ({
   organizationsApi: {
     getAll: vi.fn(),
-    getAllPaged: vi.fn(),
     create: vi.fn(),
   },
 }));
