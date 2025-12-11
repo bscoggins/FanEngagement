@@ -109,6 +109,14 @@ export function buildMemoPayload(payload: Record<string, unknown>): string {
   return memoString;
 }
 
+/**
+ * Normalize a hash string to lowercase hex without "0x" prefix.
+ * 
+ * IMPORTANT: This normalization must stay synchronized with the backend's
+ * ComputeSha256Hex method in ProposalService.cs, which also uses .toLowerCase()
+ * and never includes "0x" prefix. Any changes to this normalization logic
+ * must be reflected in both systems to ensure hash verification works correctly.
+ */
 function normalizeHash(value?: string): string | undefined {
   if (!value) {
     return undefined;

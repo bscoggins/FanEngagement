@@ -12,9 +12,8 @@ public class CreateShareTypeRequest
     public bool IsTransferable { get; set; }
     /// <summary>
     /// Token decimals for blockchain representation.
-    /// Solana SPL tokens support decimals from 0 to 9 (inclusive).
-    /// If supporting other blockchains (e.g., Ethereum ERC-20 with 18 decimals), this constraint may need revision.
+    /// Validation for allowed decimals is performed in the blockchain adapter layer,
+    /// as different blockchains support different ranges (e.g., Solana: 0-9, Ethereum ERC-20: up to 18).
     /// </summary>
-    [Range(0, 9)]
     public int TokenDecimals { get; set; }
 }

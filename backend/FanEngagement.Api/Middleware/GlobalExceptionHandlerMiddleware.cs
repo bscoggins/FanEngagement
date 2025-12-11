@@ -51,6 +51,7 @@ public class GlobalExceptionHandlerMiddleware
         {
             DomainValidationException => LogLevel.Warning,
             ResourceNotFoundException => LogLevel.Warning,
+            WalletAddressNotFoundException => LogLevel.Warning,
             ConflictException => LogLevel.Information,
             InvalidOperationException => LogLevel.Information,
             ArgumentException => LogLevel.Warning,
@@ -92,6 +93,19 @@ public class GlobalExceptionHandlerMiddleware
                 {
                     ["errorCode"] = domainEx.ErrorCode,
                     ["validationErrors"] = domainEx.ValidationErrors ?? new Dictionary<string, string[]>()
+                }
+            },
+            WalletAddressNotFoundException walletEx => new ProblemDetails
+            {
+                Status = (int)HttpStatusCode.BadRequest,
+                Title = "Wallet Address Required",
+                Detail = walletEx.Message,
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Instance = context.Request.Path,
+                Extensions =
+                {
+                    ["userId"] = walletEx.UserId.ToString(),
+                    ["blockchainType"] = walletEx.BlockchainType
                 }
             },
             ResourceNotFoundException notFoundEx => new ProblemDetails

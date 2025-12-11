@@ -5,6 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace FanEngagement.Infrastructure.Persistence.Migrations
 {
+    /// <summary>
+    /// Migration to add blockchain-related fields and user wallet addresses.
+    /// 
+    /// NOTE: This migration uses PostgreSQL-specific syntax for filtered unique indexes.
+    /// The partial index filter syntax ("IsPrimary" = TRUE) is specific to PostgreSQL.
+    /// If supporting other database providers in the future, this migration will need
+    /// provider-specific implementations.
+    /// </summary>
     /// <inheritdoc />
     public partial class AddUserWalletAddressesAndBlockchainFields : Migration
     {

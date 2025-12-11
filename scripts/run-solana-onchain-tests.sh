@@ -71,8 +71,18 @@ fi
 
 # Warn if keypair file permissions are too permissive
 if [[ -f "$KEYPAIR_FILE" ]]; then
-  KEYPAIR_PERMS=$(stat -c '%a' "$KEYPAIR_FILE" 2>/dev/null || stat -f '%OLp' "$KEYPAIR_FILE" 2>/dev/null)
-  if [[ "$KEYPAIR_PERMS" != "600" && "$KEYPAIR_PERMS" != "400" ]]; then
+  # Detect OS and use appropriate stat command
+  if [[ "$(uname -s)" == "Darwin" ]] || [[ "$(uname -s)" == *"BSD"* ]]; then
+    # macOS and BSD use -f format
+    KEYPAIR_PERMS=$(stat -f '%OLp' "$KEYPAIR_FILE" 2>/dev/null)
+  else
+    # Linux uses -c format
+    KEYPAIR_PERMS=$(stat -c '%a' "$KEYPAIR_FILE" 2>/dev/null)
+  fi
+  
+  if [[ -z "$KEYPAIR_PERMS" ]]; then
+    echo "WARNING: Could not determine keypair file permissions. Ensure $KEYPAIR_FILE has restrictive permissions (e.g., 600)."
+  elif [[ "$KEYPAIR_PERMS" != "600" && "$KEYPAIR_PERMS" != "400" ]]; then
     echo "WARNING: Keypair file $KEYPAIR_FILE has permissions $KEYPAIR_PERMS. Consider using 'chmod 600 $KEYPAIR_FILE' to restrict access."
   fi
 fi

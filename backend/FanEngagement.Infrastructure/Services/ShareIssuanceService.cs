@@ -1,5 +1,6 @@
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Blockchain;
+using FanEngagement.Application.Exceptions;
 using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -121,12 +122,6 @@ public class ShareIssuanceService(
 
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
                 var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organization.BlockchainType, cancellationToken);
-                
-                if (string.IsNullOrWhiteSpace(recipientWalletAddress))
-                {
-                    throw new InvalidOperationException(
-                        $"User {request.UserId} does not have a primary wallet address configured for {organization.BlockchainType}.");
-                }
 
                 var onChainResult = await adapter.RecordShareIssuanceAsync(
                     new RecordShareIssuanceCommand(
@@ -278,12 +273,19 @@ public class ShareIssuanceService(
         return balances;
     }
 
-    private Task<string?> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
+    private async Task<string> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
     {
-        return dbContext.UserWalletAddresses
+        var address = await dbContext.UserWalletAddresses
             .AsNoTracking()
             .Where(w => w.UserId == userId && w.BlockchainType == blockchainType && w.IsPrimary)
             .Select(w => w.Address)
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            throw new WalletAddressNotFoundException(userId, blockchainType.ToString());
+        }
+
+        return address;
     }
 }

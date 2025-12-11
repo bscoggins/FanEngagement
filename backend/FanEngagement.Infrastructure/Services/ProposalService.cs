@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.Common;
+using FanEngagement.Application.Exceptions;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
@@ -869,12 +870,6 @@ public class ProposalService(
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
                 var voterAddress = await GetPrimaryWalletAddressAsync(request.UserId, organizationDetails.BlockchainType, cancellationToken);
                 
-                if (string.IsNullOrWhiteSpace(voterAddress))
-                {
-                    throw new InvalidOperationException(
-                        $"User {request.UserId} does not have a primary wallet address configured for {organizationDetails.BlockchainType}.");
-                }
-                
                 var onChainResult = await adapter.RecordVoteAsync(
                     new RecordVoteCommand(
                         vote.Id,
@@ -1081,13 +1076,20 @@ public class ProposalService(
         };
     }
 
-    private Task<string?> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
+    private async Task<string> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
     {
-        return dbContext.UserWalletAddresses
+        var address = await dbContext.UserWalletAddresses
             .AsNoTracking()
             .Where(w => w.UserId == userId && w.BlockchainType == blockchainType && w.IsPrimary)
             .Select(w => w.Address)
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            throw new WalletAddressNotFoundException(userId, blockchainType.ToString());
+        }
+
+        return address;
     }
 
     private static readonly JsonSerializerOptions HashSerializerOptions = new()
@@ -1174,6 +1176,11 @@ public class ProposalService(
     {
         var bytes = Encoding.UTF8.GetBytes(payload);
         var hash = SHA256.HashData(bytes);
+        
+        // Hash normalization: lowercase hex string without "0x" prefix
+        // IMPORTANT: This must stay synchronized with the adapter's normalizeHash function
+        // in memo-payload.ts, which also uses .toLowerCase() and strips "0x" prefix.
+        // Any changes to this normalization logic must be reflected in both systems.
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }
