@@ -147,13 +147,18 @@ describe('Solana Adapter Unit Tests', () => {
     });
 
     test('should throw when memo payload exceeds limit', () => {
-      const unrealisticHash = 'z'.repeat(700); // Simulate misconfigured caller blowing past memo size
+      const longTitle = 'M'.repeat(700); // Oversized title to force payload beyond 566 bytes
+      const realisticHash = 'a'.repeat(64); // Valid hash so size check is reached before hash validation
+
       expect(() =>
         buildProposalMemo({
           organizationId: orgId,
           proposalId,
-          title: 'Massive payload',
-          contentHash: unrealisticHash,
+          title: longTitle,
+          contentHash: realisticHash,
+          proposalTextHash: realisticHash,
+          expectationsHash: realisticHash,
+          votingOptionsHash: realisticHash,
           startAt: new Date(),
           endAt: new Date(),
         })
