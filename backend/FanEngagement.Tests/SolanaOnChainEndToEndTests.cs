@@ -303,8 +303,8 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                 InitialRetryDelayMs * Math.Pow(2, attemptNumber)
             );
             
-            // Add jitter (±20%) to prevent thundering herd
-            var jitter = Random.Shared.NextDouble() * JitterRange - JitterOffset; // -0.2 to +0.2
+            // Add jitter (±20%) to prevent thundering herd: JitterRange spans 0.4, centered at 0 via JitterOffset
+            var jitter = Random.Shared.NextDouble() * JitterRange - JitterOffset;
             var delayWithJitter = exponentialDelay * (1 + jitter);
             
             return TimeSpan.FromMilliseconds(Math.Max(InitialRetryDelayMs, delayWithJitter));

@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer';
 const MEMO_SCHEMA_VERSION = 1;
 const MAX_MEMO_BYTES = 566;
 const MAX_TITLE_LENGTH = 120;
+// Regex pattern for validating SHA-256 hashes: exactly 64 lowercase hexadecimal characters
 const SHA256_HEX_PATTERN = /^[a-f0-9]{64}$/;
 
 export interface ProposalMemoInput {

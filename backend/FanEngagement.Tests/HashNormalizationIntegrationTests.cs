@@ -15,9 +15,11 @@ namespace FanEngagement.Tests;
 /// Integration tests to verify hash normalization is consistent between backend and Solana adapter.
 /// This is critical for on-chain transparency, as both systems must produce identical hash values.
 /// </summary>
-public class HashNormalizationIntegrationTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>
+public partial class HashNormalizationIntegrationTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>
 {
-    private static readonly Regex HashValidationRegex = new(@"^[a-f0-9]{64}$", RegexOptions.Compiled);
+    [GeneratedRegex(@"^[a-f0-9]{64}$", RegexOptions.Compiled)]
+    private static partial Regex HashValidationRegex();
+    
     private readonly HttpClient _client;
     private readonly SolanaOnChainTestWebApplicationFactory _factory;
 
@@ -167,8 +169,8 @@ public class HashNormalizationIntegrationTests : IClassFixture<SolanaOnChainTest
             var normalized = hash.StartsWith("0x") ? hash[2..] : hash;
             normalized = normalized.ToLowerInvariant();
             
-            // Check format: 64 lowercase hex characters using precompiled regex
-            if (!HashValidationRegex.IsMatch(normalized))
+            // Check format: 64 lowercase hex characters using source-generated regex
+            if (!HashValidationRegex().IsMatch(normalized))
             {
                 return false;
             }
