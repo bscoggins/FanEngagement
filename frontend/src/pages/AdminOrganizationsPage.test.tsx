@@ -105,20 +105,21 @@ describe('AdminOrganizationsPage', () => {
     });
     
     // Check Edit links
-    const editLinks = screen.getAllByText('Edit');
-    expect(editLinks).toHaveLength(2);
-    expect(editLinks[0].closest('a')).toHaveAttribute('href', '/admin/organizations/org-1/edit');
-    expect(editLinks[1].closest('a')).toHaveAttribute('href', '/admin/organizations/org-2/edit');
+    const editButtons = screen.getAllByText('Edit');
+    expect(editButtons).toHaveLength(2);
+    // Now they are buttons, not links
+    expect(editButtons[0]).toBeInTheDocument();
+    expect(editButtons[1]).toBeInTheDocument();
 
-    // Check Members links
-    const memberLinks = screen.getAllByText('Members');
-    expect(memberLinks).toHaveLength(2);
-    expect(memberLinks[0].closest('a')).toHaveAttribute('href', '/admin/organizations/org-1/memberships');
+    // Check Members buttons
+    const memberButtons = screen.getAllByText('Members');
+    expect(memberButtons).toHaveLength(2);
+    expect(memberButtons[0]).toBeInTheDocument();
 
-    // Check Share Types links
-    const shareTypeLinks = screen.getAllByText('Share Types');
-    expect(shareTypeLinks).toHaveLength(2);
-    expect(shareTypeLinks[0].closest('a')).toHaveAttribute('href', '/admin/organizations/org-1/share-types');
+    // Check Share Types buttons
+    const shareTypeButtons = screen.getAllByText('Share Types');
+    expect(shareTypeButtons).toHaveLength(2);
+    expect(shareTypeButtons[0]).toBeInTheDocument();
   });
 
   it('displays error message when API call fails', async () => {

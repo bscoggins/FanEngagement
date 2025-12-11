@@ -6,6 +6,8 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
+import { Table, type TableColumn } from '../components/Table';
+import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
 import type { Organization, PagedResult, CreateOrganizationRequest } from '../types/api';
@@ -96,25 +98,100 @@ export const AdminOrganizationsPage: React.FC = () => {
 
   const organizations = pagedResult?.items || [];
 
+  const columns: TableColumn<Organization>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      render: (org) => org.name,
+      sortable: true,
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      render: (org) => (
+        <span style={{ 
+          color: org.description ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+          maxWidth: '300px',
+          display: 'block',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {org.description || 'No description'}
+        </span>
+      ),
+    },
+    {
+      key: 'created',
+      label: 'Created',
+      render: (org) => (
+        <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+          {new Date(org.createdAt).toLocaleDateString()}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      align: 'center',
+      render: (org) => (
+        <div className="table-actions">
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/organizations/${org.id}/edit`);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/organizations/${org.id}/memberships`);
+            }}
+          >
+            Members
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/organizations/${org.id}/share-types`);
+            }}
+          >
+            Share Types
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/organizations/${org.id}/proposals`);
+            }}
+          >
+            Proposals
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1>Organization Management</h1>
-        <button
+        <Button
+          variant="secondary"
           onClick={() => setShowCreateForm(!showCreateForm)}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            fontWeight: 500,
-          }}
         >
           {showCreateForm ? 'Cancel' : '+ Create Organization'}
-        </button>
+        </Button>
       </div>
 
       {showCreateForm && (
@@ -218,7 +295,7 @@ export const AdminOrganizationsPage: React.FC = () => {
           onChange={handleSearchChange}
           placeholder="Search by organization name..."
         />
-        <div style={{ color: '#666', fontSize: '0.875rem' }}>
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
           {pagedResult && (
             <span>
               Showing {organizations.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, pagedResult.totalCount)} of {pagedResult.totalCount} organizations
@@ -231,100 +308,14 @@ export const AdminOrganizationsPage: React.FC = () => {
         <EmptyState message={searchQuery ? "No organizations found matching your search." : "No organizations found."} />
       ) : (
         <>
-          <div style={{ 
-            backgroundColor: 'white', 
-            borderRadius: '8px', 
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            overflow: 'hidden'
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Name</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Description</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Created</th>
-                  <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {organizations.map((org) => (
-                  <tr key={org.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                    <td style={{ padding: '1rem' }}>{org.name}</td>
-                    <td style={{ padding: '1rem', color: '#666', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {org.description || <em style={{ color: '#999' }}>No description</em>}
-                    </td>
-                    <td style={{ padding: '1rem', color: '#666', fontSize: '0.9rem' }}>
-                      {new Date(org.createdAt).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <Link
-                          to={`/admin/organizations/${org.id}/edit`}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#0066cc',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            textDecoration: 'none',
-                            display: 'inline-block',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          Edit
-                        </Link>
-                        <Link
-                          to={`/admin/organizations/${org.id}/memberships`}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            textDecoration: 'none',
-                            display: 'inline-block',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          Members
-                        </Link>
-                        <Link
-                          to={`/admin/organizations/${org.id}/share-types`}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#6c757d',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            textDecoration: 'none',
-                            display: 'inline-block',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          Share Types
-                        </Link>
-                        <Link
-                          to={`/admin/organizations/${org.id}/proposals`}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            backgroundColor: '#17a2b8',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            textDecoration: 'none',
-                            display: 'inline-block',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          Proposals
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            data={organizations}
+            columns={columns}
+            getRowKey={(org) => org.id}
+            mobileLayout="card"
+            testId="organizations-table"
+            caption="List of organizations in the system"
+          />
 
           {pagedResult && (
             <Pagination
