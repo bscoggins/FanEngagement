@@ -300,7 +300,31 @@ npm test -- Table.test.tsx
 
 - Virtual scrolling: Not currently implemented (suitable for tables with < 1000 rows)
 - Row keys: Required for optimal React reconciliation
-- Memoization: Consider wrapping column definitions in useMemo for large datasets
+- Memoization: Column definitions should be wrapped in useMemo to prevent unnecessary re-renders
+
+**Example:**
+```tsx
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
+const columns = useMemo(
+  () => [
+    { key: "name", label: "Name", render: (user) => user.name },
+    {
+      key: "profile",
+      label: "Profile",
+      render: (user) => (
+        <button onClick={() => navigate(`/users/${user.id}`)}>
+          View Profile
+        </button>
+      ),
+    },
+    // ...
+  ],
+  [navigate]
+);
+```
 
 ## Future Enhancements
 

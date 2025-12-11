@@ -131,82 +131,85 @@ export const AdminOrganizationsPage: React.FC = () => {
     );
   }
 
-  const columns: TableColumn<Organization>[] = [
-    {
-      key: 'name',
-      label: 'Name',
-      render: (org) => org.name,
-      sortable: true,
-    },
-    {
-      key: 'description',
-      label: 'Description',
-      render: (org) => (
-        <span className={org.description ? 'text-truncate text-truncate-md' : 'text-secondary'}>
-          {org.description || 'No description'}
-        </span>
-      ),
-    },
-    {
-      key: 'created',
-      label: 'Created',
-      render: (org) => (
-        <span className="text-secondary-color">
-          {new Date(org.createdAt).toLocaleDateString()}
-        </span>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      align: 'center',
-      render: (org) => (
-        <div className="table-actions">
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/organizations/${org.id}/edit`);
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/organizations/${org.id}/memberships`);
-            }}
-          >
-            Members
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/organizations/${org.id}/share-types`);
-            }}
-          >
-            Share Types
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/organizations/${org.id}/proposals`);
-            }}
-          >
-            Proposals
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = useMemo<TableColumn<Organization>[]>(
+    () => [
+      {
+        key: 'name',
+        label: 'Name',
+        render: (org) => org.name,
+        sortable: true,
+      },
+      {
+        key: 'description',
+        label: 'Description',
+        render: (org) => (
+          <span className={org.description ? 'text-truncate text-truncate-md' : 'text-secondary'}>
+            {org.description || 'No description'}
+          </span>
+        ),
+      },
+      {
+        key: 'created',
+        label: 'Created',
+        render: (org) => (
+          <span className="text-secondary">
+            {new Date(org.createdAt).toLocaleDateString()}
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        key: 'actions',
+        label: 'Actions',
+        align: 'center',
+        render: (org) => (
+          <div className="table-actions">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/organizations/${org.id}/edit`);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/organizations/${org.id}/memberships`);
+              }}
+            >
+              Members
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/organizations/${org.id}/share-types`);
+              }}
+            >
+              Share Types
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/organizations/${org.id}/proposals`);
+              }}
+            >
+              Proposals
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [navigate]
+  );
 
   return (
     <div>
