@@ -868,6 +868,13 @@ public class ProposalService(
             {
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
                 var voterAddress = await GetPrimaryWalletAddressAsync(request.UserId, organizationDetails.BlockchainType, cancellationToken);
+                
+                if (string.IsNullOrWhiteSpace(voterAddress))
+                {
+                    throw new InvalidOperationException(
+                        $"User {request.UserId} does not have a primary wallet address configured for {organizationDetails.BlockchainType}.");
+                }
+                
                 var onChainResult = await adapter.RecordVoteAsync(
                     new RecordVoteCommand(
                         vote.Id,
@@ -901,6 +908,9 @@ public class ProposalService(
             {
                 await transaction.RollbackAsync(cancellationToken);
             }
+
+            // Detach entity from context to prevent issues on retry
+            dbContext.Entry(vote).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
             throw;
         }

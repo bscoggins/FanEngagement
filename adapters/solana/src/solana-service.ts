@@ -621,6 +621,13 @@ export class SolanaService {
     });
   }
 
+  /**
+   * Helper: Get rent exemption lamports for an account with the given space.
+   * Caches results to minimize RPC calls.
+   * 
+   * Note: Node.js is single-threaded, so Map operations are atomic.
+   * No additional synchronization is needed for concurrent access.
+   */
   private async getRentExemptionLamports(space = 0): Promise<number> {
     if (!this.rentExemptionCache.has(space)) {
       const lamports = await this.connection.getMinimumBalanceForRentExemption(space);

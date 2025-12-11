@@ -5,7 +5,7 @@ const uuidSchema = z.string().uuid();
 const timestampSchema = z.string().datetime();
 const sha256HexSchema = z
   .string()
-  .regex(/^(0x)?[a-fA-F0-9]{64}$/u, 'Invalid SHA-256 hash');
+  .regex(/^[a-fA-F0-9]{64}$/u, 'Invalid SHA-256 hash');
 
 // Organization schemas
 export const createOrganizationSchema = z.object({
