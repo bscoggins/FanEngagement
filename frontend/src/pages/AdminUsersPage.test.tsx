@@ -9,7 +9,6 @@ import type { User } from '../types/api';
 vi.mock('../api/usersApi', () => ({
   usersApi: {
     getAll: vi.fn(),
-    getAllPaged: vi.fn(),
   },
 }));
 
@@ -54,20 +53,20 @@ describe('AdminUsersPage', () => {
   };
 
   it('renders user management heading', () => {
-    vi.mocked(usersApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(usersApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminUsersPage();
     expect(screen.getByText('User Management')).toBeInTheDocument();
   });
 
   it('displays loading state initially', () => {
-    vi.mocked(usersApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(usersApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminUsersPage();
     
     expect(screen.getByText(/loading users/i)).toBeInTheDocument();
   });
 
   it('displays users list after loading', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -83,7 +82,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays user roles correctly', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -97,7 +96,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays edit links for each user', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -105,14 +104,15 @@ describe('AdminUsersPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const editLinks = screen.getAllByText('Edit');
-    expect(editLinks).toHaveLength(2);
-    expect(editLinks[0].closest('a')).toHaveAttribute('href', '/admin/users/user-1');
-    expect(editLinks[1].closest('a')).toHaveAttribute('href', '/admin/users/user-2');
+    const editButtons = screen.getAllByText('Edit');
+    expect(editButtons).toHaveLength(2);
+    // Now they are buttons, not links
+    expect(editButtons[0]).toBeInTheDocument();
+    expect(editButtons[1]).toBeInTheDocument();
   });
 
   it('displays create user button', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce(mockPagedUsers);
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce(mockUsers);
     
     renderAdminUsersPage();
     
@@ -121,11 +121,12 @@ describe('AdminUsersPage', () => {
     });
     
     const createButton = screen.getByText('Create User');
-    expect(createButton.closest('a')).toHaveAttribute('href', '/users/new');
+    // Now it's a button, not a link
+    expect(createButton).toBeInTheDocument();
   });
 
   it('displays error message when API call fails', async () => {
-    vi.mocked(usersApi.getAllPaged).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(usersApi.getAll).mockRejectedValueOnce(new Error('Network error'));
     
     renderAdminUsersPage();
     
@@ -137,15 +138,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('displays empty state when no users exist', async () => {
-    vi.mocked(usersApi.getAllPaged).mockResolvedValueOnce({
-      items: [],
-      totalCount: 0,
-      page: 1,
-      pageSize: 10,
-      totalPages: 0,
-      hasPreviousPage: false,
-      hasNextPage: false,
-    });
+    vi.mocked(usersApi.getAll).mockResolvedValueOnce([]);
     
     renderAdminUsersPage();
     

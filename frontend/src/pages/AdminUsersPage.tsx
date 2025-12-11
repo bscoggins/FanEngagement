@@ -1,28 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
+import { Table, type TableColumn } from '../components/Table';
+import { Badge } from '../components/Badge';
+import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
-import type { User, PagedResult } from '../types/api';
+import { useTableData } from '../hooks/useTableData';
+import type { User } from '../types/api';
+
+const PAGE_SIZE = 10;
 
 export const AdminUsersPage: React.FC = () => {
-  const [pagedResult, setPagedResult] = useState<PagedResult<User> | null>(null);
+  const navigate = useNavigate();
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const pageSize = 10;
 
-  const fetchUsers = async (page: number, search: string) => {
+  const fetchUsers = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await usersApi.getAllPaged(page, pageSize, search || undefined);
-      setPagedResult(data);
+      // Fetch all users for client-side sorting, filtering, and pagination
+      // This approach provides consistent sorting across all pages and immediate search feedback
+      // Trade-off: Performance may degrade with very large datasets (consider server-side for 1000+ users)
+      const data = await usersApi.getAll();
+      setAllUsers(data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
       const errorMessage = parseApiError(err);
@@ -33,18 +41,100 @@ export const AdminUsersPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUsers(currentPage, searchQuery);
-  }, [currentPage, searchQuery]);
+    fetchUsers();
+  }, []);
+
+  // Memoize search fields function to prevent unnecessary recalculations
+  const searchFields = useCallback((user: User) => [user.displayName, user.email], []);
+
+  // Memoize custom sort fields to prevent unnecessary recalculations
+  const customSortFields = useMemo(() => ({
+    name: (user: User) => user.displayName.toLowerCase(),
+    email: (user: User) => user.email.toLowerCase(),
+    created: (user: User) => new Date(user.createdAt),
+  }), []);
+
+  const {
+    paginatedData: paginatedUsers,
+    sortedData: sortedUsers,
+    currentPage,
+    totalPages,
+    hasPreviousPage,
+    hasNextPage,
+    setCurrentPage,
+    handleSort,
+    sortConfig,
+  } = useTableData({
+    data: allUsers,
+    searchQuery,
+    searchFields,
+    initialSortConfig: { key: 'name', direction: 'asc' },
+    customSortFields,
+    pageSize: PAGE_SIZE,
+    componentName: 'AdminUsersPage',
+  });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1); // Reset to first page when searching
-  };
+  const columns = useMemo<TableColumn<User>[]>(
+    () => [
+      {
+        key: 'name',
+        label: 'Name',
+        render: (user) => user.displayName,
+        sortable: true,
+      },
+      {
+        key: 'email',
+        label: 'Email',
+        render: (user) => user.email,
+        sortable: true,
+      },
+      {
+        key: 'role',
+        label: 'Role',
+        render: (user) => (
+          <Badge variant={user.role === 'Admin' ? 'info' : 'neutral'}>
+            {user.role}
+          </Badge>
+        ),
+        align: 'left',
+      },
+      {
+        key: 'created',
+        label: 'Created',
+        render: (user) => (
+          <span className="text-secondary-color text-sm">
+            {new Date(user.createdAt).toLocaleDateString()}
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        key: 'actions',
+        label: 'Actions',
+        align: 'center',
+        render: (user) => (
+          <div className="table-actions">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/admin/users/${user.id}`);
+              }}
+            >
+              Edit
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [navigate]
+  );
 
   if (isLoading) {
     return (
@@ -59,120 +149,58 @@ export const AdminUsersPage: React.FC = () => {
     return (
       <div>
         <h1 data-testid="users-heading">User Management</h1>
-        <ErrorMessage message={error} onRetry={() => fetchUsers(currentPage, searchQuery)} />
+        <ErrorMessage message={error} onRetry={() => fetchUsers()} />
       </div>
     );
   }
-
-  const users = pagedResult?.items || [];
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 data-testid="users-heading">User Management</h1>
-        <Link
-          to="/users/new"
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#0066cc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            textDecoration: 'none',
-            display: 'inline-block',
-          }}
+        <Button
+          variant="primary"
+          onClick={() => navigate('/users/new')}
         >
           Create User
-        </Link>
+        </Button>
       </div>
 
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <SearchInput
           value={searchQuery}
-          onChange={handleSearchChange}
+          onChange={setSearchQuery}
           placeholder="Search by name or email..."
         />
-        <div style={{ color: '#666', fontSize: '0.875rem' }}>
-          {pagedResult && (
-            <span>
-              Showing {users.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, pagedResult.totalCount)} of {pagedResult.totalCount} users
-            </span>
-          )}
+        <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+          <span>
+            Showing {paginatedUsers.length > 0 ? ((currentPage - 1) * PAGE_SIZE + 1) : 0} - {Math.min(currentPage * PAGE_SIZE, sortedUsers.length)} of {sortedUsers.length} users
+          </span>
         </div>
       </div>
       
-      {users.length === 0 ? (
+      {paginatedUsers.length === 0 ? (
         <EmptyState message={searchQuery ? "No users found matching your search." : "No users found."} />
       ) : (
         <>
-          <div style={{ 
-            backgroundColor: 'white', 
-            borderRadius: '8px', 
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            overflow: 'hidden'
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Name</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Email</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Role</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Created</th>
-                  <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                    <td style={{ padding: '1rem' }}>{user.displayName}</td>
-                    <td style={{ padding: '1rem' }}>{user.email}</td>
-                    <td style={{ padding: '1rem' }}>
-                      <span style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '12px',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        backgroundColor: user.role === 'Admin' ? '#e3f2fd' : '#f5f5f5',
-                        color: user.role === 'Admin' ? '#1976d2' : '#666',
-                      }}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td style={{ padding: '1rem', color: '#666', fontSize: '0.9rem' }}>
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                      <Link
-                        to={`/admin/users/${user.id}`}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#0066cc',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            data={paginatedUsers}
+            columns={columns}
+            getRowKey={(user) => user.id}
+            mobileLayout="card"
+            sortConfig={sortConfig}
+            onSort={handleSort}
+            testId="users-table"
+            caption="List of users in the system"
+          />
 
-          {pagedResult && (
-            <Pagination
-              currentPage={pagedResult.page}
-              totalPages={pagedResult.totalPages}
-              onPageChange={handlePageChange}
-              hasPreviousPage={pagedResult.hasPreviousPage}
-              hasNextPage={pagedResult.hasNextPage}
-            />
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
+          />
         </>
       )}
     </div>

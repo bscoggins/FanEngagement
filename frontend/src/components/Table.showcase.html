@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Table Component Showcase</title>
+  <link rel="stylesheet" href="../index.css">
+  <link rel="stylesheet" href="./Table.css">
+  <style>
+    body {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: var(--color-background);
+    }
+
+    .showcase-section {
+      margin-bottom: 4rem;
+    }
+
+    .showcase-section h2 {
+      margin-bottom: 1rem;
+      color: var(--color-text-primary);
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+    }
+
+    .showcase-section p {
+      margin-bottom: 1.5rem;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-base);
+    }
+
+    .demo-controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .demo-controls button {
+      padding: 0.5rem 1rem;
+      background-color: var(--color-primary-600);
+      color: var(--color-text-on-primary);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      transition: background-color var(--duration-fast) var(--ease-out);
+    }
+
+    .demo-controls button:hover {
+      background-color: var(--color-primary-700);
+    }
+
+    .demo-controls button.active {
+      background-color: var(--color-primary-800);
+    }
+
+    .resize-hint {
+      background-color: var(--color-info-alpha-12);
+      border: 1px solid var(--color-info-500);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-text-primary);
+      font-size: var(--font-size-sm);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: var(--letter-spacing-wide);
+    }
+
+    .badge--success {
+      background-color: var(--color-success-100);
+      color: var(--color-success-700);
+    }
+
+    .badge--warning {
+      background-color: var(--color-warning-100);
+      color: var(--color-warning-700);
+    }
+
+    .badge--error {
+      background-color: var(--color-error-100);
+      color: var(--color-error-700);
+    }
+
+    .badge--info {
+      background-color: var(--color-info-100);
+      color: var(--color-info-700);
+    }
+  </style>
+</head>
+<body>
+  <h1>Table Component Showcase</h1>
+  <p>Enhanced table component with responsive layouts, sortable columns, and design system tokens.</p>
+
+  <!-- Standard Table -->
+  <section class="showcase-section">
+    <h2>Standard Table (Scroll Layout)</h2>
+    <p>Default table with horizontal scroll on mobile. Click column headers to sort.</p>
+    
+    <div class="table-container table-container--scroll table-container--sticky-header">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th role="button" tabindex="0" data-column="name">
+              <span class="table__header-content">
+                Name
+                <span class="table__sort-icon" aria-hidden="true">↕</span>
+              </span>
+            </th>
+            <th data-column="email">Email</th>
+            <th class="text-center" role="button" tabindex="0" data-column="status">
+              <span class="table__header-content">
+                Status
+                <span class="table__sort-icon" aria-hidden="true">↕</span>
+              </span>
+            </th>
+            <th role="button" tabindex="0" data-column="date">
+              <span class="table__header-content">
+                Created
+                <span class="table__sort-icon" aria-hidden="true">↕</span>
+              </span>
+            </th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-row-key="1">
+            <td data-label="Name" data-column="name">Alice Johnson</td>
+            <td data-label="Email" data-column="email">alice@example.com</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--success">Active</span>
+            </td>
+            <td data-label="Created" data-column="date">2024-01-15</td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+                <button class="table-action-button secondary">View</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-row-key="2">
+            <td data-label="Name" data-column="name">Bob Smith</td>
+            <td data-label="Email" data-column="email">bob@example.com</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--warning">Pending</span>
+            </td>
+            <td data-label="Created" data-column="date">2024-02-20</td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+                <button class="table-action-button secondary">View</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-row-key="3">
+            <td data-label="Name" data-column="name">Carol Davis</td>
+            <td data-label="Email" data-column="email">carol@example.com</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--success">Active</span>
+            </td>
+            <td data-label="Created" data-column="date">2024-03-10</td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+                <button class="table-action-button secondary">View</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-row-key="4">
+            <td data-label="Name" data-column="name">David Wilson</td>
+            <td data-label="Email" data-column="email">david@example.com</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--error">Suspended</span>
+            </td>
+            <td data-label="Created" data-column="date">2024-04-05</td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+                <button class="table-action-button danger">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Card Layout -->
+  <section class="showcase-section">
+    <h2>Card Layout (Mobile Responsive)</h2>
+    <p>Table transforms into stacked cards on mobile devices (below 768px).</p>
+    <div class="resize-hint">
+      💡 Resize your browser window to see the card layout transformation on mobile.
+    </div>
+    
+    <div class="table-container table-container--card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th data-column="product">Product</th>
+            <th data-column="category">Category</th>
+            <th class="text-right" data-column="price">Price</th>
+            <th class="text-center" data-column="stock">Stock</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-row-key="p1">
+            <td data-label="Product" data-column="product">Wireless Mouse</td>
+            <td data-label="Category" data-column="category">Electronics</td>
+            <td data-label="Price" data-column="price" class="text-right">$29.99</td>
+            <td data-label="Stock" data-column="stock" class="text-center">
+              <span class="badge badge--success">In Stock</span>
+            </td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-row-key="p2">
+            <td data-label="Product" data-column="product">USB-C Cable</td>
+            <td data-label="Category" data-column="category">Accessories</td>
+            <td data-label="Price" data-column="price" class="text-right">$12.99</td>
+            <td data-label="Stock" data-column="stock" class="text-center">
+              <span class="badge badge--warning">Low Stock</span>
+            </td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-row-key="p3">
+            <td data-label="Product" data-column="product">Keyboard</td>
+            <td data-label="Category" data-column="category">Electronics</td>
+            <td data-label="Price" data-column="price" class="text-right">$79.99</td>
+            <td data-label="Stock" data-column="stock" class="text-center">
+              <span class="badge badge--error">Out of Stock</span>
+            </td>
+            <td data-label="Actions" class="text-center">
+              <div class="table-actions">
+                <button class="table-action-button">Edit</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Compact Table -->
+  <section class="showcase-section">
+    <h2>Compact Table</h2>
+    <p>Reduced padding for dense data displays.</p>
+    
+    <div class="table-container table-container--scroll">
+      <table class="data-table data-table--compact">
+        <thead>
+          <tr>
+            <th data-column="id">#</th>
+            <th data-column="event">Event Type</th>
+            <th class="text-center" data-column="attempts">Attempts</th>
+            <th class="text-center" data-column="status">Status</th>
+            <th data-column="timestamp">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-row-key="e1">
+            <td data-label="#" data-column="id">001</td>
+            <td data-label="Event Type" data-column="event">user.created</td>
+            <td data-label="Attempts" data-column="attempts" class="text-center">1</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--success">Delivered</span>
+            </td>
+            <td data-label="Timestamp" data-column="timestamp">2024-12-11 10:30:45</td>
+          </tr>
+          <tr data-row-key="e2">
+            <td data-label="#" data-column="id">002</td>
+            <td data-label="Event Type" data-column="event">proposal.submitted</td>
+            <td data-label="Attempts" data-column="attempts" class="text-center">3</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--error">Failed</span>
+            </td>
+            <td data-label="Timestamp" data-column="timestamp">2024-12-11 10:31:20</td>
+          </tr>
+          <tr data-row-key="e3">
+            <td data-label="#" data-column="id">003</td>
+            <td data-label="Event Type" data-column="event">vote.cast</td>
+            <td data-label="Attempts" data-column="attempts" class="text-center">1</td>
+            <td data-label="Status" data-column="status" class="text-center">
+              <span class="badge badge--success">Delivered</span>
+            </td>
+            <td data-label="Timestamp" data-column="timestamp">2024-12-11 10:32:15</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Sorted Table -->
+  <section class="showcase-section">
+    <h2>Sorted Table (Ascending)</h2>
+    <p>Table sorted by name in ascending order.</p>
+    
+    <div class="table-container table-container--scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th role="button" tabindex="0" data-column="name" aria-sort="ascending">
+              <span class="table__header-content">
+                Name
+                <span class="table__sort-icon" aria-hidden="true">↑</span>
+              </span>
+            </th>
+            <th role="button" tabindex="0" data-column="department">
+              <span class="table__header-content">
+                Department
+                <span class="table__sort-icon" aria-hidden="true">↕</span>
+              </span>
+            </th>
+            <th class="text-right" role="button" tabindex="0" data-column="salary">
+              <span class="table__header-content">
+                Salary
+                <span class="table__sort-icon" aria-hidden="true">↕</span>
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-row-key="emp1">
+            <td data-label="Name" data-column="name">Alice Johnson</td>
+            <td data-label="Department" data-column="department">Engineering</td>
+            <td data-label="Salary" data-column="salary" class="text-right">$120,000</td>
+          </tr>
+          <tr data-row-key="emp2">
+            <td data-label="Name" data-column="name">Bob Smith</td>
+            <td data-label="Department" data-column="department">Marketing</td>
+            <td data-label="Salary" data-column="salary" class="text-right">$95,000</td>
+          </tr>
+          <tr data-row-key="emp3">
+            <td data-label="Name" data-column="name">Carol Davis</td>
+            <td data-label="Department" data-column="department">Sales</td>
+            <td data-label="Salary" data-column="salary" class="text-right">$85,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Empty State -->
+  <section class="showcase-section">
+    <h2>Empty State</h2>
+    <p>Displayed when the table has no data.</p>
+    
+    <div class="table-container table-container--scroll">
+      <div class="table-empty">
+        <div class="table-empty-icon" aria-hidden="true">📋</div>
+        <div class="table-empty-message">No data available</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Clickable Rows -->
+  <section class="showcase-section">
+    <h2>Clickable Rows</h2>
+    <p>Rows that can be clicked for navigation or detail view.</p>
+    
+    <div class="table-container table-container--scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th data-column="organization">Organization</th>
+            <th data-column="members">Members</th>
+            <th class="text-center" data-column="proposals">Proposals</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-row-key="org1" role="button" tabindex="0" class="table__row--clickable">
+            <td data-label="Organization" data-column="organization">Acme Corp</td>
+            <td data-label="Members" data-column="members">45</td>
+            <td data-label="Proposals" data-column="proposals" class="text-center">12</td>
+          </tr>
+          <tr data-row-key="org2" role="button" tabindex="0" class="table__row--clickable">
+            <td data-label="Organization" data-column="organization">Tech Startup Inc</td>
+            <td data-label="Members" data-column="members">28</td>
+            <td data-label="Proposals" data-column="proposals" class="text-center">8</td>
+          </tr>
+          <tr data-row-key="org3" role="button" tabindex="0" class="table__row--clickable">
+            <td data-label="Organization" data-column="organization">Community DAO</td>
+            <td data-label="Members" data-column="members">156</td>
+            <td data-label="Proposals" data-column="proposals" class="text-center">34</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    // Add simple interactivity for demo
+    document.querySelectorAll('th[role="button"]').forEach(header => {
+      header.addEventListener('click', () => {
+        console.log('Column clicked:', header.dataset.column);
+      });
+    });
+
+    document.querySelectorAll('tr.table__row--clickable').forEach(row => {
+      row.addEventListener('click', () => {
+        console.log('Row clicked:', row.dataset.rowKey);
+      });
+    });
+  </script>
+</body>
+</html>

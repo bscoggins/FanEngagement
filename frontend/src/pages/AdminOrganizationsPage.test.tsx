@@ -21,7 +21,6 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../api/organizationsApi', () => ({
   organizationsApi: {
     getAll: vi.fn(),
-    getAllPaged: vi.fn(),
     create: vi.fn(),
   },
 }));
@@ -67,20 +66,20 @@ describe('AdminOrganizationsPage', () => {
   };
 
   it('renders organization management heading', () => {
-    vi.mocked(organizationsApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(organizationsApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminOrganizationsPage();
     expect(screen.getByText('Organization Management')).toBeInTheDocument();
   });
 
   it('displays loading state initially', () => {
-    vi.mocked(organizationsApi.getAllPaged).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(organizationsApi.getAll).mockImplementation(() => new Promise(() => {})); // Never resolves
     renderAdminOrganizationsPage();
     
     expect(screen.getByText(/loading organizations/i)).toBeInTheDocument();
   });
 
   it('displays organizations list after loading', async () => {
-    vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
     
     renderAdminOrganizationsPage();
     
@@ -96,7 +95,7 @@ describe('AdminOrganizationsPage', () => {
   });
 
   it('displays action buttons for each organization', async () => {
-    vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
     
     renderAdminOrganizationsPage();
     
@@ -105,24 +104,25 @@ describe('AdminOrganizationsPage', () => {
     });
     
     // Check Edit links
-    const editLinks = screen.getAllByText('Edit');
-    expect(editLinks).toHaveLength(2);
-    expect(editLinks[0].closest('a')).toHaveAttribute('href', '/admin/organizations/org-1/edit');
-    expect(editLinks[1].closest('a')).toHaveAttribute('href', '/admin/organizations/org-2/edit');
+    const editButtons = screen.getAllByText('Edit');
+    expect(editButtons).toHaveLength(2);
+    // Now they are buttons, not links
+    expect(editButtons[0]).toBeInTheDocument();
+    expect(editButtons[1]).toBeInTheDocument();
 
-    // Check Members links
-    const memberLinks = screen.getAllByText('Members');
-    expect(memberLinks).toHaveLength(2);
-    expect(memberLinks[0].closest('a')).toHaveAttribute('href', '/admin/organizations/org-1/memberships');
+    // Check Members buttons
+    const memberButtons = screen.getAllByText('Members');
+    expect(memberButtons).toHaveLength(2);
+    expect(memberButtons[0]).toBeInTheDocument();
 
-    // Check Share Types links
-    const shareTypeLinks = screen.getAllByText('Share Types');
-    expect(shareTypeLinks).toHaveLength(2);
-    expect(shareTypeLinks[0].closest('a')).toHaveAttribute('href', '/admin/organizations/org-1/share-types');
+    // Check Share Types buttons
+    const shareTypeButtons = screen.getAllByText('Share Types');
+    expect(shareTypeButtons).toHaveLength(2);
+    expect(shareTypeButtons[0]).toBeInTheDocument();
   });
 
   it('displays error message when API call fails', async () => {
-    vi.mocked(organizationsApi.getAllPaged).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(organizationsApi.getAll).mockRejectedValueOnce(new Error('Network error'));
     
     renderAdminOrganizationsPage();
     
@@ -134,15 +134,7 @@ describe('AdminOrganizationsPage', () => {
   });
 
   it('displays empty state when no organizations exist', async () => {
-    vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce({
-      items: [],
-      totalCount: 0,
-      page: 1,
-      pageSize: 10,
-      totalPages: 0,
-      hasPreviousPage: false,
-      hasNextPage: false,
-    });
+    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce([]);
     
     renderAdminOrganizationsPage();
     
@@ -159,7 +151,7 @@ describe('AdminOrganizationsPage', () => {
     });
 
     it('displays create organization button', async () => {
-      vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+      vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
       
       renderAdminOrganizationsPage();
       
@@ -171,7 +163,7 @@ describe('AdminOrganizationsPage', () => {
     });
 
     it('shows and hides create form when button is clicked', async () => {
-      vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+      vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
       const user = userEvent.setup();
       
       renderAdminOrganizationsPage();
@@ -204,7 +196,15 @@ describe('AdminOrganizationsPage', () => {
     });
 
     it('creates organization and navigates to edit page on success', async () => {
-      vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+      vi.mocked(organizationsApi.getAll)
+        .mockResolvedValueOnce(mockOrganizations) // Initial load
+        .mockResolvedValueOnce([...mockOrganizations, { // After create
+          id: 'new-org-id',
+          name: 'New Test Org',
+          description: 'New test description',
+          createdAt: '2024-01-15T10:00:00Z',
+        }]);
+      
       const newOrg: Organization = {
         id: 'new-org-id',
         name: 'New Test Org',
@@ -250,7 +250,7 @@ describe('AdminOrganizationsPage', () => {
     });
 
     it('displays error message when create fails', async () => {
-      vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+      vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
       vi.mocked(organizationsApi.create).mockRejectedValueOnce(new Error('Failed to create organization'));
       
       const user = userEvent.setup();
@@ -281,7 +281,7 @@ describe('AdminOrganizationsPage', () => {
     });
 
     it('validates required name field', async () => {
-      vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+      vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
       
       const user = userEvent.setup();
       renderAdminOrganizationsPage();
@@ -301,7 +301,7 @@ describe('AdminOrganizationsPage', () => {
     });
 
     it('disables form during submission', async () => {
-      vi.mocked(organizationsApi.getAllPaged).mockResolvedValueOnce(mockPagedOrganizations);
+      vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
       
       // Mock create to never resolve to test loading state
       const createPromise = new Promise<Organization>(() => {

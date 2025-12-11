@@ -424,3 +424,59 @@ body.theme-dark {
   --shadow-header-dark: 0 4px 10px 0 rgba(3, 6, 12, 0.85);
   --shadow-sidebar: 2px 0 10px 0 rgba(3, 6, 12, 0.85);
 }
+
+/* ===== Utility Classes ===== */
+
+/* Text styling utilities */
+.text-secondary-color {
+  color: var(--color-text-secondary);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+/* Combined utility for convenience */
+.text-secondary {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Text truncation utility 
+ * Note: The base .text-truncate class provides ellipsis behavior but requires
+ * a size variant (.text-truncate-sm, .text-truncate-md, or .text-truncate-lg)
+ * to set the max-width constraint. Use both classes together:
+ * className="text-truncate text-truncate-md"
+ */
+.text-truncate {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Text truncation size variants */
+.text-truncate-sm {
+  max-width: 150px;
+}
+
+.text-truncate-md {
+  max-width: 300px;
+}
+
+.text-truncate-lg {
+  max-width: 500px;
+}
+
+/* Text alignment utilities */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
