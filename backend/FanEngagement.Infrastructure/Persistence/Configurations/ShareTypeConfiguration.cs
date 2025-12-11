@@ -18,6 +18,8 @@ public class ShareTypeConfiguration : IEntityTypeConfiguration<ShareType>
         builder.Property(x => x.VotingWeight).HasColumnType("numeric(20,4)").IsRequired();
         builder.Property(x => x.MaxSupply).HasColumnType("numeric(20,4)");
         builder.Property(x => x.IsTransferable).IsRequired();
+        builder.Property(x => x.TokenDecimals).IsRequired().HasDefaultValue(0);
+        builder.Property(x => x.BlockchainMintAddress).HasMaxLength(128);
         builder.Property(x => x.CreatedAt).IsRequired();
 
         builder.HasIndex(x => new { x.OrganizationId, x.Symbol }).IsUnique();

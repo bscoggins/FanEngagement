@@ -1,4 +1,5 @@
 using FanEngagement.Application.Audit;
+using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -8,7 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class ShareIssuanceService(FanEngagementDbContext dbContext, IAuditService auditService, ILogger<ShareIssuanceService> logger) : IShareIssuanceService
+public class ShareIssuanceService(
+    FanEngagementDbContext dbContext,
+    IAuditService auditService,
+    ILogger<ShareIssuanceService> logger,
+    IBlockchainAdapterFactory blockchainAdapterFactory) : IShareIssuanceService
 {
     public async Task<ShareIssuanceDto> CreateAsync(Guid organizationId, CreateShareIssuanceRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
@@ -45,10 +50,11 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext, IAuditServic
             throw new InvalidOperationException($"User {request.UserId} is not a member of organization {organizationId}");
         }
 
-        // Get organization for audit context
+        // Get organization for audit context and blockchain behavior
         var organization = await dbContext.Organizations
             .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Organization with ID {organizationId} not found.");
 
         // Use transaction for relational databases to prevent race conditions
         // In-memory database doesn't support transactions but automatically handles atomicity
@@ -105,7 +111,35 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext, IAuditServic
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
+            if (organization.BlockchainType != BlockchainType.None)
+            {
+                if (string.IsNullOrWhiteSpace(shareType.BlockchainMintAddress))
+                {
+                    throw new InvalidOperationException("Share type does not have a blockchain mint address configured.");
+                }
+
+                var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
+                var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organization.BlockchainType, cancellationToken);
+
+                var onChainResult = await adapter.RecordShareIssuanceAsync(
+                    new RecordShareIssuanceCommand(
+                        issuance.Id,
+                        shareType.BlockchainMintAddress,
+                        request.UserId,
+                        issuance.Quantity,
+                        recipientWalletAddress,
+                        actorUserId,
+                        request.Reason),
+                    cancellationToken);
+
+                logger.LogInformation(
+                    "Share issuance {IssuanceId} recorded on {Blockchain} with transaction {TransactionId}",
+                    issuance.Id,
+                    organization.BlockchainType,
+                    onChainResult.TransactionId);
+            }
+
             if (transaction != null)
             {
                 await transaction.CommitAsync(cancellationToken);
@@ -236,5 +270,14 @@ public class ShareIssuanceService(FanEngagementDbContext dbContext, IAuditServic
             .ToListAsync(cancellationToken);
 
         return balances;
+    }
+
+    private Task<string?> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
+    {
+        return dbContext.UserWalletAddresses
+            .AsNoTracking()
+            .Where(w => w.UserId == userId && w.BlockchainType == blockchainType && w.IsPrimary)
+            .Select(w => w.Address)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

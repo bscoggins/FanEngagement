@@ -1,6 +1,7 @@
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Users;
+using FanEngagement.Application.Exceptions;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
@@ -40,7 +41,7 @@ public class MembershipService(FanEngagementDbContext dbContext, IAuditService a
 
         if (existing != null)
         {
-            throw new InvalidOperationException($"User {request.UserId} is already a member of organization {organizationId}");
+            throw new ConflictException($"User {request.UserId} is already a member of organization {organizationId}");
         }
 
         var membership = new OrganizationMembership

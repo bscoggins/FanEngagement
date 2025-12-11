@@ -3,6 +3,9 @@ import { z } from 'zod';
 // Common schemas
 const uuidSchema = z.string().uuid();
 const timestampSchema = z.string().datetime();
+const sha256HexSchema = z
+  .string()
+  .regex(/^(0x)?[a-fA-F0-9]{64}$/u, 'Invalid SHA-256 hash');
 
 // Organization schemas
 export const createOrganizationSchema = z.object({
@@ -56,10 +59,14 @@ export const createProposalSchema = z.object({
   proposalId: uuidSchema,
   organizationId: uuidSchema,
   title: z.string().min(1).max(200),
-  contentHash: z.string().min(1),
+  contentHash: sha256HexSchema,
   startAt: timestampSchema,
   endAt: timestampSchema,
   eligibleVotingPower: z.number().nonnegative(),
+  createdByUserId: uuidSchema.optional(),
+  proposalTextHash: sha256HexSchema.optional(),
+  expectationsHash: sha256HexSchema.optional(),
+  votingOptionsHash: sha256HexSchema.optional(),
 });
 
 export type CreateProposalRequest = z.infer<typeof createProposalSchema>;
@@ -68,6 +75,7 @@ export type CreateProposalRequest = z.infer<typeof createProposalSchema>;
 export const recordVoteSchema = z.object({
   voteId: uuidSchema,
   proposalId: uuidSchema,
+  organizationId: uuidSchema,
   userId: uuidSchema,
   optionId: uuidSchema,
   votingPower: z.number().positive(),
@@ -80,7 +88,8 @@ export type RecordVoteRequest = z.infer<typeof recordVoteSchema>;
 // Proposal Results schemas
 export const commitProposalResultsSchema = z.object({
   proposalId: uuidSchema,
-  resultsHash: z.string().min(1),
+  organizationId: uuidSchema,
+  resultsHash: sha256HexSchema,
   winningOptionId: uuidSchema.optional(),
   totalVotesCast: z.number().nonnegative(),
   quorumMet: z.boolean(),

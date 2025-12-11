@@ -14,6 +14,7 @@ public class FanEngagementDbContext(DbContextOptions<FanEngagementDbContext> opt
     public DbSet<Proposal> Proposals => Set<Proposal>();
     public DbSet<ProposalOption> ProposalOptions => Set<ProposalOption>();
     public DbSet<Vote> Votes => Set<Vote>();
+    public DbSet<UserWalletAddress> UserWalletAddresses => Set<UserWalletAddress>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
     public DbSet<OutboundEvent> OutboundEvents => Set<OutboundEvent>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();

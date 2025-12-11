@@ -7,21 +7,21 @@ namespace FanEngagement.Infrastructure.Blockchain;
 /// </summary>
 public class NullBlockchainAdapter : IBlockchainAdapter
 {
-    public Task<string> CreateOrganizationAsync(Guid organizationId, string name, CancellationToken cancellationToken)
-    {
-        // No-op: return empty transaction ID
-        return Task.FromResult(string.Empty);
-    }
+    public Task<CreateOrganizationResult> CreateOrganizationAsync(CreateOrganizationCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new CreateOrganizationResult(string.Empty, string.Empty));
 
-    public Task<string> CreateShareTypeAsync(Guid shareTypeId, string name, string symbol, decimal votingWeight, CancellationToken cancellationToken)
-    {
-        // No-op: return empty transaction ID
-        return Task.FromResult(string.Empty);
-    }
+    public Task<CreateShareTypeResult> CreateShareTypeAsync(CreateShareTypeCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new CreateShareTypeResult(string.Empty, string.Empty));
 
-    public Task<string> RecordVoteAsync(Guid voteId, Guid proposalId, Guid userId, decimal votingPower, CancellationToken cancellationToken)
-    {
-        // No-op: return empty transaction ID
-        return Task.FromResult(string.Empty);
-    }
+    public Task<RecordShareIssuanceResult> RecordShareIssuanceAsync(RecordShareIssuanceCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new RecordShareIssuanceResult(string.Empty, string.Empty));
+
+    public Task<CreateProposalResult> CreateProposalAsync(CreateProposalCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new CreateProposalResult(string.Empty, string.Empty));
+
+    public Task<BlockchainTransactionResult> RecordVoteAsync(RecordVoteCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new BlockchainTransactionResult(string.Empty));
+
+    public Task<BlockchainTransactionResult> CommitProposalResultsAsync(CommitProposalResultsCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new BlockchainTransactionResult(string.Empty));
 }

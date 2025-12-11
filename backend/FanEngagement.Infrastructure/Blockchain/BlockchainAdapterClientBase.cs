@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FanEngagement.Application.Blockchain;
 
 namespace FanEngagement.Infrastructure.Blockchain;
@@ -12,6 +16,18 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string _namedClient;
     private readonly string? _blockchainConfig;
+    private static readonly JsonSerializerOptions SerializerOptions;
+
+    static BlockchainAdapterClientBase()
+    {
+        SerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        SerializerOptions.Converters.Add(new UtcDateTimeOffsetJsonConverter());
+    }
 
     protected BlockchainAdapterClientBase(IHttpClientFactory httpClientFactory, string namedClient, string? blockchainConfig)
     {
@@ -25,10 +41,19 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
     private HttpClient CreateHttpClient()
     {
         var client = _httpClientFactory.CreateClient(_namedClient);
+        var config = TryGetBlockchainConfig();
+        if (!string.IsNullOrWhiteSpace(config?.ApiKey))
+        {
+            if (client.DefaultRequestHeaders.Contains("X-Adapter-API-Key"))
+            {
+                client.DefaultRequestHeaders.Remove("X-Adapter-API-Key");
+            }
+            client.DefaultRequestHeaders.Add("X-Adapter-API-Key", config.ApiKey!);
+        }
         return client;
     }
 
-    private string? GetAdapterUrl()
+    private BlockchainConfigDto? TryGetBlockchainConfig()
     {
         if (string.IsNullOrWhiteSpace(_blockchainConfig))
         {
@@ -37,43 +62,39 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
         try
         {
-            var config = JsonSerializer.Deserialize<BlockchainConfigDto>(_blockchainConfig);
-            return config?.AdapterUrl;
+            return JsonSerializer.Deserialize<BlockchainConfigDto>(_blockchainConfig, SerializerOptions);
         }
         catch (JsonException)
         {
-            // If config parsing fails, use default from named client
             return null;
         }
     }
 
     private string BuildUrl(string path)
     {
-        var adapterUrl = GetAdapterUrl();
+        var adapterUrl = TryGetBlockchainConfig()?.AdapterUrl;
         if (!string.IsNullOrWhiteSpace(adapterUrl))
         {
-            // If org-specific URL is configured, use it
-            return new Uri(new Uri(adapterUrl), path).ToString();
+            var trimmedPath = path.TrimStart('/');
+            var normalizedBase = adapterUrl.EndsWith('/') ? adapterUrl : string.Concat(adapterUrl, "/");
+            return new Uri(new Uri(normalizedBase), trimmedPath).ToString();
         }
         // Otherwise use relative path with named client's BaseAddress
         return path;
     }
 
-    public async Task<string> CreateOrganizationAsync(Guid organizationId, string name, CancellationToken cancellationToken)
+    public async Task<CreateOrganizationResult> CreateOrganizationAsync(CreateOrganizationCommand command, CancellationToken cancellationToken)
     {
         try
         {
             var client = CreateHttpClient();
             var url = BuildUrl("/organizations");
-            var response = await client.PostAsJsonAsync(url, new
-            {
-                organizationId,
-                name
-            }, cancellationToken);
+            var payload = BuildOrganizationPayload(command);
+            var response = await client.PostAsJsonAsync(url, payload, SerializerOptions, cancellationToken);
 
             response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(cancellationToken);
-            return result?.TransactionId ?? string.Empty;
+            var result = await response.Content.ReadFromJsonAsync<OrganizationResponse>(cancellationToken);
+            return new CreateOrganizationResult(result?.TransactionId ?? string.Empty, result?.AccountAddress ?? string.Empty);
         }
         catch (HttpRequestException ex)
         {
@@ -85,7 +106,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         }
     }
 
-    public async Task<string> CreateShareTypeAsync(Guid shareTypeId, string name, string symbol, decimal votingWeight, CancellationToken cancellationToken)
+    public async Task<CreateShareTypeResult> CreateShareTypeAsync(CreateShareTypeCommand command, CancellationToken cancellationToken)
     {
         try
         {
@@ -93,15 +114,22 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
             var url = BuildUrl("/share-types");
             var response = await client.PostAsJsonAsync(url, new
             {
-                shareTypeId,
-                name,
-                symbol,
-                votingWeight
-            }, cancellationToken);
+                shareTypeId = command.ShareTypeId,
+                organizationId = command.OrganizationId,
+                name = command.Name,
+                symbol = command.Symbol,
+                decimals = command.Decimals,
+                maxSupply = command.MaxSupply,
+                metadata = new
+                {
+                    description = command.Description,
+                    votingWeight = command.VotingWeight
+                }
+            }, SerializerOptions, cancellationToken);
 
             response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(cancellationToken);
-            return result?.TransactionId ?? string.Empty;
+            var result = await response.Content.ReadFromJsonAsync<ShareTypeResponse>(cancellationToken);
+            return new CreateShareTypeResult(result?.TransactionId ?? string.Empty, result?.MintAddress ?? string.Empty);
         }
         catch (HttpRequestException ex)
         {
@@ -113,7 +141,76 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         }
     }
 
-    public async Task<string> RecordVoteAsync(Guid voteId, Guid proposalId, Guid userId, decimal votingPower, CancellationToken cancellationToken)
+    public async Task<RecordShareIssuanceResult> RecordShareIssuanceAsync(RecordShareIssuanceCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            var url = BuildUrl("/share-issuances");
+            var response = await client.PostAsJsonAsync(url, new
+            {
+                issuanceId = command.IssuanceId,
+                shareTypeId = command.ShareTypeAddress,
+                userId = command.UserId,
+                quantity = command.Quantity,
+                recipientAddress = command.RecipientAddress,
+                metadata = new
+                {
+                    reason = command.Reason,
+                    issuedBy = command.IssuedByUserId
+                }
+            }, SerializerOptions, cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<ShareIssuanceResponse>(cancellationToken);
+            return new RecordShareIssuanceResult(result?.TransactionId ?? string.Empty, result?.RecipientAddress ?? string.Empty);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Failed to record share issuance on {BlockchainName} blockchain: {ex.Message}", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Request to {BlockchainName} blockchain adapter timed out while recording share issuance.", ex);
+        }
+    }
+
+    public async Task<CreateProposalResult> CreateProposalAsync(CreateProposalCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            var url = BuildUrl("/proposals");
+            var response = await client.PostAsJsonAsync(url, new
+            {
+                proposalId = command.ProposalId,
+                organizationId = command.OrganizationId,
+                title = command.Title,
+                contentHash = command.ContentHash,
+                startAt = command.StartAt,
+                endAt = command.EndAt,
+                eligibleVotingPower = command.EligibleVotingPower,
+                createdByUserId = command.CreatedByUserId,
+                proposalTextHash = command.ProposalTextHash,
+                expectationsHash = command.ExpectationsHash,
+                votingOptionsHash = command.VotingOptionsHash
+            }, SerializerOptions, cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<ProposalResponse>(cancellationToken);
+            return new CreateProposalResult(result?.TransactionId ?? string.Empty, result?.ProposalAddress ?? string.Empty);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Failed to create proposal on {BlockchainName} blockchain: {ex.Message}", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Request to {BlockchainName} blockchain adapter timed out while creating proposal.", ex);
+        }
+    }
+
+    public async Task<BlockchainTransactionResult> RecordVoteAsync(RecordVoteCommand command, CancellationToken cancellationToken)
     {
         try
         {
@@ -121,15 +218,19 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
             var url = BuildUrl("/votes");
             var response = await client.PostAsJsonAsync(url, new
             {
-                voteId,
-                proposalId,
-                userId,
-                votingPower
-            }, cancellationToken);
+                voteId = command.VoteId,
+                proposalId = command.ProposalId,
+                organizationId = command.OrganizationId,
+                userId = command.UserId,
+                optionId = command.OptionId,
+                votingPower = command.VotingPower,
+                voterAddress = command.VoterAddress,
+                timestamp = command.CastAt
+            }, SerializerOptions, cancellationToken);
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(cancellationToken);
-            return result?.TransactionId ?? string.Empty;
+            return new BlockchainTransactionResult(result?.TransactionId ?? string.Empty);
         }
         catch (HttpRequestException ex)
         {
@@ -141,6 +242,110 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         }
     }
 
+    public async Task<BlockchainTransactionResult> CommitProposalResultsAsync(CommitProposalResultsCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            var url = BuildUrl("/proposal-results");
+            var response = await client.PostAsJsonAsync(url, new
+            {
+                proposalId = command.ProposalId,
+                organizationId = command.OrganizationId,
+                resultsHash = command.ResultsHash,
+                winningOptionId = command.WinningOptionId,
+                totalVotesCast = command.TotalVotesCast,
+                quorumMet = command.QuorumMet,
+                closedAt = command.ClosedAt
+            }, SerializerOptions, cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(cancellationToken);
+            return new BlockchainTransactionResult(result?.TransactionId ?? string.Empty);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Failed to commit proposal results on {BlockchainName} blockchain: {ex.Message}", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Request to {BlockchainName} blockchain adapter timed out while committing proposal results.", ex);
+        }
+    }
+
+    private static Dictionary<string, object?> BuildOrganizationPayload(CreateOrganizationCommand command)
+    {
+        var payload = new Dictionary<string, object?>
+        {
+            ["organizationId"] = command.OrganizationId,
+            ["name"] = command.Name
+        };
+
+        if (command.Description is not null)
+        {
+            payload["description"] = command.Description;
+        }
+
+        var metadata = BuildBrandingMetadata(command.Branding);
+        if (metadata is not null)
+        {
+            payload["metadata"] = metadata;
+        }
+
+        return payload;
+    }
+
+    private static Dictionary<string, object?>? BuildBrandingMetadata(OrganizationBrandingMetadata? branding)
+    {
+        if (branding is null)
+        {
+            return null;
+        }
+
+        var metadata = new Dictionary<string, object?>();
+
+        if (!string.IsNullOrWhiteSpace(branding.LogoUrl))
+        {
+            metadata["logoUrl"] = branding.LogoUrl;
+        }
+
+        var colors = new Dictionary<string, object?>();
+
+        if (!string.IsNullOrWhiteSpace(branding.PrimaryColor))
+        {
+            colors["primary"] = branding.PrimaryColor;
+        }
+
+        if (!string.IsNullOrWhiteSpace(branding.SecondaryColor))
+        {
+            colors["secondary"] = branding.SecondaryColor;
+        }
+
+        if (colors.Count > 0)
+        {
+            metadata["colors"] = colors;
+        }
+
+        return metadata.Count > 0 ? metadata : null;
+    }
+
+    private sealed class UtcDateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>
+    {
+        public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return reader.GetDateTimeOffset();
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+        }
+    }
+
     private record BlockchainConfigDto(string? AdapterUrl, string? Network, string? ApiKey);
     private record TransactionResponse(string? TransactionId);
+    private record OrganizationResponse(string? TransactionId, string? AccountAddress);
+    private record ShareTypeResponse(string? TransactionId, string? MintAddress);
+    private record ShareIssuanceResponse(string? TransactionId, string? RecipientAddress);
+    private record ProposalResponse(string? TransactionId, string? ProposalAddress);
 }

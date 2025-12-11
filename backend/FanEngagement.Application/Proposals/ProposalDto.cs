@@ -14,6 +14,7 @@ public class ProposalDto
     public decimal? QuorumRequirement { get; set; }
     public Guid CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public string? BlockchainTransactionId { get; set; }
     
     // Governance result fields (populated when closed/finalized)
     public Guid? WinningOptionId { get; set; }

@@ -1,5 +1,9 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FanEngagement.Application.Audit;
+using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
@@ -27,7 +31,8 @@ public class ProposalService(
     IOutboundEventService outboundEventService,
     IAuditService auditService,
     FanEngagementMetrics metrics,
-    ILogger<ProposalService> logger) : IProposalService
+    ILogger<ProposalService> logger,
+    IBlockchainAdapterFactory blockchainAdapterFactory) : IProposalService
 {
     public async Task<ProposalDto> CreateAsync(Guid organizationId, CreateProposalRequest request, CancellationToken cancellationToken = default)
     {
@@ -110,7 +115,7 @@ public class ProposalService(
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return proposals.Select(MapToDto).ToList();
+        return proposals.Select(p => MapToDto(p)).ToList();
     }
 
     public async Task<PagedResult<ProposalDto>> GetByOrganizationAsync(
@@ -150,7 +155,7 @@ public class ProposalService(
 
         return new PagedResult<ProposalDto>
         {
-            Items = proposals.Select(MapToDto).ToList(),
+            Items = proposals.Select(p => MapToDto(p)).ToList(),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
@@ -276,6 +281,11 @@ public class ProposalService(
             return null;
         }
 
+        var organizationDetails = await dbContext.Organizations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Organization {proposal.OrganizationId} not found.");
+
         var oldStatus = proposal.Status;
 
         // Use domain service for validation
@@ -291,18 +301,79 @@ public class ProposalService(
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
-        // Capture eligible voting power snapshot
-        var votingPowerCalc = new VotingPowerCalculator();
-        var allBalances = await dbContext.ShareBalances
-            .AsNoTracking()
-            .Include(b => b.ShareType)
-            .Where(b => b.ShareType != null && b.ShareType.OrganizationId == proposal.OrganizationId)
-            .ToListAsync(cancellationToken);
-        
-        proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);
-        proposal.Status = ProposalStatus.Open;
-        
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+        var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        string? blockchainTransactionId = null;
+
+        try
+        {
+            // Capture eligible voting power snapshot
+            var votingPowerCalc = new VotingPowerCalculator();
+            var allBalances = await dbContext.ShareBalances
+                .AsNoTracking()
+                .Include(b => b.ShareType)
+                .Where(b => b.ShareType != null && b.ShareType.OrganizationId == proposal.OrganizationId)
+                .ToListAsync(cancellationToken);
+
+            proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);
+            proposal.Status = ProposalStatus.Open;
+
+            if (organizationDetails.BlockchainType != BlockchainType.None)
+            {
+                var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
+                var startAt = proposal.StartAt ?? DateTimeOffset.UtcNow;
+                var endAt = proposal.EndAt ?? startAt.AddDays(7);
+                var eligibleVotingPower = proposal.EligibleVotingPowerSnapshot ?? 0;
+                var contentHash = ComputeProposalContentHash(proposal);
+                var optionsHash = ComputeVotingOptionsHash(proposal);
+                var descriptionHash = ComputeProposalDescriptionHash(proposal);
+
+                var onChainResult = await adapter.CreateProposalAsync(
+                    new CreateProposalCommand(
+                        proposal.Id,
+                        proposal.OrganizationId,
+                        proposal.Title,
+                        contentHash,
+                        startAt,
+                        endAt,
+                        eligibleVotingPower,
+                        proposal.CreatedByUserId,
+                        descriptionHash,
+                        null,
+                        optionsHash),
+                    cancellationToken);
+
+                proposal.BlockchainProposalAddress = onChainResult.ProposalAddress;
+                proposal.LatestContentHash = contentHash;
+                blockchainTransactionId = onChainResult.TransactionId;
+
+                logger.LogInformation(
+                    "Proposal {ProposalId} recorded on {Blockchain} with transaction {TransactionId}",
+                    proposal.Id,
+                    organizationDetails.BlockchainType,
+                    onChainResult.TransactionId);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
+        finally
+        {
+            transaction?.Dispose();
+        }
 
         // Log structured transition
         logger.LogInformation(
@@ -317,15 +388,11 @@ public class ProposalService(
         // Audit after successful commit
         try
         {
-            var organization = await dbContext.Organizations
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
-
             await auditService.LogAsync(
                 new AuditEventBuilder()
                     .WithAction(AuditActionType.StatusChanged)
                     .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
-                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithOrganization(proposal.OrganizationId, organizationDetails.Name)
                     .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
                     .WithDetails(new
                     {
@@ -349,7 +416,7 @@ public class ProposalService(
         // Enqueue outbound event
         await EnqueueProposalEventAsync(proposal, "ProposalOpened", cancellationToken);
 
-        return MapToDto(proposal);
+        return MapToDto(proposal, blockchainTransactionId);
     }
 
     public async Task<ProposalDto?> CloseAsync(Guid proposalId, CancellationToken cancellationToken = default)
@@ -364,6 +431,11 @@ public class ProposalService(
             logger.LogWarning("Proposal {ProposalId} not found for closing", proposalId);
             return null;
         }
+
+        var organizationDetails = await dbContext.Organizations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Organization {proposal.OrganizationId} not found.");
 
         var oldStatus = proposal.Status;
 
@@ -380,17 +452,65 @@ public class ProposalService(
             throw new InvalidOperationException(validation.ErrorMessage);
         }
 
-        // Compute results using domain service
-        var results = governanceService.ComputeResults(proposal);
-        
-        // Update proposal with computed results
-        proposal.Status = ProposalStatus.Closed;
-        proposal.WinningOptionId = results.WinningOptionId;
-        proposal.QuorumMet = results.QuorumMet;
-        proposal.TotalVotesCast = results.TotalVotingPowerCast;
-        proposal.ClosedAt = DateTimeOffset.UtcNow;
-        
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+        var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            // Compute results using domain service
+            var results = governanceService.ComputeResults(proposal);
+
+            // Update proposal with computed results
+            proposal.Status = ProposalStatus.Closed;
+            proposal.WinningOptionId = results.WinningOptionId;
+            proposal.QuorumMet = results.QuorumMet;
+            proposal.TotalVotesCast = results.TotalVotingPowerCast;
+            proposal.ClosedAt = DateTimeOffset.UtcNow;
+
+            if (organizationDetails.BlockchainType != BlockchainType.None)
+            {
+                var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
+                var resultsHash = ComputeProposalResultsHash(proposal, results);
+                var onChainResult = await adapter.CommitProposalResultsAsync(
+                    new CommitProposalResultsCommand(
+                        proposal.Id,
+                        proposal.OrganizationId,
+                        resultsHash,
+                        proposal.WinningOptionId,
+                        proposal.TotalVotesCast ?? 0,
+                        proposal.QuorumMet ?? false,
+                        proposal.ClosedAt ?? DateTimeOffset.UtcNow),
+                    cancellationToken);
+
+                proposal.LatestResultsHash = resultsHash;
+
+                logger.LogInformation(
+                    "Proposal results for {ProposalId} recorded on {Blockchain} with transaction {TransactionId}",
+                    proposal.Id,
+                    organizationDetails.BlockchainType,
+                    onChainResult.TransactionId);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
+        finally
+        {
+            transaction?.Dispose();
+        }
 
         // Log structured transition with results
         logger.LogInformation(
@@ -407,15 +527,11 @@ public class ProposalService(
         // Audit after successful commit
         try
         {
-            var organization = await dbContext.Organizations
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
-
             await auditService.LogAsync(
                 new AuditEventBuilder()
                     .WithAction(AuditActionType.StatusChanged)
                     .WithResource(AuditResourceType.Proposal, proposal.Id, proposal.Title)
-                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithOrganization(proposal.OrganizationId, organizationDetails.Name)
                     .WithActor(Guid.Empty, string.Empty) // TODO: Actor needs to be passed from controller
                     .WithDetails(new
                     {
@@ -671,6 +787,11 @@ public class ProposalService(
             return null;
         }
 
+        var organizationDetails = await dbContext.Organizations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Organization {proposal.OrganizationId} not found.");
+
         // Verify the option belongs to this proposal
         if (!proposal.Options.Any(o => o.Id == request.ProposalOptionId))
         {
@@ -736,7 +857,57 @@ public class ProposalService(
         };
 
         dbContext.Votes.Add(vote);
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+        var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        string? voteTransactionId = null;
+
+        try
+        {
+            if (organizationDetails.BlockchainType != BlockchainType.None)
+            {
+                var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
+                var voterAddress = await GetPrimaryWalletAddressAsync(request.UserId, organizationDetails.BlockchainType, cancellationToken);
+                var onChainResult = await adapter.RecordVoteAsync(
+                    new RecordVoteCommand(
+                        vote.Id,
+                        proposal.Id,
+                        proposal.OrganizationId,
+                        request.UserId,
+                        request.ProposalOptionId,
+                        votingPower,
+                        voterAddress,
+                        vote.CastAt),
+                    cancellationToken);
+                voteTransactionId = onChainResult.TransactionId;
+
+                logger.LogInformation(
+                    "Vote {VoteId} recorded on {Blockchain} with transaction {TransactionId}",
+                    vote.Id,
+                    organizationDetails.BlockchainType,
+                    onChainResult.TransactionId);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
+        finally
+        {
+            transaction?.Dispose();
+        }
 
         // Log vote cast (minimal PII)
         logger.LogInformation(
@@ -749,11 +920,6 @@ public class ProposalService(
         // Audit after successful commit
         try
         {
-            // Get organization information
-            var organization = await dbContext.Organizations
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken);
-
             // Get selected option from already-loaded proposal
             var selectedOption = proposal.Options.FirstOrDefault(o => o.Id == request.ProposalOptionId);
 
@@ -761,7 +927,7 @@ public class ProposalService(
                 new AuditEventBuilder()
                     .WithAction(AuditActionType.Created)
                     .WithResource(AuditResourceType.Vote, vote.Id, $"Vote on {proposal.Title}")
-                    .WithOrganization(proposal.OrganizationId, organization?.Name)
+                    .WithOrganization(proposal.OrganizationId, organizationDetails.Name)
                     .WithActor(request.UserId, voter.DisplayName ?? string.Empty)
                     .WithDetails(new
                     {
@@ -791,7 +957,8 @@ public class ProposalService(
             ProposalOptionId = vote.ProposalOptionId,
             UserId = vote.UserId,
             VotingPower = vote.VotingPower,
-            CastAt = vote.CastAt
+            CastAt = vote.CastAt,
+            BlockchainTransactionId = voteTransactionId
         };
     }
 
@@ -881,7 +1048,7 @@ public class ProposalService(
         await outboundEventService.EnqueueEventAsync(proposal.OrganizationId, eventType, payloadJson, cancellationToken);
     }
 
-    private static ProposalDto MapToDto(Proposal proposal)
+    private static ProposalDto MapToDto(Proposal proposal, string? blockchainTransactionId = null)
     {
         return new ProposalDto
         {
@@ -899,7 +1066,104 @@ public class ProposalService(
             QuorumMet = proposal.QuorumMet,
             TotalVotesCast = proposal.TotalVotesCast,
             ClosedAt = proposal.ClosedAt,
-            EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot
+            EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot,
+            BlockchainTransactionId = blockchainTransactionId
         };
+    }
+
+    private Task<string?> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
+    {
+        return dbContext.UserWalletAddresses
+            .AsNoTracking()
+            .Where(w => w.UserId == userId && w.BlockchainType == blockchainType && w.IsPrimary)
+            .Select(w => w.Address)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static readonly JsonSerializerOptions HashSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    private static string ComputeProposalContentHash(Proposal proposal)
+    {
+        var payload = new
+        {
+            proposalId = proposal.Id,
+            organizationId = proposal.OrganizationId,
+            title = proposal.Title,
+            description = proposal.Description ?? string.Empty,
+            options = proposal.Options
+                .OrderBy(o => o.Id)
+                .Select(o => new { optionId = o.Id, text = o.Text, description = o.Description ?? string.Empty })
+        };
+
+        return ComputeSha256Hex(payload);
+    }
+
+    private static string? ComputeProposalDescriptionHash(Proposal proposal)
+    {
+        if (string.IsNullOrWhiteSpace(proposal.Description))
+        {
+            return null;
+        }
+
+        return ComputeSha256Hex(proposal.Description);
+    }
+
+    private static string? ComputeVotingOptionsHash(Proposal proposal)
+    {
+        if (proposal.Options.Count == 0)
+        {
+            return null;
+        }
+
+        var payload = new
+        {
+            proposalId = proposal.Id,
+            options = proposal.Options
+                .OrderBy(o => o.Id)
+                .Select(o => new { optionId = o.Id, text = o.Text, description = o.Description ?? string.Empty })
+        };
+
+        return ComputeSha256Hex(payload);
+    }
+
+    private static string ComputeProposalResultsHash(Proposal proposal, ProposalResultComputation results)
+    {
+        var payload = new
+        {
+            proposalId = proposal.Id,
+            organizationId = proposal.OrganizationId,
+            totalVotesCast = results.TotalVotingPowerCast,
+            quorumMet = results.QuorumMet,
+            winningOptionId = results.WinningOptionId,
+            options = results.OptionResults
+                .OrderBy(r => r.OptionId)
+                .Select(r => new
+                {
+                    optionId = r.OptionId,
+                    optionText = r.OptionText,
+                    voteCount = r.VoteCount,
+                    totalVotingPower = r.TotalVotingPower
+                })
+        };
+
+        return ComputeSha256Hex(payload);
+    }
+
+    private static string ComputeSha256Hex(object payload)
+    {
+        var json = JsonSerializer.Serialize(payload, HashSerializerOptions);
+        return ComputeSha256Hex(json);
+    }
+
+    private static string ComputeSha256Hex(string payload)
+    {
+        var bytes = Encoding.UTF8.GetBytes(payload);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }

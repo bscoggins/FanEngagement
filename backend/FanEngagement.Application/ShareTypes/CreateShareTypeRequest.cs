@@ -1,5 +1,7 @@
 namespace FanEngagement.Application.ShareTypes;
 
+using System.ComponentModel.DataAnnotations;
+
 public class CreateShareTypeRequest
 {
     public string Name { get; set; } = string.Empty;
@@ -8,4 +10,6 @@ public class CreateShareTypeRequest
     public decimal VotingWeight { get; set; }
     public decimal? MaxSupply { get; set; }
     public bool IsTransferable { get; set; }
+    [Range(0, 9)]
+    public int TokenDecimals { get; set; }
 }
