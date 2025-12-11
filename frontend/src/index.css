@@ -439,7 +439,6 @@ body.theme-dark {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
 }
 
 /* Text truncation size variants */
