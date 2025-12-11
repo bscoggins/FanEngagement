@@ -74,6 +74,8 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
             Password = "VoterPassword123!"
         });
 
+        await AddPrimarySolanaWalletAsync(voter.Id, adapterPubkey);
+
         await AddMembershipAsync(organization.Id, voter.Id);
         await IssueSharesAsync(organization.Id, voter.Id, shareType.Id);
 
@@ -123,6 +125,28 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
         Assert.Equal(vote.Id.ToString(), voteMemo.GetProperty("vote").GetString());
         Assert.Equal(voter.Id.ToString(), voteMemo.GetProperty("user").GetString());
         Assert.Equal(approveOption.Id.ToString(), voteMemo.GetProperty("choice").GetString());
+    }
+
+    private async Task AddPrimarySolanaWalletAsync(Guid userId, string address)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var walletAddress = new UserWalletAddress
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            BlockchainType = BlockchainType.Solana,
+            Address = address,
+            Label = "Test Solana Wallet",
+            IsPrimary = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        dbContext.UserWalletAddresses.Add(walletAddress);
+        await dbContext.SaveChangesAsync();
     }
 
     private static bool IsMatchingMemo(JsonElement memo, string expectedType, Guid proposalId, Guid organizationId)
