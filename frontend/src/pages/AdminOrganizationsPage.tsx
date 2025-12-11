@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -10,6 +10,7 @@ import { Table, type TableColumn } from '../components/Table';
 import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useTableData } from '../hooks/useTableData';
 import type { Organization, CreateOrganizationRequest } from '../types/api';
 
 export const AdminOrganizationsPage: React.FC = () => {
@@ -18,12 +19,7 @@ export const AdminOrganizationsPage: React.FC = () => {
   const [allOrganizations, setAllOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
-    key: 'name',
-    direction: 'asc',
-  });
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createFormData, setCreateFormData] = useState<CreateOrganizationRequest>({
@@ -53,6 +49,28 @@ export const AdminOrganizationsPage: React.FC = () => {
     fetchOrganizations();
   }, []);
 
+  const {
+    paginatedData: paginatedOrganizations,
+    currentPage,
+    totalPages,
+    hasPreviousPage,
+    hasNextPage,
+    setCurrentPage,
+    handleSort,
+    sortConfig,
+  } = useTableData({
+    data: allOrganizations,
+    searchQuery,
+    searchFields: (org) => [org.name, org.description || ''],
+    initialSortConfig: { key: 'name', direction: 'asc' },
+    customSortFields: {
+      name: (org) => org.name.toLowerCase(),
+      created: (org) => new Date(org.createdAt),
+    },
+    pageSize: 10,
+    componentName: 'AdminOrganizationsPage',
+  });
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -60,15 +78,6 @@ export const AdminOrganizationsPage: React.FC = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  const handleSort = (key: string) => {
-    setSortConfig((prevConfig) => ({
-      key,
-      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
-    }));
-    setCurrentPage(1); // Reset to first page when sorting
   };
 
   const handleCreateOrganization = async (e: React.FormEvent) => {
@@ -94,72 +103,6 @@ export const AdminOrganizationsPage: React.FC = () => {
       setIsCreating(false);
     }
   };
-
-  // Filter organizations based on search query
-  const filteredOrganizations = useMemo(() => {
-    if (!searchQuery) return allOrganizations;
-    const query = searchQuery.toLowerCase();
-    return allOrganizations.filter(org => 
-      org.name.toLowerCase().includes(query) ||
-      (org.description && org.description.toLowerCase().includes(query))
-    );
-  }, [allOrganizations, searchQuery]);
-
-  // Sort organizations based on sortConfig
-  const sortedOrganizations = useMemo(() => {
-    const sorted = [...filteredOrganizations];
-    sorted.sort((a, b) => {
-      let aValue: string | Date;
-      let bValue: string | Date;
-
-      switch (sortConfig.key) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'created':
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
-          break;
-        default:
-          console.warn(`AdminOrganizationsPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Falling back to generic comparison.`);
-          // Generic fallback: access property dynamically
-          const rawA = (a as any)[sortConfig.key];
-          const rawB = (b as any)[sortConfig.key];
-          
-          // Handle null/undefined values
-          if (rawA == null && rawB == null) return 0;
-          if (rawA == null) return 1;
-          if (rawB == null) return -1;
-          
-          // Convert to comparable values
-          aValue = typeof rawA === 'string' ? rawA.toLowerCase() : rawA;
-          bValue = typeof rawB === 'string' ? rawB.toLowerCase() : rawB;
-          break;
-      }
-
-      if (aValue < bValue) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-    return sorted;
-  }, [filteredOrganizations, sortConfig]);
-
-  // Pagination
-  const PAGE_SIZE = 10;
-  const paginatedOrganizations = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
-    return sortedOrganizations.slice(startIndex, endIndex);
-  }, [sortedOrganizations, currentPage]);
-
-  const totalPages = Math.ceil(sortedOrganizations.length / PAGE_SIZE);
-  const hasPreviousPage = currentPage > 1;
-  const hasNextPage = currentPage < totalPages;
 
   if (isLoading) {
     return (

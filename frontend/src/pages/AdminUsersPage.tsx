@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -10,6 +10,7 @@ import { Table, type TableColumn } from '../components/Table';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
+import { useTableData } from '../hooks/useTableData';
 import type { User } from '../types/api';
 
 export const AdminUsersPage: React.FC = () => {
@@ -17,12 +18,7 @@ export const AdminUsersPage: React.FC = () => {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
-    key: 'name',
-    direction: 'asc',
-  });
 
   const fetchUsers = async () => {
     try {
@@ -46,6 +42,29 @@ export const AdminUsersPage: React.FC = () => {
     fetchUsers();
   }, []);
 
+  const {
+    paginatedData: paginatedUsers,
+    currentPage,
+    totalPages,
+    hasPreviousPage,
+    hasNextPage,
+    setCurrentPage,
+    handleSort,
+    sortConfig,
+  } = useTableData({
+    data: allUsers,
+    searchQuery,
+    searchFields: (user) => [user.displayName, user.email],
+    initialSortConfig: { key: 'name', direction: 'asc' },
+    customSortFields: {
+      name: (user) => user.displayName.toLowerCase(),
+      email: (user) => user.email.toLowerCase(),
+      created: (user) => new Date(user.createdAt),
+    },
+    pageSize: 10,
+    componentName: 'AdminUsersPage',
+  });
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -53,86 +72,7 @@ export const AdminUsersPage: React.FC = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1); // Reset to first page when searching
   };
-
-  const handleSort = (key: string) => {
-    setSortConfig((prevConfig) => ({
-      key,
-      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
-    }));
-    setCurrentPage(1); // Reset to first page when sort changes
-  };
-
-  // Filter users based on search query
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery) return allUsers;
-    const query = searchQuery.toLowerCase();
-    return allUsers.filter(user => 
-      user.displayName.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
-    );
-  }, [allUsers, searchQuery]);
-
-  // Sort users based on sortConfig
-  const sortedUsers = useMemo(() => {
-    const sorted = [...filteredUsers];
-    sorted.sort((a, b) => {
-      let aValue: string | Date;
-      let bValue: string | Date;
-
-      switch (sortConfig.key) {
-        case 'name':
-          aValue = a.displayName.toLowerCase();
-          bValue = b.displayName.toLowerCase();
-          break;
-        case 'email':
-          aValue = a.email.toLowerCase();
-          bValue = b.email.toLowerCase();
-          break;
-        case 'created':
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
-          break;
-        default:
-          console.warn(`AdminUsersPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Attempting generic comparison. Please update the sort logic to handle this key.`);
-          // Generic fallback: access property dynamically
-          const rawA = (a as any)[sortConfig.key];
-          const rawB = (b as any)[sortConfig.key];
-          
-          // Handle null/undefined values
-          if (rawA == null && rawB == null) return 0;
-          if (rawA == null) return 1;
-          if (rawB == null) return -1;
-          
-          // Convert to comparable values
-          aValue = typeof rawA === 'string' ? rawA.toLowerCase() : rawA;
-          bValue = typeof rawB === 'string' ? rawB.toLowerCase() : rawB;
-          break;
-      }
-
-      if (aValue < bValue) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-    return sorted;
-  }, [filteredUsers, sortConfig]);
-
-  // Pagination
-  const PAGE_SIZE = 10;
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
-    return sortedUsers.slice(startIndex, endIndex);
-  }, [sortedUsers, currentPage]);
-
-  const totalPages = Math.ceil(sortedUsers.length / PAGE_SIZE);
-  const hasPreviousPage = currentPage > 1;
-  const hasNextPage = currentPage < totalPages;
 
   if (isLoading) {
     return (
