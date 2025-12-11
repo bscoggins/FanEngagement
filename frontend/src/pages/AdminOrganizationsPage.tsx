@@ -121,7 +121,7 @@ export const AdminOrganizationsPage: React.FC = () => {
         key: 'description',
         label: 'Description',
         render: (org) => (
-          <span className="text-truncate text-truncate-md text-secondary-color">
+          <span className="text-truncate text-truncate-md text-secondary">
             {org.description || 'No description'}
           </span>
         ),
