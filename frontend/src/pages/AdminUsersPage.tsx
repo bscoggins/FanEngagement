@@ -43,7 +43,7 @@ export const AdminUsersPage: React.FC = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [searchQuery]);
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -60,6 +60,7 @@ export const AdminUsersPage: React.FC = () => {
       key,
       direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
     }));
+    setCurrentPage(1); // Reset to first page when sort changes
   };
 
   // Filter users based on search query
@@ -93,6 +94,7 @@ export const AdminUsersPage: React.FC = () => {
           bValue = new Date(b.createdAt);
           break;
         default:
+          console.warn(`AdminUsersPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Items will not be sorted. Please update the sort logic to handle this key.`);
           return 0;
       }
 

@@ -435,11 +435,23 @@ body.theme-dark {
 
 /* Text truncation utility */
 .text-truncate {
-  max-width: 300px;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Text truncation size variants */
+.text-truncate-sm {
+  max-width: 150px;
+}
+
+.text-truncate-md {
+  max-width: 300px;
+}
+
+.text-truncate-lg {
+  max-width: 500px;
 }
 
 /* Text alignment utilities */

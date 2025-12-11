@@ -50,7 +50,7 @@ export const AdminOrganizationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrganizations();
-  }, [searchQuery]);
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -67,6 +67,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       key,
       direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
     }));
+    setCurrentPage(1); // Reset to first page when sorting
   };
 
   const handleCreateOrganization = async (e: React.FormEvent) => {
@@ -120,6 +121,7 @@ export const AdminOrganizationsPage: React.FC = () => {
           bValue = new Date(b.createdAt);
           break;
         default:
+          console.warn(`AdminOrganizationsPage: Unknown sort key "${sortConfig.key}" encountered in sort logic. Items will not be sorted. Please update the sort logic to handle this key.`);
           return 0;
       }
 
