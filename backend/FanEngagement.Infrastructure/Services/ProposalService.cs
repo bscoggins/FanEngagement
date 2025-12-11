@@ -1176,6 +1176,11 @@ public class ProposalService(
     {
         var bytes = Encoding.UTF8.GetBytes(payload);
         var hash = SHA256.HashData(bytes);
+        
+        // Hash normalization: lowercase hex string without "0x" prefix
+        // IMPORTANT: This must stay synchronized with the adapter's normalizeHash function
+        // in memo-payload.ts, which also uses .toLowerCase() and strips "0x" prefix.
+        // Any changes to this normalization logic must be reflected in both systems.
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }
