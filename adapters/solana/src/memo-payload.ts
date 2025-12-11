@@ -41,6 +41,13 @@ export interface ProposalResultMemoInput {
 }
 
 export function buildProposalMemo(input: ProposalMemoInput): string {
+  // Pre-flight validation: Validate all hash inputs before constructing the memo.
+  // This prevents wasting transaction fees on malformed data.
+  validateHash(input.contentHash, 'contentHash');
+  validateHash(input.proposalTextHash, 'proposalTextHash');
+  validateHash(input.expectationsHash, 'expectationsHash');
+  validateHash(input.votingOptionsHash, 'votingOptionsHash');
+
   const payload = {
     v: MEMO_SCHEMA_VERSION,
     type: 'proposal' as const,
@@ -79,6 +86,9 @@ export function buildVoteMemo(input: VoteMemoInput): string {
 }
 
 export function buildProposalResultMemo(input: ProposalResultMemoInput): string {
+  // Pre-flight validation: Validate resultsHash before constructing the memo.
+  validateHash(input.resultsHash, 'resultsHash');
+
   const payload = {
     v: MEMO_SCHEMA_VERSION,
     type: 'result' as const,
@@ -107,6 +117,26 @@ export function buildMemoPayload(payload: Record<string, unknown>): string {
   }
 
   return memoString;
+}
+
+/**
+ * Validate that a hash string is a valid SHA-256 hash.
+ * Throws an error if the hash is invalid.
+ */
+function validateHash(value: string | undefined, fieldName: string): void {
+  if (!value) {
+    return; // Optional hashes are allowed
+  }
+
+  const normalized = value.startsWith('0x') ? value.slice(2) : value;
+  const hexPattern = /^[a-fA-F0-9]{64}$/;
+  
+  if (!hexPattern.test(normalized)) {
+    throw new Error(
+      `Invalid SHA-256 hash for ${fieldName}: must be 64 hex characters (got: ${value}). ` +
+      `Ensure hash is correctly formatted before submitting to avoid wasting transaction fees.`
+    );
+  }
 }
 
 /**
