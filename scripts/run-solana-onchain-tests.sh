@@ -39,11 +39,8 @@ cleanup() {
   if ! docker container prune -f >/dev/null 2>&1; then
     echo "Warning: Failed to prune Docker containers" >&2
   fi
-  # WARNING: This prunes ALL dangling images system-wide, not just those from this test run.
-  # This affects all Docker projects on the developer's machine.
-  if ! docker image prune -f >/dev/null 2>&1; then
-    echo "Warning: Failed to prune Docker images" >&2
-  fi
+  # Note: Not pruning Docker images to avoid affecting other projects on the developer's machine.
+  # If you need to reclaim disk space, run 'docker image prune -f' manually.
   
   exit $exit_status
 }
@@ -93,7 +90,7 @@ echo "Ensuring any previous Solana adapter stack is stopped..."
 SOLANA_PRIVATE_KEY="$SOLANA_PRIVATE_KEY_CONTENT" API_KEY="$ADAPTER_API_KEY" docker compose -f "$COMPOSE_FILE" down --remove-orphans >/dev/null 2>&1 || true
 docker rm -f solana-test-validator solana-adapter >/dev/null 2>&1 || true
 docker container prune -f >/dev/null 2>&1 || true
-docker image prune -f >/dev/null 2>&1 || true
+# Note: Not pruning Docker images to avoid affecting other projects on the developer's machine.
 
 pushd "$ADAPTER_DIR" >/dev/null
 

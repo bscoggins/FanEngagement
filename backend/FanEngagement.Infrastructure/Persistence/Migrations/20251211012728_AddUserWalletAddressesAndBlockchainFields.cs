@@ -83,6 +83,9 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                 column: "Address",
                 unique: true);
 
+            // This partial unique index ensures only one primary wallet per user per blockchain type.
+            // Application logic must ensure that when a wallet is set to primary, all other wallets
+            // for the same user and blockchain are set to non-primary to avoid constraint violations.
             migrationBuilder.CreateIndex(
                 name: "IX_UserWalletAddresses_User_Blockchain_Primary",
                 table: "UserWalletAddresses",
