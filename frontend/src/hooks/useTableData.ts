@@ -89,7 +89,7 @@ export function useTableData<T>({
       const fields = searchFields(item);
       return fields.some(field => field && field.toLowerCase().includes(query));
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- searchFields should be memoized with useCallback at the call site for performance, but is included here to ensure correctness
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- searchFields is included for correctness; callers should memoize it with useCallback to avoid unnecessary re-renders
   }, [data, searchQuery, searchFields]);
 
   // Sort data based on sortConfig
