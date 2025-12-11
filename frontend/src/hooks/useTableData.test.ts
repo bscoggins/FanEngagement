@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useTableData } from './useTableData';
 
 interface TestUser {
