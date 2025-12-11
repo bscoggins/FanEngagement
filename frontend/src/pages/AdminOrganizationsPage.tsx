@@ -151,7 +151,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       key: 'created',
       label: 'Created',
       render: (org) => (
-        <span className="text-secondary">
+        <span className="text-secondary-color">
           {new Date(org.createdAt).toLocaleDateString()}
         </span>
       ),
