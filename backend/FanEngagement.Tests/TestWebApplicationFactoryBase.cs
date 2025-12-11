@@ -85,11 +85,34 @@ public abstract class TestWebApplicationFactoryBase : WebApplicationFactory<Prog
             }
         });
 
+        ConfigureSolanaAdapterClient(services);
+        ConfigurePolygonAdapterClient(services);
+
         // Build the service provider and ensure database is created
         var serviceProvider = services.BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<FanEngagementDbContext>();
         db.Database.EnsureCreated();
+    }
+
+    protected virtual void ConfigureSolanaAdapterClient(IServiceCollection services)
+    {
+        services.AddHttpClient("SolanaAdapter")
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost/");
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new TestBlockchainAdapterHandler());
+    }
+
+    protected virtual void ConfigurePolygonAdapterClient(IServiceCollection services)
+    {
+        services.AddHttpClient("PolygonAdapter")
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost/");
+            })
+            .ConfigurePrimaryHttpMessageHandler(_ => new TestBlockchainAdapterHandler());
     }
 
     /// <summary>

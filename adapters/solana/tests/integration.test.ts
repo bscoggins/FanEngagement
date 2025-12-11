@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 /**
@@ -20,8 +20,18 @@ describe('Solana Integration Tests', () => {
   let connection: Connection;
   let keypair: Keypair;
   const RPC_URL = process.env.SOLANA_RPC_URL || 'http://localhost:8899';
+  let originalConsoleError: typeof console.error;
 
   beforeAll(async () => {
+    // Silence noisy Solana websocket errors that occur during shutdown
+    originalConsoleError = console.error;
+    console.error = (...args: any[]) => {
+      if (typeof args[0] === 'string' && args[0].includes('ws error')) {
+        return;
+      }
+      originalConsoleError(...args);
+    };
+
     // Initialize connection to test validator
     connection = new Connection(RPC_URL, 'confirmed');
     
@@ -74,4 +84,53 @@ describe('Solana Integration Tests', () => {
       expect(true).toBe(true);
     }
   }, 10000);
+
+  afterAll(async () => {
+    // Close websocket to avoid Jest open-handle warnings and noisy reconnect logs
+    const rpcWs = (connection as any)?._rpcWebSocket;
+
+    try {
+      // Stop reconnect attempts and clear subscriptions/callbacks
+      if (rpcWs) {
+        rpcWs._shouldReconnect = false;
+        if (rpcWs._subscriptions) rpcWs._subscriptions.clear();
+        if (rpcWs._subscriptionCallbacks) rpcWs._subscriptionCallbacks.clear();
+        if (rpcWs._keepAliveInterval) {
+          clearInterval(rpcWs._keepAliveInterval);
+          rpcWs._keepAliveInterval.unref?.();
+        }
+        if (rpcWs._pingInterval) {
+          clearInterval(rpcWs._pingInterval);
+          rpcWs._pingInterval.unref?.();
+        }
+      }
+
+      if (rpcWs?.removeAllListeners) {
+        rpcWs.removeAllListeners();
+      }
+
+      if (rpcWs?.close) {
+        rpcWs.close();
+      }
+
+      // Some versions keep an underlying ws client/socket open; ensure it is terminated.
+      rpcWs?._socket?.removeAllListeners?.();
+      rpcWs?._socket?.terminate?.();
+
+      rpcWs?._client?.removeAllListeners?.();
+      rpcWs?._client?.terminate?.();
+      rpcWs?._client?.close?.();
+    }
+    catch {
+      // Swallow shutdown errors; test run is finishing.
+    }
+
+    (connection as any)?.removeAllListeners?.();
+
+    // Restore console.error to avoid leaking mocks
+    console.error = originalConsoleError;
+
+    // Give the socket a moment to settle before Jest exit detection.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
 });

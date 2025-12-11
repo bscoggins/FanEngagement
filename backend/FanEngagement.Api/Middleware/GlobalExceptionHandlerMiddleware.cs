@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using FanEngagement.Application.Exceptions;
 using FanEngagement.Api.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,8 +46,23 @@ public class GlobalExceptionHandlerMiddleware
             return;
         }
 
-        // Log the exception
-        _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
+        // Log at a lower level for expected/handled exceptions to reduce noisy error output in tests and normal flows.
+        var logLevel = exception switch
+        {
+            DomainValidationException => LogLevel.Warning,
+            ResourceNotFoundException => LogLevel.Warning,
+            WalletAddressNotFoundException => LogLevel.Warning,
+            ConflictException => LogLevel.Information,
+            InvalidOperationException => LogLevel.Information,
+            ArgumentException => LogLevel.Warning,
+            _ => LogLevel.Error
+        };
+
+        var logTemplate = logLevel == LogLevel.Error
+            ? "An unhandled exception occurred: {Message}"
+            : "A handled application exception occurred: {Message}";
+
+        _logger.Log(logLevel, exception, logTemplate, exception.Message);
 
         var problemDetails = CreateProblemDetails(context, exception);
 
@@ -79,6 +95,19 @@ public class GlobalExceptionHandlerMiddleware
                     ["validationErrors"] = domainEx.ValidationErrors ?? new Dictionary<string, string[]>()
                 }
             },
+            WalletAddressNotFoundException walletEx => new ProblemDetails
+            {
+                Status = (int)HttpStatusCode.PreconditionFailed,
+                Title = "Wallet Address Required",
+                Detail = walletEx.Message,
+                Type = "https://tools.ietf.org/html/rfc7232#section-4.2",
+                Instance = context.Request.Path,
+                Extensions =
+                {
+                    ["userId"] = walletEx.UserId.ToString(),
+                    ["blockchainType"] = walletEx.BlockchainType
+                }
+            },
             ResourceNotFoundException notFoundEx => new ProblemDetails
             {
                 Status = (int)HttpStatusCode.NotFound,
@@ -91,6 +120,14 @@ public class GlobalExceptionHandlerMiddleware
                     ["resourceType"] = notFoundEx.ResourceType,
                     ["resourceId"] = notFoundEx.ResourceId != null ? notFoundEx.ResourceId.ToString() : "Unknown"
                 }
+            },
+            ConflictException conflictEx => new ProblemDetails
+            {
+                Status = (int)HttpStatusCode.Conflict,
+                Title = "Conflict",
+                Detail = conflictEx.Message,
+                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.8",
+                Instance = context.Request.Path
             },
             InvalidOperationException invalidOpEx => new ProblemDetails
             {

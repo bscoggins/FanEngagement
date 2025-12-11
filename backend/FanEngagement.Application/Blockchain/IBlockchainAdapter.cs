@@ -8,15 +8,30 @@ public interface IBlockchainAdapter
     /// <summary>
     /// Records the creation of an organization on the blockchain.
     /// </summary>
-    Task<string> CreateOrganizationAsync(Guid organizationId, string name, CancellationToken cancellationToken);
+    Task<CreateOrganizationResult> CreateOrganizationAsync(CreateOrganizationCommand command, CancellationToken cancellationToken);
 
     /// <summary>
     /// Records the creation of a share type on the blockchain.
     /// </summary>
-    Task<string> CreateShareTypeAsync(Guid shareTypeId, string name, string symbol, decimal votingWeight, CancellationToken cancellationToken);
+    Task<CreateShareTypeResult> CreateShareTypeAsync(CreateShareTypeCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records a share issuance (token mint) on the blockchain.
+    /// </summary>
+    Task<RecordShareIssuanceResult> RecordShareIssuanceAsync(RecordShareIssuanceCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records an on-chain proposal with hashed content metadata.
+    /// </summary>
+    Task<CreateProposalResult> CreateProposalAsync(CreateProposalCommand command, CancellationToken cancellationToken);
 
     /// <summary>
     /// Records a vote on the blockchain.
     /// </summary>
-    Task<string> RecordVoteAsync(Guid voteId, Guid proposalId, Guid userId, decimal votingPower, CancellationToken cancellationToken);
+    Task<BlockchainTransactionResult> RecordVoteAsync(RecordVoteCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Commits proposal results for verifiability.
+    /// </summary>
+    Task<BlockchainTransactionResult> CommitProposalResultsAsync(CommitProposalResultsCommand command, CancellationToken cancellationToken);
 }

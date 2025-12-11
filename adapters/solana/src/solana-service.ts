@@ -1,13 +1,15 @@
 import { 
+  Commitment,
   Connection, 
   Keypair, 
   PublicKey, 
-  Transaction,
   SystemProgram,
-  sendAndConfirmTransaction,
+  Transaction,
+  TransactionInstruction,
   TransactionSignature,
-  Commitment,
+  sendAndConfirmTransaction,
 } from '@solana/web3.js';
+import { Buffer } from 'node:buffer';
 import {
   createMint,
   getOrCreateAssociatedTokenAccount,
@@ -24,12 +26,19 @@ import {
   lastBlockNumber,
 } from './metrics.js';
 import { serializeError } from '../../shared/errors.js';
+import {
+  buildProposalMemo,
+  buildProposalResultMemo,
+  buildVoteMemo,
+} from './memo-payload.js';
 
 
 export class SolanaService {
   private connection: Connection;
   private keypair: Keypair;
   private programId: PublicKey;
+  private rentExemptionCache = new Map<number, number>();
+  private static readonly memoProgramId = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
   constructor(keypair: Keypair) {
     this.connection = this.createConnection();
@@ -72,13 +81,15 @@ export class SolanaService {
         bump,
       });
 
+      const rentLamports = await this.getRentExemptionLamports();
+
       // Create a memo transaction to record organization creation
       // In production, this would call a deployed Solana program
       const transaction = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: this.keypair.publicKey,
           toPubkey: pda,
-          lamports: 1000000, // 0.001 SOL for rent exemption
+          lamports: rentLamports,
         })
       );
 
@@ -250,9 +261,16 @@ export class SolanaService {
     proposalId: string,
     organizationId: string,
     title: string,
-    _contentHash: string,
-    _startAt: Date,
-    _endAt: Date
+    contentHash: string,
+    startAt: Date,
+    endAt: Date,
+    metadata?: {
+      createdByUserId?: string;
+      proposalTextHash?: string;
+      expectationsHash?: string;
+      votingOptionsHash?: string;
+      eligibleVotingPower?: number;
+    }
   ): Promise<{ transactionSignature: string; proposalAddress: string }> {
     const startTime = Date.now();
     const operation = 'create_proposal';
@@ -264,14 +282,34 @@ export class SolanaService {
       const [proposalPda] = await this.findProposalPDA(proposalId);
 
       // Create memo transaction with proposal data
+      // IMPORTANT: Memos are irrevocable on Solana. Once a transaction with a memo is confirmed,
+      // the memo data is permanently recorded on-chain and cannot be undone or modified.
+      // Ensure memo correctness before submission.
       // In production, this would call a deployed Solana program
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: this.keypair.publicKey,
-          toPubkey: proposalPda,
-          lamports: 1000000,
-        })
-      );
+      const rentLamports = await this.getRentExemptionLamports();
+      const memoInstruction = this.createMemoInstruction(buildProposalMemo({
+          organizationId,
+          proposalId,
+          title,
+          contentHash,
+          proposalTextHash: metadata?.proposalTextHash,
+          expectationsHash: metadata?.expectationsHash,
+          votingOptionsHash: metadata?.votingOptionsHash,
+          createdByUserId: metadata?.createdByUserId,
+          eligibleVotingPower: metadata?.eligibleVotingPower,
+          startAt,
+          endAt,
+        }));
+
+      const transaction = new Transaction()
+        .add(
+          SystemProgram.transfer({
+            fromPubkey: this.keypair.publicKey,
+            toPubkey: proposalPda,
+            lamports: rentLamports,
+          })
+        )
+        .add(memoInstruction);
 
       const signature = await this.submitTransaction(transaction, operation);
 
@@ -301,27 +339,46 @@ export class SolanaService {
   async recordVote(
     voteId: string,
     proposalId: string,
+    organizationId: string,
     userId: string,
     optionId: string,
-    votingPower: number
+    votingPower: number,
+    metadata?: {
+      voterAddress?: string;
+      castAt?: Date;
+    }
   ): Promise<{ transactionSignature: string }> {
     const startTime = Date.now();
     const operation = 'record_vote';
 
     try {
-      logger.info('Recording vote', { voteId, proposalId, userId, optionId, votingPower });
+      logger.info('Recording vote', { voteId, proposalId, organizationId, userId, optionId, votingPower });
 
       // Derive PDA for vote
       const [votePda] = await this.findVotePDA(voteId);
 
       // Create memo transaction with vote data
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: this.keypair.publicKey,
-          toPubkey: votePda,
-          lamports: 100000,
-        })
-      );
+        const rentLamports = await this.getRentExemptionLamports();
+      const memoInstruction = this.createMemoInstruction(buildVoteMemo({
+          organizationId,
+          proposalId,
+          voteId,
+          userId,
+          optionId,
+          votingPower,
+          voterAddress: metadata?.voterAddress,
+          castAt: metadata?.castAt,
+        }));
+
+      const transaction = new Transaction()
+        .add(
+          SystemProgram.transfer({
+            fromPubkey: this.keypair.publicKey,
+            toPubkey: votePda,
+            lamports: rentLamports,
+          })
+        )
+        .add(memoInstruction);
 
       const signature = await this.submitTransaction(transaction, operation);
 
@@ -343,27 +400,45 @@ export class SolanaService {
    */
   async commitProposalResults(
     proposalId: string,
+    organizationId: string,
     resultsHash: string,
     winningOptionId: string,
-    _totalVotesCast: number
+    totalVotesCast: number,
+    metadata?: {
+      quorumMet?: boolean;
+      closedAt?: Date;
+    }
   ): Promise<{ transactionSignature: string }> {
     const startTime = Date.now();
     const operation = 'commit_proposal_results';
 
     try {
-      logger.info('Committing proposal results', { proposalId, resultsHash, winningOptionId });
+      logger.info('Committing proposal results', { proposalId, organizationId, resultsHash, winningOptionId, totalVotesCast });
 
       // Derive PDA for proposal results
       const [resultsPda] = await this.findProposalResultsPDA(proposalId);
 
       // Create memo transaction with results hash
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: this.keypair.publicKey,
-          toPubkey: resultsPda,
-          lamports: 100000,
-        })
-      );
+        const rentLamports = await this.getRentExemptionLamports();
+      const memoInstruction = this.createMemoInstruction(buildProposalResultMemo({
+          organizationId,
+          proposalId,
+          resultsHash,
+          winningOptionId,
+          totalVotesCast,
+          quorumMet: metadata?.quorumMet,
+          closedAt: metadata?.closedAt,
+        }));
+
+      const transaction = new Transaction()
+        .add(
+          SystemProgram.transfer({
+            fromPubkey: this.keypair.publicKey,
+            toPubkey: resultsPda,
+            lamports: rentLamports,
+          })
+        )
+        .add(memoInstruction);
 
       const signature = await this.submitTransaction(transaction, operation);
 
@@ -533,6 +608,54 @@ export class SolanaService {
       [Buffer.from('proposal_results'), proposalIdBuffer],
       this.programId
     );
+  }
+
+  private createMemoInstruction(memo: string): TransactionInstruction {
+    return new TransactionInstruction({
+      programId: SolanaService.memoProgramId,
+      keys: [
+        {
+          pubkey: this.keypair.publicKey,
+          isSigner: true,
+          isWritable: false
+        }
+      ],
+      data: Buffer.from(memo, 'utf8')
+    });
+  }
+
+  /**
+   * Helper: Get rent exemption lamports for an account with the given space.
+   * Caches results to minimize RPC calls.
+   * 
+   * Note: Node.js is single-threaded, so Map operations are atomic.
+   * No additional synchronization is needed for concurrent access.
+   * 
+   * Cache Lifetime: Values are cached for the lifetime of the service instance.
+   * If the minimum rent exemption changes (e.g., due to Solana network upgrades),
+   * cached values will become stale. Use clearRentExemptionCache() to manually
+   * invalidate the cache, or restart the service to refresh cached values.
+   */
+  private async getRentExemptionLamports(space = 0): Promise<number> {
+    if (!this.rentExemptionCache.has(space)) {
+      const lamports = await this.connection.getMinimumBalanceForRentExemption(space);
+      this.rentExemptionCache.set(space, lamports);
+    }
+
+    // Map.get is safe due to guard above
+    return this.rentExemptionCache.get(space)!;
+  }
+
+  /**
+   * Clear the rent exemption cache.
+   * Call this method after Solana network upgrades that may change rent exemption amounts.
+   * This allows the cache to be refreshed without requiring a service restart.
+   */
+  clearRentExemptionCache(): void {
+    logger.info('Clearing rent exemption cache', {
+      cachedEntries: this.rentExemptionCache.size
+    });
+    this.rentExemptionCache.clear();
   }
 
   /**

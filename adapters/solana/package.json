@@ -8,8 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
-    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPattern=integration",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --testPathPattern=integration",
     "lint": "eslint src tests --ext .ts",
     "type-check": "tsc --noEmit"
   },

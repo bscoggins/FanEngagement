@@ -1,4 +1,5 @@
 using FanEngagement.Application.Audit;
+using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Organizations;
 using FanEngagement.Domain.Entities;
@@ -9,7 +10,11 @@ using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class OrganizationService(FanEngagementDbContext dbContext, IAuditService auditService, ILogger<OrganizationService> logger) : IOrganizationService
+public class OrganizationService(
+    FanEngagementDbContext dbContext,
+    IAuditService auditService,
+    ILogger<OrganizationService> logger,
+    IBlockchainAdapterFactory blockchainAdapterFactory) : IOrganizationService
 {
     public async Task<Organization> CreateAsync(CreateOrganizationRequest request, Guid creatorUserId, CancellationToken cancellationToken = default)
     {
@@ -50,8 +55,52 @@ public class OrganizationService(FanEngagementDbContext dbContext, IAuditService
 
         dbContext.OrganizationMemberships.Add(membership);
 
-        // Save both in a single transaction
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+        var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (organization.BlockchainType != Domain.Enums.BlockchainType.None)
+            {
+                var adapter = await blockchainAdapterFactory.GetAdapterAsync(organization.Id, cancellationToken);
+                var branding = new OrganizationBrandingMetadata(organization.LogoUrl, organization.PrimaryColor, organization.SecondaryColor);
+                var onChainResult = await adapter.CreateOrganizationAsync(
+                    new CreateOrganizationCommand(organization.Id, organization.Name, organization.Description, branding),
+                    cancellationToken);
+
+                if (!string.IsNullOrWhiteSpace(onChainResult.AccountAddress))
+                {
+                    organization.BlockchainAccountAddress = onChainResult.AccountAddress;
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                logger.LogInformation(
+                    "Organization {OrganizationId} registered on {Blockchain} with transaction {TransactionId}",
+                    organization.Id,
+                    organization.BlockchainType,
+                    onChainResult.TransactionId);
+            }
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            throw;
+        }
+        finally
+        {
+            transaction?.Dispose();
+        }
 
         // Audit after successful commit
         try

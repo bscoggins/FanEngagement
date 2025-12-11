@@ -22,4 +22,5 @@ public class User
     public ICollection<ShareBalance> ShareBalances { get; set; } = new List<ShareBalance>();
     public ICollection<Vote> Votes { get; set; } = new List<Vote>();
     public ICollection<Proposal> CreatedProposals { get; set; } = new List<Proposal>();
+    public ICollection<UserWalletAddress> WalletAddresses { get; set; } = new List<UserWalletAddress>();
 }

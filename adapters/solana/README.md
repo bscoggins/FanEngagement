@@ -92,6 +92,7 @@ npm start
 ## API Endpoints
 
 ### Base URL
+
 - Local: `http://localhost:3001`
 - Development: `https://solana-adapter-dev.fanengagement.io`
 - Production: `https://solana-adapter.fanengagement.io`
@@ -100,13 +101,13 @@ npm start
 
 All endpoints except `/health` and `/metrics` require API key authentication:
 
-```
+```text
 X-Adapter-API-Key: your-api-key
 ```
 
 Or:
 
-```
+```text
 Authorization: Bearer your-api-key
 ```
 
@@ -123,6 +124,44 @@ Authorization: Bearer your-api-key
 | GET | `/v1/adapter/transactions/:txId` | Get transaction status |
 | GET | `/v1/adapter/health` | Health check |
 | GET | `/v1/adapter/metrics` | Prometheus metrics |
+
+### On-Chain Transparency Payloads
+
+Each proposal, vote, and result write now appends a structured memo (max 566 bytes) so anyone can audit the record directly on Solana. Payloads share the following properties:
+
+- `v`: schema version for forward compatibility (currently `1`)
+- `type`: `proposal`, `vote`, or `result`
+- `org`: organization UUID (string) to keep multi-org data separable
+- `ts`: ISO-8601 timestamp indicating when the adapter recorded the event
+
+Additional fields:
+
+- **Proposal memos**: `proposal`, `title` (truncated to 120 chars), optional `creator`, `contentHash`, `textHash`, `expectationsHash`, `optionsHash`, `start`, `end`, and `eligiblePower`
+- **Vote memos**: `proposal`, `vote`, `user`, `choice`, `weight`, optional `voterAddress`
+- **Result memos**: `proposal`, `resultsHash`, optional `winningOptionId`, `totalVotesCast`, `quorumMet`
+
+> ℹ️ Large/free-text values (proposal body, vote demands, expectations, option lists) must be SHA-256 hashed before calling the adapter. Send those hashes via the request payload (`contentHash`, `proposalTextHash`, `expectationsHash`, `votingOptionsHash`) so the memo stays under the Solana memo byte cap.
+
+Example memo (proposal):
+
+```json
+{
+  "v": 1,
+  "type": "proposal",
+  "org": "550e8400-e29b-41d4-a716-446655440000",
+  "proposal": "5b3c4ec1-b0e8-4d68-9ac8-9f7150be8390",
+  "title": "2025 Budget Refresh",
+  "creator": "3cf4e768-b7ca-42cc-97f6-7f2fa41ced10",
+  "contentHash": "3bd1...",
+  "optionsHash": "9fa0...",
+  "start": "2025-01-10T16:00:00.000Z",
+  "end": "2025-01-17T16:00:00.000Z",
+  "eligiblePower": 120000,
+  "ts": "2025-01-02T18:22:11.123Z"
+}
+```
+
+Use Solana Explorer (or `getTransaction` via RPC) to view the memo string and cross-check hashes against the FanEngagement backend.
 
 ### Example: Create Organization
 
@@ -260,7 +299,7 @@ See deployment documentation at `/docs/blockchain/solana/solana-adapter-deployme
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────┐
 │   Solana Adapter Container          │
 │                                     │

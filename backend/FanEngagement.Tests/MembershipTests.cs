@@ -210,7 +210,7 @@ public class MembershipTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response1.StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, response2.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, response2.StatusCode);
     }
 
     [Fact]

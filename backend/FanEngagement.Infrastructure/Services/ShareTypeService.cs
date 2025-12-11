@@ -1,4 +1,5 @@
 using FanEngagement.Application.Audit;
+using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.ShareTypes;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -8,14 +9,19 @@ using Microsoft.Extensions.Logging;
 
 namespace FanEngagement.Infrastructure.Services;
 
-public class ShareTypeService(FanEngagementDbContext dbContext, IAuditService auditService, ILogger<ShareTypeService> logger) : IShareTypeService
+public class ShareTypeService(
+    FanEngagementDbContext dbContext,
+    IAuditService auditService,
+    ILogger<ShareTypeService> logger,
+    IBlockchainAdapterFactory blockchainAdapterFactory) : IShareTypeService
 {
     public async Task<ShareType> CreateAsync(Guid organizationId, CreateShareTypeRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
-        // Get organization for audit context
+        // Get organization for context and blockchain settings
         var organization = await dbContext.Organizations
             .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken)
+            ?? throw new InvalidOperationException($"Organization {organizationId} not found");
 
         var shareType = new ShareType
         {
@@ -27,11 +33,70 @@ public class ShareTypeService(FanEngagementDbContext dbContext, IAuditService au
             VotingWeight = request.VotingWeight,
             MaxSupply = request.MaxSupply,
             IsTransferable = request.IsTransferable,
+            TokenDecimals = request.TokenDecimals,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
         dbContext.ShareTypes.Add(shareType);
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+        var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (organization.BlockchainType != BlockchainType.None)
+            {
+                var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
+                var createShareTypeCommand = new CreateShareTypeCommand(
+                    shareType.Id,
+                    organizationId,
+                    shareType.Name,
+                    shareType.Symbol,
+                    shareType.TokenDecimals,
+                    shareType.VotingWeight,
+                    shareType.MaxSupply,
+                    shareType.Description);
+
+                var onChainResult = await adapter.CreateShareTypeAsync(createShareTypeCommand, cancellationToken);
+
+                if (string.IsNullOrWhiteSpace(onChainResult.MintAddress))
+                {
+                    throw new InvalidOperationException("Blockchain adapter did not return a mint address for the share type.");
+                }
+
+                shareType.BlockchainMintAddress = onChainResult.MintAddress;
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                logger.LogInformation(
+                    "Share type {ShareTypeId} minted on {Blockchain} with transaction {TransactionId}",
+                    shareType.Id,
+                    organization.BlockchainType,
+                    onChainResult.TransactionId);
+            }
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+
+            // Detach entity from context to prevent issues on retry
+            dbContext.Entry(shareType).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
+            throw;
+        }
+        finally
+        {
+            transaction?.Dispose();
+        }
 
         // Audit after successful commit
         try

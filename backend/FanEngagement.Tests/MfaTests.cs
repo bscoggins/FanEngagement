@@ -294,7 +294,7 @@ public class MfaTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task TotpMfaService_ValidatesTotp_WithCorrectCode()
+    public void TotpMfaService_ValidatesTotp_WithCorrectCode()
     {
         // Arrange
         using var scope = _factory.Services.CreateScope();
@@ -310,7 +310,7 @@ public class MfaTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task TotpMfaService_RejectsInvalidCode()
+    public void TotpMfaService_RejectsInvalidCode()
     {
         // Arrange
         using var scope = _factory.Services.CreateScope();
@@ -325,7 +325,7 @@ public class MfaTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task TotpMfaService_GeneratesBackupCodes()
+    public void TotpMfaService_GeneratesBackupCodes()
     {
         // Arrange
         using var scope = _factory.Services.CreateScope();
@@ -341,7 +341,7 @@ public class MfaTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task TotpMfaService_ValidatesBackupCode()
+    public void TotpMfaService_ValidatesBackupCode()
     {
         // Arrange
         using var scope = _factory.Services.CreateScope();

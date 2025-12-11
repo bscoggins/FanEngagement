@@ -1,8 +1,7 @@
-version: '3.8'
-
 services:
   solana-test-validator:
     image: solanalabs/solana:v1.18.26
+    platform: linux/amd64
     container_name: solana-test-validator
     command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899
     ports:
@@ -17,9 +16,10 @@ services:
       - solana-adapter-network
 
   solana-adapter:
+    platform: linux/amd64
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: adapters/solana/Dockerfile
     container_name: solana-adapter
     ports:
       - "3001:3001"

@@ -17,6 +17,7 @@ public class Organization
     // Blockchain configuration
     public BlockchainType BlockchainType { get; set; } = BlockchainType.None;
     public string? BlockchainConfig { get; set; } // JSON string
+    public string? BlockchainAccountAddress { get; set; }
 
     public ICollection<OrganizationMembership> Memberships { get; set; } = new List<OrganizationMembership>();
     public ICollection<ShareType> ShareTypes { get; set; } = new List<ShareType>();

@@ -29,5 +29,7 @@ public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
             .HasMaxLength(50);
         builder.Property(x => x.BlockchainConfig)
             .HasColumnType("jsonb");
+        builder.Property(x => x.BlockchainAccountAddress)
+            .HasMaxLength(128);
     }
 }
