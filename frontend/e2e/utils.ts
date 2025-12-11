@@ -43,14 +43,25 @@ export const getExistingOrgId = async (
   await page.goto('/admin/organizations');
   const orgRow = page.locator('tbody tr', { hasText: orgName }).first();
   await waitForVisible(orgRow);
-  const proposalsLink = orgRow.getByRole('link', { name: 'Proposals' });
-  const href = await proposalsLink.getAttribute('href');
-  if (!href) {
-    throw new Error(`Unable to locate proposals link for ${orgName}`);
+  // Prefer the stable row key that the shared Table component sets on each <tr>
+  const rowKey = await orgRow.getAttribute('data-row-key');
+  if (rowKey) {
+    return rowKey;
   }
-  const segments = href.split('/');
-  if (segments.length < 5) {
-    throw new Error(`Unexpected href format for ${orgName}: ${href}`);
+
+  // Fallback: click the proposals action button to navigate and parse the URL
+  const proposalsButton = orgRow.getByRole('button', { name: 'Proposals' });
+  if (await proposalsButton.count()) {
+    await Promise.all([
+      page.waitForURL(/\/admin\/organizations\/[^/]+\/proposals/),
+      proposalsButton.click(),
+    ]);
+    const urlSegments = page.url().split('/');
+    const orgIndex = urlSegments.findIndex((segment) => segment === 'organizations');
+    if (orgIndex > -1 && urlSegments[orgIndex + 1]) {
+      return urlSegments[orgIndex + 1];
+    }
   }
-  return segments[3];
+
+  throw new Error(`Unable to determine organization id for ${orgName}`);
 };
