@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -19,6 +19,10 @@ export const AdminUsersPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+    key: 'name',
+    direction: 'asc',
+  });
   const pageSize = 10;
 
   const fetchUsers = async (page: number, search: string) => {
@@ -50,6 +54,50 @@ export const AdminUsersPage: React.FC = () => {
     setCurrentPage(1); // Reset to first page when searching
   };
 
+  const handleSort = (key: string) => {
+    setSortConfig((prevConfig) => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  const users = pagedResult?.items || [];
+
+  // Sort users based on sortConfig
+  const sortedUsers = useMemo(() => {
+    const sorted = [...users];
+    sorted.sort((a, b) => {
+      let aValue: string | Date;
+      let bValue: string | Date;
+
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = a.displayName.toLowerCase();
+          bValue = b.displayName.toLowerCase();
+          break;
+        case 'email':
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+          break;
+        case 'created':
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [users, sortConfig]);
+
   if (isLoading) {
     return (
       <div>
@@ -67,8 +115,6 @@ export const AdminUsersPage: React.FC = () => {
       </div>
     );
   }
-
-  const users = pagedResult?.items || [];
 
   const columns: TableColumn<User>[] = [
     {
@@ -151,15 +197,17 @@ export const AdminUsersPage: React.FC = () => {
         </div>
       </div>
       
-      {users.length === 0 ? (
+      {sortedUsers.length === 0 ? (
         <EmptyState message={searchQuery ? "No users found matching your search." : "No users found."} />
       ) : (
         <>
           <Table
-            data={users}
+            data={sortedUsers}
             columns={columns}
             getRowKey={(user) => user.id}
             mobileLayout="card"
+            sortConfig={sortConfig}
+            onSort={handleSort}
             testId="users-table"
             caption="List of users in the system"
           />

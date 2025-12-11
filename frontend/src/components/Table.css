@@ -257,20 +257,6 @@
   color: var(--color-text-tertiary);
 }
 
-/* ===== Helper Classes ===== */
-.text-secondary {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.text-truncate {
-  max-width: 300px;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ===== Responsive Breakpoints (as CSS comments for reference) ===== */
 /* Mobile breakpoint: 768px */
 /* These values align with the design system's responsive breakpoints */

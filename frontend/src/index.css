@@ -424,3 +424,20 @@ body.theme-dark {
   --shadow-header-dark: 0 4px 10px 0 rgba(3, 6, 12, 0.85);
   --shadow-sidebar: 2px 0 10px 0 rgba(3, 6, 12, 0.85);
 }
+
+/* ===== Utility Classes ===== */
+
+/* Text styling utilities */
+.text-secondary {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Text truncation utility */
+.text-truncate {
+  max-width: 300px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -20,6 +20,10 @@ export const AdminOrganizationsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+    key: 'name',
+    direction: 'asc',
+  });
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createFormData, setCreateFormData] = useState<CreateOrganizationRequest>({
@@ -57,6 +61,13 @@ export const AdminOrganizationsPage: React.FC = () => {
     setCurrentPage(1); // Reset to first page when searching
   };
 
+  const handleSort = (key: string) => {
+    setSortConfig((prevConfig) => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
   const handleCreateOrganization = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -78,6 +89,39 @@ export const AdminOrganizationsPage: React.FC = () => {
     }
   };
 
+  const organizations = pagedResult?.items || [];
+
+  // Sort organizations based on sortConfig
+  const sortedOrganizations = useMemo(() => {
+    const sorted = [...organizations];
+    sorted.sort((a, b) => {
+      let aValue: string | Date;
+      let bValue: string | Date;
+
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'created':
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [organizations, sortConfig]);
+
   if (isLoading) {
     return (
       <div>
@@ -95,8 +139,6 @@ export const AdminOrganizationsPage: React.FC = () => {
       </div>
     );
   }
-
-  const organizations = pagedResult?.items || [];
 
   const columns: TableColumn<Organization>[] = [
     {
@@ -297,15 +339,17 @@ export const AdminOrganizationsPage: React.FC = () => {
         </div>
       </div>
       
-      {organizations.length === 0 ? (
+      {sortedOrganizations.length === 0 ? (
         <EmptyState message={searchQuery ? "No organizations found matching your search." : "No organizations found."} />
       ) : (
         <>
           <Table
-            data={organizations}
+            data={sortedOrganizations}
             columns={columns}
             getRowKey={(org) => org.id}
             mobileLayout="card"
+            sortConfig={sortConfig}
+            onSort={handleSort}
             testId="organizations-table"
             caption="List of organizations in the system"
           />
