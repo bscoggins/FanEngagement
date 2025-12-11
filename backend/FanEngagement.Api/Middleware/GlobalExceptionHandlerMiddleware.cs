@@ -97,10 +97,10 @@ public class GlobalExceptionHandlerMiddleware
             },
             WalletAddressNotFoundException walletEx => new ProblemDetails
             {
-                Status = (int)HttpStatusCode.BadRequest,
+                Status = (int)HttpStatusCode.PreconditionFailed,
                 Title = "Wallet Address Required",
                 Detail = walletEx.Message,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                Type = "https://tools.ietf.org/html/rfc7232#section-4.2",
                 Instance = context.Request.Path,
                 Extensions =
                 {

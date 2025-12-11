@@ -633,9 +633,8 @@ export class SolanaService {
    * 
    * Cache Lifetime: Values are cached for the lifetime of the service instance.
    * If the minimum rent exemption changes (e.g., due to Solana network upgrades),
-   * cached values will become stale. A service restart is required to refresh cached values.
-   * This is acceptable since rent exemption changes are rare and typically require
-   * application updates regardless.
+   * cached values will become stale. Use clearRentExemptionCache() to manually
+   * invalidate the cache, or restart the service to refresh cached values.
    */
   private async getRentExemptionLamports(space = 0): Promise<number> {
     if (!this.rentExemptionCache.has(space)) {
@@ -645,6 +644,18 @@ export class SolanaService {
 
     // Map.get is safe due to guard above
     return this.rentExemptionCache.get(space)!;
+  }
+
+  /**
+   * Clear the rent exemption cache.
+   * Call this method after Solana network upgrades that may change rent exemption amounts.
+   * This allows the cache to be refreshed without requiring a service restart.
+   */
+  clearRentExemptionCache(): void {
+    logger.info('Clearing rent exemption cache', {
+      cachedEntries: this.rentExemptionCache.size
+    });
+    this.rentExemptionCache.clear();
   }
 
   /**

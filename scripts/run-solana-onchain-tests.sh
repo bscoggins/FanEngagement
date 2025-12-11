@@ -75,15 +75,26 @@ if [[ -f "$KEYPAIR_FILE" ]]; then
   if [[ "$(uname -s)" == "Darwin" ]] || [[ "$(uname -s)" == *"BSD"* ]]; then
     # macOS and BSD use -f format
     KEYPAIR_PERMS=$(stat -f '%OLp' "$KEYPAIR_FILE" 2>/dev/null)
+    STAT_EXIT_CODE=$?
   else
     # Linux uses -c format
     KEYPAIR_PERMS=$(stat -c '%a' "$KEYPAIR_FILE" 2>/dev/null)
+    STAT_EXIT_CODE=$?
   fi
   
-  if [[ -z "$KEYPAIR_PERMS" ]]; then
-    echo "WARNING: Could not determine keypair file permissions. Ensure $KEYPAIR_FILE has restrictive permissions (e.g., 600)."
+  if [[ $STAT_EXIT_CODE -ne 0 ]]; then
+    echo "WARNING: Failed to check keypair file permissions using 'stat' command."
+    echo "         This could be due to:"
+    echo "         - File permission issues (ensure you have read access to $KEYPAIR_FILE)"
+    echo "         - Platform-specific stat command differences"
+    echo "         - Missing stat utility"
+    echo "         Please manually verify that $KEYPAIR_FILE has restrictive permissions (e.g., 600)."
+  elif [[ -z "$KEYPAIR_PERMS" ]]; then
+    echo "WARNING: Could not determine keypair file permissions (stat returned empty)."
+    echo "         Ensure $KEYPAIR_FILE has restrictive permissions (e.g., 600)."
   elif [[ "$KEYPAIR_PERMS" != "600" && "$KEYPAIR_PERMS" != "400" ]]; then
-    echo "WARNING: Keypair file $KEYPAIR_FILE has permissions $KEYPAIR_PERMS. Consider using 'chmod 600 $KEYPAIR_FILE' to restrict access."
+    echo "WARNING: Keypair file $KEYPAIR_FILE has permissions $KEYPAIR_PERMS."
+    echo "         Consider using 'chmod 600 $KEYPAIR_FILE' to restrict access."
   fi
 fi
 

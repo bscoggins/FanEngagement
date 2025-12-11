@@ -284,9 +284,31 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
     private sealed class SolanaRpcClient : IDisposable
     {
         private const string MemoProgramId = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
-        private const int MaxTransactionWaitRetries = 300; // 5 minutes at 1 second intervals
+        private const int MaxTransactionWaitRetries = 60; // Maximum number of retry attempts
+        private const int InitialRetryDelayMs = 500; // Start with 500ms delay
+        private const int MaxRetryDelayMs = 10000; // Cap at 10 seconds
+        private const double JitterRange = 0.4; // ±20% jitter (0.4 total range)
+        private const double JitterOffset = 0.2; // Center jitter around 0 (-0.2 to +0.2)
         private readonly HttpClient _httpClient;
         private int _requestId;
+
+        /// <summary>
+        /// Calculate exponential backoff delay with jitter to handle varying network conditions.
+        /// </summary>
+        private static TimeSpan CalculateRetryDelay(int attemptNumber)
+        {
+            // Exponential backoff: delay = min(maxDelay, initialDelay * 2^attempt)
+            var exponentialDelay = Math.Min(
+                MaxRetryDelayMs,
+                InitialRetryDelayMs * Math.Pow(2, attemptNumber)
+            );
+            
+            // Add jitter (±20%) to prevent thundering herd: JitterRange spans 0.4, centered at 0 via JitterOffset
+            var jitter = Random.Shared.NextDouble() * JitterRange - JitterOffset;
+            var delayWithJitter = exponentialDelay * (1 + jitter);
+            
+            return TimeSpan.FromMilliseconds(Math.Max(InitialRetryDelayMs, delayWithJitter));
+        }
 
         public SolanaRpcClient(string rpcUrl)
         {
@@ -307,16 +329,16 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
             CancellationToken cancellationToken,
             string[]? expectedKeys = null)
         {
-            var retries = 0;
+            var attempts = 0;
             
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 
-                if (retries++ >= MaxTransactionWaitRetries)
+                if (attempts >= MaxTransactionWaitRetries)
                 {
                     throw new TimeoutException(
-                        $"Transaction {signature} was not found or did not match predicate after {MaxTransactionWaitRetries} attempts.");
+                        $"Transaction {signature} was not found or did not match predicate after {attempts} attempts.");
                 }
 
                 var transaction = await TryGetTransactionAsync(signature, cancellationToken);
@@ -345,7 +367,9 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                     }
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                var delay = CalculateRetryDelay(attempts);
+                attempts++;
+                await Task.Delay(delay, cancellationToken);
             }
         }
 
@@ -370,9 +394,17 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
 
         public async Task<ulong> WaitForTokenSupplyAsync(string mintAddress, ulong expectedSupply, CancellationToken cancellationToken)
         {
+            var attempts = 0;
+            
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                if (attempts >= MaxTransactionWaitRetries)
+                {
+                    throw new TimeoutException(
+                        $"Token supply for mint {mintAddress} did not reach {expectedSupply} after {attempts} attempts.");
+                }
 
                 try
                 {
@@ -387,15 +419,25 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                     // ignore transient parsing issues and retry
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                var delay = CalculateRetryDelay(attempts);
+                attempts++;
+                await Task.Delay(delay, cancellationToken);
             }
         }
 
         public async Task<ulong> WaitForTokenBalanceAsync(string ownerAddress, string mintAddress, ulong expectedBalance, CancellationToken cancellationToken)
         {
+            var attempts = 0;
+            
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                if (attempts >= MaxTransactionWaitRetries)
+                {
+                    throw new TimeoutException(
+                        $"Token balance for owner {ownerAddress} and mint {mintAddress} did not reach {expectedBalance} after {attempts} attempts.");
+                }
 
                 try
                 {
@@ -434,7 +476,9 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
                     // ignore and retry
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                var delay = CalculateRetryDelay(attempts);
+                attempts++;
+                await Task.Delay(delay, cancellationToken);
             }
         }
 
