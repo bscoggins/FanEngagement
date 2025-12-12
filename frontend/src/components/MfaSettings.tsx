@@ -170,7 +170,7 @@ export const MfaSettings: React.FC = () => {
             placeholder="000000"
             maxLength={6}
             required
-            label="Authenticator Code"
+            label="Authenticator Code *"
           />
           
           {error && (
@@ -228,7 +228,7 @@ export const MfaSettings: React.FC = () => {
             onChange={(e) => setDisableCode(e.target.value)}
             placeholder="Enter code"
             required
-            label="Authenticator or Backup Code"
+            label="Authenticator or Backup Code *"
           />
 
           {error && (

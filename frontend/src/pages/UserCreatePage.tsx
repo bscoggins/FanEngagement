@@ -82,7 +82,7 @@ export const UserCreatePage: React.FC = () => {
           <Input
             id="password"
             name="password"
-            label="Password"
+            label="Password *"
             type="password"
             value={formData.password}
             onChange={handleChange}
@@ -102,7 +102,7 @@ export const UserCreatePage: React.FC = () => {
         <Input
           id="displayName"
           name="displayName"
-          label="Display Name"
+          label="Display Name *"
           type="text"
           value={formData.displayName}
           onChange={handleChange}
