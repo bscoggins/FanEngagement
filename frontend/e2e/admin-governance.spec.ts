@@ -48,7 +48,7 @@ test.describe.serial('Admin and member governance flows', () => {
 
     // Navigate directly to admin organizations page
     await page.goto('/admin/organizations');
-    await page.getByRole('button', { name: '+ Create Organization' }).click();
+    await page.getByRole('button', { name: 'Create Organization' }).click();
     await page.getByLabel('Name *').fill(newOrgName);
     await page.getByLabel('Description').fill('E2E-created organization for governance flows');
     await page.getByRole('button', { name: 'Create Organization' }).click();

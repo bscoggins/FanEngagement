@@ -10,6 +10,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Checkbox } from '../components/Checkbox';
+import './AdminPage.css';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
 export const AdminUserDetailPage: React.FC = () => {
@@ -110,55 +111,60 @@ export const AdminUserDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="admin-user-detail-page">
-        <h1>Edit User</h1>
-        <LoadingSpinner message="Loading user..." />
+      <div className="admin-page">
+        <div className="admin-card compact">
+          <h1>Edit User</h1>
+          <LoadingSpinner message="Loading user..." />
+        </div>
       </div>
     );
   }
 
   if (fetchError) {
     return (
-      <div className="admin-user-detail-page">
-        <h1>Edit User</h1>
-        <ErrorMessage message={fetchError} onRetry={fetchUserAndMemberships} />
+      <div className="admin-page">
+        <div className="admin-card compact">
+          <h1>Edit User</h1>
+          <ErrorMessage message={fetchError} onRetry={fetchUserAndMemberships} />
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="admin-user-detail-page">
-        <h1>Edit User</h1>
-        <p>User not found</p>
-        <Link to="/admin/users" style={{ color: '#0066cc' }}>
-          ← Back to Users
-        </Link>
+      <div className="admin-page">
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <h1>Edit User</h1>
+          <p className="admin-secondary-text">User not found.</p>
+          <Link to="/admin/users" className="admin-button admin-button-outline" style={{ textDecoration: 'none', width: 'fit-content' }}>
+            ← Back to Users
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-user-detail-page">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <Link to="/admin/users" style={{ color: '#0066cc', textDecoration: 'none' }}>
-          ← Back to Users
-        </Link>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1>Edit User</h1>
+          <div className="admin-page-subtitle">Manage user profile, membership, and password settings.</div>
+        </div>
+        <div className="admin-page-actions">
+          <Link to="/admin/users" className="admin-button admin-button-outline" style={{ textDecoration: 'none' }}>
+            ← Back to Users
+          </Link>
+        </div>
       </div>
       
-      <h1>Edit User</h1>
-      
-      <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))' }}>
+      <div className="admin-card-grid">
         {/* User Edit Form */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>User Details</h2>
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>User Details</h2>
           
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <form onSubmit={handleSubmit} className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <Input
               id="email"
               name="email"
@@ -167,6 +173,7 @@ export const AdminUserDetailPage: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              className="admin-input"
             />
 
             <Input
@@ -177,6 +184,7 @@ export const AdminUserDetailPage: React.FC = () => {
               value={formData.displayName}
               onChange={handleChange}
               required
+              className="admin-input"
             />
 
             <Select
@@ -186,6 +194,7 @@ export const AdminUserDetailPage: React.FC = () => {
               value={formData.role}
               onChange={handleChange}
               required
+              className="admin-select"
             >
               <option value="User">User</option>
               <option value="Admin">Admin</option>
@@ -200,77 +209,44 @@ export const AdminUserDetailPage: React.FC = () => {
               onChange={handleChange}
             />
 
-            <div style={{ 
-              padding: '0.75rem',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-              color: '#666'
-            }}>
+            <div className="admin-meta-text" style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--admin-chip-muted-bg)' }}>
               <strong>User ID:</strong> {user.id}<br />
               <strong>Created:</strong> {new Date(user.createdAt).toLocaleString()}
             </div>
 
             {error && (
-              <div
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#fee',
-                  border: '1px solid #fcc',
-                  borderRadius: '4px',
-                  color: '#c33',
-                }}
-              >
+              <div className="admin-alert admin-alert-error">
                 {error}
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              <Button
-                type="submit"
-                isLoading={isSaving}
-                variant="primary"
-              >
-                Save Changes
-              </Button>
-            </div>
+            <Button type="submit" isLoading={isSaving} variant="primary">
+              Save Changes
+            </Button>
           </form>
         </div>
 
         {/* Organization Memberships */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>
             Organization Memberships
           </h2>
           
           {memberships.length === 0 ? (
-            <p style={{ color: '#666', textAlign: 'center', padding: '2rem 0' }}>
+            <p className="admin-secondary-text" style={{ textAlign: 'center', padding: '2rem 0' }}>
               This user is not a member of any organizations.
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
               {memberships.map((membership) => (
-                <div
-                  key={membership.id}
-                  style={{
-                    padding: '1rem',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
-                  }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>
+                <div key={membership.id} className="admin-option-card">
+                  <div style={{ fontWeight: 600 }}>
                     {membership.organizationName}
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                  <div className="admin-secondary-text">
                     <strong>Role:</strong> {membership.role}
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                  <div className="admin-secondary-text">
                     <strong>Joined:</strong> {new Date(membership.createdAt).toLocaleDateString()}
                   </div>
                 </div>
@@ -280,12 +256,7 @@ export const AdminUserDetailPage: React.FC = () => {
         </div>
 
         {/* Password Management Section */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
+        <div className="admin-card">
           <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
             Password Management
           </h2>
@@ -353,23 +324,18 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} data-testid="admin-password-set-form">
-      <p style={{ color: '#666', marginBottom: '1rem' }}>
+    <form
+      onSubmit={handleSubmit}
+      data-testid="admin-password-set-form"
+      className="admin-form"
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}
+    >
+      <p className="admin-secondary-text">
         Set a new password for this user. The current password is not required.
       </p>
 
       {error && (
-        <div
-          style={{
-            padding: '0.75rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-          data-testid="password-error"
-        >
+        <div className="admin-alert admin-alert-error" data-testid="password-error">
           {error}
         </div>
       )}
@@ -387,6 +353,8 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
           minLength={8}
           helperText="Minimum 8 characters"
           data-testid="new-password-input"
+          className="admin-input"
+          style={{ maxWidth: '420px' }}
         />
       </div>
 
@@ -401,6 +369,8 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
           required
           disabled={isSubmitting}
           minLength={8}
+          className="admin-input"
+          style={{ maxWidth: '420px' }}
           data-testid="confirm-password-input"
         />
       </div>

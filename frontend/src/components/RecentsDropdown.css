@@ -6,6 +6,7 @@
   position: relative;
 }
 
+
 .recents-dropdown-button {
   display: flex;
   align-items: center;
@@ -31,7 +32,20 @@
 }
 
 .recents-dropdown-icon {
-  font-size: var(--font-size-base);
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-neutral-100);
+  border: 1px solid var(--color-border-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+
+.recents-dropdown-icon svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .recents-dropdown-label {
@@ -55,8 +69,8 @@
   min-width: 280px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md), 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
   overflow: hidden;
 }
@@ -101,6 +115,7 @@
   background-color: rgba(0, 123, 255, 0.1);
 }
 
+
 .recents-dropdown-item-icon {
   font-size: var(--font-size-xl);
   flex-shrink: 0;
@@ -111,6 +126,7 @@
   justify-content: center;
   background-color: var(--color-neutral-100);
   border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
 }
 
 .recents-dropdown-item:hover .recents-dropdown-item-icon {
@@ -135,6 +151,61 @@
   font-size: var(--font-size-xs);
   color: var(--color-neutral-600);
   margin-top: var(--spacing-0-5);
+}
+
+/* Dark theme adjustments */
+body.theme-dark .recents-dropdown-button {
+  background: linear-gradient(135deg, rgba(26, 31, 43, 0.98), rgba(16, 19, 30, 0.95));
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+}
+
+body.theme-dark .recents-dropdown-button:hover {
+  background: linear-gradient(135deg, rgba(33, 39, 54, 0.98), rgba(19, 23, 35, 0.95));
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+body.theme-dark .recents-dropdown-icon {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+body.theme-dark .recents-dropdown-menu {
+  background-color: var(--color-surface-elevated);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+body.theme-dark .recents-dropdown-title {
+  color: var(--color-text-secondary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-dark .recents-dropdown-item {
+  color: var(--color-text-primary);
+}
+
+body.theme-dark .recents-dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark .recents-dropdown-item-icon {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark .recents-dropdown-item-name {
+  color: var(--color-text-primary);
+}
+
+body.theme-dark .recents-dropdown-item-type,
+body.theme-dark .recents-dropdown-empty {
+  color: var(--color-text-secondary);
+}
+
+body.theme-dark .recents-dropdown-arrow {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 /* Animation for menu appearance */

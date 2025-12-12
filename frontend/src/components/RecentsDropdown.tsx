@@ -7,6 +7,19 @@ interface RecentsDropdownProps {
   className?: string;
 }
 
+const ClockIcon: React.FC = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <path
+      d="M12 7.5v5l3 1.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [recents, setRecents] = useState<RecentItem[]>([]);
@@ -52,7 +65,9 @@ export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className }) =
         aria-expanded={isOpen}
         aria-controls="recents-dropdown-menu"
       >
-        <span className="recents-dropdown-icon" aria-hidden="true">🕒</span>
+        <span className="recents-dropdown-icon" aria-hidden="true">
+          <ClockIcon />
+        </span>
         <span className="recents-dropdown-label">Recents</span>
         <span className="recents-dropdown-arrow" aria-hidden="true">▼</span>
       </button>

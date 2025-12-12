@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import './SearchInput.css';
 
 interface SearchInputProps {
   value: string;
@@ -36,19 +37,13 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   }, [localValue, debounceMs, value]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+    <div className="search-input">
       <input
         type="text"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         placeholder={placeholder}
-        style={{
-          width: '100%',
-          padding: '0.5rem 2.5rem 0.5rem 0.75rem',
-          border: '1px solid #ced4da',
-          borderRadius: '4px',
-          fontSize: '1rem',
-        }}
+        className="search-input__field"
         aria-label="Search"
       />
       {localValue && (
@@ -57,18 +52,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             setLocalValue('');
             onChange('');
           }}
-          style={{
-            position: 'absolute',
-            right: '0.5rem',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#666',
-            fontSize: '1.2rem',
-            padding: '0.25rem',
-          }}
+          className="search-input__clear"
           aria-label="Clear search"
         >
           ×

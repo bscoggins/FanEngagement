@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi, type DevDataSeedingResult, type TestDataResetResult, type SeedScenario, type SeedScenarioInfo } from '../api/adminApi';
+import { Button } from '../components/Button';
+import './AdminPage.css';
 
 const DEFAULT_SCENARIOS: SeedScenarioInfo[] = [
   { scenario: 'BasicDemo', name: 'Basic Demo', description: 'Basic demo data with organizations, users, and proposals.' },
@@ -87,83 +89,73 @@ export const AdminDevToolsPage: React.FC = () => {
   const selectedScenarioInfo = scenarios.find(s => s.scenario === selectedScenario);
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Developer Tools</h1>
-      <p>Admin-only tools for development and testing.</p>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1>Developer Tools</h1>
+          <div className="admin-page-subtitle">Admin-only tools for development and testing.</div>
+        </div>
+      </div>
 
-      <div style={{ marginTop: '30px', padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
-        <h2>Seed Development Data</h2>
-        <p>
-          Populate the database with sample data for testing. Choose a scenario based on what you want to test.
-        </p>
-
-        <div style={{ marginTop: '15px', marginBottom: '15px' }}>
-          <label htmlFor="scenario-select" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Select Scenario:
-          </label>
-          <select
-            id="scenario-select"
-            value={selectedScenario}
-            onChange={(e) => setSelectedScenario(e.target.value as SeedScenario)}
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '16px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              backgroundColor: isLoading ? '#f5f5f5' : 'white',
-            }}
-          >
-            {scenarios.map((s) => (
-              <option key={s.scenario} value={s.scenario}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          {selectedScenarioInfo && (
-            <p style={{ color: '#666', fontSize: '0.9em', marginTop: '8px' }}>
-              {selectedScenarioInfo.description}
-            </p>
-          )}
+      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-5)' }}>
+        <div>
+          <h2 style={{ marginTop: 0 }}>Seed Development Data</h2>
+          <p className="admin-secondary-text" style={{ marginBottom: 0 }}>
+            Populate the database with sample data for testing. Choose a scenario based on what you want to validate.
+          </p>
         </div>
 
-        <p style={{ color: '#666', fontSize: '0.9em' }}>
-          Note: This endpoint is only available in Development environment.
-          Seeding is idempotent - running it multiple times will not create duplicate data.
+        <div>
+          <span className="admin-form-label">Select Scenario</span>
+          <div
+            className="scenario-grid"
+            role="radiogroup"
+            aria-label="Seed scenarios"
+            aria-live="polite"
+          >
+            {scenarios.map((s) => {
+              const isSelected = s.scenario === selectedScenario;
+              return (
+                <button
+                  key={s.scenario}
+                  type="button"
+                  className={`scenario-option ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedScenario(s.scenario as SeedScenario)}
+                  aria-pressed={isSelected}
+                  aria-label={`${s.name} scenario`}
+                  disabled={isLoading}
+                >
+                  <div className="scenario-option__header">
+                    <span className="admin-pill admin-pill-accent">{s.name}</span>
+                    <span className="scenario-option__slug">{s.scenario}</span>
+                  </div>
+                  <p className="scenario-option__description">{s.description}</p>
+                  {isSelected && <span className="scenario-option__selected">Selected</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <p className="admin-secondary-text" style={{ margin: 0 }}>
+          Note: This endpoint is only available in Development environments. Seeding is idempotent—rerunning it will not create duplicate records.
         </p>
 
-        <button
+        <Button
           onClick={handleSeedDevData}
           disabled={isLoading}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: isLoading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            marginTop: '10px',
-          }}
+          isLoading={isLoading}
+          variant="primary"
+          style={{ alignSelf: 'flex-start' }}
         >
           {isLoading ? 'Seeding...' : `Seed ${selectedScenarioInfo?.name || 'Dev Data'}`}
-        </button>
+        </Button>
 
         {result && (
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              backgroundColor: '#d4edda',
-              color: '#155724',
-              border: '1px solid #c3e6cb',
-              borderRadius: '4px',
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>✓ Success! ({result.scenario})</h3>
-            <p style={{ marginBottom: '10px' }}>Development data seeded successfully:</p>
-            <ul style={{ marginBottom: 0 }}>
+          <div className="admin-alert admin-alert-success">
+            <h3 style={{ marginTop: 0 }}>Success ({result.scenario})</h3>
+            <p style={{ marginBottom: 'var(--spacing-2)' }}>Development data seeded successfully:</p>
+            <ul style={{ margin: 0, paddingLeft: 'var(--spacing-5)' }}>
               <li>{result.organizationsCreated} organization(s) created</li>
               <li>{result.usersCreated} user(s) created</li>
               <li>{result.membershipsCreated} membership(s) created</li>
@@ -182,80 +174,47 @@ export const AdminDevToolsPage: React.FC = () => {
         )}
 
         {error && (
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              backgroundColor: '#f8d7da',
-              color: '#721c24',
-              border: '1px solid #f5c6cb',
-              borderRadius: '4px',
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>✗ Error</h3>
+          <div className="admin-alert admin-alert-error">
+            <h3 style={{ marginTop: 0 }}>Error</h3>
             <p style={{ marginBottom: 0 }}>{error}</p>
           </div>
         )}
       </div>
 
-      <div style={{ marginTop: '30px', padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
-        <h2>Full Reset to Original Seed Data</h2>
-        <p>
-          Delete all organizations and non-admin users, then restore the original sample data. Useful to get back to a clean baseline.
-        </p>
-        <p style={{ color: '#666', fontSize: '0.9em' }}>
-          Note: Available only in Development/Demo. This action is destructive.
-        </p>
+      <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+        <div>
+          <h2 style={{ marginTop: 0 }}>Full Reset to Original Seed Data</h2>
+          <p className="admin-secondary-text" style={{ marginBottom: 0 }}>
+            Delete all organizations and non-admin users, then restore the original sample data. This action is destructive and only available in Development/Demo.
+          </p>
+        </div>
 
-        <button
+        <Button
           onClick={handleResetDevData}
           disabled={resetLoading}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: resetLoading ? '#ccc' : '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: resetLoading ? 'not-allowed' : 'pointer',
-            marginTop: '10px',
-          }}
+          isLoading={resetLoading}
+          variant="danger"
+          style={{ alignSelf: 'flex-start' }}
         >
           {resetLoading ? 'Resetting...' : 'Reset to Seed Data'}
-        </button>
+        </Button>
 
         {resetResult && (
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              backgroundColor: '#d4edda',
-              color: '#155724',
-              border: '1px solid #c3e6cb',
-              borderRadius: '4px',
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>✓ Reset Complete</h3>
-            <ul style={{ marginBottom: 0 }}>
+          <div className="admin-alert admin-alert-success">
+            <h3 style={{ marginTop: 0 }}>Reset Complete</h3>
+            <ul style={{ margin: 0, paddingLeft: 'var(--spacing-5)' }}>
               <li>{resetResult.organizationsDeleted} organization(s) deleted</li>
               <li>{resetResult.nonAdminUsersDeleted} non-admin user(s) deleted</li>
-              <li>Seeded: {resetResult.seedResult.organizationsCreated} org(s), {resetResult.seedResult.usersCreated} user(s), {resetResult.seedResult.membershipsCreated} membership(s), {resetResult.seedResult.shareTypesCreated} share type(s), {resetResult.seedResult.shareIssuancesCreated} issuance(s), {resetResult.seedResult.proposalsCreated} proposal(s), {resetResult.seedResult.votesCreated} vote(s)</li>
+              <li>
+                Seeded: {resetResult.seedResult.organizationsCreated} org(s), {resetResult.seedResult.usersCreated} user(s), {resetResult.seedResult.membershipsCreated} membership(s), {resetResult.seedResult.shareTypesCreated} share type(s), {resetResult.seedResult.shareIssuancesCreated} issuance(s), {resetResult.seedResult.proposalsCreated} proposal(s), {resetResult.seedResult.votesCreated} vote(s)
+              </li>
             </ul>
           </div>
         )}
 
         {resetError && (
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              backgroundColor: '#f8d7da',
-              color: '#721c24',
-              border: '1px solid #f5c6cb',
-              borderRadius: '4px',
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>✗ Error</h3>
+          <div className="admin-alert admin-alert-error">
+            <h3 style={{ marginTop: 0 }}>Error</h3>
             <p style={{ marginBottom: 0 }}>{resetError}</p>
           </div>
         )}

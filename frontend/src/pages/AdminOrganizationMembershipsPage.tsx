@@ -8,6 +8,7 @@ import { getRoleFullName } from '../utils/roleUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import './AdminPage.css';
 import type { MembershipWithUserDto, Organization, User } from '../types/api';
 import { Select } from '../components/Select';
 

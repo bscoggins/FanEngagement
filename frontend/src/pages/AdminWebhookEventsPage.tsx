@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import './AdminPage.css';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
 const getStatusBadgeClass = (status: OutboundEventStatus): string => {
