@@ -6,6 +6,7 @@ import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import { QuorumInfo } from '../components/QuorumInfo';
 import { parseApiError } from '../utils/errorUtils';
 import { Card } from '../components/Card';
+import { Input } from '../components/Input';
 import type {
   ProposalDetails,
   UpdateProposalRequest,
@@ -425,28 +426,24 @@ export const AdminProposalDetailPage: React.FC = () => {
             style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}
           >
             <div>
-              <label htmlFor="editTitle" className="admin-form-label">
-                Title *
-              </label>
-              <input
-                type="text"
+              <Input
                 id="editTitle"
+                label="Title"
                 value={editFormData.title || ''}
                 onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                className="admin-input"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="editDescription" className="admin-form-label">
+              <label htmlFor="editDescription" className="form-field__label">
                 Description
               </label>
               <textarea
                 id="editDescription"
                 value={editFormData.description || ''}
                 onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                className="admin-textarea"
+                className="form-control form-control--textarea"
                 style={{ minHeight: '100px' }}
               />
             </div>
@@ -494,28 +491,24 @@ export const AdminProposalDetailPage: React.FC = () => {
               style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}
             >
               <div>
-                <label htmlFor="optionText" className="admin-form-label">
-                  Option Text *
-                </label>
-                <input
-                  type="text"
+                <Input
                   id="optionText"
+                  label="Option Text"
                   value={optionFormData.text}
                   onChange={(e) => setOptionFormData({ ...optionFormData, text: e.target.value })}
-                  className="admin-input"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="optionDescription" className="admin-form-label">
+                <label htmlFor="optionDescription" className="form-field__label">
                   Description
                 </label>
                 <textarea
                   id="optionDescription"
                   value={optionFormData.description}
                   onChange={(e) => setOptionFormData({ ...optionFormData, description: e.target.value })}
-                  className="admin-textarea"
+                  className="form-control form-control--textarea"
                   style={{ minHeight: '80px' }}
                 />
               </div>

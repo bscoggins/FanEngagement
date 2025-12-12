@@ -8,6 +8,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
 import { Table, type TableColumn } from '../components/Table';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useTableData } from '../hooks/useTableData';
@@ -230,29 +231,20 @@ export const AdminOrganizationsPage: React.FC = () => {
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Create New Organization</h2>
           <form onSubmit={handleCreateOrganization}>
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                Name <span style={{ color: 'red' }}>*</span>
-              </label>
-              <input
+              <Input
                 id="name"
+                label="Name *"
                 type="text"
                 value={createFormData.name}
                 onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
                 required
                 maxLength={200}
                 disabled={isCreating}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                }}
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+              <label className="form-field__label" htmlFor="description">
                 Description
               </label>
               <textarea
@@ -262,53 +254,30 @@ export const AdminOrganizationsPage: React.FC = () => {
                 maxLength={1000}
                 disabled={isCreating}
                 rows={4}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  fontFamily: 'inherit',
-                }}
+                className="form-control form-control--textarea"
               />
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
+              <Button
                 type="submit"
                 disabled={isCreating}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: isCreating ? '#ccc' : '#0066cc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: isCreating ? 'not-allowed' : 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                }}
+                isLoading={isCreating}
+                variant="primary"
               >
                 {isCreating ? 'Creating...' : 'Create Organization'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => {
                   setShowCreateForm(false);
                   setCreateFormData({ name: '', description: '' });
                 }}
                 disabled={isCreating}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: 'white',
-                  color: '#666',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: isCreating ? 'not-allowed' : 'pointer',
-                  fontSize: '1rem',
-                }}
+                variant="secondary"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         </div>

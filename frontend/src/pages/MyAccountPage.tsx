@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { MfaSettings } from '../components/MfaSettings';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import type { UserProfile, ThemePreference } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
@@ -188,49 +189,33 @@ export const MyAccountPage: React.FC = () => {
             </p>
           )}
         </div>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="displayName" style={{ display: 'block', marginBottom: '0.5rem' }}>
-              Name:
-            </label>
-            <input
-              type="text"
-              id="displayName"
-              value={formData.displayName}
-              onChange={(e) =>
-                setFormData({ ...formData, displayName: e.target.value })
-              }
-              required
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-              }}
-            />
-          </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <Input
+                  type="text"
+                  id="displayName"
+                  label="Name:"
+                  value={formData.displayName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, displayName: e.target.value })
+                  }
+                  required
+                />
+              </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
-              Email:
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              required
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-              }}
-            />
-          </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <Input
+                  type="email"
+                  id="email"
+                  label="Email:"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  required
+                />
+              </div>
 
           <div style={{ marginBottom: '1rem' }}>
             <strong>Role:</strong> {user.role}{' '}
@@ -441,75 +426,46 @@ const PasswordChangeForm: React.FC = () => {
       )}
 
       <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="currentPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          Current Password:
-        </label>
-        <input
+        <Input
           type="password"
           id="currentPassword"
           name="currentPassword"
+          label="Current Password:"
           value={formData.currentPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-          }}
           data-testid="current-password-input"
         />
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="newPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          New Password:
-        </label>
-        <input
+        <Input
           type="password"
           id="newPassword"
           name="newPassword"
+          label="New Password:"
           value={formData.newPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
           minLength={8}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-          }}
+          helperText="Minimum 8 characters"
           data-testid="new-password-input"
         />
-        <small style={{ color: '#6c757d', display: 'block', marginTop: '0.25rem' }}>
-          Minimum 8 characters
-        </small>
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          Confirm New Password:
-        </label>
-        <input
+        <Input
           type="password"
           id="confirmPassword"
           name="confirmPassword"
+          label="Confirm New Password:"
           value={formData.confirmPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
           minLength={8}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-          }}
           data-testid="confirm-password-input"
         />
       </div>

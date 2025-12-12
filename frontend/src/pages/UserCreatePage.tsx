@@ -4,6 +4,7 @@ import { usersApi } from '../api/usersApi';
 import type { CreateUserRequest } from '../types/api';
 import { InfoBox } from '../components/InfoBox';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 
 export const UserCreatePage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,45 +68,25 @@ export const UserCreatePage: React.FC = () => {
       <h2>Create User</h2>
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Email *
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+        <Input
+          id="email"
+          name="email"
+          label="Email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
 
-        <div>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Password *
-          </label>
-          <input
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Input
             id="password"
             name="password"
+            label="Password"
             type="password"
             value={formData.password}
             onChange={handleChange}
             required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
           />
           <InfoBox>
             <strong>Password Requirements:</strong>
@@ -118,26 +99,15 @@ export const UserCreatePage: React.FC = () => {
           </InfoBox>
         </div>
 
-        <div>
-          <label htmlFor="displayName" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Display Name *
-          </label>
-          <input
-            id="displayName"
-            name="displayName"
-            type="text"
-            value={formData.displayName}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+        <Input
+          id="displayName"
+          name="displayName"
+          label="Display Name"
+          type="text"
+          value={formData.displayName}
+          onChange={handleChange}
+          required
+        />
 
         {error && (
           <div

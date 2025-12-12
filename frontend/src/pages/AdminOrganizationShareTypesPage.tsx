@@ -8,6 +8,8 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Card } from '../components/Card';
+import { Input } from '../components/Input';
+import { Checkbox } from '../components/Checkbox';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
@@ -103,10 +105,6 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       maxSupply: undefined,
       isTransferable: true,
     });
-  };
-
-  const handleIsTransferableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, isTransferable: e.target.value === 'true' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -222,50 +220,32 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '1rem', marginBottom: '1rem' }}>
               <div>
-                <label htmlFor="name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Name *
-                </label>
-                <input
+                <Input
                   type="text"
                   id="name"
                   name="name"
+                  label="Name *"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid var(--color-border-default)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '1rem',
-                  }}
                 />
               </div>
 
               <div>
-                <label htmlFor="symbol" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Symbol *
-                </label>
-                <input
+                <Input
                   type="text"
                   id="symbol"
                   name="symbol"
+                  label="Symbol *"
                   value={formData.symbol}
                   onChange={handleChange}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid var(--color-border-default)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '1rem',
-                  }}
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+              <label htmlFor="description" className="form-field__label">
                 Description
               </label>
               <textarea
@@ -274,83 +254,48 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={2}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid var(--color-border-default)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '1rem',
-                  fontFamily: 'inherit',
-                }}
+                className="form-control form-control--textarea"
               />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem', marginBottom: '1rem' }}>
               <div>
-                <label htmlFor="votingWeight" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Voting Weight *
-                </label>
-                <input
+                <Input
                   type="number"
                   id="votingWeight"
                   name="votingWeight"
+                  label="Voting Weight"
                   value={formData.votingWeight}
                   onChange={handleChange}
                   required
                   min="0"
                   step="0.01"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid var(--color-border-default)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '1rem',
-                  }}
                 />
               </div>
 
               <div>
-                <label htmlFor="maxSupply" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Max Supply
-                </label>
-                <input
+                <Input
                   type="number"
                   id="maxSupply"
                   name="maxSupply"
+                  label="Max Supply"
                   value={formData.maxSupply ?? ''}
                   onChange={handleChange}
                   min="0"
                   step="0.01"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid var(--color-border-default)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '1rem',
-                  }}
+                  helperText="Leave blank for unlimited supply."
                 />
               </div>
 
               <div>
-                <label htmlFor="isTransferable" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Transferable
-                </label>
-                <select
+                <Checkbox
                   id="isTransferable"
                   name="isTransferable"
-                  value={formData.isTransferable ? 'true' : 'false'}
-                  onChange={handleIsTransferableChange}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid var(--color-border-default)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '1rem',
-                  }}
-                >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
+                  label="Transferable"
+                  helperText="Allow holders to transfer this share type."
+                  checked={formData.isTransferable}
+                  onChange={handleChange}
+                />
               </div>
             </div>
 

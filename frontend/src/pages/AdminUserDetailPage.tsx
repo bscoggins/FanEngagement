@@ -7,6 +7,9 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
+import { Select } from '../components/Select';
+import { Checkbox } from '../components/Checkbox';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
 export const AdminUserDetailPage: React.FC = () => {
@@ -156,90 +159,46 @@ export const AdminUserDetailPage: React.FC = () => {
           <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>User Details</h2>
           
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Email *
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
-              />
-            </div>
+            <Input
+              id="email"
+              name="email"
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
 
-            <div>
-              <label htmlFor="displayName" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Display Name *
-              </label>
-              <input
-                id="displayName"
-                name="displayName"
-                type="text"
-                value={formData.displayName}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
-              />
-            </div>
+            <Input
+              id="displayName"
+              name="displayName"
+              label="Display Name"
+              type="text"
+              value={formData.displayName}
+              onChange={handleChange}
+              required
+            />
 
-            <div>
-              <label htmlFor="role" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Role *
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
-              >
-                <option value="User">User</option>
-                <option value="Admin">Admin</option>
-              </select>
-            </div>
+            <Select
+              id="role"
+              name="role"
+              label="Role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+            >
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+            </Select>
 
-            <div>
-              <label htmlFor="mfaRequired" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                Require MFA for Admin Access
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                  id="mfaRequired"
-                  name="mfaRequired"
-                  type="checkbox"
-                  checked={!!formData.mfaRequired}
-                  onChange={handleChange}
-                  style={{ width: '1rem', height: '1rem' }}
-                />
-                <span style={{ fontSize: '0.95rem' }}>Force this user to complete MFA before accessing admin tools.</span>
-              </div>
-              <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
-                Disable if the user should be allowed to sign in without MFA.
-              </small>
-            </div>
+            <Checkbox
+              id="mfaRequired"
+              name="mfaRequired"
+              label="Require MFA for Admin Access"
+              helperText="Force this user to complete MFA before accessing admin tools. Disable if the user should be allowed to sign in without MFA."
+              checked={!!formData.mfaRequired}
+              onChange={handleChange}
+            />
 
             <div style={{ 
               padding: '0.75rem',
@@ -416,54 +375,32 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
       )}
 
       <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="newPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          New Password:
-        </label>
-        <input
+        <Input
           type="password"
           id="newPassword"
           name="newPassword"
+          label="New Password"
           value={formData.newPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
           minLength={8}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            fontSize: '1rem',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-          }}
+          helperText="Minimum 8 characters"
           data-testid="new-password-input"
         />
-        <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
-          Minimum 8 characters
-        </small>
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          Confirm New Password:
-        </label>
-        <input
+        <Input
           type="password"
           id="confirmPassword"
           name="confirmPassword"
+          label="Confirm New Password"
           value={formData.confirmPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
           minLength={8}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            fontSize: '1rem',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-          }}
           data-testid="confirm-password-input"
         />
       </div>

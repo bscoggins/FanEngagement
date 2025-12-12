@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import type { MembershipWithUserDto, Organization, User } from '../types/api';
+import { Select } from '../components/Select';
 
 export const AdminOrganizationMembershipsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -169,16 +170,13 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Add New Member</h2>
           <form onSubmit={handleAddMembership}>
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="userId" className="admin-form-label">
-                Select User *
-              </label>
-              <select
+              <Select
                 id="userId"
+                label="Select User"
                 data-testid="membership-user-select"
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value)}
                 required
-                className="admin-select"
               >
                 <option value="">-- Select a user --</option>
                 {availableUsers.map((user) => (
@@ -186,23 +184,20 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
                     {user.displayName} ({user.email})
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="role" className="admin-form-label">
-                Role *
-              </label>
-              <select
+              <Select
                 id="role"
+                label="Role"
                 value={selectedRole}
                 onChange={handleRoleChange}
                 required
-                className="admin-select"
               >
                 <option value="Member">Member</option>
                 <option value="OrgAdmin">Organization Admin</option>
-              </select>
+              </Select>
             </div>
 
             <button

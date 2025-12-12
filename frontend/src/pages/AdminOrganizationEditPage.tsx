@@ -4,32 +4,8 @@ import { organizationsApi } from '../api/organizationsApi';
 import { shareTypesApi } from '../api/shareTypesApi';
 import { proposalsApi } from '../api/proposalsApi';
 import type { UpdateOrganizationRequest, Organization } from '../types/api';
-
-const adminLabelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '0.5rem',
-  fontWeight: 500,
-};
-
-const adminInputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.75rem',
-  border: '1px solid var(--color-border-default)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: '1rem',
-  backgroundColor: 'var(--color-background)',
-  color: 'var(--color-text-primary)',
-};
-
-const adminTextareaStyle: React.CSSProperties = {
-  ...adminInputStyle,
-  fontFamily: 'inherit',
-};
-
-const adminSelectStyle: React.CSSProperties = {
-  ...adminInputStyle,
-  cursor: 'pointer',
-};
+import { Input } from '../components/Input';
+import { Select } from '../components/Select';
 
 const adminInfoTextStyle: React.CSSProperties = {
   marginTop: '0.5rem',
@@ -226,22 +202,19 @@ export const AdminOrganizationEditPage: React.FC = () => {
       <div className="admin-card" style={{ padding: '2rem' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="name" style={adminLabelStyle}>
-              Name *
-            </label>
-            <input
-              type="text"
+            <Input
               id="name"
               name="name"
+              label="Name"
+              type="text"
               value={formData.name}
               onChange={handleChange}
               required
-              style={adminInputStyle}
             />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="description" style={adminLabelStyle}>
+            <label htmlFor="description" className="form-field__label">
               Description
             </label>
             <textarea
@@ -250,7 +223,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
               value={formData.description}
               onChange={handleChange}
               rows={4}
-              style={adminTextareaStyle}
+              className="form-control form-control--textarea"
             />
           </div>
 
@@ -258,33 +231,24 @@ export const AdminOrganizationEditPage: React.FC = () => {
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Blockchain Configuration</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="blockchainType" style={adminLabelStyle}>
-                Blockchain Platform
-              </label>
-              <select
+              <Select
                 id="blockchainType"
                 name="blockchainType"
+                label="Blockchain Platform"
                 value={formData.blockchainType || 'None'}
                 onChange={handleChange}
                 disabled={hasExistingData}
-                style={{
-                  ...adminSelectStyle,
-                  backgroundColor: hasExistingData ? 'var(--color-background)' : 'var(--color-surface)',
-                  cursor: hasExistingData ? 'not-allowed' : 'pointer',
-                }}
+                helperText="Select a blockchain platform for governance transparency. This setting determines where governance actions are recorded."
               >
                 <option value="None">None (Off-chain only)</option>
                 <option value="Solana">Solana</option>
                 <option value="Polygon">Polygon</option>
-              </select>
+              </Select>
               {hasExistingData && (
                 <div style={adminInfoTextStyle}>
                   Blockchain type cannot be changed after shares or proposals are created.
                 </div>
               )}
-              <div style={adminInfoTextStyle}>
-                Select a blockchain platform for governance transparency. This setting determines where governance actions are recorded.
-              </div>
             </div>
           </div>
 
@@ -292,17 +256,14 @@ export const AdminOrganizationEditPage: React.FC = () => {
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Branding</h3>
             
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="logoUrl" style={adminLabelStyle}>
-                Logo URL
-              </label>
-              <input
+              <Input
                 type="url"
                 id="logoUrl"
                 name="logoUrl"
+                label="Logo URL"
                 value={formData.logoUrl}
                 onChange={handleChange}
                 placeholder="https://example.com/logo.png"
-                style={adminInputStyle}
               />
               {formData.logoUrl && (
                 <div style={{ marginTop: '0.75rem' }}>
@@ -328,7 +289,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <label htmlFor="primaryColor" style={adminLabelStyle}>
+                <label htmlFor="primaryColor" className="form-field__label">
                   Primary Color
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -346,13 +307,14 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     value={formData.primaryColor || ''}
                     onChange={handleChange}
                     placeholder="#0066cc (default)"
-                    style={{ ...adminInputStyle, flex: 1 }}
+                    className="form-control"
+                    style={{ flex: 1 }}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="secondaryColor" style={adminLabelStyle}>
+                <label htmlFor="secondaryColor" className="form-field__label">
                   Secondary Color
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -370,7 +332,8 @@ export const AdminOrganizationEditPage: React.FC = () => {
                     value={formData.secondaryColor || ''}
                     onChange={handleChange}
                     placeholder="#6c757d (default)"
-                    style={{ ...adminInputStyle, flex: 1 }}
+                    className="form-control"
+                    style={{ flex: 1 }}
                   />
                 </div>
               </div>

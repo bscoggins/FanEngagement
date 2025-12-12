@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import type { UpdateUserRequest, User } from '../types/api';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 
 export const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -140,47 +141,25 @@ export const UserEditPage: React.FC = () => {
       <h2>Edit User</h2>
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Email *
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+        <Input
+          id="email"
+          name="email"
+          label="Email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
 
-        <div>
-          <label htmlFor="displayName" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Display Name *
-          </label>
-          <input
-            id="displayName"
-            name="displayName"
-            type="text"
-            value={formData.displayName}
-            onChange={handleChange}
-            required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+        <Input
+          id="displayName"
+          name="displayName"
+          label="Display Name"
+          type="text"
+          value={formData.displayName}
+          onChange={handleChange}
+          required
+        />
 
         {error && (
           <div

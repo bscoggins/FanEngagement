@@ -10,6 +10,8 @@ import { QuorumInfo } from '../components/QuorumInfo';
 import { checkVotingEligibility, calculateVotingPower } from '../utils/proposalUtils';
 import { parseApiError } from '../utils/errorUtils';
 import type { ProposalDetails, Vote, ProposalResults, ShareBalance, ShareType } from '../types/api';
+import { Radio } from '../components/Radio';
+import { Button } from '../components/Button';
 
 export const MyProposalPage: React.FC = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
@@ -285,51 +287,27 @@ export const MyProposalPage: React.FC = () => {
           <form onSubmit={handleVote}>
             <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
               {proposal.options.map((option) => (
-                <label
+                <Radio
                   key={option.id}
-                  style={{
-                    padding: '1rem',
-                    border:
-                      selectedOptionId === option.id ? '2px solid #007bff' : '1px solid #ddd',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    backgroundColor: selectedOptionId === option.id ? '#e7f3ff' : 'white',
-                    display: 'block',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="option"
-                    value={option.id}
-                    checked={selectedOptionId === option.id}
-                    onChange={(e) => setSelectedOptionId(e.target.value)}
-                    style={{ marginRight: '0.5rem' }}
-                  />
-                  <strong>{option.text}</strong>
-                  {option.description && (
-                    <div style={{ marginTop: '0.5rem', color: '#6c757d' }}>
-                      {option.description}
-                    </div>
-                  )}
-                </label>
+                  name="option"
+                  value={option.id}
+                  label={option.text}
+                  helperText={option.description}
+                  checked={selectedOptionId === option.id}
+                  onChange={(e) => setSelectedOptionId(e.target.value)}
+                  disabled={submitting}
+                />
               ))}
             </div>
-            <button
+            <Button
               type="submit"
               disabled={!selectedOptionId || submitting}
-              style={{
-                marginTop: '1rem',
-                padding: '0.75rem 1.5rem',
-                backgroundColor: selectedOptionId && !submitting ? '#28a745' : '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: selectedOptionId && !submitting ? 'pointer' : 'not-allowed',
-                fontSize: '1rem',
-              }}
+              isLoading={submitting}
+              variant="primary"
+              style={{ marginTop: '1rem' }}
             >
               {submitting ? 'Submitting...' : 'Cast Vote'}
-            </button>
+            </Button>
           </form>
         ) : (
           <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
@@ -458,4 +436,3 @@ export const MyProposalPage: React.FC = () => {
     </div>
   );
 };
-
