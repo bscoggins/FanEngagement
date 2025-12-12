@@ -270,7 +270,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <Input
                 id="title"
-                label="Title"
+                label="Title *"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required

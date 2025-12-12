@@ -172,7 +172,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <Select
                 id="userId"
-                label="Select User"
+                label="Select User *"
                 data-testid="membership-user-select"
                 value={selectedUserId}
                 onChange={(e) => setSelectedUserId(e.target.value)}
@@ -190,7 +190,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
             <div style={{ marginBottom: '1rem' }}>
               <Select
                 id="role"
-                label="Role"
+                label="Role *"
                 value={selectedRole}
                 onChange={handleRoleChange}
                 required

@@ -71,7 +71,7 @@ export const UserCreatePage: React.FC = () => {
         <Input
           id="email"
           name="email"
-          label="Email"
+          label="Email *"
           type="email"
           value={formData.email}
           onChange={handleChange}

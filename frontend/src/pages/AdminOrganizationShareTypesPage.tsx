@@ -264,7 +264,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   type="number"
                   id="votingWeight"
                   name="votingWeight"
-                  label="Voting Weight"
+                  label="Voting Weight *"
                   value={formData.votingWeight}
                   onChange={handleChange}
                   required
