@@ -388,7 +388,7 @@ const PasswordChangeForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="admin-form">
+    <form onSubmit={handleSubmit} className="admin-form" data-testid="password-change-form">
       <div>
         <label htmlFor="currentPassword" className="admin-form-label">
           Current Password

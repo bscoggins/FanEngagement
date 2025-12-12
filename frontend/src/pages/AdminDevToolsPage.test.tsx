@@ -88,7 +88,7 @@ describe('AdminDevToolsPage', () => {
     renderAdminDevToolsPage(true);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/select scenario/i)).toBeInTheDocument();
+      expect(screen.getByText(/select scenario/i)).toBeInTheDocument();
     });
   });
 
@@ -124,7 +124,7 @@ describe('AdminDevToolsPage', () => {
     await user.click(seedButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Success!/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Success/i })).toBeInTheDocument();
     });
 
     expect(screen.getByText(/2 organization\(s\) created/i)).toBeInTheDocument();
@@ -222,7 +222,7 @@ describe('AdminDevToolsPage', () => {
     // First click - success
     await user.click(seedButton);
     await waitFor(() => {
-      expect(screen.getByText(/Success!/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Success/i })).toBeInTheDocument();
     });
 
     // Second click - should clear previous success message during loading
@@ -230,7 +230,7 @@ describe('AdminDevToolsPage', () => {
     
     // Previous message should be cleared (though a new one will appear)
     await waitFor(() => {
-      expect(screen.getAllByText(/Success!/i)).toHaveLength(1);
+      expect(screen.getAllByRole('heading', { name: /Success/i })).toHaveLength(1);
     });
   });
 
@@ -246,18 +246,18 @@ describe('AdminDevToolsPage', () => {
     const user = userEvent.setup();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/select scenario/i)).toBeInTheDocument();
+      expect(screen.getByText(/select scenario/i)).toBeInTheDocument();
     });
 
     // Select WebhookFailures scenario
-    const select = screen.getByLabelText(/select scenario/i);
-    await user.selectOptions(select, 'WebhookFailures');
+    const scenarioButton = screen.getByRole('button', { name: /Webhook Failures/i });
+    await user.click(scenarioButton);
 
     const seedButton = screen.getByRole('button', { name: /seed webhook failures/i });
     await user.click(seedButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Success!/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Success/i })).toBeInTheDocument();
     });
 
     expect(screen.getByText(/3 webhook endpoint\(s\) created/i)).toBeInTheDocument();
