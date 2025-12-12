@@ -515,6 +515,16 @@ body.theme-dark .admin-filter-chip {
   color: var(--color-text-secondary);
 }
 
+.required-indicator {
+  color: var(--color-error-600);
+  font-weight: var(--font-weight-bold);
+  margin-left: var(--spacing-1);
+}
+
+body.theme-dark .required-indicator {
+  color: var(--color-error-400);
+}
+
 .admin-toggle-row {
   display: flex;
   align-items: center;
