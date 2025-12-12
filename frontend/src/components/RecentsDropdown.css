@@ -11,23 +11,19 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  color: var(--color-text-primary);
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--color-overlay-light);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-text-inverse);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  box-shadow: var(--shadow-md);
-  min-height: 2.5rem;
-  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 
 .recents-dropdown-button:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-border-dark);
-  background-color: var(--color-neutral-50);
+  background-color: var(--color-overlay-medium);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .recents-dropdown-button:focus-visible {
