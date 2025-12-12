@@ -306,7 +306,7 @@ export const MyProposalPage: React.FC = () => {
               variant="primary"
               style={{ marginTop: '1rem' }}
             >
-              {submitting ? 'Submitting...' : 'Cast Vote'}
+              Cast Vote
             </Button>
           </form>
         ) : (

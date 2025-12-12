@@ -78,6 +78,9 @@
   --color-overlay-medium: rgba(255, 255, 255, 0.15);
   --color-overlay-dark: rgba(0, 0, 0, 0.5);
   --color-primary-alpha-10: rgba(0, 123, 255, 0.1);  /* Primary color with 10% opacity */
+  --color-error-alpha-10: rgba(220, 53, 69, 0.1);
+  --color-error-alpha-15: rgba(220, 53, 69, 0.15);
+  --color-surface-highlight: rgba(255, 255, 255, 0.4);
 
   /* ===== Dashboard Accent Colors ===== */
   --color-accent-blue: hsl(225, 89%, 62%);          /* #4c6ef5 - Members stat */

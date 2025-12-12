@@ -265,7 +265,7 @@ export const AdminOrganizationsPage: React.FC = () => {
                 isLoading={isCreating}
                 variant="primary"
               >
-                {isCreating ? 'Creating...' : 'Create Organization'}
+                Create Organization
               </Button>
               <Button
                 type="button"

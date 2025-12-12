@@ -205,7 +205,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
             <Input
               id="name"
               name="name"
-              label="Name"
+              label="Name *"
               type="text"
               value={formData.name}
               onChange={handleChange}

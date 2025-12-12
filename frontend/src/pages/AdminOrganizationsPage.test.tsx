@@ -329,7 +329,7 @@ describe('AdminOrganizationsPage', () => {
       
       // Verify loading state
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /creating\.\.\./i })).toBeInTheDocument();
+        expect(submitButton).toHaveAttribute('aria-busy', 'true');
       });
       
       // Verify form fields are disabled
