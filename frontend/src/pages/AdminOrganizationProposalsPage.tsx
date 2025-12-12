@@ -7,6 +7,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
 import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
 import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
+import './AdminPage.css';
 import type { Proposal, Organization, CreateProposalRequest, ProposalStatus, PagedResult } from '../types/api';
 
 export const AdminOrganizationProposalsPage: React.FC = () => {
