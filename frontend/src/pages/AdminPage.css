@@ -95,6 +95,13 @@ body.theme-dark .admin-card.compact {
   background-color: rgba(18, 24, 36, 0.9);
 }
 
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-6);
+  align-items: start;
+}
+
 .admin-form {
   display: flex;
   flex-direction: column;
@@ -287,6 +294,20 @@ body.theme-dark .admin-table-wrapper {
 
 .admin-table tbody tr:hover {
   background-color: var(--admin-table-hover-bg);
+}
+
+.admin-table-row {
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.admin-table-row:hover {
+  background-color: var(--admin-table-hover-bg);
+}
+
+.admin-table-row:focus {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
 }
 
 .admin-table-toggle {
