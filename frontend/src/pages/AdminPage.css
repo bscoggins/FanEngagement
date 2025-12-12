@@ -301,6 +301,10 @@ body.theme-dark .admin-table-wrapper {
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
+.admin-table-row:hover {
+  background-color: var(--admin-table-hover-bg);
+}
+
 .admin-table-row:focus {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: -2px;
