@@ -301,25 +301,25 @@ export const AdminAuditLogPage: React.FC = () => {
                         <td colSpan={6}>
                           <div className="admin-info-grid">
                             <div>
-                              <span className="admin-form-label">Correlation ID</span>
+                              <span className="admin-detail-label">Correlation ID</span>
                               <div className="admin-mono">{event.correlationId || '-'}</div>
                             </div>
                             <div>
-                              <span className="admin-form-label">IP Address</span>
+                              <span className="admin-detail-label">IP Address</span>
                               <div className="admin-mono">{event.actorIpAddress || '-'}</div>
                             </div>
                             <div>
-                              <span className="admin-form-label">Resource ID</span>
+                              <span className="admin-detail-label">Resource ID</span>
                               <div className="admin-mono">{event.resourceId}</div>
                             </div>
                             <div>
-                              <span className="admin-form-label">Organization</span>
+                              <span className="admin-detail-label">Organization</span>
                               <div className="admin-mono">{event.organizationName || '-'}</div>
                             </div>
                           </div>
                           {event.failureReason && (
                             <div className="admin-form-field">
-                              <span className="admin-form-label">Failure Reason</span>
+                              <span className="admin-detail-label">Failure Reason</span>
                               <div className="admin-alert admin-alert-error admin-preformatted">{event.failureReason}</div>
                             </div>
                           )}

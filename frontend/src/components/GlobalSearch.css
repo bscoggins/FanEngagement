@@ -26,28 +26,28 @@
 .global-search-input {
   width: 100%;
   padding: 0.625rem var(--spacing-10) 0.625rem var(--spacing-10);
-  border: 1px solid rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
-  background-color: rgba(241, 245, 249, 0.9);
-  color: var(--color-text-primary);
-  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  background-color: var(--color-overlay-light);
+  color: var(--color-text-inverse);
+  transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 
 .global-search-input::placeholder {
-  color: rgba(100, 116, 139, 0.7);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .global-search-input:hover {
-  background-color: rgba(226, 232, 240, 0.95);
-  border-color: rgba(15, 23, 42, 0.25);
+  background-color: var(--color-overlay-medium);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .global-search-input:focus {
   outline: none;
-  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.2);
   border-color: var(--color-primary-600);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
 }
 
 .global-search-clear {
@@ -137,7 +137,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  color: var(--color-neutral-500);
+  color: var(--color-neutral-400);
   letter-spacing: var(--letter-spacing-widest);
 }
 
@@ -156,7 +156,11 @@
 
 .global-search-result:hover,
 .global-search-result.selected {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--color-neutral-100);
+}
+
+.global-search-result.selected {
+  background-color: rgba(0, 123, 255, 0.1);
 }
 
 
@@ -168,7 +172,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(59, 130, 246, 0.12);
+  background-color: var(--color-neutral-100);
   border-radius: var(--radius-sm);
 }
 
