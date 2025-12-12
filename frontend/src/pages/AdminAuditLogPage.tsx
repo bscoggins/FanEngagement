@@ -3,10 +3,10 @@ import { useParams } from 'react-router-dom';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
-import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeStyle, getActionBadgeStyle, formatDate } from '../utils/auditUtils';
+import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeClass, getActionBadgeClass, formatDate } from '../utils/auditUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Pagination } from '../components/Pagination';
-import { Card } from '../components/Card';
+import './AdminPage.css';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
 export const AdminAuditLogPage: React.FC = () => {
@@ -141,8 +141,13 @@ export const AdminAuditLogPage: React.FC = () => {
         </div>
       )}
 
-      <Card style={{ marginBottom: 'var(--spacing-5)' }}>
-        <h3 style={{ marginTop: 0, marginBottom: 'var(--spacing-4)' }}>Filters</h3>
+      <div className="admin-card" style={{ marginBottom: 'var(--spacing-5)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+        <div>
+          <h3 style={{ marginTop: 0, marginBottom: 'var(--spacing-2)' }}>Filters</h3>
+          <p className="admin-secondary-text" style={{ margin: 0 }}>
+            Narrow the audit log with date ranges, action types, and resources.
+          </p>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
           <div>
@@ -178,7 +183,7 @@ export const AdminAuditLogPage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ marginTop: 'var(--spacing-4)' }}>
+        <div>
           <label className="admin-form-label" style={{ marginBottom: 'var(--spacing-2)' }}>
             Action Types
           </label>
@@ -199,7 +204,7 @@ export const AdminAuditLogPage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ marginTop: 'var(--spacing-4)' }}>
+        <div>
           <label className="admin-form-label" style={{ marginBottom: 'var(--spacing-2)' }}>
             Resource Types
           </label>
@@ -219,7 +224,7 @@ export const AdminAuditLogPage: React.FC = () => {
             ))}
           </div>
         </div>
-      </Card>
+      </div>
 
       <div className="admin-table-meta" data-testid="audit-log-pagination">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
@@ -252,7 +257,7 @@ export const AdminAuditLogPage: React.FC = () => {
             <table data-testid="audit-log-table" className="admin-table">
               <thead>
                 <tr>
-                  <th style={{ width: '40px' }}></th>
+                  <th className="admin-table-toggle-column"></th>
                   <th>Timestamp</th>
                   <th>Actor</th>
                   <th>Action</th>
@@ -263,78 +268,59 @@ export const AdminAuditLogPage: React.FC = () => {
               <tbody>
                 {auditEvents.items.map((event) => (
                   <React.Fragment key={event.id}>
-                    <tr onClick={() => toggleRowExpansion(event.id)} style={{ cursor: 'pointer' }}>
+                    <tr className="admin-table-row" onClick={() => toggleRowExpansion(event.id)}>
                       <td>
                         <button
                           type="button"
-                          className="admin-button admin-button-ghost"
-                          style={{ padding: '0.25rem 0.5rem', minWidth: 'auto' }}
+                          className="admin-table-toggle"
                           aria-label={expandedRowId === event.id ? 'Collapse details' : 'Expand details'}
                         >
                           {expandedRowId === event.id ? '▼' : '▶'}
                         </button>
                       </td>
-                      <td className="admin-secondary-text">{formatDate(event.timestamp)}</td>
                       <td>
-                        <div>{event.actorDisplayName || 'System'}</div>
-                        {event.actorUserId && (
-                          <div className="admin-meta-text" style={{ fontSize: '0.75rem' }}>
-                            {event.actorUserId}
-                          </div>
-                        )}
+                        <div className="admin-meta-text">{formatDate(event.timestamp)}</div>
                       </td>
                       <td>
-                        <span style={getActionBadgeStyle(event.actionType)}>{event.actionType}</span>
+                        <div className="admin-meta-text admin-meta-text-primary">{event.actorDisplayName || 'System'}</div>
+                        {event.actorUserId && <div className="admin-secondary-text">{event.actorUserId}</div>}
                       </td>
                       <td>
-                        <div style={{ fontWeight: 500 }}>{event.resourceType}</div>
-                        {event.resourceName && (
-                          <div className="admin-secondary-text" style={{ fontSize: '0.8rem' }}>
-                            {event.resourceName}
-                          </div>
-                        )}
+                        <span className={getActionBadgeClass(event.actionType)}>{event.actionType}</span>
                       </td>
                       <td>
-                        <span style={getOutcomeBadgeStyle(event.outcome)}>{event.outcome}</span>
+                        <div className="admin-meta-text admin-meta-text-primary admin-meta-text-strong">{event.resourceType}</div>
+                        {event.resourceName && <div className="admin-secondary-text">{event.resourceName}</div>}
+                      </td>
+                      <td>
+                        <span className={getOutcomeBadgeClass(event.outcome)}>{event.outcome}</span>
                       </td>
                     </tr>
                     {expandedRowId === event.id && (
                       <tr className="admin-table-expanded-row">
-                        <td colSpan={6} style={{ padding: 'var(--spacing-5)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--spacing-4)' }}>
+                        <td colSpan={6}>
+                          <div className="admin-info-grid">
                             <div>
-                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
-                                Correlation ID
-                              </label>
-                              <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{event.correlationId || '-'}</div>
+                              <span className="admin-form-label">Correlation ID</span>
+                              <div className="admin-mono">{event.correlationId || '-'}</div>
                             </div>
                             <div>
-                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
-                                IP Address
-                              </label>
-                              <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{event.actorIpAddress || '-'}</div>
+                              <span className="admin-form-label">IP Address</span>
+                              <div className="admin-mono">{event.actorIpAddress || '-'}</div>
                             </div>
                             <div>
-                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
-                                Resource ID
-                              </label>
-                              <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{event.resourceId}</div>
+                              <span className="admin-form-label">Resource ID</span>
+                              <div className="admin-mono">{event.resourceId}</div>
                             </div>
                             <div>
-                              <label className="admin-form-label" style={{ marginBottom: '0.25rem' }}>
-                                Organization
-                              </label>
-                              <div>{event.organizationName || '-'}</div>
+                              <span className="admin-form-label">Organization</span>
+                              <div className="admin-mono">{event.organizationName || '-'}</div>
                             </div>
                           </div>
                           {event.failureReason && (
-                            <div style={{ marginTop: 'var(--spacing-4)' }}>
-                              <label className="admin-form-label" style={{ marginBottom: '0.5rem' }}>
-                                Failure Reason
-                              </label>
-                              <div className="admin-alert admin-alert-error" style={{ marginBottom: 0 }}>
-                                {event.failureReason}
-                              </div>
+                            <div className="admin-form-field">
+                              <span className="admin-form-label">Failure Reason</span>
+                              <div className="admin-alert admin-alert-error admin-preformatted">{event.failureReason}</div>
                             </div>
                           )}
                         </td>

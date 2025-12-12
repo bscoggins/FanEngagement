@@ -2,11 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
-import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeStyle, getActionBadgeStyle, formatDate } from '../utils/auditUtils';
+import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeClass, getActionBadgeClass, formatDate } from '../utils/auditUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
+import { Button } from '../components/Button';
+import './AdminPage.css';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
 export const PlatformAdminAuditLogPage: React.FC = () => {
@@ -14,6 +16,7 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
   const [auditEvents, setAuditEvents] = useState<PagedResult<AuditEvent> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [activeExportFormat, setActiveExportFormat] = useState<'csv' | 'json' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
@@ -99,6 +102,7 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
   const handleExport = async (format: 'csv' | 'json') => {
     try {
       setIsExporting(true);
+      setActiveExportFormat(format);
       setError(null);
 
       const filters = {
@@ -126,299 +130,212 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
       setError(errorMessage);
     } finally {
       setIsExporting(false);
+      setActiveExportFormat(null);
     }
+  };
+
+  const handleClearFilters = () => {
+    setSelectedOrgId('');
+    setDateFrom('');
+    setDateTo('');
+    setSelectedActionTypes([]);
+    setSelectedResourceTypes([]);
+    setPage(1);
   };
 
   if (isLoading && organizations.length === 0) {
     return (
-      <div>
-        <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
-        <LoadingSpinner message="Loading audit log..." />
+      <div className="admin-page">
+        <div className="admin-card compact">
+          <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
+          <LoadingSpinner message="Loading audit log..." />
+        </div>
       </div>
     );
   }
 
+  const hasFilters = Boolean(
+    selectedOrgId ||
+      dateFrom ||
+      dateTo ||
+      selectedActionTypes.length > 0 ||
+      selectedResourceTypes.length > 0
+  );
+
   return (
-    <div>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
-        <div style={{ color: '#666', fontSize: '1rem' }}>
-          Cross-organization audit events for platform-wide security monitoring
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
+          <div className="admin-page-subtitle">
+            Cross-organization audit events for platform-wide security monitoring.
+          </div>
+        </div>
+        <div className="admin-page-actions">
+          <Button
+            variant="primary"
+            onClick={() => handleExport('csv')}
+            disabled={isExporting}
+            isLoading={isExporting && activeExportFormat === 'csv'}
+            data-testid="export-csv-button"
+          >
+            {isExporting && activeExportFormat === 'csv' ? 'Exporting…' : 'Export CSV'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleExport('json')}
+            disabled={isExporting}
+            isLoading={isExporting && activeExportFormat === 'json'}
+            data-testid="export-json-button"
+          >
+            {isExporting && activeExportFormat === 'json' ? 'Exporting…' : 'Export JSON'}
+          </Button>
         </div>
       </div>
 
       {error && <ErrorMessage message={error} onRetry={fetchData} />}
 
-      {/* Filters */}
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ margin: 0 }}>Filters</h3>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => handleExport('csv')}
-              disabled={isExporting}
-              data-testid="export-csv-button"
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isExporting ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                opacity: isExporting ? 0.6 : 1,
-              }}
-            >
-              {isExporting ? 'Exporting...' : 'Export CSV'}
-            </button>
-            <button
-              onClick={() => handleExport('json')}
-              disabled={isExporting}
-              data-testid="export-json-button"
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#17a2b8',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isExporting ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                opacity: isExporting ? 0.6 : 1,
-              }}
-            >
-              {isExporting ? 'Exporting...' : 'Export JSON'}
-            </button>
+      <div className="admin-card">
+        <div className="admin-section-header">
+          <div>
+            <h2>Filters</h2>
+            <p className="admin-secondary-text">
+              Refine audit events by organization, timeframe, and activity type.
+            </p>
           </div>
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={handleClearFilters} data-testid="clear-filters-button">
+              Clear Filters
+            </Button>
+          )}
         </div>
 
-        {/* Organization filter */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label
-            htmlFor="organizationFilter"
-            style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-          >
-            Organization
-          </label>
-          <select
-            id="organizationFilter"
-            data-testid="organization-filter"
-            value={selectedOrgId}
-            onChange={(e) => {
-              setSelectedOrgId(e.target.value);
-              setPage(1);
-            }}
-            style={{
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              width: '100%',
-            }}
-          >
-            <option value="">All Organizations</option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-          {/* Date range */}
-          <div>
-            <label
-              htmlFor="dateFrom"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
-            >
-              From Date
+        <div className="admin-form">
+          <div className="admin-form-field">
+            <label className="admin-form-label" htmlFor="organizationFilter">
+              Organization
             </label>
-            <input
-              id="dateFrom"
-              type="date"
-              data-testid="audit-log-filter-date-from"
-              value={dateFrom}
+            <select
+              id="organizationFilter"
+              className="admin-select"
+              data-testid="organization-filter"
+              value={selectedOrgId}
               onChange={(e) => {
-                setDateFrom(e.target.value);
+                setSelectedOrgId(e.target.value);
                 setPage(1);
               }}
-              style={{
-                padding: '0.5rem',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                width: '100%',
-              }}
-            />
-          </div>
-          
-          <div>
-            <label
-              htmlFor="dateTo"
-              style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}
             >
-              To Date
-            </label>
-            <input
-              id="dateTo"
-              type="date"
-              data-testid="audit-log-filter-date-to"
-              value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value);
-                setPage(1);
-              }}
-              style={{
-                padding: '0.5rem',
-                border: '1px solid #ced4da',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                width: '100%',
-              }}
-            />
+              <option value="">All Organizations</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
 
-        {/* Action types */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
-            Action Types
-          </label>
-          <div
-            data-testid="audit-log-filter-action"
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
-            }}
-          >
-            {ACTION_TYPES.map((actionType) => (
-              <label
-                key={actionType}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: selectedActionTypes.includes(actionType) ? '#0066cc' : 'white',
-                  color: selectedActionTypes.includes(actionType) ? 'white' : '#333',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedActionTypes.includes(actionType)}
-                  onChange={() => handleActionTypeChange(actionType)}
-                  style={{ margin: 0 }}
-                />
-                {actionType}
+          <div className="admin-filter-row">
+            <div className="admin-form-field admin-form-field-inline">
+              <label className="admin-form-label" htmlFor="dateFrom">
+                From Date
               </label>
-            ))}
+              <input
+                id="dateFrom"
+                className="admin-input"
+                type="date"
+                data-testid="audit-log-filter-date-from"
+                value={dateFrom}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="admin-form-field admin-form-field-inline">
+              <label className="admin-form-label" htmlFor="dateTo">
+                To Date
+              </label>
+              <input
+                id="dateTo"
+                className="admin-input"
+                type="date"
+                data-testid="audit-log-filter-date-to"
+                value={dateTo}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Resource types */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.875rem' }}>
-            Resource Types
-          </label>
-          <div
-            data-testid="audit-log-filter-resource"
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              backgroundColor: '#f8f9fa',
-            }}
-          >
-            {RESOURCE_TYPES.map((resourceType) => (
-              <label
-                key={resourceType}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  padding: '0.25rem 0.5rem',
-                  backgroundColor: selectedResourceTypes.includes(resourceType) ? '#0066cc' : 'white',
-                  color: selectedResourceTypes.includes(resourceType) ? 'white' : '#333',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedResourceTypes.includes(resourceType)}
-                  onChange={() => handleResourceTypeChange(resourceType)}
-                  style={{ margin: 0 }}
-                />
-                {resourceType}
-              </label>
-            ))}
+          <div className="admin-form-field">
+            <label className="admin-form-label">Action Types</label>
+            <div className="admin-filter-group" data-testid="audit-log-filter-action">
+              {ACTION_TYPES.map((actionType) => {
+                const isSelected = selectedActionTypes.includes(actionType);
+                return (
+                  <label
+                    key={actionType}
+                    className={`admin-filter-chip ${isSelected ? 'selected' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleActionTypeChange(actionType)}
+                    />
+                    {actionType}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="admin-form-field">
+            <label className="admin-form-label">Resource Types</label>
+            <div className="admin-filter-group" data-testid="audit-log-filter-resource">
+              {RESOURCE_TYPES.map((resourceType) => {
+                const isSelected = selectedResourceTypes.includes(resourceType);
+                return (
+                  <label
+                    key={resourceType}
+                    className={`admin-filter-chip ${isSelected ? 'selected' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleResourceTypeChange(resourceType)}
+                    />
+                    {resourceType}
+                  </label>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Pagination controls */}
-      <div
-        data-testid="audit-log-pagination"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label htmlFor="pageSize" style={{ fontSize: '0.875rem', color: '#666' }}>
-            Items per page:
+      <div className="admin-table-meta" data-testid="audit-log-pagination">
+        <div className="admin-form-field admin-form-field-inline">
+          <label className="admin-form-label" htmlFor="pageSize">
+            Items per page
           </label>
-          <select
-            id="pageSize"
-            value={pageSize}
-            onChange={handlePageSizeChange}
-            style={{
-              padding: '0.5rem',
-              border: '1px solid #ced4da',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-            }}
-          >
+          <select id="pageSize" className="admin-select" value={pageSize} onChange={handlePageSizeChange}>
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
         </div>
-
-        <div style={{ color: '#666', fontSize: '0.875rem' }}>
+        <div className="admin-meta-text">
           {auditEvents ? `${auditEvents.totalCount} total events` : '0 events'}
         </div>
       </div>
 
       {isLoading ? (
-        <LoadingSpinner message="Loading audit events..." />
+        <div className="admin-card compact">
+          <LoadingSpinner message="Loading audit events..." />
+        </div>
       ) : !auditEvents || auditEvents.items.length === 0 ? (
         <EmptyState
           message={
@@ -429,139 +346,84 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
         />
       ) : (
         <>
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              overflow: 'hidden',
-            }}
-          >
-            <table data-testid="audit-log-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="admin-table-wrapper">
+            <table data-testid="audit-log-table" className="admin-table">
               <thead>
-                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, width: '30px' }}></th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Organization</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Timestamp</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Actor</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Action</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Resource</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600 }}>Outcome</th>
+                <tr>
+                  <th className="admin-table-toggle-column"></th>
+                  <th>Organization</th>
+                  <th>Timestamp</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>Outcome</th>
                 </tr>
               </thead>
               <tbody>
                 {auditEvents.items.map((event) => (
                   <React.Fragment key={event.id}>
-                    <tr 
-                      style={{ borderBottom: '1px solid #dee2e6', cursor: 'pointer' }}
-                      onClick={() => toggleRowExpansion(event.id)}
-                    >
-                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <tr className="admin-table-row" onClick={() => toggleRowExpansion(event.id)}>
+                      <td>
                         <button
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '1.2rem',
-                            padding: 0,
-                            color: '#666',
-                          }}
+                          type="button"
+                          className="admin-table-toggle"
                           aria-label={expandedRowId === event.id ? 'Collapse details' : 'Expand details'}
                         >
                           {expandedRowId === event.id ? '▼' : '▶'}
                         </button>
                       </td>
-                      <td style={{ padding: '1rem', fontSize: '0.875rem' }}>
-                        {event.organizationName || '-'}
+                      <td>
+                        <div className="admin-meta-text admin-meta-text-primary">
+                          {event.organizationName || '-'}
+                        </div>
                       </td>
-                      <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#666' }}>
-                        {formatDate(event.timestamp)}
+                      <td>
+                        <div className="admin-meta-text">{formatDate(event.timestamp)}</div>
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontSize: '0.875rem' }}>
+                      <td>
+                        <div className="admin-meta-text admin-meta-text-primary">
                           {event.actorDisplayName || 'System'}
                         </div>
-                        {event.actorUserId && (
-                          <div style={{ fontSize: '0.75rem', color: '#999' }}>
-                            {event.actorUserId}
-                          </div>
-                        )}
+                        {event.actorUserId && <div className="admin-secondary-text">{event.actorUserId}</div>}
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={getActionBadgeStyle(event.actionType)}>
-                          {event.actionType}
-                        </span>
+                      <td>
+                        <span className={getActionBadgeClass(event.actionType)}>{event.actionType}</span>
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                      <td>
+                        <div className="admin-meta-text admin-meta-text-primary admin-meta-text-strong">
                           {event.resourceType}
                         </div>
-                        {event.resourceName && (
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>
-                            {event.resourceName}
-                          </div>
-                        )}
+                        {event.resourceName && <div className="admin-secondary-text">{event.resourceName}</div>}
                       </td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={getOutcomeBadgeStyle(event.outcome)}>
-                          {event.outcome}
-                        </span>
+                      <td>
+                        <span className={getOutcomeBadgeClass(event.outcome)}>{event.outcome}</span>
                       </td>
                     </tr>
                     {expandedRowId === event.id && (
-                      <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-                        <td colSpan={7} style={{ padding: '1.5rem' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <tr className="admin-table-expanded-row">
+                        <td colSpan={7}>
+                          <div className="admin-info-grid">
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                                Correlation ID
-                              </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.correlationId || '-'}
-                              </div>
+                              <span className="admin-form-label">Correlation ID</span>
+                              <div className="admin-mono">{event.correlationId || '-'}</div>
                             </div>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                                IP Address
-                              </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.actorIpAddress || '-'}
-                              </div>
+                              <span className="admin-form-label">IP Address</span>
+                              <div className="admin-mono">{event.actorIpAddress || '-'}</div>
                             </div>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                                Resource ID
-                              </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.resourceId}
-                              </div>
+                              <span className="admin-form-label">Resource ID</span>
+                              <div className="admin-mono">{event.resourceId}</div>
                             </div>
                             <div>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.25rem', color: '#666', fontSize: '0.875rem' }}>
-                                Organization ID
-                              </label>
-                              <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                                {event.organizationId || '-'}
-                              </div>
+                              <span className="admin-form-label">Organization ID</span>
+                              <div className="admin-mono">{event.organizationId || '-'}</div>
                             </div>
                           </div>
                           {event.failureReason && (
-                            <div style={{ marginTop: '1rem' }}>
-                              <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                                Failure Reason
-                              </label>
-                              <div
-                                style={{
-                                  padding: '0.75rem',
-                                  backgroundColor: '#fee',
-                                  border: '1px solid #fcc',
-                                  borderRadius: '4px',
-                                  color: '#c33',
-                                  fontSize: '0.875rem',
-                                  whiteSpace: 'pre-wrap',
-                                  wordBreak: 'break-word',
-                                }}
-                              >
+                            <div className="admin-form-field">
+                              <span className="admin-form-label">Failure Reason</span>
+                              <div className="admin-alert admin-alert-error admin-preformatted">
                                 {event.failureReason}
                               </div>
                             </div>
