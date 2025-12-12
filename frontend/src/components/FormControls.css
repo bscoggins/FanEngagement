@@ -17,7 +17,7 @@
 .form-field__required {
   color: var(--color-danger-600, #dc2626);
   font-weight: var(--font-weight-bold);
-  margin-left: 2px;
+  margin-left: var(--spacing-0-5);
 }
 
 .form-field__control {
