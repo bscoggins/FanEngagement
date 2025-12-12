@@ -86,11 +86,6 @@ export const AdminOrganizationsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
   const handleCreateOrganization = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -308,7 +303,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       >
         <SearchInput
           value={searchQuery}
-          onChange={handleSearchChange}
+          onChange={setSearchQuery}
           placeholder="Search by organization name"
         />
         <div className="admin-secondary-text">
