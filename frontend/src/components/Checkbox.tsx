@@ -51,7 +51,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
           {label}
           {props.required && (
             <span className="form-field__required" aria-label="required">
-              {' '}*
+              *
             </span>
           )}
         </span>
