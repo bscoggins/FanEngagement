@@ -428,7 +428,7 @@ export const AdminProposalDetailPage: React.FC = () => {
             <div>
               <Input
                 id="editTitle"
-                label="Title *"
+                label="Title"
                 value={editFormData.title || ''}
                 onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
                 required
@@ -493,7 +493,7 @@ export const AdminProposalDetailPage: React.FC = () => {
               <div>
                 <Input
                   id="optionText"
-                  label="Option Text *"
+                  label="Option Text"
                   value={optionFormData.text}
                   onChange={(e) => setOptionFormData({ ...optionFormData, text: e.target.value })}
                   required

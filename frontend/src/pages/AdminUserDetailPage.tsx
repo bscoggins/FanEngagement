@@ -162,7 +162,7 @@ export const AdminUserDetailPage: React.FC = () => {
             <Input
               id="email"
               name="email"
-              label="Email *"
+              label="Email"
               type="email"
               value={formData.email}
               onChange={handleChange}
@@ -172,7 +172,7 @@ export const AdminUserDetailPage: React.FC = () => {
             <Input
               id="displayName"
               name="displayName"
-              label="Display Name *"
+              label="Display Name"
               type="text"
               value={formData.displayName}
               onChange={handleChange}
@@ -182,7 +182,7 @@ export const AdminUserDetailPage: React.FC = () => {
             <Select
               id="role"
               name="role"
-              label="Role *"
+              label="Role"
               value={formData.role}
               onChange={handleChange}
               required

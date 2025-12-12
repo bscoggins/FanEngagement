@@ -224,7 +224,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   type="text"
                   id="name"
                   name="name"
-                  label="Name *"
+                  label="Name"
                   value={formData.name}
                   onChange={handleChange}
                   required
@@ -236,7 +236,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   type="text"
                   id="symbol"
                   name="symbol"
-                  label="Symbol *"
+                  label="Symbol"
                   value={formData.symbol}
                   onChange={handleChange}
                   required
@@ -264,7 +264,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   type="number"
                   id="votingWeight"
                   name="votingWeight"
-                  label="Voting Weight *"
+                  label="Voting Weight"
                   value={formData.votingWeight}
                   onChange={handleChange}
                   required

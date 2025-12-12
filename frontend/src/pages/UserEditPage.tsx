@@ -144,7 +144,7 @@ export const UserEditPage: React.FC = () => {
         <Input
           id="email"
           name="email"
-          label="Email *"
+          label="Email"
           type="email"
           value={formData.email}
           onChange={handleChange}
@@ -154,7 +154,7 @@ export const UserEditPage: React.FC = () => {
         <Input
           id="displayName"
           name="displayName"
-          label="Display Name *"
+          label="Display Name"
           type="text"
           value={formData.displayName}
           onChange={handleChange}

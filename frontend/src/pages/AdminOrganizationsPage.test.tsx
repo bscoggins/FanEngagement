@@ -173,14 +173,14 @@ describe('AdminOrganizationsPage', () => {
       });
       
       // Initially form is hidden
-      expect(screen.queryByLabelText(/name \*/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/name/i)).not.toBeInTheDocument();
       
       // Click create button
       const createButton = screen.getByRole('button', { name: /\+ create organization/i });
       await user.click(createButton);
       
       // Form should be visible
-      expect(screen.getByLabelText(/name \*/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
       
       // Click cancel to hide form
@@ -191,7 +191,7 @@ describe('AdminOrganizationsPage', () => {
       
       // Form should be hidden again
       await waitFor(() => {
-        expect(screen.queryByLabelText(/name \*/i)).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/name/i)).not.toBeInTheDocument();
       });
     });
 
@@ -225,7 +225,7 @@ describe('AdminOrganizationsPage', () => {
       await user.click(createButton);
       
       // Fill form
-      const nameInput = screen.getByLabelText(/name \*/i);
+      const nameInput = screen.getByLabelText(/name/i);
       const descriptionInput = screen.getByLabelText(/description/i);
       
       await user.type(nameInput, 'New Test Org');
@@ -265,7 +265,7 @@ describe('AdminOrganizationsPage', () => {
       await user.click(createButton);
       
       // Fill and submit form
-      const nameInput = screen.getByLabelText(/name \*/i);
+      const nameInput = screen.getByLabelText(/name/i);
       await user.type(nameInput, 'Test Org');
       
       const submitButton = screen.getByRole('button', { name: /^create organization$/i });
@@ -277,7 +277,7 @@ describe('AdminOrganizationsPage', () => {
       });
       
       // Form should still be visible
-      expect(screen.getByLabelText(/name \*/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     });
 
     it('validates required name field', async () => {
@@ -295,7 +295,7 @@ describe('AdminOrganizationsPage', () => {
       await user.click(createButton);
       
       // Try to submit without filling name (browser validation will prevent this)
-      const nameInput = screen.getByLabelText(/name \*/i) as HTMLInputElement;
+      const nameInput = screen.getByLabelText(/name/i) as HTMLInputElement;
       expect(nameInput).toBeRequired();
       expect(nameInput.maxLength).toBe(200);
     });
@@ -320,7 +320,7 @@ describe('AdminOrganizationsPage', () => {
       const createButton = screen.getByRole('button', { name: /\+ create organization/i });
       await user.click(createButton);
       
-      const nameInput = screen.getByLabelText(/name \*/i);
+      const nameInput = screen.getByLabelText(/name/i);
       await user.type(nameInput, 'Test Org');
       
       // Submit form
