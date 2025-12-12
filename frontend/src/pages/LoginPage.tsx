@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleMfaSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <Input
             id="mfaCode"
-            label="MFA Code *"
+            label="MFA Code"
             type="text"
             value={mfaCode}
             onChange={(e) => setMfaCode(e.target.value)}
@@ -130,7 +130,7 @@ export const LoginPage: React.FC = () => {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <Input
           id="email"
-          label="Email *"
+          label="Email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -138,7 +138,7 @@ export const LoginPage: React.FC = () => {
         />
         <Input
           id="password"
-          label="Password *"
+          label="Password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

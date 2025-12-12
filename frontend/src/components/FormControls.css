@@ -14,6 +14,12 @@
   gap: var(--spacing-1);
 }
 
+.form-field__required {
+  color: var(--color-danger-600, #dc2626);
+  font-weight: var(--font-weight-bold);
+  margin-left: 2px;
+}
+
 .form-field__control {
   position: relative;
   width: 100%;

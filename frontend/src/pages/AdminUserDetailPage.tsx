@@ -379,7 +379,7 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
           type="password"
           id="newPassword"
           name="newPassword"
-          label="New Password *"
+          label="New Password"
           value={formData.newPassword}
           onChange={handleChange}
           required
@@ -395,7 +395,7 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
           type="password"
           id="confirmPassword"
           name="confirmPassword"
-          label="Confirm New Password *"
+          label="Confirm New Password"
           value={formData.confirmPassword}
           onChange={handleChange}
           required

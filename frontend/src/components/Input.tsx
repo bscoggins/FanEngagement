@@ -43,6 +43,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref)
       {label && (
         <label className="form-field__label" htmlFor={id}>
           {label}
+          {props.required && (
+            <span className="form-field__required" aria-label="required">
+              *
+            </span>
+          )}
         </label>
       )}
 

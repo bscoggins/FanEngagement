@@ -195,7 +195,7 @@ export const MyAccountPage: React.FC = () => {
                 <Input
                   type="text"
                   id="displayName"
-                  label="Name: *"
+                  label="Name:"
                   value={formData.displayName}
                   onChange={(e) =>
                     setFormData({ ...formData, displayName: e.target.value })
@@ -208,7 +208,7 @@ export const MyAccountPage: React.FC = () => {
                 <Input
                   type="email"
                   id="email"
-                  label="Email: *"
+                  label="Email:"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -430,7 +430,7 @@ const PasswordChangeForm: React.FC = () => {
           type="password"
           id="currentPassword"
           name="currentPassword"
-          label="Current Password: *"
+          label="Current Password:"
           value={formData.currentPassword}
           onChange={handleChange}
           required
@@ -444,7 +444,7 @@ const PasswordChangeForm: React.FC = () => {
           type="password"
           id="newPassword"
           name="newPassword"
-          label="New Password: *"
+          label="New Password:"
           value={formData.newPassword}
           onChange={handleChange}
           required
@@ -460,7 +460,7 @@ const PasswordChangeForm: React.FC = () => {
           type="password"
           id="confirmPassword"
           name="confirmPassword"
-          label="Confirm New Password: *"
+          label="Confirm New Password:"
           value={formData.confirmPassword}
           onChange={handleChange}
           required
