@@ -93,6 +93,29 @@ describe('AdminOrganizationsPage', () => {
     expect(screen.getByText('Test Organization 2')).toBeInTheDocument();
   });
 
+  it('conditionally renders descriptions based on presence', async () => {
+    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
+    
+    renderAdminOrganizationsPage();
+    
+    await waitFor(() => {
+      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+    });
+    
+    // Verify description is shown when it exists (org-1)
+    expect(screen.getByText('Test description 1')).toBeInTheDocument();
+    
+    // Verify description is not rendered when it doesn't exist (org-2)
+    // Since org-2 has undefined description, no description text should appear for it
+    const org2Name = screen.getByText('Test Organization 2');
+    const org2Container = org2Name.closest('td');
+    expect(org2Container).toBeInTheDocument();
+    
+    // The description element should only appear once (for org-1), not twice
+    const descriptionElements = screen.queryAllByText(/test description/i);
+    expect(descriptionElements).toHaveLength(1);
+  });
+
   it('displays action buttons for each organization', async () => {
     vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
     

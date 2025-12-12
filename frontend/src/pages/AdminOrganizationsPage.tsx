@@ -46,7 +46,8 @@ export const AdminOrganizationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrganizations();
-  }, [fetchOrganizations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const searchFields = useCallback(
     (org: Organization) => [org.name, org.description ?? ''],
