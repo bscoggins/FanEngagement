@@ -506,14 +506,7 @@ body.theme-dark .admin-filter-chip {
   background-color: var(--color-surface);
 }
 
-.admin-form-label {
-  display: block;
-  margin-bottom: var(--spacing-2);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
+.admin-form-label,
 .admin-detail-label {
   display: block;
   margin-bottom: var(--spacing-2);
