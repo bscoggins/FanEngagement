@@ -130,32 +130,7 @@
 }
 
 /* ===== Dark Mode Support ===== */
-
-/* Prefer color scheme dark */
-@media (prefers-color-scheme: dark) {
-  .card {
-    background-color: var(--color-surface-elevated);
-    border-color: var(--color-border-dark);
-  }
-  
-  .card--default {
-    border-color: var(--color-border-dark);
-  }
-  
-  .card--interactive {
-    border-color: var(--color-border-dark);
-  }
-  
-  .card--interactive:hover {
-    background-color: var(--color-overlay-subtle);
-  }
-  
-  .card--bordered {
-    border-color: var(--color-border-dark);
-  }
-}
-
-/* Theme class dark */
+/* Dark mode styling follows the explicit `.theme-dark` opt-in. */
 body.theme-dark .card {
   background-color: var(--color-surface-elevated);
   border-color: var(--color-border-dark);

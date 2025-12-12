@@ -7,13 +7,13 @@ For full technical documentation, Copilot should reference `.github/copilot-codi
 
 ## 1. Global Rules for All Interactions
 
-- **Always propose a plan first** before modifying files.  
+- **Always create a plan first** before modifying files.  
 - **Never delete code** unless explicitly instructed.  
 - **Never introduce new external dependencies** without justification and approval.  
 - **Prefer minimal diffs** and backward‑compatible changes.  
 - **Ensure the build compiles** after suggested changes.  
 - **Follow repository patterns** (backend layering, React frontend patterns).  
-- **If schema changes occur**, remind the user to create an EF migration.  
+- **If schema changes occur**, create an EF migration.  
 - **Ask clarifying questions** when requirements are unclear.  
 - **Generate complete, ready‑to‑use code** when providing snippets.
 
@@ -23,7 +23,7 @@ For full technical documentation, Copilot should reference `.github/copilot-codi
 
 When answering questions or generating changes, use:
 
-- `.github/copilot-coding-agent-instructions.md` — full architecture rules  
+- `.github/copilot-coding-agent-instructions.md` — full architecture rules for the Coding Agent that runs in GitHub
 - `docs/architecture.md` — domain, lifecycle, authorization, governance  
 - Backend folder structure for pattern matching  
 - Frontend folder structure for routing and UI consistency  
@@ -56,7 +56,8 @@ Copilot Chat must:
 1. **Restate the user’s request**  
 2. **Propose a clear plan**  
 3. **List the files that will be changed**  
-4. Only then provide the code changes  
+4. **Implement the plan**  
+5. Execute `docker compose build --no-cache` to ensure the build compiles.
 
 **Example response:**
 
@@ -80,7 +81,7 @@ Copilot must:
 - Use structured logging  
 - Use ProblemDetails error responses  
 - Suggest tests using `WebApplicationFactory`  
-- Remind user to create EF migrations when needed  
+- Create EF migrations when needed  
 
 ---
 
@@ -165,7 +166,7 @@ This file defines **how GitHub Copilot Chat behaves** inside VS Code:
 
 - Follow global rules  
 - Use minimal diffs  
-- Confirm before editing  
+- Implement planned changes without requesting extra confirmation from the user
 - Respect repository architecture  
 - Reference deeper docs when needed  
 Technical details live in `.github/copilot-coding-agent-instructions.md`.

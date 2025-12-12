@@ -7,6 +7,7 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Button } from '../components/Button';
+import './AdminPage.css';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
 export const AdminUserDetailPage: React.FC = () => {
@@ -107,57 +108,62 @@ export const AdminUserDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="admin-user-detail-page">
-        <h1>Edit User</h1>
-        <LoadingSpinner message="Loading user..." />
+      <div className="admin-page">
+        <div className="admin-card compact">
+          <h1>Edit User</h1>
+          <LoadingSpinner message="Loading user..." />
+        </div>
       </div>
     );
   }
 
   if (fetchError) {
     return (
-      <div className="admin-user-detail-page">
-        <h1>Edit User</h1>
-        <ErrorMessage message={fetchError} onRetry={fetchUserAndMemberships} />
+      <div className="admin-page">
+        <div className="admin-card compact">
+          <h1>Edit User</h1>
+          <ErrorMessage message={fetchError} onRetry={fetchUserAndMemberships} />
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="admin-user-detail-page">
-        <h1>Edit User</h1>
-        <p>User not found</p>
-        <Link to="/admin/users" style={{ color: '#0066cc' }}>
-          ← Back to Users
-        </Link>
+      <div className="admin-page">
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <h1>Edit User</h1>
+          <p className="admin-secondary-text">User not found.</p>
+          <Link to="/admin/users" className="admin-button admin-button-outline" style={{ textDecoration: 'none', width: 'fit-content' }}>
+            ← Back to Users
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-user-detail-page">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <Link to="/admin/users" style={{ color: '#0066cc', textDecoration: 'none' }}>
-          ← Back to Users
-        </Link>
+    <div className="admin-page">
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1>Edit User</h1>
+          <div className="admin-page-subtitle">Manage user profile, membership, and password settings.</div>
+        </div>
+        <div className="admin-page-actions">
+          <Link to="/admin/users" className="admin-button admin-button-outline" style={{ textDecoration: 'none' }}>
+            ← Back to Users
+          </Link>
+        </div>
       </div>
       
-      <h1>Edit User</h1>
-      
-      <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))' }}>
+      <div className="admin-card-grid">
         {/* User Edit Form */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>User Details</h2>
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>User Details</h2>
           
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <form onSubmit={handleSubmit} className="admin-form">
             <div>
-              <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="email" className="admin-form-label">
                 Email *
               </label>
               <input
@@ -167,18 +173,12 @@ export const AdminUserDetailPage: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
+                className="admin-input"
               />
             </div>
 
             <div>
-              <label htmlFor="displayName" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="displayName" className="admin-form-label">
                 Display Name *
               </label>
               <input
@@ -188,18 +188,12 @@ export const AdminUserDetailPage: React.FC = () => {
                 value={formData.displayName}
                 onChange={handleChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
+                className="admin-input"
               />
             </div>
 
             <div>
-              <label htmlFor="role" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="role" className="admin-form-label">
                 Role *
               </label>
               <select
@@ -208,13 +202,7 @@ export const AdminUserDetailPage: React.FC = () => {
                 value={formData.role}
                 onChange={handleChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '1rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                }}
+                className="admin-select"
               >
                 <option value="User">User</option>
                 <option value="Admin">Admin</option>
@@ -222,96 +210,62 @@ export const AdminUserDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="mfaRequired" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              <label htmlFor="mfaRequired" className="admin-form-label">
                 Require MFA for Admin Access
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="admin-toggle-row">
                 <input
                   id="mfaRequired"
                   name="mfaRequired"
                   type="checkbox"
                   checked={!!formData.mfaRequired}
                   onChange={handleChange}
-                  style={{ width: '1rem', height: '1rem' }}
                 />
-                <span style={{ fontSize: '0.95rem' }}>Force this user to complete MFA before accessing admin tools.</span>
+                <span>Force this user to complete MFA before accessing admin tools.</span>
               </div>
-              <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
+              <small className="admin-secondary-text">
                 Disable if the user should be allowed to sign in without MFA.
               </small>
             </div>
 
-            <div style={{ 
-              padding: '0.75rem',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-              color: '#666'
-            }}>
+            <div className="admin-meta-text" style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--admin-chip-muted-bg)' }}>
               <strong>User ID:</strong> {user.id}<br />
               <strong>Created:</strong> {new Date(user.createdAt).toLocaleString()}
             </div>
 
             {error && (
-              <div
-                style={{
-                  padding: '0.75rem',
-                  backgroundColor: '#fee',
-                  border: '1px solid #fcc',
-                  borderRadius: '4px',
-                  color: '#c33',
-                }}
-              >
+              <div className="admin-alert admin-alert-error">
                 {error}
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              <Button
-                type="submit"
-                isLoading={isSaving}
-                variant="primary"
-              >
-                Save Changes
-              </Button>
-            </div>
+            <Button type="submit" isLoading={isSaving} variant="primary">
+              Save Changes
+            </Button>
           </form>
         </div>
 
         {/* Organization Memberships */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>
             Organization Memberships
           </h2>
           
           {memberships.length === 0 ? (
-            <p style={{ color: '#666', textAlign: 'center', padding: '2rem 0' }}>
+            <p className="admin-secondary-text" style={{ textAlign: 'center', padding: '2rem 0' }}>
               This user is not a member of any organizations.
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
               {memberships.map((membership) => (
-                <div
-                  key={membership.id}
-                  style={{
-                    padding: '1rem',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '4px',
-                    backgroundColor: '#f8f9fa',
-                  }}
-                >
-                  <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>
+                <div key={membership.id} className="admin-option-card">
+                  <div style={{ fontWeight: 600 }}>
                     {membership.organizationName}
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                  <div className="admin-secondary-text">
                     <strong>Role:</strong> {membership.role}
                   </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                  <div className="admin-secondary-text">
                     <strong>Joined:</strong> {new Date(membership.createdAt).toLocaleDateString()}
                   </div>
                 </div>
@@ -321,12 +275,7 @@ export const AdminUserDetailPage: React.FC = () => {
         </div>
 
         {/* Password Management Section */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
+        <div className="admin-card">
           <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem' }}>
             Password Management
           </h2>
@@ -394,30 +343,25 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} data-testid="admin-password-set-form">
-      <p style={{ color: '#666', marginBottom: '1rem' }}>
+    <form
+      onSubmit={handleSubmit}
+      data-testid="admin-password-set-form"
+      className="admin-form"
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}
+    >
+      <p className="admin-secondary-text">
         Set a new password for this user. The current password is not required.
       </p>
 
       {error && (
-        <div
-          style={{
-            padding: '0.75rem',
-            backgroundColor: '#fee',
-            border: '1px solid #fcc',
-            borderRadius: '4px',
-            color: '#c33',
-            marginBottom: '1rem',
-          }}
-          data-testid="password-error"
-        >
+        <div className="admin-alert admin-alert-error" data-testid="password-error">
           {error}
         </div>
       )}
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="newPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          New Password:
+      <div>
+        <label htmlFor="newPassword" className="admin-form-label">
+          New Password
         </label>
         <input
           type="password"
@@ -428,24 +372,18 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
           required
           disabled={isSubmitting}
           minLength={8}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            fontSize: '1rem',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-          }}
+          className="admin-input"
+          style={{ maxWidth: '420px' }}
           data-testid="new-password-input"
         />
-        <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
+        <small className="admin-secondary-text" style={{ display: 'block', marginTop: '0.25rem' }}>
           Minimum 8 characters
         </small>
       </div>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
-          Confirm New Password:
+      <div>
+        <label htmlFor="confirmPassword" className="admin-form-label">
+          Confirm New Password
         </label>
         <input
           type="password"
@@ -456,14 +394,8 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
           required
           disabled={isSubmitting}
           minLength={8}
-          style={{
-            width: '100%',
-            maxWidth: '400px',
-            padding: '0.5rem',
-            fontSize: '1rem',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-          }}
+          className="admin-input"
+          style={{ maxWidth: '420px' }}
           data-testid="confirm-password-input"
         />
       </div>

@@ -6,6 +6,7 @@ import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import { QuorumInfo } from '../components/QuorumInfo';
 import { parseApiError } from '../utils/errorUtils';
 import { Card } from '../components/Card';
+import './AdminPage.css';
 import type {
   ProposalDetails,
   UpdateProposalRequest,

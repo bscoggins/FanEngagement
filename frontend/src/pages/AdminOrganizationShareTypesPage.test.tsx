@@ -159,7 +159,7 @@ describe('AdminOrganizationShareTypesPage', () => {
     fireEvent.change(screen.getByLabelText(/voting weight/i), { target: { value: '1' } });
     
     // Submit
-    const submitButton = screen.getByText('Create Share Type', { selector: 'button' });
+    const submitButton = screen.getByRole('button', { name: 'Create Share Type' });
     fireEvent.click(submitButton);
     
     await waitFor(() => {
@@ -257,9 +257,8 @@ describe('AdminOrganizationShareTypesPage', () => {
     fireEvent.change(screen.getByLabelText(/symbol \*/i), { target: { value: 'T' } });
     
     // Submit - now there are two buttons, get the one that's type=submit
-    const submitButtons = screen.getAllByText('Create Share Type');
-    const submitButton = submitButtons.find(btn => (btn as HTMLButtonElement).type === 'submit');
-    fireEvent.click(submitButton!);
+    const submitButton = screen.getByRole('button', { name: 'Create Share Type' });
+    fireEvent.click(submitButton);
     
     await waitFor(() => {
       expect(screen.getAllByText(/invalid share type data/i).length).toBeGreaterThan(0);
@@ -314,13 +313,8 @@ describe('AdminOrganizationShareTypesPage', () => {
     expect(screen.getByText('Create New Share Type')).toBeInTheDocument();
     
     // Cancel
-    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
-    const headerCancelButton = cancelButtons.find((button) =>
-      (button as HTMLButtonElement).classList.contains('admin-button-neutral')
-    );
-
-    expect(headerCancelButton).toBeDefined();
-    fireEvent.click(headerCancelButton!);
+    const closeButton = screen.getByRole('button', { name: 'Close form' });
+    fireEvent.click(closeButton);
     
     expect(screen.queryByText('Create New Share Type')).not.toBeInTheDocument();
   });

@@ -60,11 +60,11 @@ describe('MyAccountPage', () => {
       });
 
       // Should show user info from auth context
-      expect(screen.getByText(/Name:/)).toBeInTheDocument();
+      expect(screen.getByText(/Name/)).toBeInTheDocument();
       expect(screen.getByText('Test User')).toBeInTheDocument();
-      expect(screen.getByText(/Email:/)).toBeInTheDocument();
+      expect(screen.getByText(/Email/)).toBeInTheDocument();
       expect(screen.getByText('user@example.com')).toBeInTheDocument();
-      expect(screen.getByText(/Role:/)).toBeInTheDocument();
+      expect(screen.getByText(/Role/)).toBeInTheDocument();
       expect(screen.getByText('User')).toBeInTheDocument();
 
       // Regular users should not call the API - data comes from auth context
@@ -132,7 +132,7 @@ describe('MyAccountPage', () => {
       });
 
       // createdAt is not available in auth context for regular users
-      expect(screen.queryByText(/Member Since:/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Member Since/)).not.toBeInTheDocument();
     });
   });
 
@@ -159,13 +159,13 @@ describe('MyAccountPage', () => {
       expect(usersApi.getById).toHaveBeenCalledWith('admin-1');
 
       // Should show all user info including Member Since from API
-      expect(screen.getByText(/Name:/)).toBeInTheDocument();
+      expect(screen.getByText(/Name/)).toBeInTheDocument();
       expect(screen.getByText('Admin User')).toBeInTheDocument();
-      expect(screen.getByText(/Email:/)).toBeInTheDocument();
+      expect(screen.getByText(/Email/)).toBeInTheDocument();
       expect(screen.getByText('admin@example.com')).toBeInTheDocument();
-      expect(screen.getByText(/Role:/)).toBeInTheDocument();
+      expect(screen.getByText(/Role/)).toBeInTheDocument();
       expect(screen.getByText('Admin')).toBeInTheDocument();
-      expect(screen.getByText(/Member Since:/)).toBeInTheDocument();
+      expect(screen.getByText(/Member Since/)).toBeInTheDocument();
     });
 
     it('allows admin to edit profile information', async () => {
@@ -199,8 +199,8 @@ describe('MyAccountPage', () => {
       await user.click(editButton);
 
       // Update fields
-      const nameInput = screen.getByLabelText(/Name:/i);
-      const emailInput = screen.getByLabelText(/Email:/i);
+      const nameInput = screen.getByLabelText(/Name/i);
+      const emailInput = screen.getByLabelText(/Email/i);
 
       await user.clear(nameInput);
       await user.type(nameInput, 'Updated Admin');
@@ -278,14 +278,14 @@ describe('MyAccountPage', () => {
       await user.click(screen.getByRole('button', { name: /Edit Profile/i }));
 
       // Verify in edit mode
-      expect(screen.getByLabelText(/Name:/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
 
       // Click cancel
       await user.click(screen.getByRole('button', { name: /Cancel/i }));
 
       // Should be back in view mode
       expect(screen.getByRole('button', { name: /Edit Profile/i })).toBeInTheDocument();
-      expect(screen.queryByLabelText(/Name:/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Name/i)).not.toBeInTheDocument();
     });
 
     it('displays loading state for admin users', () => {
@@ -469,7 +469,7 @@ describe('MyAccountPage', () => {
 
       // Check success notification appears
       await waitFor(() => {
-        expect(screen.getByText('Password changed successfully!')).toBeInTheDocument();
+        expect(screen.getByText('Password updated successfully!')).toBeInTheDocument();
       });
 
       // Form should be cleared

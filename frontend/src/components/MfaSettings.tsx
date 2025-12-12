@@ -107,9 +107,9 @@ export const MfaSettings: React.FC = () => {
 
   if (backupCodes) {
     return (
-      <div style={{ padding: '1.5rem', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '4px', marginTop: '2rem' }}>
+      <div className="admin-card admin-alert admin-alert-warning" style={{ marginTop: '2rem' }}>
         <h3>⚠️ Save Your Backup Codes</h3>
-        <p style={{ marginBottom: '1rem', color: '#856404' }}>
+        <p style={{ marginBottom: '1rem' }}>
           Please save these backup codes in a secure location. You can use them to access your account if you lose your authenticator device.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', marginBottom: '1rem', fontFamily: 'monospace', fontSize: '1.1rem' }}>
@@ -119,18 +119,7 @@ export const MfaSettings: React.FC = () => {
             </div>
           ))}
         </div>
-        <button
-          onClick={handleCloseSetup}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '1rem',
-          }}
-        >
+        <button onClick={handleCloseSetup} className="admin-button admin-button-success">
           I've Saved My Backup Codes
         </button>
       </div>
@@ -139,7 +128,7 @@ export const MfaSettings: React.FC = () => {
 
   if (showSetup && setupData) {
     return (
-      <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px' }}>
+      <div className="admin-card" style={{ marginTop: '2rem' }}>
         <h3>Enable Two-Factor Authentication</h3>
         
         <div style={{ marginTop: '1.5rem' }}>
@@ -158,7 +147,7 @@ export const MfaSettings: React.FC = () => {
           </div>
         </div>
 
-        <form onSubmit={handleEnableMfa}>
+        <form onSubmit={handleEnableMfa} className="admin-form">
           <p style={{ marginBottom: '0.5rem' }}>
             <strong>Step 2:</strong> Enter the 6-digit code from your authenticator app:
           </p>
@@ -169,50 +158,21 @@ export const MfaSettings: React.FC = () => {
             placeholder="000000"
             maxLength={6}
             required
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1.1rem',
-              marginBottom: '1rem',
-              textAlign: 'center',
-              letterSpacing: '0.2rem',
-            }}
+            className="admin-input"
+            style={{ textAlign: 'center', letterSpacing: '0.2rem' }}
           />
           
           {error && (
-            <div style={{ padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33', marginBottom: '1rem' }}>
+            <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem' }}>
               {error}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              type="submit"
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button type="submit" className="admin-button admin-button-success">
               Enable MFA
             </button>
-            <button
-              type="button"
-              onClick={handleCloseSetup}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
+            <button type="button" onClick={handleCloseSetup} className="admin-button admin-button-outline">
               Cancel
             </button>
           </div>
@@ -223,64 +183,39 @@ export const MfaSettings: React.FC = () => {
 
   if (showDisable) {
     return (
-      <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '4px' }}>
+      <div className="admin-card admin-alert admin-alert-warning" style={{ marginTop: '2rem' }}>
         <h3>Disable Two-Factor Authentication</h3>
-        <p style={{ marginTop: '1rem', color: '#856404' }}>
+        <p style={{ marginTop: '1rem' }}>
           Enter your 6-digit authenticator code or a backup code to disable MFA.
         </p>
 
-        <form onSubmit={handleDisableMfa}>
+        <form onSubmit={handleDisableMfa} className="admin-form">
           <input
             type="text"
             value={disableCode}
             onChange={(e) => setDisableCode(e.target.value)}
             placeholder="Enter code"
             required
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1.1rem',
-              marginTop: '1rem',
-              marginBottom: '1rem',
-            }}
+            className="admin-input"
           />
 
           {error && (
-            <div style={{ padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33', marginBottom: '1rem' }}>
+            <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem' }}>
               {error}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              type="submit"
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button type="submit" className="admin-button admin-button-danger">
               Disable MFA
             </button>
             <button
               type="button"
+              className="admin-button admin-button-outline"
               onClick={() => {
                 setShowDisable(false);
                 setDisableCode('');
                 setError('');
-              }}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
               }}
             >
               Cancel
@@ -292,7 +227,7 @@ export const MfaSettings: React.FC = () => {
   }
 
   return (
-    <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px' }}>
+    <div className="admin-card" style={{ marginTop: '2rem' }}>
       <h3>Two-Factor Authentication</h3>
       
       <div style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
@@ -308,31 +243,11 @@ export const MfaSettings: React.FC = () => {
       </div>
 
       {!mfaEnabled ? (
-        <button
-          onClick={handleSetupMfa}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
+        <button onClick={handleSetupMfa} className="admin-button admin-button-primary">
           Enable Two-Factor Authentication
         </button>
       ) : (
-        <button
-          onClick={() => setShowDisable(true)}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
+        <button onClick={() => setShowDisable(true)} className="admin-button admin-button-danger">
           Disable Two-Factor Authentication
         </button>
       )}

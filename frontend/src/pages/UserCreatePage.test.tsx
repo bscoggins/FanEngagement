@@ -27,13 +27,15 @@ describe('UserCreatePage', () => {
     }));
   });
 
-  const renderUserCreatePage = () => {
+  const renderUserCreatePage = (initialPath = '/users/new') => {
     return render(
-      <MemoryRouter initialEntries={['/users/new']}>
+      <MemoryRouter initialEntries={[initialPath]}>
         <AuthProvider>
           <Routes>
             <Route path="/users/new" element={<UserCreatePage />} />
+            <Route path="/admin/users/new" element={<UserCreatePage />} />
             <Route path="/users" element={<div>Users List Page</div>} />
+            <Route path="/admin/users" element={<div>Admin Users List Page</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -85,6 +87,37 @@ describe('UserCreatePage', () => {
     });
   });
 
+  it('redirects to admin users list when rendered within admin route', async () => {
+    const mockUser: User = {
+      id: 'new-user-id',
+      email: 'adminnew@example.com',
+      displayName: 'Admin New User',
+      role: 'User',
+      createdAt: '2024-01-03T00:00:00Z',
+    };
+
+    vi.mocked(usersApi.create).mockResolvedValueOnce(mockUser);
+
+    renderUserCreatePage('/admin/users/new');
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/email/i), 'adminnew@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/display name/i), 'Admin New User');
+
+    await user.click(screen.getByRole('button', { name: /create user/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Admin Users List Page')).toBeInTheDocument();
+    });
+
+    expect(usersApi.create).toHaveBeenCalledWith({
+      email: 'adminnew@example.com',
+      password: 'password123',
+      displayName: 'Admin New User',
+    });
+  });
+
   it('displays error message on validation error (400)', async () => {
     const mockError = {
       response: {
@@ -133,7 +166,7 @@ describe('UserCreatePage', () => {
     
     // Wait for error message
     await waitFor(() => {
-      expect(screen.getByText(/failed to create user/i)).toBeInTheDocument();
+      expect(screen.getByText(/network error/i)).toBeInTheDocument();
     });
   });
 

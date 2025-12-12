@@ -160,7 +160,7 @@ export const AdminUsersPage: React.FC = () => {
         <h1 data-testid="users-heading">User Management</h1>
         <Button
           variant="primary"
-          onClick={() => navigate('/users/new')}
+          onClick={() => navigate('/admin/users/new')}
         >
           Create User
         </Button>
