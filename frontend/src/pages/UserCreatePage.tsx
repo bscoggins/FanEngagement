@@ -85,7 +85,7 @@ export const UserCreatePage: React.FC = () => {
         <form onSubmit={handleSubmit} className="admin-form" data-testid="create-user-form">
           <div className="admin-form-field">
             <label htmlFor="email" className="admin-form-label">
-              Email *
+              Email <span className="required-indicator">*</span>
             </label>
             <input
               id="email"
@@ -94,6 +94,7 @@ export const UserCreatePage: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              aria-required="true"
               maxLength={256}
               autoComplete="email"
               disabled={isLoading}
@@ -103,7 +104,7 @@ export const UserCreatePage: React.FC = () => {
 
           <div className="admin-form-field">
             <label htmlFor="password" className="admin-form-label">
-              Password *
+              Password <span className="required-indicator">*</span>
             </label>
             <input
               id="password"
@@ -112,6 +113,7 @@ export const UserCreatePage: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              aria-required="true"
               maxLength={128}
               autoComplete="new-password"
               disabled={isLoading}
@@ -130,7 +132,7 @@ export const UserCreatePage: React.FC = () => {
 
           <div className="admin-form-field">
             <label htmlFor="displayName" className="admin-form-label">
-              Display Name *
+              Display Name <span className="required-indicator">*</span>
             </label>
             <input
               id="displayName"
@@ -139,6 +141,7 @@ export const UserCreatePage: React.FC = () => {
               value={formData.displayName}
               onChange={handleChange}
               required
+              aria-required="true"
               maxLength={120}
               autoComplete="name"
               disabled={isLoading}
