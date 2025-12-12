@@ -50,7 +50,7 @@ export const Radio = React.forwardRef<HTMLInputElement, RadioProps>((props, ref)
         <span className="choice-label">
           {label}
           {props.required && (
-            <span className="form-field__required" aria-label="required field">
+            <span className="form-field__required" aria-hidden="true">
               *
             </span>
           )}
