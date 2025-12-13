@@ -8,30 +8,32 @@ interface ToastProps {
 }
 
 const getAnimationDirection = (position: Toast['position']) => {
-  if (position.includes('left')) {
-    return 'left';
+  switch (position) {
+    case 'top-left':
+    case 'bottom-left':
+      return 'left';
+    case 'top-right':
+    case 'bottom-right':
+      return 'right';
+    case 'top-center':
+      return 'top';
+    case 'bottom-center':
+      return 'bottom';
+    default:
+      return 'right';
   }
-
-  if (position.includes('right')) {
-    return 'right';
-  }
-
-  return position.startsWith('top') ? 'top' : 'bottom';
 };
 
 export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
-  const role = toast.type === 'error' ? 'alert' : 'status';
+  const isError = toast.type === 'error';
   const direction = getAnimationDirection(toast.position);
 
   return (
     <div
       className={`toast toast--${toast.type}`}
-      role={role}
-      aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-      aria-atomic="true"
+      role={isError ? 'alert' : undefined}
       data-position={toast.position}
       data-direction={direction}
-      tabIndex={0}
       data-testid={`toast-${toast.type}`}
     >
       <div className="toast__body">
@@ -44,7 +46,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
       >
-        ×
+        <span aria-hidden="true">×</span>
       </button>
     </div>
   );

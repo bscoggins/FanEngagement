@@ -16,10 +16,10 @@ export interface Notification extends Toast {}
 
 interface NotificationContextType {
   notifications: Notification[];
-  showSuccess: (message: string, options?: ToastOptions) => string;
-  showError: (message: string, options?: ToastOptions) => string;
-  showInfo: (message: string, options?: ToastOptions) => string;
-  showWarning: (message: string, options?: ToastOptions) => string;
+  showSuccess: (message: string, options?: ToastOptions) => void;
+  showError: (message: string, options?: ToastOptions) => void;
+  showInfo: (message: string, options?: ToastOptions) => void;
+  showWarning: (message: string, options?: ToastOptions) => void;
   removeNotification: (id: string) => void;
 }
 
@@ -28,14 +28,29 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 );
 
 export const useNotifications = (): NotificationContextType => {
-  const { toasts, showSuccess, showError, showInfo, showWarning, dismissToast } = useToast();
+  const {
+    toasts,
+    showSuccess: toastSuccess,
+    showError: toastError,
+    showInfo: toastInfo,
+    showWarning: toastWarning,
+    dismissToast,
+  } = useToast();
 
   return {
     notifications: toasts,
-    showSuccess,
-    showError,
-    showInfo,
-    showWarning,
+    showSuccess: (message: string, options?: ToastOptions) => {
+      toastSuccess(message, options);
+    },
+    showError: (message: string, options?: ToastOptions) => {
+      toastError(message, options);
+    },
+    showInfo: (message: string, options?: ToastOptions) => {
+      toastInfo(message, options);
+    },
+    showWarning: (message: string, options?: ToastOptions) => {
+      toastWarning(message, options);
+    },
     removeNotification: dismissToast,
   };
 };

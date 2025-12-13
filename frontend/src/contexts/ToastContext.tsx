@@ -34,17 +34,27 @@ const DEFAULT_POSITION: ToastPosition = 'top-right';
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
-const generateId = () => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const fallbackIdCounter = useRef(0);
+
+  const generateId = useCallback(() => {
+    if (typeof crypto !== 'undefined') {
+      if ('randomUUID' in crypto) {
+        return crypto.randomUUID();
+      }
+
+      if (typeof crypto.getRandomValues === 'function') {
+        const buffer = new Uint32Array(4);
+        crypto.getRandomValues(buffer);
+        return Array.from(buffer, (value) => value.toString(16).padStart(8, '0')).join('-');
+      }
+    }
+
+    fallbackIdCounter.current += 1;
+    return `${Date.now().toString(16)}-${fallbackIdCounter.current.toString(16).padStart(4, '0')}-${Math.random().toString(16).slice(2)}`;
+  }, []);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -79,7 +89,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       return id;
     },
-    [dismissToast]
+    [dismissToast, generateId]
   );
 
   useEffect(() => {

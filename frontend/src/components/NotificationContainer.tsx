@@ -6,6 +6,8 @@ const POSITIONS: ToastPosition[] = ['top-right', 'top-left', 'bottom-right', 'bo
 
 export const NotificationContainer: React.FC = () => {
   const { toasts, dismissToast } = useToast();
+  const hasErrorToast = useMemo(() => toasts.some((toast) => toast.type === 'error'), [toasts]);
+  const ariaLive = hasErrorToast ? 'assertive' : 'polite';
 
   const groupedToasts = useMemo(() => {
     const groups = new Map<ToastPosition, typeof toasts>();
@@ -15,8 +17,6 @@ export const NotificationContainer: React.FC = () => {
       const stack = groups.get(toast.position);
       if (stack) {
         stack.push(toast);
-      } else {
-        groups.set(toast.position, [toast]);
       }
     });
 
@@ -28,7 +28,7 @@ export const NotificationContainer: React.FC = () => {
   }
 
   return (
-    <div className="toast-portal" role="status" aria-live="polite" aria-atomic="true">
+    <div className="toast-portal" role="region" aria-label="Notifications" aria-live={ariaLive} aria-atomic="true">
       {POSITIONS.map((position) => {
         const stack = groupedToasts.get(position);
         if (!stack || stack.length === 0) {
