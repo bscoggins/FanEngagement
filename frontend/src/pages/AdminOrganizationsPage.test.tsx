@@ -91,7 +91,29 @@ describe('AdminOrganizationsPage', () => {
     expect(screen.getByText('Test Organization 1')).toBeInTheDocument();
     expect(screen.getByText('Test description 1')).toBeInTheDocument();
     expect(screen.getByText('Test Organization 2')).toBeInTheDocument();
-    expect(screen.getByText('No description')).toBeInTheDocument();
+  });
+
+  it('conditionally renders descriptions based on presence', async () => {
+    vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
+    
+    renderAdminOrganizationsPage();
+    
+    await waitFor(() => {
+      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+    });
+    
+    // Verify description is shown when it exists (org-1)
+    expect(screen.getByText('Test description 1')).toBeInTheDocument();
+    
+    // Verify description is not rendered when it doesn't exist (org-2)
+    // Since org-2 has undefined description, no description text should appear for it
+    const org2Name = screen.getByText('Test Organization 2');
+    const org2Container = org2Name.closest('td');
+    expect(org2Container).toBeInTheDocument();
+    
+    // The description element should only appear once (for org-1), not twice
+    const descriptionElements = screen.queryAllByText(/test description/i);
+    expect(descriptionElements).toHaveLength(1);
   });
 
   it('displays action buttons for each organization', async () => {
@@ -104,7 +126,7 @@ describe('AdminOrganizationsPage', () => {
     });
     
     // Check Edit links
-    const editButtons = screen.getAllByText('Edit');
+    const editButtons = screen.getAllByText('Manage');
     expect(editButtons).toHaveLength(2);
     // Now they are buttons, not links
     expect(editButtons[0]).toBeInTheDocument();
@@ -176,7 +198,7 @@ describe('AdminOrganizationsPage', () => {
       expect(screen.queryByLabelText(/name/i)).not.toBeInTheDocument();
       
       // Click create button
-      const createButton = screen.getByRole('button', { name: /\+ create organization/i });
+      const createButton = screen.getByRole('button', { name: /create organization/i });
       await user.click(createButton);
       
       // Form should be visible
@@ -221,7 +243,7 @@ describe('AdminOrganizationsPage', () => {
       });
       
       // Open create form
-      const createButton = screen.getByRole('button', { name: /\+ create organization/i });
+      const createButton = screen.getByRole('button', { name: /create organization/i });
       await user.click(createButton);
       
       // Fill form
@@ -261,7 +283,7 @@ describe('AdminOrganizationsPage', () => {
       });
       
       // Open create form
-      const createButton = screen.getByRole('button', { name: /\+ create organization/i });
+      const createButton = screen.getByRole('button', { name: /create organization/i });
       await user.click(createButton);
       
       // Fill and submit form
@@ -291,7 +313,7 @@ describe('AdminOrganizationsPage', () => {
       });
       
       // Open create form
-      const createButton = screen.getByRole('button', { name: /\+ create organization/i });
+      const createButton = screen.getByRole('button', { name: /create organization/i });
       await user.click(createButton);
       
       // Try to submit without filling name (browser validation will prevent this)
@@ -317,7 +339,7 @@ describe('AdminOrganizationsPage', () => {
       });
       
       // Open create form and fill
-      const createButton = screen.getByRole('button', { name: /\+ create organization/i });
+      const createButton = screen.getByRole('button', { name: /create organization/i });
       await user.click(createButton);
       
       const nameInput = screen.getByLabelText(/name/i);

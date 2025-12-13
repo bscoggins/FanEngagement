@@ -26,13 +26,6 @@
   background-color: var(--color-neutral-100);
 }
 
-/* Dark mode overrides for sticky header */
-@media (prefers-color-scheme: dark) {
-  .table-container--sticky-header .data-table thead {
-    background-color: var(--color-surface-elevated);
-  }
-}
-
 body.theme-dark .table-container--sticky-header .data-table thead {
   background-color: var(--color-surface-elevated);
 }
@@ -349,65 +342,7 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 }
 
 /* ===== Dark Mode Support ===== */
-/* 
- * ⚠️ WARNING: DUAL BLOCK MAINTENANCE REQUIRED ⚠️
- * 
- * Dark mode styles are intentionally duplicated in TWO separate blocks:
- * 1. @media (prefers-color-scheme: dark) - for system preference
- * 2. body.theme-dark - for manual theme toggle
- * 
- * ANY changes to dark mode styles MUST be duplicated in BOTH blocks below.
- * Failure to keep both blocks in sync will result in inconsistent dark mode behavior.
- * 
- * This duplication ensures dark mode works consistently across all user preference scenarios.
- */
-@media (prefers-color-scheme: dark) {
-  .data-table thead {
-    background-color: var(--color-surface-elevated);
-    border-bottom-color: var(--color-border-dark);
-  }
-
-  .data-table tbody tr {
-    border-bottom-color: var(--color-border-dark);
-  }
-
-  .data-table tbody tr:hover {
-    background-color: var(--color-overlay-subtle);
-  }
-
-  .data-table th[role="button"]:hover {
-    background-color: var(--color-overlay-light);
-  }
-
-  .data-table .status-badge.neutral {
-    background-color: var(--color-neutral-700);
-  }
-
-  .table-action-button.secondary {
-    background-color: var(--color-neutral-700);
-    color: var(--color-text-inverse);
-  }
-
-  .table-action-button.secondary:hover {
-    background-color: var(--color-neutral-600);
-  }
-
-  @media (max-width: 768px) {
-    .table-container--card .data-table tbody tr {
-      background-color: var(--color-surface-elevated);
-      border-color: var(--color-border-dark);
-    }
-
-    .table-container--card .data-table tbody tr:hover {
-      background-color: var(--color-overlay-light);
-    }
-
-    .table-container--card .data-table td {
-      border-bottom-color: var(--color-border-dark);
-    }
-  }
-}
-
+/* Dark mode styling is driven solely by the explicit `.theme-dark` class. */
 body.theme-dark .data-table thead {
   background-color: var(--color-surface-elevated);
   border-bottom-color: var(--color-border-dark);

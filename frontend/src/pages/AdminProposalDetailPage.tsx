@@ -7,6 +7,7 @@ import { QuorumInfo } from '../components/QuorumInfo';
 import { parseApiError } from '../utils/errorUtils';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
+import './AdminPage.css';
 import type {
   ProposalDetails,
   UpdateProposalRequest,

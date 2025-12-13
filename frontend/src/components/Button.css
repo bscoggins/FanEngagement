@@ -313,14 +313,20 @@
 /* Combines both prefers-color-scheme and manual theme toggle */
 @media (prefers-color-scheme: dark) {
   .btn--secondary {
-    background-color: var(--color-neutral-700);
+    background-color: rgba(255, 255, 255, 0.12);
     color: var(--color-text-inverse);
-    border-color: var(--color-neutral-600);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: var(--shadow-sm);
   }
   
   .btn--secondary:hover:not(:disabled) {
-    background-color: var(--color-neutral-600);
-    border-color: var(--color-neutral-500);
+    background-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  .btn--secondary:active:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.4);
   }
   
   .btn--ghost {
@@ -345,31 +351,39 @@
 
 /* Manual theme toggle support */
 body.theme-dark .btn--secondary {
-  background-color: var(--color-neutral-700);
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--color-text-inverse);
-  border-color: var(--color-neutral-600);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 body.theme-dark .btn--secondary:hover:not(:disabled) {
-  background-color: var(--color-neutral-600);
-  border-color: var(--color-neutral-500);
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.theme-dark .btn--secondary:active:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.42);
 }
 
 body.theme-dark .btn--ghost {
-  color: var(--color-text-inverse);
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 body.theme-dark .btn--ghost:hover:not(:disabled) {
-  background-color: var(--color-neutral-800);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 body.theme-dark .btn--outline {
-  color: var(--color-primary-400);
-  border-color: var(--color-primary-400);
+  color: var(--color-primary-300);
+  border-color: rgba(59, 130, 246, 0.6);
 }
 
 body.theme-dark .btn--outline:hover:not(:disabled) {
-  background-color: var(--color-primary-alpha-10);
-  color: var(--color-primary-300);
-  border-color: var(--color-primary-300);
+  background-color: rgba(59, 130, 246, 0.12);
+  color: var(--color-primary-100);
+  border-color: rgba(59, 130, 246, 0.85);
 }

@@ -49,7 +49,7 @@ echo "Running tests..."
 dotnet test backend/FanEngagement.Tests/FanEngagement.Tests.csproj \
   --configuration Release \
   --no-build \
-  $VERBOSE \
+  ${VERBOSE:---verbosity quiet} \
   $FILTER
 
 echo ""

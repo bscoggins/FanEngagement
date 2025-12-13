@@ -8,6 +8,7 @@ import { ErrorMessage } from '../components/ErrorMessage';
 import { MfaSettings } from '../components/MfaSettings';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import '../pages/AdminPage.css';
 import type { UserProfile, ThemePreference } from '../types/api';
 
 export const MyAccountPage: React.FC = () => {
@@ -138,126 +139,106 @@ export const MyAccountPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>My Account</h1>
+    <div className="admin-page" style={{ maxWidth: '960px', margin: '0 auto' }}>
+      <div className="admin-page-header">
+        <div className="admin-page-title-group">
+          <h1>My Account</h1>
+          <div className="admin-page-subtitle">Manage your profile, theme, and security preferences.</div>
+        </div>
+      </div>
 
       {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            border: '1px solid #f5c6cb',
-            borderRadius: '4px',
-            marginBottom: '1rem',
-          }}
-        >
+        <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem' }}>
           {error}
         </div>
       )}
 
-      {!isEditing ? (
-        <div>
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Name:</strong> {user.displayName}
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Email:</strong> {user.email}
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <strong>Role:</strong> {user.role}
-            </div>
-            {user.createdAt && (
-              <div style={{ marginBottom: '1rem' }}>
-                <strong>Member Since:</strong>{' '}
-                {new Date(user.createdAt).toLocaleDateString()}
+      <div className="admin-card">
+        {!isEditing ? (
+          <div>
+            <div className="admin-info-grid">
+              <div>
+                <div className="text-label">Name</div>
+                <div className="text-body-large">{user.displayName}</div>
               </div>
+              <div>
+                <div className="text-label">Email</div>
+                <div className="text-body-large">{user.email}</div>
+              </div>
+              <div>
+                <div className="text-label">Role</div>
+                <div className="text-body-large">{user.role}</div>
+              </div>
+              {user.createdAt && (
+                <div>
+                  <div className="text-label">Member Since</div>
+                  <div className="text-body-large">{new Date(user.createdAt).toLocaleDateString()}</div>
+                </div>
+              )}
+            </div>
+
+            {isAdmin ? (
+              <Button onClick={() => setIsEditing(true)} variant="primary">
+                Edit Profile
+              </Button>
+            ) : (
+              <p className="admin-secondary-text" style={{ fontStyle: 'italic' }}>
+                Contact an administrator to update your profile information.
+              </p>
             )}
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="admin-form">
+            <Input
+              type="text"
+              id="displayName"
+              label="Name"
+              value={formData.displayName}
+              onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+              required
+              className="admin-input"
+            />
 
-          {isAdmin ? (
-            <Button
-              onClick={() => setIsEditing(true)}
-              variant="primary"
-            >
-              Edit Profile
-            </Button>
-          ) : (
-            <p style={{ color: '#6c757d', fontStyle: 'italic' }}>
-              Contact an administrator to update your profile information.
-            </p>
-          )}
-        </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <Input
-                  type="text"
-                  id="displayName"
-                  label="Name:"
-                  value={formData.displayName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, displayName: e.target.value })
-                  }
-                  required
-                />
-              </div>
+            <Input
+              type="email"
+              id="email"
+              label="Email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              className="admin-input"
+            />
 
-              <div style={{ marginBottom: '1rem' }}>
-                <Input
-                  type="email"
-                  id="email"
-                  label="Email:"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                />
-              </div>
+            <div className="admin-secondary-text" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+              <strong>Role:</strong> {user.role}{' '}
+              {!isAdmin && <span>(Cannot be changed)</span>}
+            </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <strong>Role:</strong> {user.role}{' '}
-            {!isAdmin && <span style={{ color: '#6c757d' }}>(Cannot be changed)</span>}
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Button
-              type="submit"
-              variant="primary"
-            >
-              Save Changes
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setFormData({
-                  displayName: user.displayName,
-                  email: user.email,
-                });
-                setError('');
-              }}
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Button type="submit" variant="primary">
+                Save Changes
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setIsEditing(false);
+                  setFormData({
+                    displayName: user.displayName,
+                    email: user.email,
+                  });
+                  setError('');
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        )}
+      </div>
 
       {/* Theme Preference Section */}
-      <section
-        style={{
-          marginTop: '3rem',
-          padding: '2rem',
-          borderRadius: '12px',
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border-subtle)',
-          boxShadow: 'var(--shadow-md)',
-        }}
-      >
+      <section className="admin-card">
         <div
           style={{
             display: 'flex',
@@ -337,10 +318,10 @@ export const MyAccountPage: React.FC = () => {
       </section>
 
       {/* Password Change Section */}
-      <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #ddd' }}>
-        <h2 style={{ marginBottom: '1.5rem' }}>Change Password</h2>
+      <section className="admin-card">
+        <h2 style={{ marginBottom: '1rem' }}>Change Password</h2>
         <PasswordChangeForm />
-      </div>
+      </section>
 
       {/* MFA Settings - Only for Admin users */}
       {isAdmin && <MfaSettings />}
@@ -368,13 +349,11 @@ const PasswordChangeForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate passwords match
     if (formData.newPassword !== formData.confirmPassword) {
       setError('New passwords do not match');
       return;
     }
 
-    // Validate password length
     if (formData.newPassword.length < 8) {
       setError('New password must be at least 8 characters long');
       return;
@@ -389,15 +368,9 @@ const PasswordChangeForm: React.FC = () => {
         newPassword: formData.newPassword,
       });
 
-      showSuccess('Password changed successfully!');
-      
-      // Clear form
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch (err: any) {
+      showSuccess('Password updated successfully!');
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
       console.error('Failed to change password:', err);
       const errorMessage = parseApiError(err);
       setError(errorMessage);
@@ -408,19 +381,9 @@ const PasswordChangeForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} data-testid="password-change-form">
+    <form onSubmit={handleSubmit} className="admin-form" data-testid="password-change-form">
       {error && (
-        <div
-          style={{
-            padding: '1rem',
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            border: '1px solid #f5c6cb',
-            borderRadius: '4px',
-            marginBottom: '1rem',
-          }}
-          data-testid="password-error"
-        >
+        <div className="admin-alert admin-alert-error" data-testid="password-error" style={{ marginBottom: '1rem' }}>
           {error}
         </div>
       )}
@@ -435,6 +398,7 @@ const PasswordChangeForm: React.FC = () => {
           onChange={handleChange}
           required
           disabled={isSubmitting}
+          className="admin-input"
           data-testid="current-password-input"
         />
       </div>
@@ -448,10 +412,11 @@ const PasswordChangeForm: React.FC = () => {
           value={formData.newPassword}
           onChange={handleChange}
           required
-          disabled={isSubmitting}
           minLength={8}
           helperText="Minimum 8 characters"
           data-testid="new-password-input"
+          disabled={isSubmitting}
+          className="admin-input"
         />
       </div>
 
@@ -466,17 +431,19 @@ const PasswordChangeForm: React.FC = () => {
           required
           disabled={isSubmitting}
           minLength={8}
+          className="admin-input"
           data-testid="confirm-password-input"
         />
       </div>
 
       <Button
         type="submit"
-        isLoading={isSubmitting}
         variant="primary"
+        isLoading={isSubmitting}
+        disabled={isSubmitting}
         testId="change-password-button"
       >
-        Change Password
+        {isSubmitting ? 'Changing...' : 'Change Password'}
       </Button>
     </form>
   );

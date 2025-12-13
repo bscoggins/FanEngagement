@@ -7,9 +7,10 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
-import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Checkbox } from '../components/Checkbox';
+import { Button } from '../components/Button';
+import './AdminPage.css';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
@@ -196,13 +197,13 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
           </div>
         </div>
         <div className="admin-page-actions">
-          <button
+          <Button
             type="button"
+            variant={showForm ? 'ghost' : 'primary'}
             onClick={showForm ? handleCancel : handleCreateNew}
-            className={`admin-button ${showForm ? 'admin-button-neutral' : 'admin-button-success'}`}
           >
-            {showForm ? 'Cancel' : 'Create Share Type'}
-          </button>
+            {showForm ? 'Close form' : 'Create Share Type'}
+          </Button>
         </div>
       </div>
 
@@ -213,12 +214,10 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       )}
 
       {showForm && (
-        <Card style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>
-            {editingId ? 'Edit Share Type' : 'Create New Share Type'}
-          </h2>
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="admin-card" style={{ marginBottom: 'var(--spacing-6)' }}>
+          <h2 style={{ marginTop: 0 }}>{editingId ? 'Edit Share Type' : 'Create New Share Type'}</h2>
+          <form onSubmit={handleSubmit} className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-5)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 'var(--spacing-4)' }}>
               <div>
                 <Input
                   type="text"
@@ -228,6 +227,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
+                  className="admin-input"
                 />
               </div>
 
@@ -240,12 +240,13 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   value={formData.symbol}
                   onChange={handleChange}
                   required
+                  className="admin-input"
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="description" className="form-field__label">
+              <label htmlFor="description" className="form-field__label admin-form-label">
                 Description
               </label>
               <textarea
@@ -253,12 +254,12 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows={2}
-                className="form-control form-control--textarea"
+                rows={3}
+                className="form-control form-control--textarea admin-textarea"
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'var(--spacing-4)' }}>
               <div>
                 <Input
                   type="number"
@@ -270,6 +271,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   required
                   min="0"
                   step="0.01"
+                  className="admin-input"
                 />
               </div>
 
@@ -284,6 +286,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                   min="0"
                   step="0.01"
                   helperText="Leave blank for unlimited supply."
+                  className="admin-input"
                 />
               </div>
 
@@ -299,15 +302,13 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="admin-button admin-button-success"
-            >
-              {isSaving ? 'Saving...' : (editingId ? 'Update Share Type' : 'Create Share Type')}
-            </button>
+            <div>
+              <Button type="submit" variant="primary" isLoading={isSaving} disabled={isSaving}>
+                {isSaving ? 'Saving...' : editingId ? 'Update Share Type' : 'Create Share Type'}
+              </Button>
+            </div>
           </form>
-        </Card>
+        </div>
       )}
 
       {shareTypes.length === 0 ? (
@@ -337,35 +338,28 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                     {shareType.maxSupply !== null && shareType.maxSupply !== undefined ? shareType.maxSupply : <em style={{ color: 'var(--color-text-tertiary)' }}>Unlimited</em>}
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <span
-                      style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '12px',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        backgroundColor: shareType.isTransferable ? 'var(--color-success-50)' : 'var(--color-error-50)',
-                        color: shareType.isTransferable ? 'var(--color-success-700)' : 'var(--color-error-700)',
-                      }}
-                    >
+                    <span className={`admin-pill ${shareType.isTransferable ? 'admin-pill-success' : 'admin-pill-danger'}`}>
                       {shareType.isTransferable ? 'Yes' : 'No'}
                     </span>
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <div className="admin-table-actions">
-                      <button
+                      <Button
                         type="button"
-                        className="admin-button admin-button-primary"
+                        size="sm"
+                        variant="primary"
                         onClick={() => handleEdit(shareType)}
                       >
                         Edit
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="admin-button admin-button-outline"
-                        onClick={() => handleCancel()}
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCancel}
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

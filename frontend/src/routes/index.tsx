@@ -170,6 +170,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'users/new',
+        element: (
+          <AdminRoute>
+            <UserCreatePage />
+          </AdminRoute>
+        ),
+      },
+      {
         path: 'users/:userId',
         element: (
           <AdminRoute>

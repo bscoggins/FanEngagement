@@ -38,53 +38,41 @@ export const RESOURCE_TYPES: AuditResourceType[] = [
 ];
 
 /**
- * Get styling for outcome badges
+ * Get class names for outcome badges with theme-aware styling
  */
-export const getOutcomeBadgeStyle = (outcome: AuditOutcome): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    display: 'inline-block',
-  };
-
+export const getOutcomeBadgeClass = (outcome: AuditOutcome): string => {
   switch (outcome) {
     case 'Success':
-      return { ...baseStyle, backgroundColor: '#d4edda', color: '#155724' };
+      return 'admin-badge admin-badge--success';
     case 'Failure':
-      return { ...baseStyle, backgroundColor: '#f8d7da', color: '#721c24' };
+      return 'admin-badge admin-badge--danger';
     case 'Denied':
-      return { ...baseStyle, backgroundColor: '#fff3cd', color: '#856404' };
+      return 'admin-badge admin-badge--warning';
     case 'Partial':
-      return { ...baseStyle, backgroundColor: '#d1ecf1', color: '#0c5460' };
+      return 'admin-badge admin-badge--info';
     default:
-      return { ...baseStyle, backgroundColor: '#e9ecef', color: '#495057' };
+      return 'admin-badge admin-badge--muted';
   }
 };
 
 /**
- * Get styling for action type badges
+ * Get class names for action type badges
  */
-export const getActionBadgeStyle = (actionType: AuditActionType): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.25rem 0.5rem',
-    borderRadius: '4px',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    display: 'inline-block',
-  };
-
-  if (actionType === 'Created') {
-    return { ...baseStyle, backgroundColor: '#d4edda', color: '#155724' };
-  } else if (actionType === 'Updated') {
-    return { ...baseStyle, backgroundColor: '#d1ecf1', color: '#0c5460' };
-  } else if (actionType === 'Deleted') {
-    return { ...baseStyle, backgroundColor: '#f8d7da', color: '#721c24' };
-  } else if (actionType === 'AuthorizationDenied') {
-    return { ...baseStyle, backgroundColor: '#fff3cd', color: '#856404' };
-  } else {
-    return { ...baseStyle, backgroundColor: '#e9ecef', color: '#495057' };
+export const getActionBadgeClass = (actionType: AuditActionType): string => {
+  switch (actionType) {
+    case 'Created':
+      return 'admin-badge admin-badge--success';
+    case 'Updated':
+    case 'AdminDataSeeded':
+    case 'AdminDataReset':
+    case 'AdminDataCleanup':
+      return 'admin-badge admin-badge--info';
+    case 'Deleted':
+      return 'admin-badge admin-badge--danger';
+    case 'AuthorizationDenied':
+      return 'admin-badge admin-badge--warning';
+    default:
+      return 'admin-badge admin-badge--muted';
   }
 };
 

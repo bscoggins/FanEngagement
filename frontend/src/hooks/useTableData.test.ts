@@ -214,6 +214,9 @@ describe('useTableData', () => {
         searchQuery: 'smith',
         searchFields: (user) => [user.displayName, user.email],
         initialSortConfig: { key: 'name', direction: 'asc' },
+        customSortFields: {
+          name: (user) => user.displayName.toLowerCase(),
+        },
       })
     );
 
@@ -230,6 +233,9 @@ describe('useTableData', () => {
           searchQuery,
           searchFields: (user) => [user.displayName, user.email],
           initialSortConfig: { key: 'name', direction: 'asc' },
+          customSortFields: {
+            name: (user) => user.displayName.toLowerCase(),
+          },
           pageSize: 2,
         }),
       { initialProps: { searchQuery: '' } }
@@ -299,6 +305,7 @@ describe('useTableData', () => {
     });
 
     it('should handle null/undefined values in generic sort', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       interface TestData {
         id: string;
         name: string | null;
@@ -327,9 +334,11 @@ describe('useTableData', () => {
       expect(result.current.sortedData[1].name).toBe('Bob');
       expect(result.current.sortedData[2].name).toBe(null);
       expect(result.current.sortedData[3].name).toBe(null);
+      consoleWarnSpy.mockRestore();
     });
 
     it('should handle generic sort for non-string types', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       interface TestData {
         id: string;
         priority: number;
@@ -357,9 +366,11 @@ describe('useTableData', () => {
       expect(result.current.sortedData[1].priority).toBe(2);
       expect(result.current.sortedData[2].priority).toBe(3);
       expect(result.current.sortedData[3].priority).toBe(5);
+      consoleWarnSpy.mockRestore();
     });
 
     it('should handle both null values correctly', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       interface TestData {
         id: string;
         value: string | null;
@@ -385,9 +396,11 @@ describe('useTableData', () => {
       expect(result.current.sortedData[0].value).toBe('value1');
       expect(result.current.sortedData[1].value).toBe(null);
       expect(result.current.sortedData[2].value).toBe(null);
+      consoleWarnSpy.mockRestore();
     });
 
     it('should convert strings to lowercase for case-insensitive sorting', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       interface TestData {
         id: string;
         name: string;
@@ -413,6 +426,7 @@ describe('useTableData', () => {
       expect(result.current.sortedData[0].name).toBe('Apple');
       expect(result.current.sortedData[1].name).toBe('banana');
       expect(result.current.sortedData[2].name).toBe('zebra');
+      consoleWarnSpy.mockRestore();
     });
   });
 });

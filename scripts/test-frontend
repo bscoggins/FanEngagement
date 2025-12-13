@@ -47,7 +47,7 @@ fi
 
 echo "Running tests..."
 # shellcheck disable=SC2086
-npm test -- $WATCH $COVERAGE
+npm test -- $WATCH $COVERAGE --reporter=dot
 
 echo ""
 echo "✓ Frontend tests complete!"
