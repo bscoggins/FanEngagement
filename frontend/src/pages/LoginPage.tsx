@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useRoleBasedNavigation } from '../hooks/useRoleBasedNavigation';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -78,27 +79,16 @@ export const LoginPage: React.FC = () => {
           Enter the 6-digit code from your authenticator app or use a backup code.
         </p>
         <form onSubmit={handleMfaSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label htmlFor="mfaCode" style={{ display: 'block', marginBottom: '0.5rem' }}>
-              MFA Code
-            </label>
-            <input
-              id="mfaCode"
-              type="text"
-              value={mfaCode}
-              onChange={(e) => setMfaCode(e.target.value)}
-              placeholder="Enter 6-digit code"
-              required
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                fontSize: '1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-              }}
-            />
-          </div>
+          <Input
+            id="mfaCode"
+            label="MFA Code"
+            type="text"
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value)}
+            placeholder="Enter 6-digit code"
+            required
+            autoFocus
+          />
           {error && (
             <div
               role="alert"
@@ -138,44 +128,22 @@ export const LoginPage: React.FC = () => {
     <div className="login-page" style={{ maxWidth: '400px', margin: '2rem auto' }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
-        <div>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
-        </div>
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         {error && (
           <div
             role="alert"

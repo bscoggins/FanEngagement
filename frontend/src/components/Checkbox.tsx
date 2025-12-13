@@ -1,0 +1,76 @@
+import React, { useId } from 'react';
+import './FormControls.css';
+
+export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  label: React.ReactNode;
+  helperText?: string;
+  error?: string;
+}
+
+export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props, ref) => {
+  const {
+    label,
+    helperText,
+    error,
+    className = '',
+    id: providedId,
+    disabled,
+    ...rest
+  } = props;
+
+  const generatedId = useId();
+  const id = providedId ?? generatedId;
+  const hasError = Boolean(error);
+  const helperId = helperText ? `${id}-helper` : undefined;
+  const errorId = hasError ? `${id}-error` : undefined;
+  const ariaDescribedBy = [helperId, errorId].filter(Boolean).join(' ') || undefined;
+
+  const wrapperClasses = [
+    'choice-field',
+    hasError && 'choice-field--error',
+    disabled && 'choice-field--disabled',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <label className={wrapperClasses} htmlFor={id}>
+      <input
+        ref={ref}
+        id={id}
+        type="checkbox"
+        className="choice-input choice-input--checkbox"
+        aria-invalid={hasError}
+        aria-describedby={ariaDescribedBy}
+        disabled={disabled}
+        {...rest}
+      />
+      <div className="choice-content">
+        <span className="choice-label">
+          {label}
+          {props.required && (
+            <span className="form-field__required" aria-hidden="true">
+              *
+            </span>
+          )}
+        </span>
+        {helperText && (
+          <span id={helperId} className="choice-helper">
+            {helperText}
+          </span>
+        )}
+        {hasError && (
+          <span id={errorId} className="form-field__error" role="alert">
+            <span className="form-field__error-icon" aria-hidden="true">
+              !
+            </span>
+            <span>{error}</span>
+          </span>
+        )}
+      </div>
+    </label>
+  );
+});
+
+Checkbox.displayName = 'Checkbox';

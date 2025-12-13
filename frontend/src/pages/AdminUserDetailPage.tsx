@@ -7,6 +7,9 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
+import { Select } from '../components/Select';
+import { Checkbox } from '../components/Checkbox';
 import './AdminPage.css';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
 
@@ -161,72 +164,50 @@ export const AdminUserDetailPage: React.FC = () => {
         <div className="admin-card">
           <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>User Details</h2>
           
-          <form onSubmit={handleSubmit} className="admin-form">
-            <div>
-              <label htmlFor="email" className="admin-form-label">
-                Email *
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="admin-input"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <Input
+              id="email"
+              name="email"
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="admin-input"
+            />
 
-            <div>
-              <label htmlFor="displayName" className="admin-form-label">
-                Display Name *
-              </label>
-              <input
-                id="displayName"
-                name="displayName"
-                type="text"
-                value={formData.displayName}
-                onChange={handleChange}
-                required
-                className="admin-input"
-              />
-            </div>
+            <Input
+              id="displayName"
+              name="displayName"
+              label="Display Name"
+              type="text"
+              value={formData.displayName}
+              onChange={handleChange}
+              required
+              className="admin-input"
+            />
 
-            <div>
-              <label htmlFor="role" className="admin-form-label">
-                Role *
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-                className="admin-select"
-              >
-                <option value="User">User</option>
-                <option value="Admin">Admin</option>
-              </select>
-            </div>
+            <Select
+              id="role"
+              name="role"
+              label="Role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+              className="admin-select"
+            >
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+            </Select>
 
-            <div>
-              <label htmlFor="mfaRequired" className="admin-form-label">
-                Require MFA for Admin Access
-              </label>
-              <div className="admin-toggle-row">
-                <input
-                  id="mfaRequired"
-                  name="mfaRequired"
-                  type="checkbox"
-                  checked={!!formData.mfaRequired}
-                  onChange={handleChange}
-                />
-                <span>Force this user to complete MFA before accessing admin tools.</span>
-              </div>
-              <small className="admin-secondary-text">
-                Disable if the user should be allowed to sign in without MFA.
-              </small>
-            </div>
+            <Checkbox
+              id="mfaRequired"
+              name="mfaRequired"
+              label="Require MFA for Admin Access"
+              helperText="Force this user to complete MFA before accessing admin tools. Disable if the user should be allowed to sign in without MFA."
+              checked={!!formData.mfaRequired}
+              onChange={handleChange}
+            />
 
             <div className="admin-meta-text" style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--admin-chip-muted-bg)' }}>
               <strong>User ID:</strong> {user.id}<br />
@@ -359,36 +340,30 @@ const AdminPasswordSetForm: React.FC<{ userId: string }> = ({ userId }) => {
         </div>
       )}
 
-      <div>
-        <label htmlFor="newPassword" className="admin-form-label">
-          New Password
-        </label>
-        <input
+      <div style={{ marginBottom: '1rem' }}>
+        <Input
           type="password"
           id="newPassword"
           name="newPassword"
+          label="New Password"
           value={formData.newPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
           minLength={8}
+          helperText="Minimum 8 characters"
+          data-testid="new-password-input"
           className="admin-input"
           style={{ maxWidth: '420px' }}
-          data-testid="new-password-input"
         />
-        <small className="admin-secondary-text" style={{ display: 'block', marginTop: '0.25rem' }}>
-          Minimum 8 characters
-        </small>
       </div>
 
-      <div>
-        <label htmlFor="confirmPassword" className="admin-form-label">
-          Confirm New Password
-        </label>
-        <input
+      <div style={{ marginBottom: '1rem' }}>
+        <Input
           type="password"
           id="confirmPassword"
           name="confirmPassword"
+          label="Confirm New Password"
           value={formData.confirmPassword}
           onChange={handleChange}
           required

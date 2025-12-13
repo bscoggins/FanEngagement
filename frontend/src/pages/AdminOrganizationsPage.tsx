@@ -8,6 +8,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
 import { Table, type TableColumn } from '../components/Table';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useTableData } from '../hooks/useTableData';
@@ -241,11 +242,9 @@ export const AdminOrganizationsPage: React.FC = () => {
             style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}
           >
             <div>
-              <label htmlFor="name" className="admin-form-label">
-                Name *
-              </label>
-              <input
+              <Input
                 id="name"
+                label="Name"
                 type="text"
                 value={createFormData.name}
                 onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
@@ -257,7 +256,7 @@ export const AdminOrganizationsPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="description" className="admin-form-label">
+              <label htmlFor="description" className="form-field__label admin-form-label">
                 Description
               </label>
               <textarea
@@ -267,7 +266,7 @@ export const AdminOrganizationsPage: React.FC = () => {
                 maxLength={1000}
                 disabled={isCreating}
                 rows={4}
-                className="admin-textarea"
+                className="form-control form-control--textarea admin-textarea"
               />
             </div>
 

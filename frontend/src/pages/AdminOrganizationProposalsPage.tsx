@@ -9,6 +9,8 @@ import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
 import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import './AdminPage.css';
 import type { Proposal, Organization, CreateProposalRequest, ProposalStatus, PagedResult } from '../types/api';
+import { Input } from '../components/Input';
+import { Select } from '../components/Select';
 
 export const AdminOrganizationProposalsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -239,21 +241,18 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
             </div>
 
             <div style={{ minWidth: '200px' }}>
-              <label htmlFor="statusFilter" className="admin-form-label">
-                Status
-              </label>
-              <select
+              <Select
                 id="statusFilter"
+                label="Status"
                 value={statusFilter}
                 onChange={(e) => handleStatusFilterChange(e.target.value as ProposalStatus | '')}
-                className="admin-select"
               >
                 <option value="">All Statuses</option>
                 <option value="Draft">Draft</option>
                 <option value="Open">Open</option>
                 <option value="Closed">Closed</option>
                 <option value="Finalized">Finalized</option>
-              </select>
+              </Select>
             </div>
 
             {pagedResult && (
@@ -270,28 +269,24 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Create New Proposal</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="title" className="admin-form-label">
-                Title *
-              </label>
-              <input
-                type="text"
+              <Input
                 id="title"
+                label="Title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="admin-input"
                 required
               />
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="description" className="admin-form-label">
+              <label htmlFor="description" className="form-field__label">
                 Description
               </label>
               <textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="admin-textarea"
+                className="form-control form-control--textarea"
                 style={{ minHeight: '100px' }}
               />
             </div>
@@ -303,39 +298,31 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
               marginBottom: '1rem'
             }}>
               <div>
-                <label htmlFor="startAt" className="admin-form-label">
-                  Start Date & Time
-                </label>
-                <input
+                <Input
                   type="datetime-local"
                   id="startAt"
+                  label="Start Date & Time"
                   value={formData.startAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, startAt: e.target.value || undefined })}
-                  className="admin-input"
                 />
               </div>
 
               <div>
-                <label htmlFor="endAt" className="admin-form-label">
-                  End Date & Time
-                </label>
-                <input
+                <Input
                   type="datetime-local"
                   id="endAt"
+                  label="End Date & Time"
                   value={formData.endAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, endAt: e.target.value || undefined })}
-                  className="admin-input"
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="quorumRequirement" className="admin-form-label">
-                Quorum Requirement (%)
-              </label>
-              <input
+              <Input
                 type="number"
                 id="quorumRequirement"
+                label="Quorum Requirement (%)"
                 step="0.01"
                 min="0"
                 max="100"
@@ -344,7 +331,6 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   ...formData,
                   quorumRequirement: e.target.value ? parseFloat(e.target.value) : undefined
                 })}
-                className="admin-input"
               />
             </div>
 

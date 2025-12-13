@@ -7,6 +7,8 @@ import { parseApiError } from '../utils/errorUtils';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
+import { Input } from '../components/Input';
+import { Checkbox } from '../components/Checkbox';
 import { Button } from '../components/Button';
 import './AdminPage.css';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
@@ -104,10 +106,6 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       maxSupply: undefined,
       isTransferable: true,
     });
-  };
-
-  const handleIsTransferableChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, isTransferable: e.target.value === 'true' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -221,13 +219,11 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="admin-form" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-5)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 'var(--spacing-4)' }}>
               <div>
-                <label htmlFor="name" className="admin-form-label">
-                  Name *
-                </label>
-                <input
+                <Input
                   type="text"
                   id="name"
                   name="name"
+                  label="Name"
                   value={formData.name}
                   onChange={handleChange}
                   required
@@ -236,13 +232,11 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="symbol" className="admin-form-label">
-                  Symbol *
-                </label>
-                <input
+                <Input
                   type="text"
                   id="symbol"
                   name="symbol"
+                  label="Symbol"
                   value={formData.symbol}
                   onChange={handleChange}
                   required
@@ -251,8 +245,8 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="description" className="admin-form-label">
+            <div style={{ marginBottom: '1rem' }}>
+              <label htmlFor="description" className="form-field__label admin-form-label">
                 Description
               </label>
               <textarea
@@ -261,19 +255,17 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                className="admin-textarea"
+                className="form-control form-control--textarea admin-textarea"
               />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 'var(--spacing-4)' }}>
               <div>
-                <label htmlFor="votingWeight" className="admin-form-label">
-                  Voting Weight *
-                </label>
-                <input
+                <Input
                   type="number"
                   id="votingWeight"
                   name="votingWeight"
+                  label="Voting Weight"
                   value={formData.votingWeight}
                   onChange={handleChange}
                   required
@@ -284,35 +276,29 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="maxSupply" className="admin-form-label">
-                  Max Supply
-                </label>
-                <input
+                <Input
                   type="number"
                   id="maxSupply"
                   name="maxSupply"
+                  label="Max Supply"
                   value={formData.maxSupply ?? ''}
                   onChange={handleChange}
                   min="0"
                   step="0.01"
+                  helperText="Leave blank for unlimited supply."
                   className="admin-input"
                 />
               </div>
 
               <div>
-                <label htmlFor="isTransferable" className="admin-form-label">
-                  Transferable
-                </label>
-                <select
+                <Checkbox
                   id="isTransferable"
                   name="isTransferable"
-                  value={formData.isTransferable ? 'true' : 'false'}
-                  onChange={handleIsTransferableChange}
-                  className="admin-select"
-                >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
+                  label="Transferable"
+                  helperText="Allow holders to transfer this share type."
+                  checked={formData.isTransferable}
+                  onChange={handleChange}
+                />
               </div>
             </div>
 

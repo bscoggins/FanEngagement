@@ -253,8 +253,8 @@ describe('AdminOrganizationShareTypesPage', () => {
     fireEvent.click(screen.getByText('Create Share Type'));
     
     // Fill minimal form
-    fireEvent.change(screen.getByLabelText(/name \*/i), { target: { value: 'Test' } });
-    fireEvent.change(screen.getByLabelText(/symbol \*/i), { target: { value: 'T' } });
+    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Test' } });
+    fireEvent.change(screen.getByLabelText(/symbol/i), { target: { value: 'T' } });
     
     // Submit - now there are two buttons, get the one that's type=submit
     const submitButton = screen.getByRole('button', { name: 'Create Share Type' });

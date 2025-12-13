@@ -91,7 +91,7 @@ describe('AdminOrganizationEditPage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
     
-    const nameInput = screen.getByLabelText(/name \*/i);
+    const nameInput = screen.getByLabelText(/name/i);
     const descriptionInput = screen.getByLabelText(/^description$/i);
     
     fireEvent.change(nameInput, { target: { value: 'Updated Organization' } });

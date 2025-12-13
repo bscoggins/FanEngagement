@@ -5,6 +5,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import type { MfaSetupResult } from '../types/api';
+import { Input } from './Input';
 
 export const MfaSettings: React.FC = () => {
   const { showSuccess, showError } = useNotifications();
@@ -151,13 +152,14 @@ export const MfaSettings: React.FC = () => {
           <p style={{ marginBottom: '0.5rem' }}>
             <strong>Step 2:</strong> Enter the 6-digit code from your authenticator app:
           </p>
-          <input
+          <Input
             type="text"
             value={totpCode}
             onChange={(e) => setTotpCode(e.target.value)}
             placeholder="000000"
             maxLength={6}
             required
+            label="Authenticator Code"
             className="admin-input"
             style={{ textAlign: 'center', letterSpacing: '0.2rem' }}
           />
@@ -190,12 +192,13 @@ export const MfaSettings: React.FC = () => {
         </p>
 
         <form onSubmit={handleDisableMfa} className="admin-form">
-          <input
+          <Input
             type="text"
             value={disableCode}
             onChange={(e) => setDisableCode(e.target.value)}
             placeholder="Enter code"
             required
+            label="Authenticator or Backup Code"
             className="admin-input"
           />
 

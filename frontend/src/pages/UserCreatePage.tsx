@@ -4,6 +4,7 @@ import { usersApi } from '../api/usersApi';
 import type { CreateUserRequest } from '../types/api';
 import { InfoBox } from '../components/InfoBox';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import { parseApiError } from '../utils/errorUtils';
 import './AdminPage.css';
 
@@ -84,12 +85,10 @@ export const UserCreatePage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="admin-form" data-testid="create-user-form">
           <div className="admin-form-field">
-            <label htmlFor="email" className="admin-form-label">
-              Email <span className="required-indicator">*</span>
-            </label>
-            <input
+            <Input
               id="email"
               name="email"
+              label="Email *"
               type="email"
               value={formData.email}
               onChange={handleChange}
@@ -103,12 +102,10 @@ export const UserCreatePage: React.FC = () => {
           </div>
 
           <div className="admin-form-field">
-            <label htmlFor="password" className="admin-form-label">
-              Password <span className="required-indicator">*</span>
-            </label>
-            <input
+            <Input
               id="password"
               name="password"
+              label="Password *"
               type="password"
               value={formData.password}
               onChange={handleChange}
@@ -131,12 +128,10 @@ export const UserCreatePage: React.FC = () => {
           </div>
 
           <div className="admin-form-field">
-            <label htmlFor="displayName" className="admin-form-label">
-              Display Name <span className="required-indicator">*</span>
-            </label>
-            <input
+            <Input
               id="displayName"
               name="displayName"
+              label="Display Name *"
               type="text"
               value={formData.displayName}
               onChange={handleChange}

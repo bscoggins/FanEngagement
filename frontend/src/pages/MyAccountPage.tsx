@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { MfaSettings } from '../components/MfaSettings';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import '../pages/AdminPage.css';
 import type { UserProfile, ThemePreference } from '../types/api';
 
@@ -188,35 +189,27 @@ export const MyAccountPage: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="admin-form">
-            <div>
-              <label htmlFor="displayName" className="admin-form-label">
-                Name
-              </label>
-              <input
-                type="text"
-                id="displayName"
-                value={formData.displayName}
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                required
-                className="admin-input"
-              />
-            </div>
+            <Input
+              type="text"
+              id="displayName"
+              label="Name"
+              value={formData.displayName}
+              onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+              required
+              className="admin-input"
+            />
 
-            <div>
-              <label htmlFor="email" className="admin-form-label">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                className="admin-input"
-              />
-            </div>
+            <Input
+              type="email"
+              id="email"
+              label="Email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              className="admin-input"
+            />
 
-            <div className="admin-secondary-text">
+            <div className="admin-secondary-text" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
               <strong>Role:</strong> {user.role}{' '}
               {!isAdmin && <span>(Cannot be changed)</span>}
             </div>
@@ -389,14 +382,18 @@ const PasswordChangeForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="admin-form" data-testid="password-change-form">
-      <div>
-        <label htmlFor="currentPassword" className="admin-form-label">
-          Current Password
-        </label>
-        <input
+      {error && (
+        <div className="admin-alert admin-alert-error" data-testid="password-error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </div>
+      )}
+
+      <div style={{ marginBottom: '1rem' }}>
+        <Input
           type="password"
           id="currentPassword"
           name="currentPassword"
+          label="Current Password:"
           value={formData.currentPassword}
           onChange={handleChange}
           required
@@ -406,47 +403,38 @@ const PasswordChangeForm: React.FC = () => {
         />
       </div>
 
-      <div>
-        <label htmlFor="newPassword" className="admin-form-label">
-          New Password
-        </label>
-        <input
+      <div style={{ marginBottom: '1rem' }}>
+        <Input
           type="password"
           id="newPassword"
           name="newPassword"
+          label="New Password:"
           value={formData.newPassword}
           onChange={handleChange}
           required
           minLength={8}
+          helperText="Minimum 8 characters"
+          data-testid="new-password-input"
           disabled={isSubmitting}
           className="admin-input"
-          data-testid="new-password-input"
         />
-        <small className="admin-secondary-text">Minimum 8 characters</small>
       </div>
 
-      <div>
-        <label htmlFor="confirmPassword" className="admin-form-label">
-          Confirm New Password
-        </label>
-        <input
+      <div style={{ marginBottom: '1rem' }}>
+        <Input
           type="password"
           id="confirmPassword"
           name="confirmPassword"
+          label="Confirm New Password:"
           value={formData.confirmPassword}
           onChange={handleChange}
           required
           disabled={isSubmitting}
+          minLength={8}
           className="admin-input"
           data-testid="confirm-password-input"
         />
       </div>
-
-      {error && (
-        <div className="admin-alert admin-alert-error" data-testid="password-error">
-          {error}
-        </div>
-      )}
 
       <Button
         type="submit"

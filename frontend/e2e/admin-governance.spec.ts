@@ -49,7 +49,7 @@ test.describe.serial('Admin and member governance flows', () => {
     // Navigate directly to admin organizations page
     await page.goto('/admin/organizations');
     await page.getByRole('button', { name: 'Create Organization' }).click();
-    await page.getByLabel('Name *').fill(newOrgName);
+    await page.getByLabel('Name').fill(newOrgName);
     await page.getByLabel('Description').fill('E2E-created organization for governance flows');
     await page.getByRole('button', { name: 'Create Organization' }).click();
 
@@ -83,8 +83,8 @@ test.describe.serial('Admin and member governance flows', () => {
     await page.goto(`/admin/organizations/${newOrgId}/edit`);
     await page.goto(`/admin/organizations/${newOrgId}/share-types`);
     await page.getByRole('button', { name: 'Create Share Type' }).click();
-    await page.getByLabel('Name *').fill(shareTypeName);
-    await page.getByLabel('Symbol *').fill(`E2E${newOrgName.split(' ').pop()}`);
+    await page.getByLabel('Name').fill(shareTypeName);
+    await page.getByLabel('Symbol').fill(`E2E${newOrgName.split(' ').pop()}`);
     await page.getByLabel('Description').fill('E2E voting share with weight 1');
     await page.getByLabel('Voting Weight').fill('1');
     const createShareTypeResponse = page.waitForResponse(
@@ -122,7 +122,7 @@ test.describe.serial('Admin and member governance flows', () => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.goto(`/admin/organizations/${existingOrgId}/proposals`);
     await page.getByRole('button', { name: 'Create Proposal' }).click();
-    await page.getByLabel('Title *').fill(proposalTitle);
+    await page.getByLabel('Title').fill(proposalTitle);
     await page.getByLabel('Description').fill('UI-driven governance validation');
     const createProposalResponse = page.waitForResponse(
       (resp) => resp.url().includes(`/organizations/${existingOrgId}/proposals`) && resp.request().method() === 'POST' && resp.status() === 201,
