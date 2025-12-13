@@ -1,101 +1,48 @@
-import React from 'react';
-import { useNotifications, type NotificationType } from '../contexts/NotificationContext';
+import React, { useMemo } from 'react';
+import { Toast } from './Toast';
+import { useToast, type ToastPosition } from '../contexts/ToastContext';
 
-const getNotificationStyles = (type: NotificationType) => {
-  const base = {
-    padding: '1rem 1.5rem',
-    borderRadius: '4px',
-    marginBottom: '0.5rem',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-    animation: 'slideIn 0.3s ease-out',
-    minWidth: '300px',
-    maxWidth: '500px',
-  };
-
-  const variants = {
-    success: {
-      backgroundColor: '#d4edda',
-      color: '#155724',
-      border: '1px solid #c3e6cb',
-    },
-    error: {
-      backgroundColor: '#f8d7da',
-      color: '#721c24',
-      border: '1px solid #f5c6cb',
-    },
-    info: {
-      backgroundColor: '#d1ecf1',
-      color: '#0c5460',
-      border: '1px solid #bee5eb',
-    },
-    warning: {
-      backgroundColor: '#fff3cd',
-      color: '#856404',
-      border: '1px solid #ffeeba',
-    },
-  };
-
-  return { ...base, ...variants[type] };
-};
+const POSITIONS: ToastPosition[] = ['top-right', 'top-left', 'bottom-right', 'bottom-left', 'top-center', 'bottom-center'];
 
 export const NotificationContainer: React.FC = () => {
-  const { notifications, removeNotification } = useNotifications();
+  const { toasts, dismissToast } = useToast();
 
-  if (notifications.length === 0) {
+  const groupedToasts = useMemo(() => {
+    const groups = new Map<ToastPosition, typeof toasts>();
+    POSITIONS.forEach((position) => groups.set(position, []));
+
+    toasts.forEach((toast) => {
+      const stack = groups.get(toast.position);
+      if (stack) {
+        stack.push(toast);
+      } else {
+        groups.set(toast.position, [toast]);
+      }
+    });
+
+    return groups;
+  }, [toasts]);
+
+  if (toasts.length === 0) {
     return null;
   }
 
   return (
-    <>
-      <style>
-        {`
-          @keyframes slideIn {
-            from {
-              transform: translateX(100%);
-              opacity: 0;
-            }
-            to {
-              transform: translateX(0);
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
-      <div
-        style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '1rem',
-          zIndex: 9999,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {notifications.map((notification) => (
-          <div key={notification.id} style={getNotificationStyles(notification.type)}>
-            <span>{notification.message}</span>
-            <button
-              onClick={() => removeNotification(notification.id)}
-              style={{
-                marginLeft: '1rem',
-                background: 'none',
-                border: 'none',
-                fontSize: '1.25rem',
-                cursor: 'pointer',
-                color: 'inherit',
-                padding: '0',
-                lineHeight: '1',
-              }}
-              aria-label="Close notification"
-            >
-              ×
-            </button>
+    <div className="toast-portal" role="status" aria-live="polite" aria-atomic="true">
+      {POSITIONS.map((position) => {
+        const stack = groupedToasts.get(position);
+        if (!stack || stack.length === 0) {
+          return null;
+        }
+
+        return (
+          <div key={position} className={`toast-stack toast-stack--${position}`} data-position={position}>
+            {stack.map((toast) => (
+              <Toast key={toast.id} toast={toast} onDismiss={dismissToast} />
+            ))}
           </div>
-        ))}
-      </div>
-    </>
+        );
+      })}
+    </div>
   );
 };
