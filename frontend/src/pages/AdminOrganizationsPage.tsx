@@ -244,7 +244,7 @@ export const AdminOrganizationsPage: React.FC = () => {
             <div>
               <Input
                 id="name"
-                label="Name *"
+                label="Name"
                 type="text"
                 value={createFormData.name}
                 onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}

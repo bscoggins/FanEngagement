@@ -45,6 +45,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>((props, r
       {label && (
         <label className="form-field__label" htmlFor={id}>
           {label}
+          {props.required && (
+            <span className="form-field__required" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
 

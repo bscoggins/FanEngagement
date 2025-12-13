@@ -12,6 +12,11 @@ export const SelectStates = () => (
       <option value="orgadmin">Org Admin</option>
       <option value="member">Member</option>
     </Select>
+    <Select label="Required field" required>
+      <option value="">Choose an option</option>
+      <option value="opt1">Option 1</option>
+      <option value="opt2">Option 2</option>
+    </Select>
     <Select label="Status" helperText="Used for filtering results.">
       <option value="">All statuses</option>
       <option value="open">Open</option>

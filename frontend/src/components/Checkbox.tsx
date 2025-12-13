@@ -47,7 +47,14 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
         {...rest}
       />
       <div className="choice-content">
-        <span className="choice-label">{label}</span>
+        <span className="choice-label">
+          {label}
+          {props.required && (
+            <span className="form-field__required" aria-hidden="true">
+              *
+            </span>
+          )}
+        </span>
         {helperText && (
           <span id={helperId} className="choice-helper">
             {helperText}
