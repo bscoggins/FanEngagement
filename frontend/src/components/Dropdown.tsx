@@ -104,6 +104,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onOpenChange,
   onSelect,
 }) => {
+  const MENU_OFFSET = 8;
+  const MENU_SHIFT_PADDING = 8;
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const listRef = useRef<Array<HTMLElement | null>>([]);
@@ -124,7 +126,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   }, [focusableItems, selectedId]);
 
   const middleware = useMemo(() => {
-    const base = [offset(8), shift({ padding: 8 })];
+    const base = [offset(MENU_OFFSET), shift({ padding: MENU_SHIFT_PADDING })];
     if (placement === 'auto') {
       base.push(autoPlacement({ alignment: 'start' }));
     } else {
