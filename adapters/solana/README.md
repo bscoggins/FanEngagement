@@ -9,6 +9,7 @@ Solana blockchain adapter for FanEngagement platform. This service provides bloc
 - **Token Issuance**: Mint tokens to members
 - **Proposal Management**: Create and manage on-chain proposals
 - **Vote Recording**: Record votes on the Solana blockchain
+- **Custom Governance Program**: Uses the fan-governance program (configurable via `SOLANA_PROGRAM_ID`) for org/proposal/vote state
 - **Result Commitment**: Commit proposal results for verifiability
 - **Transaction Queries**: Query transaction status
 - **Health Monitoring**: Health checks and Prometheus metrics
@@ -52,6 +53,7 @@ Edit `.env` and set:
 - `SOLANA_KEYPAIR_PATH` or `SOLANA_PRIVATE_KEY`: Path to keypair or keypair JSON
 - `SOLANA_RPC_URL`: Solana RPC endpoint (devnet, testnet, or mainnet)
 - `SOLANA_NETWORK`: Network name (devnet, testnet, mainnet-beta)
+- `SOLANA_PROGRAM_ID`: Program ID for the fan-governance on-chain program (defaults to repo keypair)
 
 ### 3. Run with Docker Compose (Recommended)
 
@@ -208,6 +210,14 @@ npm run test:integration
 
 # Stop test validator
 docker-compose down
+```
+
+### Governance Program Tests
+
+Run the on-chain fan-governance program build + Rust tests + local validator deploy check from repo root:
+
+```bash
+./scripts/run-solana-governance-tests.sh
 ```
 
 ## Monitoring

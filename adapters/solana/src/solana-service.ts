@@ -44,10 +44,7 @@ export class SolanaService {
     this.connection = this.createConnection();
     this.keypair = keypair;
     
-    // TODO: Replace with actual deployed Solana program ID
-    // Using system program as placeholder for development
-    // In production, deploy custom program and update this ID
-    this.programId = new PublicKey('11111111111111111111111111111111');
+    this.programId = new PublicKey(config.solana.programId);
     
     logger.info('SolanaService initialized', {
       network: config.solana.network,
@@ -279,7 +276,7 @@ export class SolanaService {
       logger.info('Creating proposal', { proposalId, organizationId, title });
 
       // Derive PDA for proposal
-      const [proposalPda] = await this.findProposalPDA(proposalId);
+      const [proposalPda] = await this.findProposalPDA(proposalId, organizationId);
 
       // Create memo transaction with proposal data
       // IMPORTANT: Memos are irrevocable on Solana. Once a transaction with a memo is confirmed,
@@ -288,18 +285,18 @@ export class SolanaService {
       // In production, this would call a deployed Solana program
       const rentLamports = await this.getRentExemptionLamports();
       const memoInstruction = this.createMemoInstruction(buildProposalMemo({
-          organizationId,
-          proposalId,
-          title,
-          contentHash,
-          proposalTextHash: metadata?.proposalTextHash,
-          expectationsHash: metadata?.expectationsHash,
-          votingOptionsHash: metadata?.votingOptionsHash,
-          createdByUserId: metadata?.createdByUserId,
-          eligibleVotingPower: metadata?.eligibleVotingPower,
-          startAt,
-          endAt,
-        }));
+        organizationId,
+        proposalId,
+        title,
+        contentHash,
+        proposalTextHash: metadata?.proposalTextHash,
+        expectationsHash: metadata?.expectationsHash,
+        votingOptionsHash: metadata?.votingOptionsHash,
+        createdByUserId: metadata?.createdByUserId,
+        eligibleVotingPower: metadata?.eligibleVotingPower,
+        startAt,
+        endAt,
+      }));
 
       const transaction = new Transaction()
         .add(
@@ -358,17 +355,17 @@ export class SolanaService {
       const [votePda] = await this.findVotePDA(voteId);
 
       // Create memo transaction with vote data
-        const rentLamports = await this.getRentExemptionLamports();
+      const rentLamports = await this.getRentExemptionLamports();
       const memoInstruction = this.createMemoInstruction(buildVoteMemo({
-          organizationId,
-          proposalId,
-          voteId,
-          userId,
-          optionId,
-          votingPower,
-          voterAddress: metadata?.voterAddress,
-          castAt: metadata?.castAt,
-        }));
+        organizationId,
+        proposalId,
+        voteId,
+        userId,
+        optionId,
+        votingPower,
+        voterAddress: metadata?.voterAddress,
+        castAt: metadata?.castAt,
+      }));
 
       const transaction = new Transaction()
         .add(
@@ -415,20 +412,21 @@ export class SolanaService {
     try {
       logger.info('Committing proposal results', { proposalId, organizationId, resultsHash, winningOptionId, totalVotesCast });
 
-      // Derive PDA for proposal results
-      const [resultsPda] = await this.findProposalResultsPDA(proposalId);
+      // Derive PDAs for proposal and results to mirror on-chain seeds
+      const [proposalPda] = await this.findProposalPDA(proposalId, organizationId);
+      const [resultsPda] = await this.findProposalResultsPDA(proposalPda);
 
       // Create memo transaction with results hash
-        const rentLamports = await this.getRentExemptionLamports();
+      const rentLamports = await this.getRentExemptionLamports();
       const memoInstruction = this.createMemoInstruction(buildProposalResultMemo({
-          organizationId,
-          proposalId,
-          resultsHash,
-          winningOptionId,
-          totalVotesCast,
-          quorumMet: metadata?.quorumMet,
-          closedAt: metadata?.closedAt,
-        }));
+        organizationId,
+        proposalId,
+        resultsHash,
+        winningOptionId,
+        totalVotesCast,
+        quorumMet: metadata?.quorumMet,
+        closedAt: metadata?.closedAt,
+      }));
 
       const transaction = new Transaction()
         .add(
@@ -580,10 +578,11 @@ export class SolanaService {
   /**
    * Helper: Find proposal PDA
    */
-  private async findProposalPDA(proposalId: string): Promise<[PublicKey, number]> {
+  private async findProposalPDA(proposalId: string, organizationId: string): Promise<[PublicKey, number]> {
+    const [organizationPda] = await this.findOrganizationPDA(organizationId);
     const proposalIdBuffer = Buffer.from(proposalId.replace(/-/g, ''), 'hex');
     return await PublicKey.findProgramAddress(
-      [Buffer.from('proposal'), proposalIdBuffer],
+      [Buffer.from('proposal'), organizationPda.toBuffer(), proposalIdBuffer],
       this.programId
     );
   }
@@ -602,10 +601,9 @@ export class SolanaService {
   /**
    * Helper: Find proposal results PDA
    */
-  private async findProposalResultsPDA(proposalId: string): Promise<[PublicKey, number]> {
-    const proposalIdBuffer = Buffer.from(proposalId.replace(/-/g, ''), 'hex');
+  private async findProposalResultsPDA(proposalPublicKey: PublicKey): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
-      [Buffer.from('proposal_results'), proposalIdBuffer],
+      [Buffer.from('proposal_results'), proposalPublicKey.toBuffer()],
       this.programId
     );
   }

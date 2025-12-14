@@ -1,0 +1,28 @@
+# Build artifacts
+target/
+**/*.rs.bk
+*.pem
+
+# Anchor
+.anchor/
+test-ledger/
+
+# IDL
+target/idl/
+target/types/
+
+# Keypairs (NEVER commit these)
+*-keypair.json
+!target/deploy/*-keypair.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

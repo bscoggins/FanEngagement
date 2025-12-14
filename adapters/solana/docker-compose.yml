@@ -3,9 +3,10 @@ services:
     image: solanalabs/solana:v1.18.26
     platform: linux/amd64
     container_name: solana-test-validator
-    command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899
+    command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899 --faucet-port 9900 --faucet-lamports 100000000000 --faucet-bind-address 0.0.0.0
     ports:
       - "8899:8899"
+      - "9900:9900"
     healthcheck:
       test: ["CMD", "solana", "cluster-version", "--url", "http://localhost:8899"]
       interval: 10s
