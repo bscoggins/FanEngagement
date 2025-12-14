@@ -123,7 +123,6 @@ export const OrganizationSelector: React.FC = () => {
                   },
                   onMouseLeave: () => setShowTooltip(null),
                 })}
-                ref={state.ref}
               >
                 <span className="org-selector-option-name">
                   {membership.organizationName}

@@ -112,7 +112,6 @@ export const OrganizationDropdown: React.FC<OrganizationDropdownProps> = ({
                   role: 'menuitemradio',
                   'aria-checked': isActive,
                 })}
-                ref={state.ref}
               >
                 <span className="org-dropdown-item-icon" aria-hidden="true">🏢</span>
                 <div className="org-dropdown-item-content">

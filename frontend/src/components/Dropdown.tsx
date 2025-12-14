@@ -283,6 +283,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
     'aria-label': label,
   }) as Record<string, unknown>;
   const { ['aria-labelledby']: floatingAriaLabelledby, ...floatingMenuProps } = rawFloatingProps;
+  const ariaAttributes = label
+    ? { 'aria-label': label }
+    : { 'aria-labelledby': floatingAriaLabelledby as string | undefined };
 
   const defaultTrigger = (
     <button
@@ -352,8 +355,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
               data-placement={computedPlacement}
               data-testid={testId ? `${testId}-menu` : undefined}
               {...floatingMenuProps}
-              aria-label={label}
-              aria-labelledby={label ? undefined : (floatingAriaLabelledby as string | undefined)}
+              {...ariaAttributes}
             >
               {items ? (
                 <ul className="dropdown-list" role="none">
@@ -365,15 +367,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     const focusIndex = getFocusableIndex(item.id);
 
                     if (renderItem) {
+                      // Only track focusable options in the list navigation ref set
+                      const listNavigationRef =
+                        focusIndex >= 0
+                          ? (node: HTMLElement | null) => {
+                              listRef.current[focusIndex] = node;
+                            }
+                          : undefined;
+
                       return renderItem(item, {
-                        ref: mergeRefs(
-                          focusIndex >= 0
-                            ? (node: HTMLElement | null) => {
-                                listRef.current[focusIndex] = node;
-                              }
-                            : undefined,
-                          undefined
-                        ),
+                        ref: listNavigationRef,
                         active: item.id === selectedId,
                         focused: focusIndex >= 0 && focusIndex === activeIndex,
                         close: () => setOpen(false),
