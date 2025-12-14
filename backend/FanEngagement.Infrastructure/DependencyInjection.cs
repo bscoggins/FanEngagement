@@ -4,6 +4,7 @@ using FanEngagement.Application.Authentication;
 using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Application.Encryption;
+using FanEngagement.Application.FeatureFlags;
 using FanEngagement.Application.Memberships;
 using FanEngagement.Application.Mfa;
 using FanEngagement.Application.Organizations;
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IProposalService, ProposalService>();
         services.AddScoped<IWebhookEndpointService, WebhookEndpointService>();
         services.AddScoped<IOutboundEventService, OutboundEventService>();
+        services.AddScoped<IFeatureFlagService, FeatureFlagService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IDevDataSeedingService, DevDataSeedingService>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
@@ -64,6 +66,12 @@ public static class DependencyInjection
             {
                 client.BaseAddress = new Uri(baseUrl);
             }
+            
+            var apiKey = configuration["BlockchainAdapters:Solana:ApiKey"];
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                client.DefaultRequestHeaders.Add("X-Adapter-API-Key", apiKey);
+            }
         });
         
         services.AddHttpClient("PolygonAdapter", client =>
@@ -72,6 +80,12 @@ public static class DependencyInjection
             if (!string.IsNullOrWhiteSpace(baseUrl))
             {
                 client.BaseAddress = new Uri(baseUrl);
+            }
+            
+            var apiKey = configuration["BlockchainAdapters:Polygon:ApiKey"];
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                client.DefaultRequestHeaders.Add("X-Adapter-API-Key", apiKey);
             }
         });
 

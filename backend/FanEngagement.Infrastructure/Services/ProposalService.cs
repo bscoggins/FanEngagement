@@ -6,6 +6,7 @@ using FanEngagement.Application.Audit;
 using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Exceptions;
+using FanEngagement.Application.FeatureFlags;
 using FanEngagement.Application.OutboundEvents;
 using FanEngagement.Application.Proposals;
 using FanEngagement.Domain.Entities;
@@ -33,7 +34,8 @@ public class ProposalService(
     IAuditService auditService,
     FanEngagementMetrics metrics,
     ILogger<ProposalService> logger,
-    IBlockchainAdapterFactory blockchainAdapterFactory) : IProposalService
+    IBlockchainAdapterFactory blockchainAdapterFactory,
+    IFeatureFlagService featureFlagService) : IProposalService
 {
     public async Task<ProposalDto> CreateAsync(Guid organizationId, CreateProposalRequest request, CancellationToken cancellationToken = default)
     {
@@ -287,6 +289,9 @@ public class ProposalService(
             .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken)
             ?? throw new InvalidOperationException($"Organization {proposal.OrganizationId} not found.");
 
+        var blockchainEnabled = organizationDetails.BlockchainType != BlockchainType.None
+            && await featureFlagService.IsEnabledAsync(proposal.OrganizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
+
         var oldStatus = proposal.Status;
 
         // Use domain service for validation
@@ -319,7 +324,7 @@ public class ProposalService(
             proposal.EligibleVotingPowerSnapshot = votingPowerCalc.CalculateTotalEligibleVotingPower(allBalances);
             proposal.Status = ProposalStatus.Open;
 
-            if (organizationDetails.BlockchainType != BlockchainType.None)
+            if (organizationDetails.BlockchainType != BlockchainType.None && blockchainEnabled)
             {
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
                 var startAt = proposal.StartAt ?? DateTimeOffset.UtcNow;
@@ -354,6 +359,12 @@ public class ProposalService(
                     organizationDetails.BlockchainType,
                     onChainResult.TransactionId);
             }
+                    else if (organizationDetails.BlockchainType != BlockchainType.None && !blockchainEnabled)
+                    {
+                    logger.LogInformation(
+                        "Proposal {ProposalId} open skipped on-chain registration because BlockchainIntegration feature flag is disabled",
+                        proposal.Id);
+                    }
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -438,6 +449,9 @@ public class ProposalService(
             .FirstOrDefaultAsync(o => o.Id == proposal.OrganizationId, cancellationToken)
             ?? throw new InvalidOperationException($"Organization {proposal.OrganizationId} not found.");
 
+        var blockchainEnabled = organizationDetails.BlockchainType != BlockchainType.None
+            && await featureFlagService.IsEnabledAsync(proposal.OrganizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
+
         var oldStatus = proposal.Status;
 
         // Use domain service for validation
@@ -468,7 +482,7 @@ public class ProposalService(
             proposal.TotalVotesCast = results.TotalVotingPowerCast;
             proposal.ClosedAt = DateTimeOffset.UtcNow;
 
-            if (organizationDetails.BlockchainType != BlockchainType.None)
+            if (organizationDetails.BlockchainType != BlockchainType.None && blockchainEnabled)
             {
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
                 var resultsHash = ComputeProposalResultsHash(proposal, results);
@@ -490,6 +504,12 @@ public class ProposalService(
                     proposal.Id,
                     organizationDetails.BlockchainType,
                     onChainResult.TransactionId);
+            }
+            else if (organizationDetails.BlockchainType != BlockchainType.None && !blockchainEnabled)
+            {
+                logger.LogInformation(
+                    "Proposal {ProposalId} close skipped on-chain commit because BlockchainIntegration feature flag is disabled",
+                    proposal.Id);
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -861,11 +881,13 @@ public class ProposalService(
 
         var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
         var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var blockchainEnabled = organizationDetails.BlockchainType != BlockchainType.None
+            && await featureFlagService.IsEnabledAsync(proposal.OrganizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
         string? voteTransactionId = null;
 
         try
         {
-            if (organizationDetails.BlockchainType != BlockchainType.None)
+            if (organizationDetails.BlockchainType != BlockchainType.None && blockchainEnabled)
             {
                 var adapter = await blockchainAdapterFactory.GetAdapterAsync(proposal.OrganizationId, cancellationToken);
                 var voterAddress = await GetPrimaryWalletAddressAsync(request.UserId, organizationDetails.BlockchainType, cancellationToken);
@@ -888,6 +910,12 @@ public class ProposalService(
                     vote.Id,
                     organizationDetails.BlockchainType,
                     onChainResult.TransactionId);
+            }
+            else if (organizationDetails.BlockchainType != BlockchainType.None && !blockchainEnabled)
+            {
+                logger.LogInformation(
+                    "Vote {VoteId} skipped on-chain recording because BlockchainIntegration feature flag is disabled",
+                    vote.Id);
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);

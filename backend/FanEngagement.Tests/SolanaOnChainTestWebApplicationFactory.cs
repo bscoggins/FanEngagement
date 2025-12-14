@@ -9,7 +9,7 @@ namespace FanEngagement.Tests;
 public class SolanaOnChainTestWebApplicationFactory : TestWebApplicationFactory
 {
     private const string DefaultAdapterBaseUrl = "http://localhost:3001/v1/adapter/";
-    private const string DefaultApiKey = "dev-api-key-change-in-production";
+    private const string DefaultApiKey = "dev-api-key-change-me";
 
     protected override void ConfigureSolanaAdapterClient(IServiceCollection services)
     {

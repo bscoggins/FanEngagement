@@ -2,6 +2,7 @@ using FanEngagement.Application.Audit;
 using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.Common;
 using FanEngagement.Application.Organizations;
+using FanEngagement.Application.FeatureFlags;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
 using FanEngagement.Infrastructure.Persistence;
@@ -14,7 +15,8 @@ public class OrganizationService(
     FanEngagementDbContext dbContext,
     IAuditService auditService,
     ILogger<OrganizationService> logger,
-    IBlockchainAdapterFactory blockchainAdapterFactory) : IOrganizationService
+    IBlockchainAdapterFactory blockchainAdapterFactory,
+    IFeatureFlagService featureFlagService) : IOrganizationService
 {
     public async Task<Organization> CreateAsync(CreateOrganizationRequest request, Guid creatorUserId, CancellationToken cancellationToken = default)
     {
@@ -43,12 +45,28 @@ public class OrganizationService(
 
         dbContext.Organizations.Add(organization);
 
-        // Automatically create OrgAdmin membership for the creator
+        // Determine the initial admin
+        var adminUserId = request.InitialAdminUserId ?? creatorUserId;
+
+        // If different from creator, validate existence
+        if (adminUserId != creatorUserId)
+        {
+            var adminExists = await dbContext.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Id == adminUserId, cancellationToken);
+
+            if (!adminExists)
+            {
+                throw new InvalidOperationException($"Initial admin user {adminUserId} not found");
+            }
+        }
+
+        // Automatically create OrgAdmin membership for the initial admin
         var membership = new OrganizationMembership
         {
             Id = Guid.NewGuid(),
             OrganizationId = organization.Id,
-            UserId = creatorUserId,
+            UserId = adminUserId,
             Role = OrganizationRole.OrgAdmin,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -62,25 +80,42 @@ public class OrganizationService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
 
+            // Set the blockchain feature flag if requested
+            if (request.EnableBlockchainFeature)
+            {
+                await featureFlagService.SetAsync(organization.Id, OrganizationFeature.BlockchainIntegration, true, creatorUserId, cancellationToken);
+            }
+
             if (organization.BlockchainType != Domain.Enums.BlockchainType.None)
             {
-                var adapter = await blockchainAdapterFactory.GetAdapterAsync(organization.Id, cancellationToken);
-                var branding = new OrganizationBrandingMetadata(organization.LogoUrl, organization.PrimaryColor, organization.SecondaryColor);
-                var onChainResult = await adapter.CreateOrganizationAsync(
-                    new CreateOrganizationCommand(organization.Id, organization.Name, organization.Description, branding),
-                    cancellationToken);
-
-                if (!string.IsNullOrWhiteSpace(onChainResult.AccountAddress))
+                var blockchainEnabled = await featureFlagService.IsEnabledAsync(organization.Id, OrganizationFeature.BlockchainIntegration, cancellationToken);
+                if (blockchainEnabled)
                 {
-                    organization.BlockchainAccountAddress = onChainResult.AccountAddress;
-                    await dbContext.SaveChangesAsync(cancellationToken);
-                }
+                    var adapter = await blockchainAdapterFactory.GetAdapterAsync(organization.Id, cancellationToken);
+                    var branding = new OrganizationBrandingMetadata(organization.LogoUrl, organization.PrimaryColor, organization.SecondaryColor);
+                    var onChainResult = await adapter.CreateOrganizationAsync(
+                        new CreateOrganizationCommand(organization.Id, organization.Name, organization.Description, branding),
+                        cancellationToken);
 
-                logger.LogInformation(
-                    "Organization {OrganizationId} registered on {Blockchain} with transaction {TransactionId}",
-                    organization.Id,
-                    organization.BlockchainType,
-                    onChainResult.TransactionId);
+                    if (!string.IsNullOrWhiteSpace(onChainResult.AccountAddress))
+                    {
+                        organization.BlockchainAccountAddress = onChainResult.AccountAddress;
+                        await dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
+                    logger.LogInformation(
+                        "Organization {OrganizationId} registered on {Blockchain} with transaction {TransactionId}",
+                        organization.Id,
+                        organization.BlockchainType,
+                        onChainResult.TransactionId);
+                }
+                else
+                {
+                    logger.LogInformation(
+                        "Organization {OrganizationId} has blockchain type {Blockchain} but BlockchainIntegration feature flag is disabled; skipping on-chain registration",
+                        organization.Id,
+                        organization.BlockchainType);
+                }
             }
 
             if (transaction != null)

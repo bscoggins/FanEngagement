@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Authentication;
+using FanEngagement.Application.Common;
 using FanEngagement.Application.DevDataSeeding;
 using FanEngagement.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,9 +39,6 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<DevDataSeedingResult>();
         Assert.NotNull(result);
-
-        // Wait for background service to process audit events
-        await Task.Delay(500);
 
         // Assert - Verify audit event was created
         var auditEvent = await GetLatestAuditEventAsync(AuditActionType.AdminDataSeeded);
@@ -121,9 +119,6 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
         var result = await response.Content.ReadFromJsonAsync<E2eCleanupResult>();
         Assert.NotNull(result);
 
-        // Wait longer for background service to process audit events
-        await Task.Delay(1000);
-
         // Assert - Verify audit event was created
         var auditEvent = await GetLatestAuditEventAsync(AuditActionType.AdminDataCleanup);
         Assert.NotNull(auditEvent);
@@ -152,7 +147,6 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
 
         // Act
         await _client.PostAsync("/admin/seed-dev-data?scenario=BasicDemo", null);
-        await Task.Delay(500);
 
         var afterOperation = DateTimeOffset.UtcNow;
 
@@ -175,7 +169,6 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
         
         // The second call won't create more data (idempotent), but should still audit the attempt
         await _client.PostAsync("/admin/seed-dev-data?scenario=BasicDemo", null);
-        await Task.Delay(800); // Wait longer for background processing
 
         // Assert - Verify we have audit events for both operations
         using var scope = _factory.Services.CreateScope();
@@ -188,7 +181,19 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
             PageSize = 10
         };
 
-        var auditEvents = await auditService.QueryAsync(query);
+        PagedResult<AuditEventDto> auditEvents = null;
+        // Retry for up to 5 seconds
+        for (int i = 0; i < 25; i++)
+        {
+            auditEvents = await auditService.QueryAsync(query);
+            if (auditEvents.TotalCount >= 2)
+            {
+                break;
+            }
+            await Task.Delay(200);
+        }
+
+        Assert.NotNull(auditEvents);
         _output.WriteLine($"Found {auditEvents.TotalCount} audit events for AdminDataSeeded");
         Assert.True(auditEvents.TotalCount >= 2, $"Expected at least 2 audit events, got {auditEvents.TotalCount}");
     }
@@ -244,8 +249,19 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
             PageSize = 1
         };
 
-        var result = await auditService.QueryAsync(query);
-        return result.Items.FirstOrDefault();
+        // Retry for up to 5 seconds to allow background processing
+        for (int i = 0; i < 25; i++)
+        {
+            var result = await auditService.QueryAsync(query);
+            var item = result.Items.FirstOrDefault();
+            if (item != null)
+            {
+                return item;
+            }
+            await Task.Delay(200);
+        }
+
+        return null;
     }
 
     /// <summary>

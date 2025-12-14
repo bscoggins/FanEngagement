@@ -55,6 +55,16 @@ services:
     command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899 --quiet
     environment:
       RUST_LOG: error
+    # privileged: true is required because solana-test-validator needs access to 
+    # system resources and capabilities that are typically restricted in containers.
+    # Specifically, it needs elevated permissions for memory mapping, file system operations,
+    # and handling the large number of file descriptors required for validator operations.
+    # This is safe for local development and testing environments.
+    privileged: true
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1000000
     ports:
       - "8899:8899"
     healthcheck:

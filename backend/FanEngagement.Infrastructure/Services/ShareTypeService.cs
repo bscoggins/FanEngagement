@@ -1,5 +1,6 @@
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Blockchain;
+using FanEngagement.Application.FeatureFlags;
 using FanEngagement.Application.ShareTypes;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -13,7 +14,8 @@ public class ShareTypeService(
     FanEngagementDbContext dbContext,
     IAuditService auditService,
     ILogger<ShareTypeService> logger,
-    IBlockchainAdapterFactory blockchainAdapterFactory) : IShareTypeService
+    IBlockchainAdapterFactory blockchainAdapterFactory,
+    IFeatureFlagService featureFlagService) : IShareTypeService
 {
     public async Task<ShareType> CreateAsync(Guid organizationId, CreateShareTypeRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
@@ -48,32 +50,44 @@ public class ShareTypeService(
 
             if (organization.BlockchainType != BlockchainType.None)
             {
-                var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
-                var createShareTypeCommand = new CreateShareTypeCommand(
-                    shareType.Id,
-                    organizationId,
-                    shareType.Name,
-                    shareType.Symbol,
-                    shareType.TokenDecimals,
-                    shareType.VotingWeight,
-                    shareType.MaxSupply,
-                    shareType.Description);
-
-                var onChainResult = await adapter.CreateShareTypeAsync(createShareTypeCommand, cancellationToken);
-
-                if (string.IsNullOrWhiteSpace(onChainResult.MintAddress))
+                var blockchainEnabled = await featureFlagService.IsEnabledAsync(organizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
+                if (blockchainEnabled)
                 {
-                    throw new InvalidOperationException("Blockchain adapter did not return a mint address for the share type.");
+                    var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
+                    var createShareTypeCommand = new CreateShareTypeCommand(
+                        shareType.Id,
+                        organizationId,
+                        shareType.Name,
+                        shareType.Symbol,
+                        shareType.TokenDecimals,
+                        shareType.VotingWeight,
+                        shareType.MaxSupply,
+                        shareType.Description);
+
+                    var onChainResult = await adapter.CreateShareTypeAsync(createShareTypeCommand, cancellationToken);
+
+                    if (string.IsNullOrWhiteSpace(onChainResult.MintAddress))
+                    {
+                        throw new InvalidOperationException("Blockchain adapter did not return a mint address for the share type.");
+                    }
+
+                    shareType.BlockchainMintAddress = onChainResult.MintAddress;
+                    await dbContext.SaveChangesAsync(cancellationToken);
+
+                    logger.LogInformation(
+                        "Share type {ShareTypeId} minted on {Blockchain} with transaction {TransactionId}",
+                        shareType.Id,
+                        organization.BlockchainType,
+                        onChainResult.TransactionId);
                 }
-
-                shareType.BlockchainMintAddress = onChainResult.MintAddress;
-                await dbContext.SaveChangesAsync(cancellationToken);
-
-                logger.LogInformation(
-                    "Share type {ShareTypeId} minted on {Blockchain} with transaction {TransactionId}",
-                    shareType.Id,
-                    organization.BlockchainType,
-                    onChainResult.TransactionId);
+                else
+                {
+                    logger.LogInformation(
+                        "Share type {ShareTypeId} created for organization {OrganizationId} with blockchain type {Blockchain} but feature flag disabled; skipping on-chain mint",
+                        shareType.Id,
+                        organizationId,
+                        organization.BlockchainType);
+                }
             }
 
             if (transaction != null)

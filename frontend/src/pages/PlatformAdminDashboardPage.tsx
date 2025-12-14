@@ -203,7 +203,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
         data-testid="quick-actions-grid"
       >
         <QuickActionCard
-          to="/admin/organizations/new"
+          to="/admin/organizations?action=create"
           icon="➕"
           iconBgClass="bg-light-blue"
           title="Create Organization"

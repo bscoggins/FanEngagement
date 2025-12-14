@@ -1,6 +1,7 @@
 using FanEngagement.Application.Audit;
 using FanEngagement.Application.Blockchain;
 using FanEngagement.Application.Exceptions;
+using FanEngagement.Application.FeatureFlags;
 using FanEngagement.Application.ShareIssuances;
 using FanEngagement.Domain.Entities;
 using FanEngagement.Domain.Enums;
@@ -14,7 +15,8 @@ public class ShareIssuanceService(
     FanEngagementDbContext dbContext,
     IAuditService auditService,
     ILogger<ShareIssuanceService> logger,
-    IBlockchainAdapterFactory blockchainAdapterFactory) : IShareIssuanceService
+    IBlockchainAdapterFactory blockchainAdapterFactory,
+    IFeatureFlagService featureFlagService) : IShareIssuanceService
 {
     public async Task<ShareIssuanceDto> CreateAsync(Guid organizationId, CreateShareIssuanceRequest request, Guid actorUserId, string actorDisplayName, CancellationToken cancellationToken = default)
     {
@@ -115,30 +117,41 @@ public class ShareIssuanceService(
 
             if (organization.BlockchainType != BlockchainType.None)
             {
-                if (string.IsNullOrWhiteSpace(shareType.BlockchainMintAddress))
+                var blockchainEnabled = await featureFlagService.IsEnabledAsync(organizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
+                if (blockchainEnabled)
                 {
-                    throw new InvalidOperationException("Share type does not have a blockchain mint address configured.");
-                }
+                    if (string.IsNullOrWhiteSpace(shareType.BlockchainMintAddress))
+                    {
+                        throw new InvalidOperationException("Share type does not have a blockchain mint address configured.");
+                    }
 
-                var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
-                var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organization.BlockchainType, cancellationToken);
+                    var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
+                    var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organization.BlockchainType, cancellationToken);
 
-                var onChainResult = await adapter.RecordShareIssuanceAsync(
-                    new RecordShareIssuanceCommand(
+                    var onChainResult = await adapter.RecordShareIssuanceAsync(
+                        new RecordShareIssuanceCommand(
+                            issuance.Id,
+                            shareType.BlockchainMintAddress,
+                            request.UserId,
+                            issuance.Quantity,
+                            recipientWalletAddress,
+                            actorUserId,
+                            request.Reason),
+                        cancellationToken);
+
+                    logger.LogInformation(
+                        "Share issuance {IssuanceId} recorded on {Blockchain} with transaction {TransactionId}",
                         issuance.Id,
-                        shareType.BlockchainMintAddress,
-                        request.UserId,
-                        issuance.Quantity,
-                        recipientWalletAddress,
-                        actorUserId,
-                        request.Reason),
-                    cancellationToken);
-
-                logger.LogInformation(
-                    "Share issuance {IssuanceId} recorded on {Blockchain} with transaction {TransactionId}",
-                    issuance.Id,
-                    organization.BlockchainType,
-                    onChainResult.TransactionId);
+                        organization.BlockchainType,
+                        onChainResult.TransactionId);
+                }
+                else
+                {
+                    logger.LogInformation(
+                        "Share issuance {IssuanceId} for organization {OrganizationId} skipped on-chain recording because BlockchainIntegration feature flag is disabled",
+                        issuance.Id,
+                        organizationId);
+                }
             }
 
             if (transaction != null)

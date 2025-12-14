@@ -24,6 +24,7 @@ using Xunit;
 
 namespace FanEngagement.Tests;
 
+[Trait("Category", "SolanaIntegration")]
 public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>, IDisposable
 {
     private readonly HttpClient _client;
@@ -178,8 +179,21 @@ public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebAppl
 
         var response = await _client.PostAsJsonAsync("/organizations", request);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Organization>()
+        var organization = await response.Content.ReadFromJsonAsync<Organization>()
             ?? throw new InvalidOperationException("Organization response could not be parsed.");
+
+        await EnableBlockchainIntegrationAsync(organization.Id);
+        return organization;
+    }
+
+    private async Task EnableBlockchainIntegrationAsync(Guid organizationId)
+    {
+        var enableResponse = await _client.PutAsJsonAsync($"/organizations/{organizationId}/feature-flags/BlockchainIntegration", new
+        {
+            enabled = true
+        });
+
+        enableResponse.EnsureSuccessStatusCode();
     }
 
     private async Task<ShareType> CreateShareTypeAsync(Guid organizationId)

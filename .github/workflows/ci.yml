@@ -32,7 +32,7 @@ jobs:
         working-directory: ./backend
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=SolanaIntegration"
         working-directory: ./backend
 
   frontend-tests:
@@ -115,6 +115,7 @@ jobs:
           RESULTS_DIR=$(pwd)/test-results
           docker compose -f docker-compose.yml run --rm -v "$RESULTS_DIR:/results" tests dotnet test FanEngagement.Tests/FanEngagement.Tests.csproj \
             --configuration Release \
+            --filter "Category!=SolanaIntegration" \
             --logger "trx;LogFileName=test-results.trx" \
             --results-directory /results
 
