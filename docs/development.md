@@ -12,6 +12,8 @@ This guide covers local development setup, testing workflows, and troubleshootin
 
 This guide helps you get up and running with the FanEngagement development environment quickly.
 
+If you are on macOS and brand new to the project, run the bootstrap script first: `./scripts/setup-mac-dev.sh` (see [guides/new-developer-setup.md](guides/new-developer-setup.md)).
+
 ## Prerequisites
 
 - **Docker** and **Docker Compose** (recommended)
@@ -180,6 +182,13 @@ See [docs/demo-seed-data.md](./demo-seed-data.md) for organization memberships, 
 ./scripts/test-backend --filter "HealthCheckTests"
 ```
 
+### Solana Governance Program Tests
+
+```bash
+# Build, unit test, and deploy-check the fan-governance program on a local validator
+./scripts/run-solana-governance-tests.sh
+```
+
 ### Frontend Tests
 
 ```bash
@@ -266,7 +275,9 @@ Or use the "Reset to Seed Data" button in the Admin Dev Tools UI.
 | `./scripts/dev-down --clean` | Stop and remove all data (volumes) |
 | `./scripts/test-backend` | Run backend tests |
 | `./scripts/test-frontend` | Run frontend tests |
+| `./scripts/run-solana-governance-tests.sh` | Build + test Solana governance program and validator install check |
 | `./scripts/run-e2e.sh` | Run end-to-end tests |
+| `./scripts/run-all-tests.sh` | Run governance, backend, frontend, and E2E suites in order |
 
 ## Dev Data Scenarios
 
