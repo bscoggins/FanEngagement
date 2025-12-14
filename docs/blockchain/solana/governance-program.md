@@ -57,8 +57,8 @@ source "$HOME/.cargo/env"
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
 # Build the program and emit IDL
-author_env="adapters/solana/program"
-cd "$author_env"
+program_dir="adapters/solana/program"
+cd "$program_dir"
 anchor build
 
 # Run Rust unit tests for the program

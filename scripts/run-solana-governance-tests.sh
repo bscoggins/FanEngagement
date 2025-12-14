@@ -71,4 +71,4 @@ cargo test -p fan-governance live_validator_flow
 # Shut down dockerized validator after the live test
 docker compose -f "$ROOT_DIR/adapters/solana/docker-compose.yml" down >/dev/null
 
-echo "\n✓ Governance program build, unit tests, and validator install check finished successfully."
+echo -e "\n✓ Governance program build, unit tests, and validator install check finished successfully."

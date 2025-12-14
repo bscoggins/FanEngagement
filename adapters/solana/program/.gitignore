@@ -11,9 +11,11 @@ test-ledger/
 target/idl/
 target/types/
 
-# Keypairs (NEVER commit these)
+# Keypairs (NEVER commit these, except deployed program keypairs)
+# Note: Negation patterns only work within the same directory scope.
+# Since target/ is already ignored on line 2, we cannot re-include files within it.
+# Deploy keypairs should be regenerated via anchor build/deploy.
 *-keypair.json
-!target/deploy/*-keypair.json
 
 # IDE
 .idea/

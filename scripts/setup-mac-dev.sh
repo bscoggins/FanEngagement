@@ -71,6 +71,10 @@ install_pnpm() {
   if have_cmd pnpm; then
     return
   fi
+  if ! have_cmd npm; then
+    echo "Error: npm not found. Please ensure Node.js is installed first."
+    return 1
+  fi
   npm install -g pnpm
 }
 
@@ -93,6 +97,11 @@ install_solana_cli() {
 install_anchor() {
   if have_cmd anchor; then
     return
+  fi
+  # Ensure cargo is available (sourced via $HOME/.cargo/env before this function is called)
+  if ! have_cmd cargo; then
+    echo "Error: cargo not found. Please ensure rustup is installed and sourced first."
+    return 1
   fi
   echo "Installing Anchor CLI 0.32.x..."
   cargo install --git https://github.com/coral-xyz/anchor anchor-cli --tag v0.32.1

@@ -12,7 +12,7 @@ export const config = {
     rpcUrl: process.env.SOLANA_RPC_URL || 'http://localhost:8899',
     commitment: (process.env.SOLANA_COMMITMENT || 'confirmed') as 'processed' | 'confirmed' | 'finalized',
     confirmTimeout: parseInt(process.env.SOLANA_CONFIRM_TIMEOUT || '30000', 10),
-    programId: process.env.SOLANA_PROGRAM_ID || 'BuSzaWuvbYRnhxBNkqLueDE2AavgvtYjsFLsBaspSVBc',
+    programId: process.env.SOLANA_PROGRAM_ID || '53kLd3Zo8gqPyHuuALc1fLoARPszVkheA4P859MtfPo',
   },
   authentication: {
     apiKey: process.env.API_KEY || '',
@@ -39,9 +39,5 @@ export function validateConfig(): void {
 
   if (!config.solana.rpcUrl) {
     throw new Error('SOLANA_RPC_URL is required');
-  }
-
-  if (!config.solana.programId) {
-    throw new Error('SOLANA_PROGRAM_ID is required');
   }
 }
