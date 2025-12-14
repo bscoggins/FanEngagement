@@ -1,13 +1,13 @@
 import React from 'react';
-import { type Toast } from '../contexts/ToastContext';
+import { type Toast as ToastModel } from '../contexts/ToastContext';
 import './Toast.css';
 
 interface ToastProps {
-  toast: Toast;
+  toast: ToastModel;
   onDismiss: (id: string) => void;
 }
 
-const getAnimationDirection = (position: Toast['position']) => {
+const getAnimationDirection = (position: ToastModel['position']) => {
   switch (position) {
     case 'top-left':
     case 'bottom-left':

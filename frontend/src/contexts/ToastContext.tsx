@@ -39,22 +39,31 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const fallbackIdCounter = useRef(0);
 
-  const generateId = useCallback(() => {
-    if (typeof crypto !== 'undefined') {
-      if ('randomUUID' in crypto) {
-        return crypto.randomUUID();
-      }
+  const getCrypto = useCallback(() => {
+    if (typeof globalThis === 'undefined') {
+      return undefined;
+    }
 
-      if (typeof crypto.getRandomValues === 'function') {
-        const buffer = new Uint32Array(4);
-        crypto.getRandomValues(buffer);
-        return Array.from(buffer, (value) => value.toString(16).padStart(8, '0')).join('-');
-      }
+    const { crypto: cryptoObj } = globalThis as typeof globalThis & { crypto?: Crypto };
+    return cryptoObj ?? undefined;
+  }, []);
+
+  const generateId = useCallback(() => {
+    const cryptoInstance = getCrypto();
+
+    if (cryptoInstance?.randomUUID) {
+      return cryptoInstance.randomUUID();
+    }
+
+    if (typeof cryptoInstance?.getRandomValues === 'function') {
+      const buffer = new Uint32Array(4);
+      cryptoInstance.getRandomValues(buffer);
+      return Array.from(buffer, (value) => value.toString(16).padStart(8, '0')).join('-');
     }
 
     fallbackIdCounter.current += 1;
     return `${Date.now().toString(16)}-${fallbackIdCounter.current.toString(16).padStart(4, '0')}-${Math.random().toString(16).slice(2)}`;
-  }, []);
+  }, [getCrypto]);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
