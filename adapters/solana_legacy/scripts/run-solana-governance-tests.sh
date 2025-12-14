@@ -14,7 +14,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROGRAM_DIR="$ROOT_DIR/adapters/solana/program"
+PROGRAM_DIR="$ROOT_DIR/adapters/solana_legacy/program"
 
 if [[ -f "$HOME/.cargo/env" ]]; then
   # shellcheck source=/dev/null
@@ -31,7 +31,7 @@ if ! command -v solana >/dev/null 2>&1; then
 fi
 
 # Ensure any prior docker validator instances are stopped to free RPC ports
-docker compose -f "$ROOT_DIR/adapters/solana/docker-compose.yml" down >/dev/null 2>&1 || true
+docker compose -f "$ROOT_DIR/adapters/solana_legacy/docker-compose.yml" down >/dev/null 2>&1 || true
 
 cd "$PROGRAM_DIR"
 

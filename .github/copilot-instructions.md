@@ -209,3 +209,9 @@ Technical details live in `.github/copilot-coding-agent-instructions.md`.
 - Solana adapter tests live under `adapters/solana/tests` and run with the package-level npm scripts; most integration tests expect either Solana devnet or the optional `solana-test-validator` Compose profile.  
 - Polygon adapter tests live under `adapters/polygon/tests`; they require a funded Polygon Amoy testnet key (`POLYGON_PRIVATE_KEY`) plus `POLYGON_RPC_URL`.  
 - When E2E or backend workflows need blockchain adapters, document whether the caller must start them (e.g., `docker compose --profile solana up -d solana-adapter`). If a change depends on adapter behavior, call out which adapter(s) to run and which env vars must be set.
+
+**Solana Notes**
+- The latest information on solana can be found at https://www.anza.xyz/.  Note that the old Solana github repo has been archived.
+- Solana SDK is located at https://github.com/anza-xyz/solana-sdk.
+- Always use the latest version of the Solana SDK for compatibility and security.
+- Use Pinoccio for blockchain interactions.

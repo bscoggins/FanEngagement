@@ -9,7 +9,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-ADAPTER_DIR="$ROOT_DIR/adapters/solana"
+ADAPTER_DIR="$ROOT_DIR/adapters/solana_legacy"
 COMPOSE_FILE="$ADAPTER_DIR/docker-compose.yml"
 KEYPAIR_FILE="${SOLANA_TEST_KEYPAIR:-$ROOT_DIR/test-keypair.json}"
 RPC_URL="${SOLANA_RPC_URL:-http://localhost:8899}"
