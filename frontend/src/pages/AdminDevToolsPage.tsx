@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi, type DevDataSeedingResult, type TestDataResetResult, type SeedScenario, type SeedScenarioInfo } from '../api/adminApi';
 import { Button } from '../components/Button';
+import { Modal } from '../components/Modal';
 import './AdminPage.css';
 
 const DEFAULT_SCENARIOS: SeedScenarioInfo[] = [
@@ -18,6 +19,7 @@ export const AdminDevToolsPage: React.FC = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetResult, setResetResult] = useState<TestDataResetResult | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
 
   useEffect(() => {
     const fetchScenarios = async () => {
@@ -59,12 +61,10 @@ export const AdminDevToolsPage: React.FC = () => {
   };
 
   const handleResetDevData = async () => {
-    if (!window.confirm('This will delete all organizations and non-admin users, then reseed sample data. Continue?')) {
-      return;
-    }
     setResetLoading(true);
     setResetError(null);
     setResetResult(null);
+    setShowResetConfirmModal(false);
     try {
       const res = await adminApi.resetDevData();
       setResetResult(res);
@@ -190,7 +190,7 @@ export const AdminDevToolsPage: React.FC = () => {
         </div>
 
         <Button
-          onClick={handleResetDevData}
+          onClick={() => setShowResetConfirmModal(true)}
           disabled={resetLoading}
           isLoading={resetLoading}
           variant="danger"
@@ -219,6 +219,29 @@ export const AdminDevToolsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={showResetConfirmModal}
+        onClose={() => setShowResetConfirmModal(false)}
+        title="Confirm Reset"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowResetConfirmModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleResetDevData}>
+              Reset Data
+            </Button>
+          </>
+        }
+      >
+        <p>This will delete all organizations and non-admin users, then reseed sample data.</p>
+        <p style={{ marginBottom: 0 }}>
+          <strong>This action cannot be undone.</strong> Are you sure you want to continue?
+        </p>
+      </Modal>
     </div>
   );
 };
