@@ -173,6 +173,8 @@ export const Modal: React.FC<ModalProps> = ({
         style={maxWidth ? { maxWidth } : undefined}
         role="dialog"
         aria-modal="true"
+        // Only set aria-labelledby when using title prop (which creates element with id='modal-title')
+        // Custom headers should provide their own id if they want aria-labelledby support
         aria-labelledby={title ? 'modal-title' : undefined}
       >
         {/* Header slot */}
