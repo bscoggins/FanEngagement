@@ -45,10 +45,6 @@ export const AdminOrganizationsPage: React.FC = () => {
   useEffect(() => {
     if (searchParams.get('action') === 'create') {
       setShowCreateForm(true);
-      // Clear the param so refreshing doesn't reopen it if closed, 
-      // or just to clean up the URL. 
-      // Actually, keeping it might be nice if they refresh. 
-      // But if they click cancel, we should probably remove it.
     }
   }, [searchParams]);
 

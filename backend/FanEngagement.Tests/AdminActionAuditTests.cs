@@ -193,6 +193,7 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
             await Task.Delay(200);
         }
 
+        Assert.NotNull(auditEvents);
         _output.WriteLine($"Found {auditEvents.TotalCount} audit events for AdminDataSeeded");
         Assert.True(auditEvents.TotalCount >= 2, $"Expected at least 2 audit events, got {auditEvents.TotalCount}");
     }

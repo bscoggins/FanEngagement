@@ -31,6 +31,12 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                         principalTable: "Organizations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrganizationFeatureFlags_Users_EnabledByUserId",
+                        column: x => x.EnabledByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateIndex(

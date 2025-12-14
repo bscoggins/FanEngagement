@@ -43,6 +43,16 @@ public class FeatureFlagService(FanEngagementDbContext dbContext) : IFeatureFlag
             throw new InvalidOperationException($"Unsupported feature flag: {feature}");
         }
 
+        // Validate that the organization exists
+        var organizationExists = await dbContext.Organizations
+            .AsNoTracking()
+            .AnyAsync(o => o.Id == organizationId, cancellationToken);
+
+        if (!organizationExists)
+        {
+            throw new InvalidOperationException($"Organization {organizationId} not found");
+        }
+
         var existing = await dbContext.OrganizationFeatureFlags
             .FirstOrDefaultAsync(f => f.OrganizationId == organizationId && f.Feature == feature, cancellationToken);
 

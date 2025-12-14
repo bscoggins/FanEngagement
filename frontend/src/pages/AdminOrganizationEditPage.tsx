@@ -290,7 +290,11 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 ) : (
                   <Toggle
                     checked={isBlockchainEnabled}
-                    onChange={handleToggleBlockchainFlag}
+                    onChange={(e) => {
+                      if (e.target.checked !== isBlockchainEnabled) {
+                        handleToggleBlockchainFlag();
+                      }
+                    }}
                     disabled={!isAdmin || isUpdatingFlag}
                     label={isBlockchainEnabled ? 'Enabled' : 'Disabled'}
                     data-testid="toggle-blockchain-integration"

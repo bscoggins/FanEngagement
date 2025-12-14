@@ -9,22 +9,12 @@ namespace FanEngagement.Api.Controllers;
 [Route("organizations/{organizationId:guid}/feature-flags")]
 [Authorize]
 public class OrganizationFeatureFlagsController(
-    IFeatureFlagService featureFlagService,
-    IAuthorizationService authorizationService) : ControllerBase
+    IFeatureFlagService featureFlagService) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = "OrgAdmin")]
     public async Task<ActionResult<IEnumerable<FeatureFlagDto>>> Get(Guid organizationId, CancellationToken cancellationToken)
     {
-        // Platform admins can always view. Non-admins must satisfy OrgAdmin policy.
-        if (!User.IsInRole("Admin"))
-        {
-            var authResult = await authorizationService.AuthorizeAsync(User, null, "OrgAdmin");
-            if (!authResult.Succeeded)
-            {
-                return Forbid();
-            }
-        }
-
         var flags = await featureFlagService.GetForOrganizationAsync(organizationId, cancellationToken);
         return Ok(flags);
     }
