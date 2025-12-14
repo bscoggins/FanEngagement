@@ -18,6 +18,7 @@ public class FanEngagementDbContext(DbContextOptions<FanEngagementDbContext> opt
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
     public DbSet<OutboundEvent> OutboundEvents => Set<OutboundEvent>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<OrganizationFeatureFlag> OrganizationFeatureFlags => Set<OrganizationFeatureFlag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -51,6 +51,10 @@ test.describe.serial('Admin and member governance flows', () => {
     await page.getByRole('button', { name: 'Create Organization' }).click();
     await page.getByLabel('Name').fill(newOrgName);
     await page.getByLabel('Description').fill('E2E-created organization for governance flows');
+    
+    // Select the first available user as admin (index 0 is placeholder)
+    await page.getByLabel('Initial Organization Admin').selectOption({ index: 1 });
+
     await page.getByRole('button', { name: 'Create Organization' }).click();
 
     await expect(page).toHaveURL(/\/admin\/organizations\/.+\/edit/);

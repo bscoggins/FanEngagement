@@ -11,8 +11,24 @@ namespace FanEngagement.Tests;
 /// </summary>
 internal sealed class TestBlockchainAdapterHandler : HttpMessageHandler
 {
+    private readonly string _adapterName;
+
+    public TestBlockchainAdapterHandler(string adapterName)
+    {
+        _adapterName = adapterName;
+    }
+
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        // Verify API Key is present
+        if (!request.Headers.Contains("X-Adapter-API-Key"))
+        {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            {
+                Content = new StringContent("Missing API Key")
+            });
+        }
+
         var path = request.RequestUri?.AbsolutePath?.TrimEnd('/')?.ToLowerInvariant() ?? string.Empty;
         var responsePayload = path switch
         {

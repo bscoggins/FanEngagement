@@ -13,6 +13,15 @@ vi.mock('../api/organizationsApi', () => ({
   },
 }));
 
+// Mock AuthContext
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: () => ({
+    isAdmin: true,
+    user: { id: 'admin-1', email: 'admin@example.com' },
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

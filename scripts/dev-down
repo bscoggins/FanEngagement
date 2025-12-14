@@ -23,13 +23,13 @@ echo ""
 
 if [[ "$CLEAN_VOLUMES" == true ]]; then
   echo "Stopping services and removing containers, networks, and volumes..."
-  docker compose down -v --remove-orphans
+  docker compose --profile "*" down -v --remove-orphans
   echo ""
   echo "✓ All services stopped and data removed."
   echo "  Database will be empty on next start."
 else
   echo "Stopping services and removing containers..."
-  docker compose down --remove-orphans
+  docker compose --profile "*" down --remove-orphans
   echo ""
   echo "✓ All services stopped."
   echo "  Database data preserved. Use --clean to also remove data."

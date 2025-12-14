@@ -33,8 +33,54 @@ if [[ ! -x $GOV_SCRIPT ]]; then
   exit 1
 fi
 
+# Ensure a clean slate before starting
+echo "Cleaning up any existing Docker services..."
+docker compose --profile "*" down --remove-orphans >/dev/null 2>&1 || true
+
 echo "=== [1/3] Governance program build + unit tests ==="
 $GOV_SCRIPT
+
+cleanup() {
+  echo "Stopping all Docker services..."
+  docker compose --profile "*" down --remove-orphans || true
+}
+trap cleanup EXIT
+
+echo -e "\n=== Starting Solana Services for Integration Tests ==="
+docker compose --profile solana up -d solana-test-validator solana-adapter
+
+echo "Waiting for Solana services to be healthy..."
+# Wait for validator
+for i in {1..30}; do
+  if docker compose exec -T solana-test-validator solana cluster-version >/dev/null 2>&1; then
+    echo "Validator is ready."
+    break
+  fi
+  echo "Waiting for validator... ($i/30)"
+  sleep 2
+done
+
+# Wait for adapter
+for i in {1..30}; do
+  if curl -s http://localhost:3001/v1/adapter/health >/dev/null; then
+    echo "Adapter is ready."
+    break
+  fi
+  echo "Waiting for adapter... ($i/30)"
+  sleep 2
+done
+
+echo "Funding adapter wallet..."
+# Devnet public key corresponding to the default dev private key
+ADAPTER_PUBKEY="2p7ji7RTkmNJTEHwd7mRkiscmZXFETHavtYyNJMyLzcg"
+for i in {1..5}; do
+  if docker compose exec -T solana-test-validator solana airdrop 10 "$ADAPTER_PUBKEY" --url http://localhost:8899; then
+    echo "Airdrop succeeded."
+    break
+  fi
+  echo "Airdrop failed, retrying... ($i/5)"
+  sleep 5
+done
 
 echo -e "\n=== [2/3] Backend + Frontend Unit Suites ==="
 $UNIT_SCRIPT

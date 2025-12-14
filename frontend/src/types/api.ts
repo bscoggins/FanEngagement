@@ -45,6 +45,7 @@ export interface MfaStatusResponse {
 
 // Blockchain types
 export type BlockchainType = 'None' | 'Solana' | 'Polygon';
+export type OrganizationFeature = 'BlockchainIntegration';
 
 // Pagination types
 export interface PagedResult<T> {
@@ -125,6 +126,8 @@ export interface CreateOrganizationRequest {
   secondaryColor?: string;
   blockchainType?: BlockchainType;
   blockchainConfig?: string;
+  enableBlockchainFeature?: boolean;
+  initialAdminUserId?: string;
 }
 
 export interface UpdateOrganizationRequest {
@@ -135,6 +138,15 @@ export interface UpdateOrganizationRequest {
   secondaryColor?: string;
   blockchainType?: BlockchainType;
   blockchainConfig?: string;
+}
+
+export interface FeatureFlag {
+  feature: OrganizationFeature;
+  isEnabled: boolean;
+  name: string;
+  description: string;
+  enabledAt?: string;
+  enabledByUserId?: string;
 }
 
 export interface Membership {

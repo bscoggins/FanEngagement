@@ -130,7 +130,7 @@
 /* ===== Secondary Variant ===== */
 .btn--secondary {
   background-color: var(--color-neutral-200);
-  color: var(--color-text-primary);
+  color: var(--color-neutral-700);
   border-color: var(--color-neutral-300);
   box-shadow: var(--shadow-sm);
 }
@@ -171,13 +171,13 @@
 /* ===== Ghost Variant ===== */
 .btn--ghost {
   background-color: transparent;
-  color: var(--color-text-primary);
+  color: var(--color-neutral-700);
   border-color: transparent;
 }
 
 .btn--ghost:hover:not(:disabled) {
   background-color: var(--color-neutral-100);
-  color: var(--color-text-primary);
+  color: var(--color-neutral-900);
 }
 
 .btn--ghost:active:not(:disabled) {
@@ -310,44 +310,11 @@
 }
 
 /* ===== Dark Mode Support (Foundation) ===== */
-/* Combines both prefers-color-scheme and manual theme toggle */
-@media (prefers-color-scheme: dark) {
-  .btn--secondary {
-    background-color: rgba(255, 255, 255, 0.12);
-    color: var(--color-text-inverse);
-    border-color: rgba(255, 255, 255, 0.22);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .btn--secondary:hover:not(:disabled) {
-    background-color: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.32);
-  }
-
-  .btn--secondary:active:not(:disabled) {
-    background-color: rgba(255, 255, 255, 0.24);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-  
-  .btn--ghost {
-    color: var(--color-text-inverse);
-  }
-  
-  .btn--ghost:hover:not(:disabled) {
-    background-color: var(--color-neutral-800);
-  }
-  
-  .btn--outline {
-    color: var(--color-primary-400);
-    border-color: var(--color-primary-400);
-  }
-  
-  .btn--outline:hover:not(:disabled) {
-    background-color: var(--color-primary-alpha-10);
-    color: var(--color-primary-300);
-    border-color: var(--color-primary-300);
-  }
-}
+/* 
+   Note: We rely on the .theme-dark class on the body element for dark mode overrides.
+   The @media (prefers-color-scheme: dark) block has been removed to prevent
+   system preferences from overriding the application's theme state.
+*/
 
 /* Manual theme toggle support */
 body.theme-dark .btn--secondary {

@@ -25,6 +25,15 @@ vi.mock('../api/organizationsApi', () => ({
   },
 }));
 
+// Mock the usersApi
+vi.mock('../api/usersApi', () => ({
+  usersApi: {
+    getAll: vi.fn().mockResolvedValue([
+      { id: 'user-1', displayName: 'Test User', email: 'test@example.com' }
+    ]),
+  },
+}));
+
 describe('AdminOrganizationsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -249,9 +258,11 @@ describe('AdminOrganizationsPage', () => {
       // Fill form
       const nameInput = screen.getByLabelText(/name/i);
       const descriptionInput = screen.getByLabelText(/description/i);
+      const adminSelect = screen.getByLabelText(/initial organization admin/i);
       
       await user.type(nameInput, 'New Test Org');
       await user.type(descriptionInput, 'New test description');
+      await user.selectOptions(adminSelect, 'user-1');
       
       // Submit form
       const submitButton = screen.getByRole('button', { name: /^create organization$/i });
@@ -262,6 +273,13 @@ describe('AdminOrganizationsPage', () => {
         expect(organizationsApi.create).toHaveBeenCalledWith({
           name: 'New Test Org',
           description: 'New test description',
+          initialAdminUserId: 'user-1',
+          logoUrl: '',
+          primaryColor: '#000000',
+          secondaryColor: '#ffffff',
+          enableBlockchainFeature: false,
+          blockchainType: 'None',
+          blockchainConfig: '',
         });
       });
       
@@ -288,7 +306,10 @@ describe('AdminOrganizationsPage', () => {
       
       // Fill and submit form
       const nameInput = screen.getByLabelText(/name/i);
+      const adminSelect = screen.getByLabelText(/initial organization admin/i);
+      
       await user.type(nameInput, 'Test Org');
+      await user.selectOptions(adminSelect, 'user-1');
       
       const submitButton = screen.getByRole('button', { name: /^create organization$/i });
       await user.click(submitButton);
@@ -343,7 +364,10 @@ describe('AdminOrganizationsPage', () => {
       await user.click(createButton);
       
       const nameInput = screen.getByLabelText(/name/i);
+      const adminSelect = screen.getByLabelText(/initial organization admin/i);
+      
       await user.type(nameInput, 'Test Org');
+      await user.selectOptions(adminSelect, 'user-1');
       
       // Submit form
       const submitButton = screen.getByRole('button', { name: /^create organization$/i });

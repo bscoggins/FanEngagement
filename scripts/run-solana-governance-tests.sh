@@ -33,6 +33,12 @@ fi
 # Ensure any prior docker validator instances are stopped to free RPC ports
 docker compose -f "$ROOT_DIR/adapters/solana/docker-compose.yml" down >/dev/null 2>&1 || true
 
+cleanup() {
+  # Shut down dockerized validator if it was started
+  docker compose -f "$ROOT_DIR/adapters/solana/docker-compose.yml" down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
 cd "$PROGRAM_DIR"
 
 echo "=== Building governance program (anchor build) ==="
@@ -67,8 +73,5 @@ export RUN_LIVE_VALIDATOR_TEST=1
 export SOLANA_RPC_URL="$LIVE_RPC_URL"
 export SOLANA_PAYER_KEYPAIR="$VALIDATOR_PAYER_OUT"
 cargo test -p fan-governance live_validator_flow
-
-# Shut down dockerized validator after the live test
-docker compose -f "$ROOT_DIR/adapters/solana/docker-compose.yml" down >/dev/null
 
 echo -e "\n✓ Governance program build, unit tests, and validator install check finished successfully."

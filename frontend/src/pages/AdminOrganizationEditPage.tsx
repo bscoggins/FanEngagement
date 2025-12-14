@@ -3,9 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
 import { shareTypesApi } from '../api/shareTypesApi';
 import { proposalsApi } from '../api/proposalsApi';
-import type { UpdateOrganizationRequest, Organization } from '../types/api';
+import type { UpdateOrganizationRequest, Organization, FeatureFlag } from '../types/api';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
+import { Toggle } from '../components/Toggle';
+import { useAuth } from '../auth/AuthContext';
 
 const adminInfoTextStyle: React.CSSProperties = {
   marginTop: '0.5rem',
@@ -25,6 +27,7 @@ const adminColorInputStyle: React.CSSProperties = {
 export const AdminOrganizationEditPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [formData, setFormData] = useState<UpdateOrganizationRequest>({
@@ -41,6 +44,10 @@ export const AdminOrganizationEditPage: React.FC = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasExistingData, setHasExistingData] = useState(false);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([]);
+  const [isFlagsLoading, setIsFlagsLoading] = useState(false);
+  const [flagError, setFlagError] = useState<string | null>(null);
+  const [isUpdatingFlag, setIsUpdatingFlag] = useState(false);
 
   useEffect(() => {
     const fetchOrganization = async () => {
@@ -53,6 +60,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
       try {
         setIsLoading(true);
         setFetchError(null);
+        setIsFlagsLoading(true);
         
         const orgData = await organizationsApi.getById(orgId);
         setOrganization(orgData);
@@ -64,6 +72,22 @@ export const AdminOrganizationEditPage: React.FC = () => {
           secondaryColor: orgData.secondaryColor || '',
           blockchainType: orgData.blockchainType || 'None',
         });
+
+        try {
+          const flags = await organizationsApi.getFeatureFlags(orgId);
+          setFeatureFlags(flags);
+          setFlagError(null);
+        } catch (flagErr) {
+          console.error('Failed to fetch feature flags:', flagErr);
+          const status = (flagErr as any)?.response?.status;
+          if (status === 403) {
+            setFlagError('You do not have permission to view feature flags. Platform admins can manage flags.');
+          } else {
+            setFlagError('Unable to load feature flags. Please try again or contact an administrator.');
+          }
+        } finally {
+          setIsFlagsLoading(false);
+        }
         
         // Check if organization has existing data (shares or proposals)
         try {
@@ -89,6 +113,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
         } else {
           setFetchError('Failed to load organization. Please try again.');
         }
+        setIsFlagsLoading(false);
       } finally {
         setIsLoading(false);
       }
@@ -100,6 +125,28 @@ export const AdminOrganizationEditPage: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const blockchainFlag = featureFlags.find((f) => f.feature === 'BlockchainIntegration');
+  const isBlockchainEnabled = blockchainFlag?.isEnabled ?? false;
+
+  const handleToggleBlockchainFlag = async () => {
+    if (!orgId || !isAdmin) return;
+    setIsUpdatingFlag(true);
+    setFlagError(null);
+    try {
+      const updated = await organizationsApi.setFeatureFlag(orgId, 'BlockchainIntegration', !isBlockchainEnabled);
+      setFeatureFlags((prev) => {
+        const other = prev.filter((f) => f.feature !== 'BlockchainIntegration');
+        return [...other, updated];
+      });
+      setSuccessMessage(`Blockchain integration ${updated.isEnabled ? 'enabled' : 'disabled'} successfully.`);
+    } catch (err) {
+      console.error('Failed to update feature flag:', err);
+      setFlagError('Unable to update feature flag.');
+    } finally {
+      setIsUpdatingFlag(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,6 +276,34 @@ export const AdminOrganizationEditPage: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border-subtle)' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Blockchain Configuration</h3>
+
+            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontWeight: 600 }}>Blockchain Integration</div>
+                  <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
+                    Enable on-chain storage for organization governance.
+                  </div>
+                </div>
+                {isFlagsLoading ? (
+                  <span style={{ color: 'var(--color-text-secondary)' }}>Loading…</span>
+                ) : (
+                  <Toggle
+                    checked={isBlockchainEnabled}
+                    onChange={handleToggleBlockchainFlag}
+                    disabled={!isAdmin || isUpdatingFlag}
+                    label={isBlockchainEnabled ? 'Enabled' : 'Disabled'}
+                    data-testid="toggle-blockchain-integration"
+                  />
+                )}
+              </div>
+              {flagError && (
+                <div style={{ color: 'var(--color-danger)', marginTop: '0.5rem' }}>{flagError}</div>
+              )}
+              {!isAdmin && !isBlockchainEnabled && (
+                <div style={adminInfoTextStyle}>Platform admin must enable blockchain integration before on-chain settings can be used.</div>
+              )}
+            </div>
             
             <div style={{ marginBottom: '1.5rem' }}>
               <Select
@@ -237,7 +312,7 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 label="Blockchain Platform"
                 value={formData.blockchainType || 'None'}
                 onChange={handleChange}
-                disabled={hasExistingData}
+                disabled={hasExistingData || (!isBlockchainEnabled && !isAdmin)}
                 helperText="Select a blockchain platform for governance transparency. This setting determines where governance actions are recorded."
               >
                 <option value="None">None (Off-chain only)</option>
@@ -247,6 +322,11 @@ export const AdminOrganizationEditPage: React.FC = () => {
               {hasExistingData && (
                 <div style={adminInfoTextStyle}>
                   Blockchain type cannot be changed after shares or proposals are created.
+                </div>
+              )}
+              {!isBlockchainEnabled && (
+                <div style={adminInfoTextStyle}>
+                  Blockchain integration is disabled. Enable the feature flag to use on-chain storage.
                 </div>
               )}
             </div>

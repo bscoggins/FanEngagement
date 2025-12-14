@@ -11,4 +11,6 @@ public class CreateOrganizationRequest
     public string? SecondaryColor { get; set; }
     public BlockchainType? BlockchainType { get; set; }
     public string? BlockchainConfig { get; set; }
+    public bool EnableBlockchainFeature { get; set; }
+    public Guid? InitialAdminUserId { get; set; }
 }

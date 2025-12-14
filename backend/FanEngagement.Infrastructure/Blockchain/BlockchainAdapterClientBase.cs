@@ -88,7 +88,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         try
         {
             var client = CreateHttpClient();
-            var url = BuildUrl("/organizations");
+            var url = BuildUrl("organizations");
             var payload = BuildOrganizationPayload(command);
             var response = await client.PostAsJsonAsync(url, payload, SerializerOptions, cancellationToken);
 
@@ -111,7 +111,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         try
         {
             var client = CreateHttpClient();
-            var url = BuildUrl("/share-types");
+            var url = BuildUrl("share-types");
             var response = await client.PostAsJsonAsync(url, new
             {
                 shareTypeId = command.ShareTypeId,
@@ -146,7 +146,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         try
         {
             var client = CreateHttpClient();
-            var url = BuildUrl("/share-issuances");
+            var url = BuildUrl("share-issuances");
             var response = await client.PostAsJsonAsync(url, new
             {
                 issuanceId = command.IssuanceId,
@@ -180,7 +180,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         try
         {
             var client = CreateHttpClient();
-            var url = BuildUrl("/proposals");
+            var url = BuildUrl("proposals");
             var response = await client.PostAsJsonAsync(url, new
             {
                 proposalId = command.ProposalId,
@@ -215,7 +215,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         try
         {
             var client = CreateHttpClient();
-            var url = BuildUrl("/votes");
+            var url = BuildUrl("votes");
             var response = await client.PostAsJsonAsync(url, new
             {
                 voteId = command.VoteId,
@@ -247,7 +247,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         try
         {
             var client = CreateHttpClient();
-            var url = BuildUrl("/proposal-results");
+            var url = BuildUrl("proposal-results");
             var response = await client.PostAsJsonAsync(url, new
             {
                 proposalId = command.ProposalId,

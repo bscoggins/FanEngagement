@@ -22,9 +22,9 @@ fi
 echo "=== FanEngagement Dev Environment ==="
 echo ""
 
-# Start database
-echo "Starting PostgreSQL database..."
-docker compose up -d db
+# Start database and Solana services
+echo "Starting PostgreSQL database and Solana services..."
+docker compose --profile solana up -d db solana-test-validator solana-adapter
 
 # Wait for database to be healthy
 echo "Waiting for database to be healthy..."
