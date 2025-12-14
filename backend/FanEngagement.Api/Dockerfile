@@ -12,6 +12,9 @@ COPY backend/FanEngagement.Domain/FanEngagement.Domain.csproj backend/FanEngagem
 COPY backend/FanEngagement.Infrastructure/FanEngagement.Infrastructure.csproj backend/FanEngagement.Infrastructure/
 COPY backend/FanEngagement.Tests/FanEngagement.Tests.csproj backend/FanEngagement.Tests/
 
+# Ensure trusted certificates are available for NuGet restore in containerized environments
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+
 RUN dotnet restore backend/FanEngagement.Api/FanEngagement.Api.csproj
 
 COPY backend/. ./backend/

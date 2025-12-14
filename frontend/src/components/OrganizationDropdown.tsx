@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import type { MembershipWithOrganizationDto } from '../types/api';
 import { getRoleBadgeClass, getRoleLabel } from '../utils/roleUtils';
+import { Dropdown, type DropdownItem } from './Dropdown';
 import './OrganizationDropdown.css';
 
 interface OrganizationDropdownProps {
@@ -16,9 +17,7 @@ export const OrganizationDropdown: React.FC<OrganizationDropdownProps> = ({
   onSelect,
   testId,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const baseTestId = testId || 'organization-dropdown';
+  const baseTestId = testId || 'org-dropdown';
 
   const activeMembership = useMemo(() => {
     if (memberships.length === 0) {
@@ -32,121 +31,103 @@ export const OrganizationDropdown: React.FC<OrganizationDropdownProps> = ({
     return memberships[0];
   }, [memberships, activeOrgId]);
 
-  const toggleDropdown = useCallback(() => {
-    setIsOpen(prev => !prev);
-  }, []);
-
-  const closeDropdown = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const handleSelect = useCallback((orgId: string) => {
-    onSelect(orgId);
-    closeDropdown();
-  }, [onSelect, closeDropdown]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        closeDropdown();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen, closeDropdown]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeDropdown();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen, closeDropdown]);
-
   if (memberships.length === 0) {
     return null;
   }
 
-  const selectedLabel = activeMembership?.organizationName ?? 'Select organization';
+  const dropdownItems: DropdownItem[] = useMemo(
+    () =>
+      memberships.map(membership => ({
+        id: membership.organizationId,
+        label: membership.organizationName,
+        description: getRoleLabel(membership.role),
+        icon: '🏢',
+        role: 'menuitemradio',
+        onSelect: () => onSelect(membership.organizationId),
+      })),
+    [memberships, onSelect]
+  );
 
   return (
-    <div
-      ref={dropdownRef}
+    <Dropdown
+      items={dropdownItems}
+      selectedId={activeMembership?.organizationId}
+      label="Select organization"
+      placement="bottom-right"
       className="org-dropdown"
-      data-testid={baseTestId}
-    >
-      <button
-        type="button"
-        className="org-dropdown-button"
-        onClick={toggleDropdown}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-controls="org-dropdown-menu"
-        data-testid={`${baseTestId}-button`}
-      >
-        <span className="org-dropdown-icon" aria-hidden="true">🏢</span>
-        <div className="org-dropdown-text" aria-live="polite">
-          <span className="org-dropdown-meta">Organization</span>
-          <span className="org-dropdown-value">{selectedLabel}</span>
-        </div>
-        {activeMembership && (
-          <span
-            className={`org-dropdown-role-badge ${getRoleBadgeClass(activeMembership.role)}`}
-            aria-label={`Role: ${getRoleLabel(activeMembership.role)}`}
-          >
-            {getRoleLabel(activeMembership.role)}
-          </span>
-        )}
-        <span className="org-dropdown-arrow" aria-hidden="true">
-          {isOpen ? '▲' : '▼'}
-        </span>
-      </button>
-
-      {isOpen && (
-        <div
-          id="org-dropdown-menu"
-          className="org-dropdown-menu"
-          role="menu"
-          aria-label="Select organization"
+      menuClassName="org-dropdown-menu"
+      testId={baseTestId}
+      renderTrigger={({ ref, open, ariaControls, getReferenceProps }) => (
+        <button
+          type="button"
+          className="org-dropdown-button"
+          data-testid={`${baseTestId}-button`}
+          {...getReferenceProps({
+            ref,
+            'aria-controls': ariaControls,
+            'aria-expanded': open,
+            'aria-haspopup': 'menu',
+          })}
         >
-          <div className="org-dropdown-title">Your Organizations</div>
-          <div className="org-dropdown-list">
-            {memberships.map(membership => {
-              const isActive = activeMembership?.organizationId === membership.organizationId;
-              return (
-                <button
-                  key={membership.organizationId}
-                  type="button"
-                  className={`org-dropdown-item ${isActive ? 'active' : ''}`}
-                  onClick={() => handleSelect(membership.organizationId)}
-                  role="menuitemradio"
-                  aria-checked={isActive}
-                  data-testid={`org-option-${membership.organizationId}`}
-                >
-                  <span className="org-dropdown-item-icon" aria-hidden="true">🏢</span>
-                  <div className="org-dropdown-item-content">
-                    <span className="org-dropdown-item-name">{membership.organizationName}</span>
-                    <span className="org-dropdown-item-role">
-                      {getRoleLabel(membership.role)}
-                    </span>
-                  </div>
-                  {isActive && (
-                    <span className="org-dropdown-check" aria-hidden="true">✓</span>
-                  )}
-                </button>
-              );
-            })}
+          <span className="org-dropdown-icon" aria-hidden="true">🏢</span>
+          <div className="org-dropdown-text" aria-live="polite">
+            <span className="org-dropdown-meta">Organization</span>
+            <span className="org-dropdown-value">
+              {activeMembership?.organizationName ?? 'Select organization'}
+            </span>
           </div>
-        </div>
+          {activeMembership && (
+            <span
+              className={`org-dropdown-role-badge ${getRoleBadgeClass(activeMembership.role)}`}
+              aria-label={`Role: ${getRoleLabel(activeMembership.role)}`}
+            >
+              {getRoleLabel(activeMembership.role)}
+            </span>
+          )}
+          <span className="org-dropdown-arrow" aria-hidden="true">
+            {open ? '▲' : '▼'}
+          </span>
+        </button>
       )}
-    </div>
+      renderItem={(item, state) => {
+        const membership = memberships.find(m => m.organizationId === item.id);
+        if (!membership) {
+          return null;
+        }
+        const isActive = activeMembership?.organizationId === membership.organizationId;
+
+        return (
+          <React.Fragment key={item.id}>
+            {state.index === 0 && (
+              <li className="org-dropdown-title" role="presentation">
+                Your Organizations
+              </li>
+            )}
+            <li role="none">
+              <button
+                type="button"
+                className={`org-dropdown-item ${isActive ? 'active' : ''}`}
+                data-testid={`org-option-${membership.organizationId}`}
+                {...state.getItemProps({
+                  role: 'menuitemradio',
+                  'aria-checked': isActive,
+                })}
+              >
+                <span className="org-dropdown-item-icon" aria-hidden="true">🏢</span>
+                <div className="org-dropdown-item-content">
+                  <span className="org-dropdown-item-name">{membership.organizationName}</span>
+                  <span className="org-dropdown-item-role">
+                    {getRoleLabel(membership.role)}
+                  </span>
+                </div>
+                {isActive && (
+                  <span className="org-dropdown-check" aria-hidden="true">✓</span>
+                )}
+              </button>
+            </li>
+          </React.Fragment>
+        );
+      }}
+    />
   );
 };
