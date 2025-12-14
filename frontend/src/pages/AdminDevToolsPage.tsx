@@ -238,7 +238,7 @@ export const AdminDevToolsPage: React.FC = () => {
         }
       >
         <p>This will delete all organizations and non-admin users, then reseed sample data.</p>
-        <p style={{ marginBottom: 0 }}>
+        <p className="mb-0">
           <strong>This action cannot be undone.</strong> Are you sure you want to continue?
         </p>
       </Modal>

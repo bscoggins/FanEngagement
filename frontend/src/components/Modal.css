@@ -217,21 +217,8 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .modal-content {
-    background-color: var(--color-surface-elevated);
-  }
-
-  .modal-close-button:hover {
-    background-color: var(--color-overlay-light);
-  }
-
-  .modal-footer {
-    border-top-color: var(--color-border-dark);
-  }
-}
-
+/* ===== Dark Mode Support ===== */
+/* Dark mode styling is driven solely by the explicit `.theme-dark` class. */
 body.theme-dark .modal-content {
   background-color: var(--color-surface-elevated);
 }
