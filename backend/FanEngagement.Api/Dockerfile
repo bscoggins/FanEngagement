@@ -14,8 +14,6 @@ COPY backend/FanEngagement.Tests/FanEngagement.Tests.csproj backend/FanEngagemen
 
 # Ensure trusted certificates are available for NuGet restore in containerized environments
 RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
-ENV DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
-ENV NUGET_CERT_REVOCATION_MODE=offline
 
 RUN dotnet restore backend/FanEngagement.Api/FanEngagement.Api.csproj
 
