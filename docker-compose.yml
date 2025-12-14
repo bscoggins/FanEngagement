@@ -55,6 +55,7 @@ services:
     command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899 --quiet
     environment:
       RUST_LOG: error
+    privileged: true
     ulimits:
       nofile:
         soft: 65536
