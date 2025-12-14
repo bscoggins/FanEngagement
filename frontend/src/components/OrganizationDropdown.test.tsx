@@ -437,7 +437,7 @@ describe('OrganizationDropdown', () => {
       const button = screen.getByRole('button', { name: /organization/i });
       fireEvent.click(button);
 
-      const menu = screen.getByRole('menu', { name: /select organization/i });
+      const menu = screen.getByTestId('org-dropdown-menu');
       expect(menu).toHaveAttribute('id', 'org-dropdown-menu');
       expect(menu).toHaveAttribute('role', 'menu');
       expect(menu).toHaveAttribute('aria-label', 'Select organization');

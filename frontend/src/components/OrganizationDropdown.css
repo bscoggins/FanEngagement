@@ -136,7 +136,8 @@ body.theme-dark .org-dropdown-role-badge.admin {
   border-bottom: 1px solid var(--color-border-default);
 }
 
-.org-dropdown-list {
+.org-dropdown-list,
+.org-dropdown-menu .dropdown-list {
   max-height: 320px;
   overflow-y: auto;
 }

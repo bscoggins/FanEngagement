@@ -32,25 +32,7 @@ describe('OrganizationSelector', () => {
     vi.clearAllMocks();
   });
 
-  it('renders nothing when user has only one organization', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: [mockMemberships[0]],
-      hasMultipleOrgs: false,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    const { container } = render(<OrganizationSelector />);
-    expect(container.firstChild).toBeNull();
-  });
-
-  it('renders selector button when user has multiple organizations', () => {
+  const renderSelector = (overrides?: Partial<ReturnType<typeof OrgContext.useActiveOrganization>>) => {
     vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
       activeOrg: {
         id: 'org-1',
@@ -62,9 +44,22 @@ describe('OrganizationSelector', () => {
       hasMultipleOrgs: true,
       isLoading: false,
       refreshMemberships: vi.fn(),
+      ...overrides,
     });
 
-    render(<OrganizationSelector />);
+    return render(<OrganizationSelector />);
+  };
+
+  it('renders nothing when user has only one organization', () => {
+    const { container } = renderSelector({
+      memberships: [mockMemberships[0]],
+      hasMultipleOrgs: false,
+    });
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders selector button when user has multiple organizations', () => {
+    renderSelector();
 
     expect(screen.getByText('Organization:')).toBeInTheDocument();
     expect(screen.getByTestId('org-selector-button')).toBeInTheDocument();
@@ -72,20 +67,7 @@ describe('OrganizationSelector', () => {
   });
 
   it('displays active organization with role badge', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
     expect(button).toHaveTextContent('Organization One');
@@ -93,20 +75,13 @@ describe('OrganizationSelector', () => {
   });
 
   it('displays Member badge when user is a regular member', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
+    renderSelector({
       activeOrg: {
         id: 'org-2',
         name: 'Organization Two',
         role: 'Member',
       },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
     });
-
-    render(<OrganizationSelector />);
 
     const button = screen.getByTestId('org-selector-button');
     expect(button).toHaveTextContent('Organization Two');
@@ -114,20 +89,7 @@ describe('OrganizationSelector', () => {
   });
 
   it('opens dropdown when button is clicked', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
     expect(button).toHaveAttribute('aria-expanded', 'false');
@@ -135,30 +97,16 @@ describe('OrganizationSelector', () => {
     fireEvent.click(button);
 
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByTestId('org-selector-dropdown')).toBeInTheDocument();
+    expect(screen.getByTestId('org-selector-menu')).toBeInTheDocument();
   });
 
   it('displays all organizations in dropdown with role badges', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
+    renderSelector();
 
-    render(<OrganizationSelector />);
+    fireEvent.click(screen.getByTestId('org-selector-button'));
 
-    const button = screen.getByTestId('org-selector-button');
-    fireEvent.click(button);
-
-    const dropdown = screen.getByTestId('org-selector-dropdown');
-    const options = dropdown.querySelectorAll('[role="option"]');
+    const dropdown = screen.getByTestId('org-selector-menu');
+    const options = dropdown.querySelectorAll('[role="menuitemradio"]');
 
     expect(options).toHaveLength(2);
     expect(options[0]).toHaveTextContent('Organization One');
@@ -168,51 +116,22 @@ describe('OrganizationSelector', () => {
   });
 
   it('highlights active organization in dropdown', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
+    renderSelector();
 
-    render(<OrganizationSelector />);
-
-    const button = screen.getByTestId('org-selector-button');
-    fireEvent.click(button);
+    fireEvent.click(screen.getByTestId('org-selector-button'));
 
     const activeOption = screen.getByTestId('org-option-org-1');
     expect(activeOption).toHaveClass('active');
-    expect(activeOption).toHaveAttribute('aria-selected', 'true');
-    // Check for checkmark
+    expect(activeOption.querySelector('button')).toHaveAttribute('aria-checked', 'true');
     expect(activeOption).toHaveTextContent('✓');
   });
 
   it('calls setActiveOrg when organization is selected', async () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
+    renderSelector();
 
-    render(<OrganizationSelector />);
+    fireEvent.click(screen.getByTestId('org-selector-button'));
 
-    const button = screen.getByTestId('org-selector-button');
-    fireEvent.click(button);
-
-    const org2Option = screen.getByTestId('org-option-org-2');
+    const org2Option = screen.getByTestId('org-option-org-2').querySelector('button')!;
     fireEvent.click(org2Option);
 
     await waitFor(() => {
@@ -223,71 +142,40 @@ describe('OrganizationSelector', () => {
       });
     });
 
-    // Dropdown should close after selection
     await waitFor(() => {
-      expect(screen.queryByTestId('org-selector-dropdown')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('org-selector-menu')).not.toBeInTheDocument();
     });
   });
 
   it('supports keyboard navigation with arrow keys', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
-    
-    // Open dropdown with arrow down
+
     fireEvent.keyDown(button, { key: 'ArrowDown' });
     expect(button).toHaveAttribute('aria-expanded', 'true');
 
-    // Navigate down
-    fireEvent.keyDown(button, { key: 'ArrowDown' });
+    const firstOptionButton = screen.getByTestId('org-option-org-1').querySelector('button')!;
+    fireEvent.keyDown(firstOptionButton, { key: 'ArrowDown' });
     const secondOption = screen.getByTestId('org-option-org-2');
     expect(secondOption).toHaveClass('focused');
 
-    // Navigate up
-    fireEvent.keyDown(button, { key: 'ArrowUp' });
+    const secondOptionButton = secondOption.querySelector('button')!;
+    fireEvent.keyDown(secondOptionButton, { key: 'ArrowUp' });
     const firstOption = screen.getByTestId('org-option-org-1');
     expect(firstOption).toHaveClass('focused');
   });
 
   it('selects organization with Enter key', async () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
-    
-    // Open dropdown
+
     fireEvent.keyDown(button, { key: 'ArrowDown' });
-    
-    // Navigate to second option
-    fireEvent.keyDown(button, { key: 'ArrowDown' });
-    
-    // Select with Enter
-    fireEvent.keyDown(button, { key: 'Enter' });
+    const firstOptionButton = screen.getByTestId('org-option-org-1').querySelector('button')!;
+    fireEvent.keyDown(firstOptionButton, { key: 'ArrowDown' });
+    const secondOptionButton = screen.getByTestId('org-option-org-2').querySelector('button')!;
+    fireEvent.keyDown(secondOptionButton, { key: 'Enter' });
 
     await waitFor(() => {
       expect(mockSetActiveOrg).toHaveBeenCalledWith({
@@ -299,92 +187,52 @@ describe('OrganizationSelector', () => {
   });
 
   it('closes dropdown with Escape key', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
-    
-    // Open dropdown
+
     fireEvent.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    
-    // Close with Escape
+
     fireEvent.keyDown(button, { key: 'Escape' });
-    expect(button).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByTestId('org-selector-dropdown')).not.toBeInTheDocument();
+    return waitFor(() => {
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByTestId('org-selector-menu')).not.toBeInTheDocument();
+    });
   });
 
   it('has proper ARIA attributes for accessibility', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
-    expect(button).toHaveAttribute('aria-haspopup', 'listbox');
+    expect(button).toHaveAttribute('aria-haspopup', 'menu');
     expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(button).toHaveAttribute('aria-labelledby');
 
     fireEvent.click(button);
 
-    const dropdown = screen.getByTestId('org-selector-dropdown');
-    expect(dropdown).toHaveAttribute('role', 'listbox');
-    
-    const options = dropdown.querySelectorAll('[role="option"]');
-    expect(options[0]).toHaveAttribute('aria-selected', 'true');
-    expect(options[1]).toHaveAttribute('aria-selected', 'false');
+    const dropdown = screen.getByTestId('org-selector-menu');
+    expect(dropdown).toHaveAttribute('role', 'menu');
+
+    const options = dropdown.querySelectorAll('[role="menuitemradio"]');
+    expect(options[0]).toHaveAttribute('aria-checked', 'true');
+    expect(options[1]).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('closes dropdown when clicking outside', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
-
-    render(<OrganizationSelector />);
+  it('closes dropdown when clicking outside', async () => {
+    renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
-    
-    // Open dropdown
+
     fireEvent.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    
-    // Click outside the dropdown
+
     fireEvent.mouseDown(document.body);
-    
-    // Dropdown should close
-    expect(button).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByTestId('org-selector-dropdown')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByTestId('org-selector-menu')).not.toBeInTheDocument();
+    });
   });
 
   it('shows tooltip for truncated organization names', () => {
@@ -407,64 +255,33 @@ describe('OrganizationSelector', () => {
       },
     ];
 
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
+    renderSelector({
       memberships: longOrgMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
     });
 
-    render(<OrganizationSelector />);
+    fireEvent.click(screen.getByTestId('org-selector-button'));
 
-    const button = screen.getByTestId('org-selector-button');
-    fireEvent.click(button);
+    const longOrgOption = screen.getByTestId('org-option-org-2').querySelector('button')!;
 
-    const longOrgOption = screen.getByTestId('org-option-org-2');
-    
-    // Hover over the option with long name
     fireEvent.mouseEnter(longOrgOption);
-    
-    // Tooltip should appear
+
     const tooltip = screen.getByRole('tooltip');
     expect(tooltip).toBeInTheDocument();
     expect(tooltip).toHaveTextContent('This is a Very Long Organization Name That Exceeds Thirty Characters');
-    
-    // Mouse leave should hide tooltip
+
     fireEvent.mouseLeave(longOrgOption);
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('does not show tooltip for short organization names', () => {
-    vi.mocked(OrgContext.useActiveOrganization).mockReturnValue({
-      activeOrg: {
-        id: 'org-1',
-        name: 'Organization One',
-        role: 'OrgAdmin',
-      },
-      setActiveOrg: mockSetActiveOrg,
-      memberships: mockMemberships,
-      hasMultipleOrgs: true,
-      isLoading: false,
-      refreshMemberships: vi.fn(),
-    });
+    renderSelector();
 
-    render(<OrganizationSelector />);
+    fireEvent.click(screen.getByTestId('org-selector-button'));
 
-    const button = screen.getByTestId('org-selector-button');
-    fireEvent.click(button);
+    const shortOrgOption = screen.getByTestId('org-option-org-1').querySelector('button')!;
 
-    const shortOrgOption = screen.getByTestId('org-option-org-1');
-    
-    // Hover over the option with short name
     fireEvent.mouseEnter(shortOrgOption);
-    
-    // Tooltip should not appear
+
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 });
