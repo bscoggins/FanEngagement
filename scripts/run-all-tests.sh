@@ -36,10 +36,10 @@ fi
 echo "=== [1/3] Governance program build + unit tests ==="
 $GOV_SCRIPT
 
-echo "\n=== [2/3] Backend + Frontend Unit Suites ==="
+echo -e "\n=== [2/3] Backend + Frontend Unit Suites ==="
 $UNIT_SCRIPT
 
-echo "\n=== [3/3] Playwright E2E Suite ==="
+echo -e "\n=== [3/3] Playwright E2E Suite ==="
 $E2E_SCRIPT
 
-echo "\n✓ All automated tests passed."
+echo -e "\n✓ All automated tests passed."
