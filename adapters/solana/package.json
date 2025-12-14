@@ -22,8 +22,8 @@
   "author": "FanEngagement Team",
   "license": "UNLICENSED",
   "dependencies": {
-    "@solana/web3.js": "^1.95.8",
-    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.4",
+    "@solana/spl-token": "^0.4.14",
     "express": "^4.21.2",
     "winston": "^3.17.0",
     "prom-client": "^15.1.3",

@@ -15,6 +15,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
 UNIT_SCRIPT="./scripts/run-tests.sh"
+GOV_SCRIPT="./scripts/run-solana-governance-tests.sh"
 E2E_SCRIPT="./scripts/run-e2e.sh"
 
 if [[ ! -x $UNIT_SCRIPT ]]; then
@@ -27,10 +28,18 @@ if [[ ! -x $E2E_SCRIPT ]]; then
   exit 1
 fi
 
-echo "=== [1/2] Backend + Frontend Unit Suites ==="
+if [[ ! -x $GOV_SCRIPT ]]; then
+  echo "Error: $GOV_SCRIPT is missing or not executable." >&2
+  exit 1
+fi
+
+echo "=== [1/3] Governance program build + unit tests ==="
+$GOV_SCRIPT
+
+echo -e "\n=== [2/3] Backend + Frontend Unit Suites ==="
 $UNIT_SCRIPT
 
-echo "\n=== [2/2] Playwright E2E Suite ==="
+echo -e "\n=== [3/3] Playwright E2E Suite ==="
 $E2E_SCRIPT
 
-echo "\n✓ All automated tests passed."
+echo -e "\n✓ All automated tests passed."

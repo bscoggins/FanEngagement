@@ -5,15 +5,18 @@ This directory contains documentation for the FanEngagement blockchain adapter p
 ## Quick Links
 
 ### Getting Started
+
 - **[Adapter Testing Playbook](./adapter-testing-playbook.md)** - Step-by-step testing guide for Solana and Polygon adapters
 - **[Adapter Testing Strategy](./adapter-testing.md)** - Comprehensive testing strategy and best practices
 - **[Adapter Platform Architecture](./adapter-platform-architecture.md)** - System architecture and design
 
 ### Deployment Guides
+
 - **[Solana Adapter Deployment](./solana/solana-adapter-deployment.md)** - Deploy Solana adapter (local, Docker, Kubernetes)
 - **[Polygon Adapter Deployment](./polygon/polygon-adapter-deployment.md)** - Deploy Polygon adapter (local, Docker, Kubernetes)
 
 ### Operations
+
 - **[Adapter CI/CD](./adapter-cicd.md)** - Continuous integration and deployment pipeline
 - **[Adapter Operations](./adapter-operations.md)** - Operational procedures and runbooks
 
@@ -38,6 +41,8 @@ This directory contains documentation for the FanEngagement blockchain adapter p
 | [solana/solana-key-management-security.md](./solana/solana-key-management-security.md) | Security best practices |
 | [solana/governance-models-evaluation.md](./solana/governance-models-evaluation.md) | Governance model evaluation |
 | [solana/sharetype-tokenization-strategy.md](./solana/sharetype-tokenization-strategy.md) | Token strategy |
+| [solana/custom-governance-program.md](./solana/custom-governance-program.md) | **Custom Solana program architecture** and design specification |
+| [solana/governance-program.md](./solana/governance-program.md) | **Implemented fan-governance program** build, test, and deployment guide |
 
 ### Polygon Documentation
 
@@ -55,6 +60,7 @@ Test fixtures for contract testing are located in [test-fixtures/](./test-fixtur
 ### Testing Adapters Locally
 
 **Quick start:**
+
 ```bash
 # Solana
 cd adapters/solana
@@ -74,6 +80,7 @@ See [adapter-testing-playbook.md](./adapter-testing-playbook.md) for detailed in
 ### Deploying to Kubernetes
 
 See deployment guides:
+
 - [Solana Deployment](./solana/solana-adapter-deployment.md#kubernetes-deployment)
 - [Polygon Deployment](./polygon/polygon-adapter-deployment.md#production-deployment)
 
@@ -83,7 +90,7 @@ See [adapter-cicd.md](./adapter-cicd.md#manual-operations) for local CI simulati
 
 ## Document Relationships
 
-```
+```text
 adapter-testing-playbook.md (Quick Reference)
     ↓ references
 adapter-testing.md (Comprehensive Strategy)
@@ -111,6 +118,7 @@ When adding new documentation:
 ## Support
 
 For questions or issues:
+
 - Check [adapter-testing-playbook.md](./adapter-testing-playbook.md) for quick answers
 - Review [troubleshooting sections](./adapter-testing-playbook.md#8-troubleshooting-guide)
 - Contact FanEngagement Platform Team

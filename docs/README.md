@@ -7,14 +7,12 @@ Welcome to the FanEngagement documentation. This index helps you find the inform
 New to FanEngagement? Start here:
 
 - **[Development Guide](development.md)** - Set up your development environment, run tests, and start coding
+- **[New Developer Setup (macOS)](guides/new-developer-setup.md)** - One-stop bootstrap for a fresh laptop
 - **[Architecture Overview](architecture.md)** - Understand the system design, tech stack, and core concepts
 - **[Demo Seed Data](demo-seed-data.md)** - Test accounts and sample data for development
 
 ## 📚 Core Documentation
 
-### Backend Architecture
-
-- **[Architecture](architecture.md)** - Comprehensive system architecture, domain model, and governance rules
 - **[Authorization](authorization.md)** - Policy-based authorization system, roles, and permissions
 - **[Future Improvements](future-improvements.md)** - Backlog of enhancement ideas and feature requests
 
@@ -116,6 +114,7 @@ Located in [`blockchain/`](blockchain/) (excluded from this consolidation):
 - Blockchain adapter platform documentation
 - Solana and Polygon integration guides
 - See `blockchain/README.md` for the complete index
+- **Governance application (Solana)** — purpose, lifecycle, and on-chain commitments for organizations, proposals, and vote results: [blockchain/solana/governance-program.md](blockchain/solana/governance-program.md)
 
 ## 📦 Product Documentation
 
@@ -172,7 +171,7 @@ When adding new documentation:
 
 ## 📂 Documentation Structure
 
-```
+```text
 docs/
 ├── README.md (this file)
 ├── architecture.md
@@ -190,3 +189,4 @@ docs/
 ├── product/             # Product requirements (excluded)
 └── technical/           # Technical documentation
 ```
+

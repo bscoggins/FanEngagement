@@ -1,0 +1,23 @@
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+fan_governance = "53kLd3Zo8gqPyHuuALc1fLoARPszVkheA4P859MtfPo"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[workspace]
+members = ["programs/fan-governance"]
+
+[scripts]
+test = "pnpm test"
+
+[hooks]
