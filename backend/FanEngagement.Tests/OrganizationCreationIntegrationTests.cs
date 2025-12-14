@@ -8,6 +8,7 @@ using Xunit.Abstractions;
 
 namespace FanEngagement.Tests;
 
+[Trait("Category", "SolanaIntegration")]
 public class OrganizationCreationIntegrationTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>
 {
     private readonly HttpClient _client;

@@ -32,7 +32,7 @@ jobs:
         working-directory: ./backend
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=SolanaIntegration"
         working-directory: ./backend
 
   frontend-tests:

@@ -24,6 +24,7 @@ using Xunit;
 
 namespace FanEngagement.Tests;
 
+[Trait("Category", "SolanaIntegration")]
 public class SolanaOnChainEndToEndTests : IClassFixture<SolanaOnChainTestWebApplicationFactory>, IDisposable
 {
     private readonly HttpClient _client;
