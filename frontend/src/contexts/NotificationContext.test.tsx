@@ -99,4 +99,45 @@ describe('NotificationContext', () => {
     
     vi.useRealTimers();
   });
+
+  it('supports custom position and duration', () => {
+    vi.useFakeTimers();
+    let notificationMethods: any;
+
+    function TestComponent() {
+      notificationMethods = useNotifications();
+      const { notifications } = useNotifications();
+
+      return (
+        <div data-testid="notifications-container">
+          {notifications.map((n) => (
+            <div key={n.id} data-position={n.position}>
+              {n.message}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    render(
+      <NotificationProvider>
+        <TestComponent />
+      </NotificationProvider>
+    );
+
+    act(() => {
+      notificationMethods.showInfo('Custom toast', { position: 'bottom-center', duration: 1000 });
+    });
+
+    const container = screen.getByTestId('notifications-container');
+    expect(container.querySelector('[data-position="bottom-center"]')).toBeTruthy();
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(container.textContent).not.toContain('Custom toast');
+
+    vi.useRealTimers();
+  });
 });
