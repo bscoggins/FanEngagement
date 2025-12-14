@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dropdown, type DropdownItem } from './Dropdown';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { getRoleBadgeClass, getRoleLabel } from '../utils/roleUtils';
 import type { MembershipWithOrganizationDto } from '../types/api';
@@ -8,57 +9,9 @@ const TRUNCATE_THRESHOLD = 30;
 
 export const OrganizationSelector: React.FC = () => {
   const { activeOrg, setActiveOrg, memberships, hasMultipleOrgs } = useActiveOrganization();
-  const [isOpen, setIsOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
-  
-  // Compute the initial focused index based on active org
-  const initialFocusedIndex = useMemo(() => {
-    if (activeOrg && memberships.length > 0) {
-      return memberships.findIndex(m => m.organizationId === activeOrg.id);
-    }
-    return -1;
-  }, [activeOrg, memberships]);
-  
-  const [focusedIndex, setFocusedIndex] = useState(initialFocusedIndex);
-  
   const announcementTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const escapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
-
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (announcementTimeoutRef.current !== null) {
-        window.clearTimeout(announcementTimeoutRef.current);
-      }
-      if (escapeTimeoutRef.current !== null) {
-        clearTimeout(escapeTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Update focused index when initial value changes (e.g., when active org or memberships change)
-  useEffect(() => {
-    setFocusedIndex(initialFocusedIndex);
-  }, [initialFocusedIndex]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setFocusedIndex(initialFocusedIndex);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen, initialFocusedIndex]);
 
   const handleOrgSelect = useCallback((membership: MembershipWithOrganizationDto) => {
     setActiveOrg({
@@ -66,149 +19,111 @@ export const OrganizationSelector: React.FC = () => {
       name: membership.organizationName,
       role: membership.role,
     });
-    
-    // Announce change for screen readers
+
     const roleText = membership.role === 'OrgAdmin' ? 'Admin' : 'Member';
     setAnnouncement(`Switched to ${membership.organizationName} as ${roleText}`);
-    
-    // Clear previous timeout if any
+
     if (announcementTimeoutRef.current !== null) {
       window.clearTimeout(announcementTimeoutRef.current);
     }
     announcementTimeoutRef.current = window.setTimeout(() => setAnnouncement(''), 1000);
-    
-    setIsOpen(false);
-    buttonRef.current?.focus();
   }, [setActiveOrg]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-          setFocusedIndex(initialFocusedIndex >= 0 ? initialFocusedIndex : 0);
-        } else {
-          setFocusedIndex(prev => (prev + 1) % memberships.length);
-        }
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-          setFocusedIndex(initialFocusedIndex >= 0 ? initialFocusedIndex : memberships.length - 1);
-        } else {
-          setFocusedIndex(prev => (prev - 1 + memberships.length) % memberships.length);
-        }
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (isOpen && focusedIndex >= 0) {
-          handleOrgSelect(memberships[focusedIndex]);
-        } else {
-          setIsOpen(!isOpen);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        // Use setTimeout to ensure DOM is stable before focusing
-        escapeTimeoutRef.current = setTimeout(() => {
-          buttonRef.current?.focus();
-        }, 0);
-        break;
-      case ' ':
-        e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-        } else if (focusedIndex >= 0) {
-          handleOrgSelect(memberships[focusedIndex]);
-        } else {
-          setIsOpen(false);
-        }
-        break;
-      case 'Tab':
-        setIsOpen(false);
-        break;
-    }
-  }, [isOpen, focusedIndex, memberships, handleOrgSelect, initialFocusedIndex]);
-
-  // Scroll focused item into view
   useEffect(() => {
-    if (isOpen && focusedIndex >= 0 && listRef.current) {
-      const focusedElement = listRef.current.children[focusedIndex] as HTMLElement;
-      if (focusedElement && focusedElement.scrollIntoView) {
-        focusedElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    return () => {
+      if (announcementTimeoutRef.current !== null) {
+        window.clearTimeout(announcementTimeoutRef.current);
       }
-    }
-  }, [focusedIndex, isOpen]);
+    };
+  }, []);
 
-  // Don't show selector if user doesn't have multiple orgs
   if (!hasMultipleOrgs) {
     return null;
   }
 
+  const dropdownItems: DropdownItem[] = useMemo(
+    () =>
+      memberships.map(membership => ({
+        id: membership.organizationId,
+        label: membership.organizationName,
+        description: getRoleLabel(membership.role),
+        role: 'menuitemradio',
+        onSelect: () => handleOrgSelect(membership),
+      })),
+    [memberships, handleOrgSelect]
+  );
+
   return (
-    <div className="org-selector-container" ref={dropdownRef}>
-      <span className="org-selector-label" id="org-selector-label">
-        Organization:
-      </span>
-      <button
-        ref={buttonRef}
-        type="button"
-        className="org-selector-button"
-        onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={handleKeyDown}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        aria-labelledby="org-selector-label org-selector-button"
-        aria-activedescendant={isOpen && focusedIndex >= 0 ? `org-option-${memberships[focusedIndex].organizationId}` : undefined}
-        id="org-selector-button"
-        data-testid="org-selector-button"
-      >
-        <span className="org-selector-button-text">
-          {activeOrg?.name || 'Select organization'}
-        </span>
-        <span
-          className={`org-selector-button-badge ${activeOrg ? getRoleBadgeClass(activeOrg.role) : ''}`}
-          aria-label={activeOrg ? `Role: ${getRoleLabel(activeOrg.role)}` : ''}
-        >
-          {activeOrg && getRoleLabel(activeOrg.role)}
-        </span>
-        <span className="org-selector-button-arrow" aria-hidden="true">
-          {isOpen ? '▲' : '▼'}
-        </span>
-      </button>
-      
-      {isOpen && (
-        <ul
-          ref={listRef}
-          className="org-selector-dropdown"
-          role="listbox"
-          aria-labelledby="org-selector-label"
-          data-testid="org-selector-dropdown"
-        >
-          {memberships.map((membership: MembershipWithOrganizationDto, index: number) => {
-            const isActive = activeOrg?.id === membership.organizationId;
-            const isFocused = index === focusedIndex;
-            const isTruncated = membership.organizationName.length > TRUNCATE_THRESHOLD;
-            
-            return (
-              <li
-                key={membership.organizationId}
-                id={`org-option-${membership.organizationId}`}
-                className={`org-selector-option ${isActive ? 'active' : ''} ${isFocused ? 'focused' : ''}`}
-                role="option"
-                aria-selected={isActive}
-                onClick={() => handleOrgSelect(membership)}
-                onMouseEnter={() => {
-                  setFocusedIndex(index);
-                  if (isTruncated) {
-                    setShowTooltip(membership.organizationId);
-                  }
-                }}
-                onMouseLeave={() => setShowTooltip(null)}
-                data-testid={`org-option-${membership.organizationId}`}
+    <div className="org-selector-container">
+      <Dropdown
+        items={dropdownItems}
+        selectedId={activeOrg?.id}
+        label="Select organization"
+        placement="bottom-left"
+        className="org-selector-dropdown-root"
+        menuClassName="org-selector-dropdown"
+        testId="org-selector"
+        renderTrigger={({ ref, open, ariaControls, getReferenceProps }) => (
+          <>
+            <span className="org-selector-label" id="org-selector-label">
+              Organization:
+            </span>
+            <button
+              type="button"
+              className="org-selector-button"
+              data-testid="org-selector-button"
+              {...getReferenceProps({
+                ref,
+                id: 'org-selector-button',
+                'aria-haspopup': 'menu',
+                'aria-expanded': open,
+                'aria-labelledby': 'org-selector-label org-selector-button',
+                'aria-controls': ariaControls,
+              })}
+            >
+              <span className="org-selector-button-text">
+                {activeOrg?.name || 'Select organization'}
+              </span>
+              <span
+                className={`org-selector-button-badge ${activeOrg ? getRoleBadgeClass(activeOrg.role) : ''}`}
+                aria-label={activeOrg ? `Role: ${getRoleLabel(activeOrg.role)}` : ''}
+              >
+                {activeOrg && getRoleLabel(activeOrg.role)}
+              </span>
+              <span className="org-selector-button-arrow" aria-hidden="true">
+                {open ? '▲' : '▼'}
+              </span>
+            </button>
+          </>
+        )}
+        renderItem={(item, state) => {
+          const membership = memberships.find(m => m.organizationId === item.id);
+          if (!membership) {
+            return null;
+          }
+          const isActive = activeOrg?.id === membership.organizationId;
+          const isTruncated = membership.organizationName.length > TRUNCATE_THRESHOLD;
+
+          return (
+            <li
+              key={membership.organizationId}
+              className={`org-selector-option ${isActive ? 'active' : ''} ${state.focused ? 'focused' : ''}`}
+              data-testid={`org-option-${membership.organizationId}`}
+            >
+              <button
+                type="button"
+                className="org-selector-option-button"
+                {...state.getItemProps({
+                  role: 'menuitemradio',
+                  'aria-checked': isActive,
+                  onMouseEnter: () => {
+                    if (isTruncated) {
+                      setShowTooltip(membership.organizationId);
+                    }
+                  },
+                  onMouseLeave: () => setShowTooltip(null),
+                })}
+                ref={state.ref}
               >
                 <span className="org-selector-option-name">
                   {membership.organizationName}
@@ -228,16 +143,15 @@ export const OrganizationSelector: React.FC = () => {
                     {membership.organizationName}
                   </span>
                 )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      
-      {/* Screen reader announcement for org switching */}
-      <div 
-        role="status" 
-        aria-live="polite" 
+              </button>
+            </li>
+          );
+        }}
+      />
+
+      <div
+        role="status"
+        aria-live="polite"
         aria-atomic="true"
         className="org-selector-announcement"
       >

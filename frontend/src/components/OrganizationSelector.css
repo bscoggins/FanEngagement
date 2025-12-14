@@ -82,23 +82,20 @@
   color: var(--color-neutral-600);
 }
 
-/* Dropdown menu */
 .org-selector-dropdown {
-  position: absolute;
-  top: calc(100% + var(--spacing-1));
-  left: 0;
-  right: 0;
-  max-height: 300px;
+  max-height: 320px;
   overflow-y: auto;
-  margin: 0;
   padding: var(--spacing-2);
-  list-style: none;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  z-index: 1000;
-  animation: dropdown-appear var(--duration-fast) var(--ease-out);
+}
+
+.org-selector-dropdown .dropdown-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
 }
 
 @keyframes dropdown-appear {
@@ -112,26 +109,33 @@
   }
 }
 
-/* Dropdown option */
 .org-selector-option {
+  list-style: none;
+}
+
+.org-selector-option-button {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  width: 100%;
   padding: 0.625rem var(--spacing-3);
   cursor: pointer;
   border-radius: var(--radius-md);
   transition: background-color var(--duration-fast) var(--ease-out);
   position: relative;
+  border: none;
+  background: none;
   /* Ensure touch target is at least 44px */
   min-height: 44px;
+  text-align: left;
 }
 
-.org-selector-option:hover,
-.org-selector-option.focused {
+.org-selector-option-button:hover,
+.org-selector-option.focused .org-selector-option-button {
   background-color: rgba(0, 123, 255, 0.08);
 }
 
-.org-selector-option.active {
+.org-selector-option.active .org-selector-option-button {
   background-color: rgba(0, 123, 255, 0.12);
   font-weight: var(--font-weight-semibold);
 }
@@ -218,7 +222,7 @@
   
   .org-selector-button,
   .org-selector-button-arrow,
-  .org-selector-option {
+  .org-selector-option-button {
     transition: none;
   }
 }
@@ -235,15 +239,9 @@
     min-width: unset;
     flex: 1;
   }
-  
-  .org-selector-dropdown {
-    left: 0;
-    right: 0;
-    width: 100%;
-  }
-  
+
   /* Ensure adequate touch targets on mobile */
-  .org-selector-option {
+  .org-selector-option-button {
     padding: var(--spacing-3);
     min-height: 48px;
   }
