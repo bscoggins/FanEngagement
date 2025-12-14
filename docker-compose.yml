@@ -59,7 +59,7 @@ services:
     ulimits:
       nofile:
         soft: 65536
-        hard: 65536
+        hard: 1000000
     ports:
       - "8899:8899"
     healthcheck:
