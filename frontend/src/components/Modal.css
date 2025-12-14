@@ -218,7 +218,21 @@
 }
 
 /* ===== Dark Mode Support ===== */
-/* Dark mode styling is driven solely by the explicit `.theme-dark` class. */
+/* Combines both prefers-color-scheme and manual theme toggle */
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background-color: var(--color-surface-elevated);
+  }
+
+  .modal-close-button:hover {
+    background-color: var(--color-overlay-light);
+  }
+
+  .modal-footer {
+    border-top-color: var(--color-border-dark);
+  }
+}
+
 body.theme-dark .modal-content {
   background-color: var(--color-surface-elevated);
 }
