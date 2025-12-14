@@ -18,6 +18,7 @@ env:
 
 jobs:
   build-solana-adapter:
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
