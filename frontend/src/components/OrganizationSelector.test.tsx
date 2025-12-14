@@ -219,7 +219,7 @@ describe('OrganizationSelector', () => {
     expect(options[1]).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('closes dropdown when clicking outside', () => {
+  it('closes dropdown when clicking outside', async () => {
     renderSelector();
 
     const button = screen.getByTestId('org-selector-button');
@@ -229,8 +229,10 @@ describe('OrganizationSelector', () => {
 
     fireEvent.mouseDown(document.body);
 
-    expect(button).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByTestId('org-selector-menu')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByTestId('org-selector-menu')).not.toBeInTheDocument();
+    });
   });
 
   it('shows tooltip for truncated organization names', () => {

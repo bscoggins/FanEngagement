@@ -81,8 +81,7 @@ const mergeRefs = <T extends HTMLElement>(
       if (typeof ref === 'function') {
         ref(node);
       } else {
-        // @ts-expect-error - allow writing to mutable ref
-        ref.current = node;
+        (ref as React.MutableRefObject<T | null>).current = node;
       }
     });
   };
@@ -269,16 +268,21 @@ export const Dropdown: React.FC<DropdownProps> = ({
     } as T);
   };
 
-  const defaultTrigger = (
-    (() => {
-      const referenceProps = getReferencePropsWithKeydown({
-        ref: refs.setReference,
-        'aria-controls': menuId,
-        'aria-haspopup': 'menu',
-        'aria-expanded': open,
-      });
+  const referenceProps = getReferencePropsWithKeydown({
+    ref: refs.setReference,
+    'aria-controls': menuId,
+    'aria-haspopup': 'menu',
+    'aria-expanded': open,
+  });
 
-      return (
+  const rawFloatingProps = getFloatingProps({
+    role: 'menu',
+    id: menuId,
+    'aria-label': label,
+  }) as Record<string, unknown>;
+  const { ['aria-labelledby']: floatingAriaLabelledby, ...floatingMenuProps } = rawFloatingProps;
+
+  const defaultTrigger = (
     <button
       type="button"
       className="dropdown-trigger"
@@ -288,8 +292,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
       <span className="dropdown-trigger-label">{triggerLabel}</span>
       <span className="dropdown-trigger-caret" aria-hidden="true">▾</span>
     </button>
-      );
-    })()
   );
 
   const defaultItemRenderer = (item: DropdownItem, focusIndex: number) => {
@@ -340,13 +342,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
       {open && (
         <FloatingFocusManager context={context} modal={false} initialFocus={-1}>
           <FloatingList elementsRef={listRef} labels={focusableItems.map(item => String(item.label))}>
-            {(() => {
-              const floatingProps = getFloatingProps({
-                role: 'menu',
-                id: menuId,
-                'aria-label': label,
-              });
-              return (
             <div
               ref={refs.setFloating}
               style={floatingStyles}
@@ -354,9 +349,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
               data-open={open}
               data-placement={computedPlacement}
               data-testid={testId ? `${testId}-menu` : undefined}
-              {...floatingProps}
+              {...floatingMenuProps}
               aria-label={label}
-              aria-labelledby={label ? undefined : (floatingProps as unknown as { 'aria-labelledby'?: string })['aria-labelledby']}
+              aria-labelledby={label ? undefined : (floatingAriaLabelledby as string | undefined)}
             >
               {items ? (
                 <ul className="dropdown-list" role="none">
@@ -394,8 +389,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 </div>
               )}
             </div>
-              );
-            })()}
           </FloatingList>
         </FloatingFocusManager>
       )}
