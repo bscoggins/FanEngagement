@@ -24,7 +24,7 @@ const ModalExample = ({
   const header = customHeader ? (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
       <span style={{ fontSize: '1.5rem' }}>⚙️</span>
-      <h2 id="modal-title" style={{ margin: 0, fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-semibold)' }}>
+      <h2 id="modal-title" className="modal-title">
         Custom Header
       </h2>
     </div>
@@ -62,7 +62,7 @@ const ModalExample = ({
           Press <kbd>Escape</kbd> to close the modal.
         </p>
         {hasFooter && (
-          <p style={{ marginBottom: 0 }}>
+          <p className="mb-0">
             The footer provides action buttons aligned to the right.
           </p>
         )}
