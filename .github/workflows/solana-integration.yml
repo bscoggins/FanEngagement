@@ -30,7 +30,7 @@ jobs:
 
       - name: Start Solana Services
         run: |
-          docker compose --profile solana up -d --wait solana-test-validator solana-adapter
+          docker compose --profile solana up -d --wait solana-test-validator solana-adapter || (docker compose logs solana-test-validator && exit 1)
         env:
           API_KEY: dev-api-key-change-me
 
