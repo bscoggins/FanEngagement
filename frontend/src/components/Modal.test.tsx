@@ -205,4 +205,200 @@ describe('Modal', () => {
     const dialog = screen.getByRole('dialog');
     expect(dialog).toHaveStyle({ maxWidth: '500px' });
   });
+
+  describe('Size variants', () => {
+    it('applies small size class', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}} size="sm">
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--sm');
+    });
+
+    it('applies medium size class by default', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}}>
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--md');
+    });
+
+    it('applies large size class', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}} size="lg">
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--lg');
+    });
+
+    it('applies extra large size class', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}} size="xl">
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--xl');
+    });
+
+    it('applies full size class', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}} size="full">
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--full');
+    });
+  });
+
+  describe('Animation variants', () => {
+    it('applies slide animation by default', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}}>
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--slide');
+    });
+
+    it('applies fade animation', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}} animation="fade">
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveClass('modal-content--fade');
+    });
+  });
+
+  describe('Footer slot', () => {
+    it('renders footer when provided', () => {
+      render(
+        <Modal
+          isOpen={true}
+          onClose={() => {}}
+          footer={
+            <>
+              <button>Cancel</button>
+              <button>Confirm</button>
+            </>
+          }
+        >
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+      expect(screen.getByText('Confirm')).toBeInTheDocument();
+      expect(document.querySelector('.modal-footer')).toBeInTheDocument();
+    });
+
+    it('does not render footer when not provided', () => {
+      render(
+        <Modal isOpen={true} onClose={() => {}}>
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      expect(document.querySelector('.modal-footer')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Custom header', () => {
+    it('renders custom header when provided', () => {
+      render(
+        <Modal
+          isOpen={true}
+          onClose={() => {}}
+          header={<div data-testid="custom-header">Custom Header Content</div>}
+        >
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      expect(screen.getByTestId('custom-header')).toBeInTheDocument();
+      expect(screen.getByText('Custom Header Content')).toBeInTheDocument();
+    });
+
+    it('prefers custom header over title', () => {
+      render(
+        <Modal
+          isOpen={true}
+          onClose={() => {}}
+          title="This should not appear"
+          header={<div data-testid="custom-header">Custom Header</div>}
+        >
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      expect(screen.getByTestId('custom-header')).toBeInTheDocument();
+      expect(screen.queryByText('This should not appear')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Backdrop click behavior', () => {
+    it('closes on backdrop click by default', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+
+      render(
+        <Modal isOpen={true} onClose={onClose}>
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const backdrop = screen.getByRole('presentation');
+      await user.click(backdrop);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not close on backdrop click when disabled', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+
+      render(
+        <Modal isOpen={true} onClose={onClose} closeOnBackdropClick={false}>
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      const backdrop = screen.getByRole('presentation');
+      await user.click(backdrop);
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('still closes with Escape key when backdrop click is disabled', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+
+      render(
+        <Modal isOpen={true} onClose={onClose} closeOnBackdropClick={false}>
+          <div>Modal content</div>
+        </Modal>
+      );
+
+      await user.keyboard('{Escape}');
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
 });

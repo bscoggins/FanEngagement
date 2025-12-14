@@ -1,12 +1,40 @@
 import React, { useEffect, useRef } from 'react';
 import './Modal.css';
 
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
   title?: string;
+  /**
+   * @deprecated Use size prop instead
+   */
   maxWidth?: string;
+  /**
+   * Modal size variant
+   * @default 'md'
+   */
+  size?: ModalSize;
+  /**
+   * Whether clicking the backdrop closes the modal
+   * @default true
+   */
+  closeOnBackdropClick?: boolean;
+  /**
+   * Optional header content (overrides title if provided)
+   */
+  header?: React.ReactNode;
+  /**
+   * Optional footer content
+   */
+  footer?: React.ReactNode;
+  /**
+   * Animation variant
+   * @default 'slide'
+   */
+  animation?: 'slide' | 'fade';
 }
 
 /**
@@ -18,7 +46,12 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   title,
-  maxWidth = '700px',
+  maxWidth,
+  size = 'md',
+  closeOnBackdropClick = true,
+  header,
+  footer,
+  animation = 'slide',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -123,26 +156,39 @@ export const Modal: React.FC<ModalProps> = ({
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (closeOnBackdropClick && e.target === e.currentTarget) {
       onClose();
     }
   };
 
   return (
     <div
-      className="modal-backdrop"
+      className={`modal-backdrop modal-backdrop--${animation}`}
       onClick={handleBackdropClick}
       role="presentation"
     >
       <div
         ref={modalRef}
-        className="modal-content"
-        style={{ maxWidth }}
+        className={`modal-content modal-content--${size} modal-content--${animation}`}
+        style={maxWidth ? { maxWidth } : undefined}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? 'modal-title' : undefined}
+        aria-labelledby={title || header ? 'modal-title' : undefined}
       >
-        {title && (
+        {/* Header slot */}
+        {header ? (
+          <div className="modal-header">
+            {header}
+            <button
+              ref={closeButtonRef}
+              className="modal-close-button"
+              onClick={onClose}
+              aria-label="Close modal"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        ) : title ? (
           <div className="modal-header">
             <h2 id="modal-title" className="modal-title">
               {title}
@@ -156,8 +202,7 @@ export const Modal: React.FC<ModalProps> = ({
               <span aria-hidden="true">×</span>
             </button>
           </div>
-        )}
-        {!title && (
+        ) : (
           <button
             ref={closeButtonRef}
             className="modal-close-button modal-close-button-only"
@@ -167,7 +212,12 @@ export const Modal: React.FC<ModalProps> = ({
             <span aria-hidden="true">×</span>
           </button>
         )}
+
+        {/* Body slot */}
         <div className="modal-body">{children}</div>
+
+        {/* Footer slot */}
+        {footer && <div className="modal-footer">{footer}</div>}
       </div>
     </div>
   );

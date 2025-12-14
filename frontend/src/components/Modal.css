@@ -25,6 +25,31 @@
   overflow: auto;
   box-shadow: var(--shadow-2xl);
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Modal Size Variants ===== */
+.modal-content--sm {
+  max-width: 400px;
+}
+
+.modal-content--md {
+  max-width: 600px;
+}
+
+.modal-content--lg {
+  max-width: 800px;
+}
+
+.modal-content--xl {
+  max-width: 1200px;
+}
+
+.modal-content--full {
+  width: 95%;
+  max-width: none;
+  max-height: 90vh;
 }
 
 .modal-header {
@@ -33,6 +58,7 @@
   align-items: flex-start;
   padding: var(--spacing-8) var(--spacing-8) 0 var(--spacing-8);
   margin-bottom: var(--spacing-6);
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -69,11 +95,27 @@
 
 .modal-body {
   padding: 0 var(--spacing-8) var(--spacing-8) var(--spacing-8);
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* When header is present, adjust body padding */
 .modal-header + .modal-body {
   padding-top: 0;
+}
+
+.modal-footer {
+  padding: var(--spacing-6) var(--spacing-8) var(--spacing-8) var(--spacing-8);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  flex-shrink: 0;
+}
+
+/* Footer without border when it contains custom content */
+.modal-footer:empty {
+  display: none;
 }
 
 /* Ensure focus styles are visible in modal */
@@ -89,11 +131,19 @@
 
 /* Animation for modal appearance */
 @media (prefers-reduced-motion: no-preference) {
-  .modal-backdrop {
+  .modal-backdrop--fade {
     animation: modal-fade-in var(--duration-normal) var(--ease-out);
   }
 
-  .modal-content {
+  .modal-backdrop--slide {
+    animation: modal-fade-in var(--duration-normal) var(--ease-out);
+  }
+
+  .modal-content--fade {
+    animation: modal-fade-in var(--duration-normal) var(--ease-out);
+  }
+
+  .modal-content--slide {
     animation: modal-slide-in var(--duration-normal) var(--ease-out);
   }
 
@@ -134,6 +184,14 @@
 
   .modal-content {
     max-height: 90vh;
+    width: 95%;
+  }
+
+  .modal-content--sm,
+  .modal-content--md,
+  .modal-content--lg,
+  .modal-content--xl {
+    max-width: none;
   }
 
   .modal-header {
@@ -145,7 +203,43 @@
     padding: 0 var(--spacing-6) var(--spacing-6) var(--spacing-6);
   }
 
+  .modal-footer {
+    padding: var(--spacing-4) var(--spacing-6) var(--spacing-6) var(--spacing-6);
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer > * {
+    width: 100%;
+  }
+
   .modal-title {
     font-size: var(--font-size-xl);
   }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background-color: var(--color-surface-elevated);
+  }
+
+  .modal-close-button:hover {
+    background-color: var(--color-overlay-light);
+  }
+
+  .modal-footer {
+    border-top-color: var(--color-border-dark);
+  }
+}
+
+body.theme-dark .modal-content {
+  background-color: var(--color-surface-elevated);
+}
+
+body.theme-dark .modal-close-button:hover {
+  background-color: var(--color-overlay-light);
+}
+
+body.theme-dark .modal-footer {
+  border-top-color: var(--color-border-dark);
 }
