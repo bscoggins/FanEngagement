@@ -38,7 +38,7 @@ interface DropdownTriggerRenderProps {
 }
 
 interface DropdownItemRenderState {
-  ref: (node: HTMLElement | null) => void;
+  ref: ((node: HTMLElement | null) => void) | undefined;
   active: boolean;
   focused: boolean;
   close: () => void;
@@ -223,12 +223,12 @@ export const Dropdown: React.FC<DropdownProps> = ({
       ...userProps,
       ref: mergeRefs(refs.setReference, userProps?.ref as React.Ref<HTMLElement> | undefined),
       onKeyDown: (event) => {
-        userProps?.onKeyDown?.(event);
+        userProps?.onKeyDown?.(event as React.KeyboardEvent<HTMLElement>);
         if (!event.defaultPrevented) {
-          handleTriggerKeyDown(event);
+          handleTriggerKeyDown(event as React.KeyboardEvent<HTMLElement>);
         }
       },
-    } as T);
+    }) as unknown as T;
   };
 
   const getItemInteractionProps = <T extends React.HTMLProps<HTMLElement>>(
@@ -272,7 +272,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
       ),
       onClick: handleClick,
       onKeyDown: handleKeyDown,
-    } as T);
+    }) as unknown as T;
   };
 
   const referenceProps = getReferencePropsWithKeydown({
@@ -351,7 +351,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
       {open && (
         <FloatingFocusManager context={context} modal={false} initialFocus={-1}>
-          <FloatingList elementsRef={listRef} labels={focusableItems.map(item => String(item.label))}>
+          <FloatingList elementsRef={listRef}>
             <div
               ref={refs.setFloating}
               style={floatingStyles}

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Dropdown, type DropdownItem } from './Dropdown';
 
 export default {
