@@ -47,9 +47,9 @@ services:
     depends_on:
       - api
   solana-test-validator:
-    # Using v1.18.15 for stable local testing. Update to newer versions if needed
+    # Using v1.18.26 for stable local testing. Update to newer versions if needed
     # for compatibility with mainnet/devnet features. Check solanalabs/solana on Docker Hub.
-    image: solanalabs/solana:v1.18.15
+    image: solanalabs/solana:v1.18.26
     container_name: solana-test-validator
     profiles: ["solana"]
     command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899 --quiet
