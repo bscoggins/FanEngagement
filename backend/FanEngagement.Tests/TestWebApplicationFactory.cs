@@ -23,7 +23,11 @@ public class TestWebApplicationFactory : TestWebApplicationFactoryBase
                 ["RateLimiting:Registration:PermitLimit"] = "1000",
                 ["RateLimiting:Registration:WindowHours"] = "1",
                 ["RateLimiting:AuditExport:PermitLimit"] = "1000",
-                ["RateLimiting:AuditExport:WindowHours"] = "1"
+                ["RateLimiting:AuditExport:WindowHours"] = "1",
+                
+                // Configure API keys for blockchain adapters
+                ["BlockchainAdapters:Solana:ApiKey"] = "test-api-key",
+                ["BlockchainAdapters:Polygon:ApiKey"] = "test-api-key"
             });
         });
     }

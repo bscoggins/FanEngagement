@@ -102,7 +102,7 @@ public abstract class TestWebApplicationFactoryBase : WebApplicationFactory<Prog
             {
                 client.BaseAddress = new Uri("http://localhost/");
             })
-            .ConfigurePrimaryHttpMessageHandler(_ => new TestBlockchainAdapterHandler());
+            .ConfigurePrimaryHttpMessageHandler(_ => new TestBlockchainAdapterHandler("Solana"));
     }
 
     protected virtual void ConfigurePolygonAdapterClient(IServiceCollection services)
@@ -112,7 +112,7 @@ public abstract class TestWebApplicationFactoryBase : WebApplicationFactory<Prog
             {
                 client.BaseAddress = new Uri("http://localhost/");
             })
-            .ConfigurePrimaryHttpMessageHandler(_ => new TestBlockchainAdapterHandler());
+            .ConfigurePrimaryHttpMessageHandler(_ => new TestBlockchainAdapterHandler("Polygon"));
     }
 
     /// <summary>

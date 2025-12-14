@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Organization, UpdateOrganizationRequest, CreateOrganizationRequest, PagedResult } from '../types/api';
+import type { Organization, UpdateOrganizationRequest, CreateOrganizationRequest, PagedResult, FeatureFlag } from '../types/api';
 
 export const organizationsApi = {
   create: async (request: CreateOrganizationRequest): Promise<Organization> => {
@@ -31,6 +31,16 @@ export const organizationsApi = {
 
   update: async (id: string, request: UpdateOrganizationRequest): Promise<Organization> => {
     const response = await apiClient.put<Organization>(`/organizations/${id}`, request);
+    return response.data;
+  },
+
+  getFeatureFlags: async (organizationId: string): Promise<FeatureFlag[]> => {
+    const response = await apiClient.get<FeatureFlag[]>(`/organizations/${organizationId}/feature-flags`);
+    return response.data;
+  },
+
+  setFeatureFlag: async (organizationId: string, feature: string, enabled: boolean): Promise<FeatureFlag> => {
+    const response = await apiClient.put<FeatureFlag>(`/organizations/${organizationId}/feature-flags/${feature}`, { enabled });
     return response.data;
   },
 };

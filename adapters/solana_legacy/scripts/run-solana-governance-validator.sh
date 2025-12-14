@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 PROGRAM_DIR="$ROOT_DIR/adapters/solana_legacy/program"
 SO_PATH="$PROGRAM_DIR/target/deploy/fan_governance.so"
 KEYPAIR_PATH="$PROGRAM_DIR/target/deploy/fan_governance-keypair.json"

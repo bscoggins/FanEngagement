@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 ADAPTER_DIR="$ROOT_DIR/adapters/solana_legacy"
 COMPOSE_FILE="$ADAPTER_DIR/docker-compose.yml"
 KEYPAIR_FILE="${SOLANA_TEST_KEYPAIR:-$ROOT_DIR/test-keypair.json}"

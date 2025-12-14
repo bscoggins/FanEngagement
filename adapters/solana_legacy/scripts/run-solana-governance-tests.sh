@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 PROGRAM_DIR="$ROOT_DIR/adapters/solana_legacy/program"
 
 if [[ -f "$HOME/.cargo/env" ]]; then
@@ -33,6 +33,12 @@ fi
 # Ensure any prior docker validator instances are stopped to free RPC ports
 docker compose -f "$ROOT_DIR/adapters/solana_legacy/docker-compose.yml" down >/dev/null 2>&1 || true
 
+cleanup() {
+  # Shut down dockerized validator if it was started
+  docker compose -f "$ROOT_DIR/adapters/solana_legacy/docker-compose.yml" down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
 cd "$PROGRAM_DIR"
 
 echo "=== Building governance program (anchor build) ==="
@@ -42,14 +48,14 @@ echo "=== Running governance Rust unit tests (cargo test -p fan-governance) ==="
 cargo test -p fan-governance
 
 echo "=== Deploy/install check on solana-test-validator ==="
-"$ROOT_DIR/scripts/run-solana-governance-validator.sh"
+"$ROOT_DIR/adapters/solana_legacy/scripts/run-solana-governance-validator.sh"
 
 # Optional end-to-end on a Docker validator: deploy, then run live RPC-based flow test against the running chain
 echo "=== Running governance end-to-end flow against dockerized solana-test-validator ==="
 export SOLANA_VALIDATOR_MODE=docker
 export VALIDATOR_PAYER_OUT="$PROGRAM_DIR/target/tmp/validator-payer.json"
 export KEEP_VALIDATOR_ALIVE=1
-"$ROOT_DIR/scripts/run-solana-governance-validator.sh"
+"$ROOT_DIR/adapters/solana_legacy/scripts/run-solana-governance-validator.sh"
 
 LIVE_RPC_URL="http://127.0.0.1:${RPC_PORT:-8899}"
 # Ensure the saved validator payer exists and is funded before running the live test
@@ -67,8 +73,5 @@ export RUN_LIVE_VALIDATOR_TEST=1
 export SOLANA_RPC_URL="$LIVE_RPC_URL"
 export SOLANA_PAYER_KEYPAIR="$VALIDATOR_PAYER_OUT"
 cargo test -p fan-governance live_validator_flow
-
-# Shut down dockerized validator after the live test
-docker compose -f "$ROOT_DIR/adapters/solana/docker-compose.yml" down >/dev/null
 
 echo -e "\n✓ Governance program build, unit tests, and validator install check finished successfully."

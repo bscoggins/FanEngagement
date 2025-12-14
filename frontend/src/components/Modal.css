@@ -218,20 +218,11 @@
 }
 
 /* ===== Dark Mode Support ===== */
-/* Combines both prefers-color-scheme and manual theme toggle */
-@media (prefers-color-scheme: dark) {
-  .modal-content {
-    background-color: var(--color-surface-elevated);
-  }
-
-  .modal-close-button:hover {
-    background-color: var(--color-overlay-light);
-  }
-
-  .modal-footer {
-    border-top-color: var(--color-border-dark);
-  }
-}
+/* 
+   Note: We rely on the .theme-dark class on the body element for dark mode overrides.
+   The @media (prefers-color-scheme: dark) block has been removed to prevent
+   system preferences from overriding the application's theme state.
+*/
 
 body.theme-dark .modal-content {
   background-color: var(--color-surface-elevated);
