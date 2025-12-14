@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   autoPlacement,
   autoUpdate,
@@ -124,6 +124,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
     if (!selectedId) return null;
     return focusableItems.findIndex(item => item.id === selectedId);
   }, [focusableItems, selectedId]);
+
+  const getListNavigationRef = useCallback(
+    (index: number) => (node: HTMLElement | null) => {
+      listRef.current[index] = node;
+    },
+    []
+  );
 
   const middleware = useMemo(() => {
     const base = [offset(MENU_OFFSET), shift({ padding: MENU_SHIFT_PADDING })];
@@ -260,9 +267,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
       tabIndex: activeIndex === focusIndex ? 0 : -1,
       'aria-disabled': item.disabled || undefined,
       ref: mergeRefs(
-        (node: HTMLElement | null) => {
-          listRef.current[focusIndex] = node;
-        },
+        focusIndex >= 0 ? getListNavigationRef(focusIndex) : undefined,
         userProps?.ref as React.Ref<HTMLElement> | undefined
       ),
       onClick: handleClick,
@@ -283,7 +288,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     'aria-label': label,
   }) as Record<string, unknown>;
   const { ['aria-labelledby']: floatingAriaLabelledby, ...floatingMenuProps } = rawFloatingProps;
-  const ariaAttributes = label
+  const menuAriaAttributes = label
     ? { 'aria-label': label }
     : { 'aria-labelledby': floatingAriaLabelledby as string | undefined };
 
@@ -355,7 +360,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
               data-placement={computedPlacement}
               data-testid={testId ? `${testId}-menu` : undefined}
               {...floatingMenuProps}
-              {...ariaAttributes}
+              {...menuAriaAttributes}
             >
               {items ? (
                 <ul className="dropdown-list" role="none">
@@ -369,11 +374,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     if (renderItem) {
                       // Only track focusable options in the list navigation ref set
                       const listNavigationRef =
-                        focusIndex >= 0
-                          ? (node: HTMLElement | null) => {
-                              listRef.current[focusIndex] = node;
-                            }
-                          : undefined;
+                        focusIndex >= 0 ? getListNavigationRef(focusIndex) : undefined;
 
                       return renderItem(item, {
                         ref: listNavigationRef,
