@@ -173,7 +173,7 @@ export const Modal: React.FC<ModalProps> = ({
         style={maxWidth ? { maxWidth } : undefined}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title || header ? 'modal-title' : undefined}
+        aria-labelledby={title ? 'modal-title' : undefined}
       >
         {/* Header slot */}
         {header ? (

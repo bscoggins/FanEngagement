@@ -239,13 +239,15 @@ The header slot provides three options:
   header={
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
       <Icon name="settings" />
-      <h2>Advanced Settings</h2>
+      <h2 id="modal-title">Advanced Settings</h2>
     </div>
   }
 >
   {/* content */}
 </Modal>
 ```
+
+**Note**: When using custom header, include `id="modal-title"` on your heading element for proper screen reader support.
 
 3. **No Header** (Close button only)
 ```tsx
