@@ -415,22 +415,29 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = check => check.Tags.Contains("ready") // Only readiness checks
 });
 
-// Ensure database is migrated on startup (useful for containerized/dev scenarios)
-using (var scope = app.Services.CreateScope())
+// Conditionally apply database migrations on startup.
+// Controlled by configuration: set "ApplyMigrationsOnStartup" to true in appsettings or environment variables
+// (e.g., ASPNETCORE_ApplyMigrationsOnStartup=true) to enable in dev/container scenarios.
+// This is disabled by default to prevent issues in production with multiple instances (race conditions, locking).
+var applyMigrations = builder.Configuration.GetValue<bool>("ApplyMigrationsOnStartup");
+if (applyMigrations)
 {
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
-        if (dbContext.Database.IsRelational())
+        try
         {
-            dbContext.Database.Migrate();
+            var dbContext = scope.ServiceProvider.GetRequiredService<FanEngagement.Infrastructure.Persistence.FanEngagementDbContext>();
+            if (dbContext.Database.IsRelational())
+            {
+                dbContext.Database.Migrate();
+            }
         }
-    }
-    catch (Exception ex)
-    {
-        var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        startupLogger.LogError(ex, "Database migration failed during startup.");
-        throw;
+        catch (Exception ex)
+        {
+            var startupLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            startupLogger.LogError(ex, "Database migration failed during startup.");
+            throw;
+        }
     }
 }
 
