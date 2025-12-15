@@ -3,6 +3,8 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+dist/
+.env
 
 # Build artifacts not needed in production
 *.tsbuildinfo
