@@ -11,7 +11,7 @@ export const OrganizationSelector: React.FC = () => {
   const { activeOrg, setActiveOrg, memberships, hasMultipleOrgs } = useActiveOrganization();
   const [announcement, setAnnouncement] = useState('');
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
-  const announcementTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const announcementTimeoutRef = useRef<number | null>(null);
 
   const handleOrgSelect = useCallback((membership: MembershipWithOrganizationDto) => {
     setActiveOrg({
