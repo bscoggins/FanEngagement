@@ -1,8 +1,12 @@
+import type { Meta } from '@storybook/react';
 import { Tooltip } from './Tooltip';
 
-export default {
+const meta: Meta<typeof Tooltip> = {
   title: 'Components/Tooltip',
+  component: Tooltip,
 };
+
+export default meta;
 
 export const Basic = () => (
   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

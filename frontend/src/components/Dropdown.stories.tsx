@@ -1,8 +1,13 @@
+import type { Meta } from '@storybook/react';
 import { Dropdown, type DropdownItem } from './Dropdown';
 
-export default {
+const meta: Meta<typeof Dropdown> = {
   title: 'Components/Dropdown',
+  component: Dropdown,
+  parameters: { controls: { expanded: true } },
 };
+
+export default meta;
 
 const menuItems: DropdownItem[] = [
   { id: 'profile', label: 'Profile', icon: '👤' },

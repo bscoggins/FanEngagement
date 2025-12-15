@@ -20,7 +20,7 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const keyboardHelpTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | undefined>(undefined);
+  const keyboardHelpTimeoutRef = useRef<number | undefined>(undefined);
 
   // Platform detection for keyboard shortcuts
   const isMac = useMemo(() => {

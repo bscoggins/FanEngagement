@@ -1,10 +1,14 @@
+import type { Meta } from '@storybook/react';
 import { useState } from 'react';
 import { Modal, type ModalSize } from './Modal';
 import { Button } from './Button';
 
-export default {
+const meta: Meta<typeof Modal> = {
   title: 'Components/Overlays/Modal',
+  component: Modal,
 };
+
+export default meta;
 
 const ModalExample = ({
   size = 'md',
