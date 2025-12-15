@@ -18,7 +18,6 @@ env:
 
 jobs:
   build-solana-adapter:
-    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,7 +34,7 @@ jobs:
       - name: Build Solana adapter image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: adapters/solana
           file: adapters/solana/Dockerfile
           load: true
           tags: solana-adapter:test
@@ -139,7 +138,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: adapters/solana
           file: adapters/solana/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
