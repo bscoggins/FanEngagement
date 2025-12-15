@@ -105,7 +105,10 @@ const FormPlayground = () => {
         <Button type="button" variant="secondary" onClick={() => setForm({ name: '', email: '', role: '', updates: true, access: 'member' })}>
           Reset
         </Button>
-        <Button type="submit" isLoading={submitted && (!!errors.name || !!errors.email || !!errors.role)}>
+        <Button
+          type="submit"
+          isLoading={submitted && !errors.name && !errors.email && !errors.role}
+        >
           Save changes
         </Button>
       </div>

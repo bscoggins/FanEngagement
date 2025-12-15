@@ -58,14 +58,14 @@ export const Default: Story = {};
 
 export const Sortable: Story = {
   render: (args) => {
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof UserRow; direction: 'asc' | 'desc' } | null>(null);
 
     const sortedData = useMemo(() => {
       if (!sortConfig) return args.data;
-      const sorted = [...(args.data ?? [])];
+      const sorted = [...args.data];
       sorted.sort((a, b) => {
-        const aValue = (a as Record<string, unknown>)[sortConfig.key];
-        const bValue = (b as Record<string, unknown>)[sortConfig.key];
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
         const aComparable = typeof aValue === 'string' ? aValue.toLowerCase() : aValue ?? '';
         const bComparable = typeof bValue === 'string' ? bValue.toLowerCase() : bValue ?? '';
 
@@ -77,11 +77,12 @@ export const Sortable: Story = {
     }, [args.data, sortConfig]);
 
     const handleSort = (key: string) => {
+      const sortKey = key as keyof UserRow;
       setSortConfig((prev) => {
-        if (prev?.key === key) {
-          return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+        if (prev?.key === sortKey) {
+          return { key: sortKey, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
         }
-        return { key, direction: 'asc' };
+        return { key: sortKey, direction: 'asc' };
       });
     };
 
