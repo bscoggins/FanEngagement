@@ -53,7 +53,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const middleware = useMemo(() => {
     const base = [offset(8), shift({ padding: 8 })];
     if (placement === 'auto') {
-      base.push(autoPlacement({ alignment: 'center' }));
+      base.push(autoPlacement());
     } else {
       base.push(flip({ fallbackAxisSideDirection: 'start' }));
     }
@@ -106,7 +106,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const floatingProps = getFloatingProps();
 
   const child = React.Children.only(children);
-  const describedByValue = child.props?.['aria-describedby'];
+  const describedByValue = (child.props as any)?.['aria-describedby'];
   const describedBy = open
     ? [describedByValue, tooltipId].filter(Boolean).join(' ')
     : describedByValue;
@@ -126,7 +126,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             {...floatingProps}
             id={tooltipId}
             ref={refs.setFloating}
-            style={{ ...floatingProps.style, ...floatingStyles, maxWidth }}
+            style={{ ...(floatingProps.style || {}), ...floatingStyles, maxWidth }}
             className={`tooltip ${className ?? ''} ${floatingProps.className ?? ''}`.trim()}
             data-placement={computedPlacement}
             data-open={open}

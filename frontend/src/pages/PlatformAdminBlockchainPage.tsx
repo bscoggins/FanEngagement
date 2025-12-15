@@ -8,6 +8,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
+import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { BlockchainRecordDto, Organization, PagedResult, BlockchainVerificationDto } from '../types/api';
 
@@ -188,28 +189,32 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
                       <td>{record.entityName}</td>
                       <td className="font-monospace small">
                         {record.transactionId ? (
-                          <div title="Transaction ID">
-                            TX: <a 
-                                  href={`https://explorer.solana.com/tx/${record.transactionId}?cluster=devnet`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-decoration-none"
-                                >
-                                  {record.transactionId}
-                                </a>
-                          </div>
-                        ) : null}
-                        {record.onChainAddress ? (
-                          <div title="On-Chain Address">
-                            Addr: <a 
-                                    href={`https://explorer.solana.com/address/${record.onChainAddress}?cluster=devnet`} 
+                          <Tooltip content="Transaction ID">
+                            <div>
+                              TX: <a 
+                                    href={`https://explorer.solana.com/tx/${record.transactionId}?cluster=devnet`} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="text-decoration-none"
                                   >
-                                    {record.onChainAddress}
+                                    {record.transactionId}
                                   </a>
-                          </div>
+                            </div>
+                          </Tooltip>
+                        ) : null}
+                        {record.onChainAddress ? (
+                          <Tooltip content="On-Chain Address">
+                            <div>
+                              Addr: <a 
+                                      href={`https://explorer.solana.com/address/${record.onChainAddress}?cluster=devnet`} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-decoration-none"
+                                    >
+                                      {record.onChainAddress}
+                                    </a>
+                            </div>
+                          </Tooltip>
                         ) : null}
                       </td>
                       <td>{record.status}</td>
