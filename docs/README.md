@@ -14,6 +14,7 @@ New to FanEngagement? Start here:
 ## 📚 Core Documentation
 
 - **[Authorization](authorization.md)** - Policy-based authorization system, roles, and permissions
+- **[Accessibility Testing](accessibility-testing.md)** - ARIA implementation, WCAG compliance, and screen reader testing guide
 - **[Future Improvements](future-improvements.md)** - Backlog of enhancement ideas and feature requests
 
 ### Development & Testing
@@ -136,6 +137,7 @@ Located in [`guides/`](guides/):
 
 - [Development Setup](development.md)
 - [Architecture Overview](architecture.md)
+- [Accessibility Testing](accessibility-testing.md)
 - [Audit Logging Guide](audit/development.md)
 - [Frontend Components](frontend/components/)
 - [Design System](frontend/design-system.md)

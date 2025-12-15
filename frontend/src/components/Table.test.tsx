@@ -369,6 +369,76 @@ describe('Table', () => {
       const header = container.querySelector('th[data-column="name"]');
       expect(header).toHaveAttribute('aria-sort', 'ascending');
     });
+
+    it('should have descriptive aria-label for unsorted sortable column', () => {
+      const columns: TableColumn<TestData>[] = [
+        { key: 'name', label: 'Name', render: (item) => item.name, sortable: true },
+      ];
+
+      const { container } = render(
+        <Table
+          data={mockData}
+          columns={columns}
+          getRowKey={(item) => item.id}
+        />
+      );
+
+      const header = container.querySelector('th[data-column="name"]');
+      expect(header).toHaveAttribute('aria-label', 'Name, not sorted. Click to sort ascending.');
+    });
+
+    it('should have descriptive aria-label for ascending sorted column', () => {
+      const columns: TableColumn<TestData>[] = [
+        { key: 'name', label: 'Name', render: (item) => item.name, sortable: true },
+      ];
+
+      const { container } = render(
+        <Table
+          data={mockData}
+          columns={columns}
+          getRowKey={(item) => item.id}
+          sortConfig={{ key: 'name', direction: 'asc' }}
+        />
+      );
+
+      const header = container.querySelector('th[data-column="name"]');
+      expect(header).toHaveAttribute('aria-label', 'Name, sorted ascending. Click to sort descending.');
+    });
+
+    it('should have descriptive aria-label for descending sorted column', () => {
+      const columns: TableColumn<TestData>[] = [
+        { key: 'name', label: 'Name', render: (item) => item.name, sortable: true },
+      ];
+
+      const { container } = render(
+        <Table
+          data={mockData}
+          columns={columns}
+          getRowKey={(item) => item.id}
+          sortConfig={{ key: 'name', direction: 'desc' }}
+        />
+      );
+
+      const header = container.querySelector('th[data-column="name"]');
+      expect(header).toHaveAttribute('aria-label', 'Name, sorted descending. Click to sort ascending.');
+    });
+
+    it('should not have aria-label for non-sortable column', () => {
+      const columns: TableColumn<TestData>[] = [
+        { key: 'name', label: 'Name', render: (item) => item.name, sortable: false },
+      ];
+
+      const { container } = render(
+        <Table
+          data={mockData}
+          columns={columns}
+          getRowKey={(item) => item.id}
+        />
+      );
+
+      const header = container.querySelector('th[data-column="name"]');
+      expect(header).not.toHaveAttribute('aria-label');
+    });
   });
 
   describe('Row Interaction', () => {

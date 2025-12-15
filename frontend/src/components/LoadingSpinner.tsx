@@ -25,6 +25,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -34,6 +37,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       }}
     >
       <div
+        aria-hidden="true"
         style={{
           width: spinnerSize,
           height: spinnerSize,
@@ -47,6 +51,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         <p style={{ marginTop: '1rem', color: '#666', fontSize: '0.875rem' }}>
           {message}
         </p>
+      )}
+      {!message && (
+        <span className="visually-hidden">Loading...</span>
       )}
       <style>
         {`

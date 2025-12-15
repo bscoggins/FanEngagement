@@ -14,6 +14,8 @@ interface ErrorMessageProps {
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry }) => {
   return (
     <div
+      role="alert"
+      aria-live="assertive"
       style={{
         padding: '1rem',
         backgroundColor: '#f8d7da',
@@ -37,6 +39,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry }) 
             cursor: 'pointer',
             fontSize: '0.875rem',
           }}
+          aria-label="Retry loading"
         >
           Retry
         </button>

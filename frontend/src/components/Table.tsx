@@ -190,6 +190,22 @@ export function Table<T>({
     );
   };
 
+  const getSortAriaLabel = (column: TableColumn<T>) => {
+    if (!column.sortable) return undefined;
+    
+    const sortKey = column.sortKey || column.key;
+    const isActive = sortConfig?.key === sortKey;
+    const direction = sortConfig && isActive ? sortConfig.direction : null;
+    
+    if (direction === 'asc') {
+      return `${column.label}, sorted ascending. Click to sort descending.`;
+    } else if (direction === 'desc') {
+      return `${column.label}, sorted descending. Click to sort ascending.`;
+    } else {
+      return `${column.label}, not sorted. Click to sort ascending.`;
+    }
+  };
+
   const classes = [
     'table-container',
     `table-container--${mobileLayout}`,
@@ -244,6 +260,7 @@ export function Table<T>({
                       : 'descending'
                     : undefined
                 }
+                aria-label={getSortAriaLabel(column)}
                 data-column={column.key}
               >
                 <span className="table__header-content">

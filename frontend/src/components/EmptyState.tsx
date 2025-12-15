@@ -20,7 +20,9 @@ interface EmptyStateProps {
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({ message, icon, action }) => {
   return (
-    <div
+    <section
+      role="status"
+      aria-label="Empty state"
       style={{
         padding: '3rem 2rem',
         backgroundColor: 'white',
@@ -30,7 +32,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ message, icon, action })
       }}
     >
       {icon && (
-        <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }} aria-hidden="true">
           {icon}
         </div>
       )}
@@ -53,6 +55,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ message, icon, action })
           {action.label}
         </button>
       )}
-    </div>
+    </section>
   );
 };
