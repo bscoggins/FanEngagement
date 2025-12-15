@@ -117,6 +117,11 @@
 </div>
 ```
 
+### For Developers: Storybook
+
+- From `frontend/`, run `npm run storybook` to explore components with controls and the accessibility addon.
+- Generate a static bundle with `npm run build-storybook` for local sharing.
+
 ### Building Navigation Components
 
 **1. Review navigation specifications:**

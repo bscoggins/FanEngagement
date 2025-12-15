@@ -1,10 +1,14 @@
 import type { CSSProperties } from 'react';
+import type { Meta } from '@storybook/react';
 import { NotificationContainer } from './NotificationContainer';
 import { ToastProvider, useToast, type ToastPosition } from '../contexts/ToastContext';
 
-export default {
+const meta: Meta<typeof NotificationContainer> = {
   title: 'Components/Feedback/Toast',
+  component: NotificationContainer,
 };
+
+export default meta;
 
 const buttonStyle: CSSProperties = {
   padding: '0.5rem 1rem',
