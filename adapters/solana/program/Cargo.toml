@@ -1,16 +1,11 @@
-[workspace]
-members = ["programs/fan-governance"]
-resolver = "2"
-
-[workspace.package]
+[package]
+name = "fan-engagement-log"
 version = "0.1.0"
 edition = "2021"
-license = "UNLICENSED"
-authors = ["FanEngagement Team"]
 
-[profile.release]
-overflow-checks = true
+[lib]
+crate-type = ["cdylib", "lib"]
 
-[workspace.dependencies]
-anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
-solana-program = "3.0.0"
+[dependencies]
+pinocchio = "0.10.0-rc.1"
+pinocchio-log = "0.5.1"

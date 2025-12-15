@@ -1,0 +1,16 @@
+[workspace]
+members = ["programs/fan-governance"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+authors = ["FanEngagement Team"]
+
+[profile.release]
+overflow-checks = true
+
+[workspace.dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+solana-program = "3.0.0"

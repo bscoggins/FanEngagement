@@ -29,4 +29,15 @@ public class BlockchainAdapterFactory(FanEngagementDbContext dbContext, IHttpCli
             _ => throw new InvalidOperationException($"Unknown blockchain type: {organization.BlockchainType}")
         };
     }
+
+    public IBlockchainAdapter GetAdapter(BlockchainType blockchainType)
+    {
+        return blockchainType switch
+        {
+            BlockchainType.Solana => new SolanaAdapterClient(httpClientFactory, null),
+            BlockchainType.Polygon => new PolygonAdapterClient(httpClientFactory, null),
+            BlockchainType.None => new NullBlockchainAdapter(),
+            _ => throw new InvalidOperationException($"Unknown blockchain type: {blockchainType}")
+        };
+    }
 }

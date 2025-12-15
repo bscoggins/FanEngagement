@@ -78,7 +78,7 @@ Hash any large/free-form blobs (proposal text, expectation statements, ballot de
 
 ## Local Development Setup
 
-### Quick on-chain E2E test (backend + adapter + validator)
+### Quick on-chain E2E test (backend + adapter)
 
 Run the full Solana on-chain integration in one command from the repo root:
 
@@ -86,16 +86,16 @@ Run the full Solana on-chain integration in one command from the repo root:
 ./scripts/run-solana-onchain-tests.sh
 ```
 
-What it does: stops any previous adapter/validator containers, prunes stopped containers and dangling images, starts the local `solana-test-validator` + `solana-adapter`, funds the adapter keypair via airdrop, waits for health, and runs `SolanaOnChainEndToEndTests` against the backend.
+What it does: ensures the `solana-adapter` is running (connected to Devnet), waits for health, and runs `SolanaOnChainEndToEndTests` against the backend.
+
+**Note:** You must ensure the adapter wallet is funded on Devnet before running these tests.
 
 Key env overrides (optional):
 
 - `SOLANA_TEST_KEYPAIR` – path to the keypair JSON array (defaults to `test-keypair.json`).
 - `SOLANA_ADAPTER_BASE_URL` – adapter base URL (default `http://localhost:3001/v1/adapter/`).
-- `SOLANA_ON_CHAIN_RPC_URL` – validator RPC URL (default `http://localhost:8899`).
+- `SOLANA_ON_CHAIN_RPC_URL` – validator RPC URL (default `https://api.devnet.solana.com`).
 - `SOLANA_ADAPTER_API_KEY` – adapter API key (default `dev-api-key-change-in-production`).
-
-After the run, the script stops the stack and prunes stopped containers/dangling images to keep local Docker tidy.
 
 ### 1. Generate Keypair
 

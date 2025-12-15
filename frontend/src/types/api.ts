@@ -387,3 +387,51 @@ export interface AuditEvent {
 export interface AuditEventDetails extends AuditEvent {
   details?: string;
 }
+
+export interface BlockchainRecordDto {
+  entityId: string;
+  organizationId: string;
+  organizationName: string;
+  entityType: string;
+  entityName: string;
+  transactionId?: string;
+  onChainAddress?: string;
+  timestamp: string;
+  status: string;
+}
+
+export interface BlockchainVerificationDto {
+  isVerified: boolean;
+  message: string;
+  databaseValue?: any;
+  blockchainValue?: any;
+}
+
+export interface ShareIssuanceDto {
+  id: string;
+  organizationId: string;
+  userId: string;
+  userDisplayName: string;
+  shareTypeId: string;
+  shareTypeName: string;
+  shareTypeSymbol: string;
+  quantity: number;
+  issuedAt: string;
+  issuedByUserId: string;
+  issuedByUserDisplayName: string;
+  reason?: string;
+  blockchainTransactionId?: string;
+}
+
+export interface CreateShareIssuanceRequest {
+  userId: string;
+  shareTypeId: string;
+  quantity: number;
+  reason?: string;
+}
+
+export interface PlatformWalletDto {
+  address: string;
+  balance: number;
+  currency: string;
+}

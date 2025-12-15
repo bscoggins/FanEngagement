@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        adapter: [solana, polygon]
+        adapter: [polygon]
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

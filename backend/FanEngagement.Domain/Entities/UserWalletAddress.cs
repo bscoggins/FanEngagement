@@ -8,6 +8,7 @@ public class UserWalletAddress
     public Guid UserId { get; set; }
     public BlockchainType BlockchainType { get; set; }
     public string Address { get; set; } = default!;
+    public string? EncryptedPrivateKey { get; set; }
     public string? Label { get; set; }
     public bool IsPrimary { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

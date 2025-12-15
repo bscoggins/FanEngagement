@@ -8,15 +8,15 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROGRAM_DIR="$ROOT_DIR/adapters/solana/program"
+ROOT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+PROGRAM_DIR="$ROOT_DIR/adapters/solana_legacy/program"
 SO_PATH="$PROGRAM_DIR/target/deploy/fan_governance.so"
 KEYPAIR_PATH="$PROGRAM_DIR/target/deploy/fan_governance-keypair.json"
 PROGRAM_ID="53kLd3Zo8gqPyHuuALc1fLoARPszVkheA4P859MtfPo"
 RPC_PORT=${RPC_PORT:-8899}
 RPC_URL="http://127.0.0.1:${RPC_PORT}"
 VALIDATOR_MODE=${SOLANA_VALIDATOR_MODE:-binary} # binary|docker
-COMPOSE_FILE="$ROOT_DIR/adapters/solana/docker-compose.yml"
+COMPOSE_FILE="$ROOT_DIR/adapters/solana_legacy/docker-compose.yml"
 COMPOSE_SERVICE="solana-test-validator"
 
 if [[ -f "$HOME/.cargo/env" ]]; then

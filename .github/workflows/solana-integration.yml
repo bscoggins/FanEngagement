@@ -31,19 +31,19 @@ jobs:
 
       - name: Start Solana Services
         run: |
-          docker compose --profile solana up -d --wait solana-test-validator solana-adapter || (docker compose logs solana-test-validator && exit 1)
+          docker compose --profile solana up -d --wait solana-adapter
         env:
           API_KEY: dev-api-key-change-me
 
-      - name: Fund Adapter Wallet
-        run: |
-          # Airdrop to adapter wallet (using the pubkey from run-all-tests.sh)
-          docker compose exec -T solana-test-validator solana airdrop 10 2p7ji7RTkmNJTEHwd7mRkiscmZXFETHavtYyNJMyLzcg --url http://localhost:8899
+      # - name: Fund Adapter Wallet
+      #   run: |
+      #     # Airdrop to adapter wallet (using the pubkey from run-all-tests.sh)
+      #     docker compose exec -T solana-test-validator solana airdrop 10 2p7ji7RTkmNJTEHwd7mRkiscmZXFETHavtYyNJMyLzcg --url http://localhost:8899
 
       - name: Run Solana Integration Tests
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=SolanaIntegration"
         working-directory: ./backend
         env:
-          SOLANA_ON_CHAIN_RPC_URL: http://localhost:8899
+          SOLANA_ON_CHAIN_RPC_URL: https://api.devnet.solana.com
           SOLANA_ADAPTER_BASE_URL: http://localhost:3001/v1/adapter/
           SOLANA_ADAPTER_API_KEY: dev-api-key-change-me

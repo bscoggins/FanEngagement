@@ -30,6 +30,11 @@ services:
       Jwt__Issuer: FanEngagement
       Jwt__Audience: FanEngagement
       Jwt__SigningKey: ${JWT_SIGNING_KEY:-dev-signing-key-change-in-production}
+      # Blockchain Adapter Configuration
+      BlockchainAdapters__Solana__BaseUrl: http://solana-adapter:3001/v1/adapter/
+      BlockchainAdapters__Solana__ApiKey: ${API_KEY:-dev-api-key-change-in-production}
+      BlockchainAdapters__Polygon__BaseUrl: http://polygon-adapter:3002/v1/adapter/
+      BlockchainAdapters__Polygon__ApiKey: ${API_KEY:-dev-api-key-change-in-production}
     ports:
       - "8080:8080"
     depends_on:
@@ -46,50 +51,23 @@ services:
       - "3000:80"
     depends_on:
       - api
-  solana-test-validator:
-    # Using v1.18.26 for stable local testing. Update to newer versions if needed
-    # for compatibility with mainnet/devnet features. Check solanalabs/solana on Docker Hub.
-    image: solanalabs/solana:v1.18.26
-    container_name: solana-test-validator
-    profiles: ["solana"]
-    command: solana-test-validator --no-bpf-jit --reset --rpc-port 8899 --quiet
-    environment:
-      RUST_LOG: error
-    # privileged: true is required because solana-test-validator needs access to 
-    # system resources and capabilities that are typically restricted in containers.
-    # Specifically, it needs elevated permissions for memory mapping, file system operations,
-    # and handling the large number of file descriptors required for validator operations.
-    # This is safe for local development and testing environments.
-    privileged: true
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 1000000
-    ports:
-      - "8899:8899"
-    healthcheck:
-      test: ["CMD", "solana", "cluster-version", "--url", "http://localhost:8899"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
   solana-adapter:
     build:
-      context: .
-      dockerfile: adapters/solana/Dockerfile
+      context: ./adapters/solana
+      dockerfile: Dockerfile
     container_name: solana-adapter
-    profiles: ["solana"]
     ports:
       - "3001:3001"
     environment:
       NODE_ENV: development
       PORT: 3001
       LOG_LEVEL: debug
-      SOLANA_NETWORK: localnet
-      SOLANA_RPC_URL: http://solana-test-validator:8899
+      SOLANA_NETWORK: devnet
+      SOLANA_RPC_URL: https://api.devnet.solana.com
       SOLANA_COMMITMENT: confirmed
       SOLANA_CONFIRM_TIMEOUT: 30000
       SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY}
+      SOLANA_PROGRAM_ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
       API_KEY: ${API_KEY:-dev-api-key-change-in-production}
       REQUIRE_AUTH: "true"
       RETRY_MAX_ATTEMPTS: 4
@@ -179,5 +157,6 @@ services:
 
 volumes:
   db_data:
+  solana_data:
   playwright-cache:
   frontend-node_modules:

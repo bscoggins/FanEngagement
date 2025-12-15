@@ -904,6 +904,7 @@ public class ProposalService(
                         vote.CastAt),
                     cancellationToken);
                 voteTransactionId = onChainResult.TransactionId;
+                vote.BlockchainTransactionId = voteTransactionId;
 
                 logger.LogInformation(
                     "Vote {VoteId} recorded on {Blockchain} with transaction {TransactionId}",

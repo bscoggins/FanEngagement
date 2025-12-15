@@ -36,6 +36,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Default to excluding Solana integration tests if no filter is provided
+if [[ -z "$FILTER" ]]; then
+  FILTER="--filter Category!=SolanaIntegration"
+fi
+
 echo "=== Running Backend Tests ==="
 echo ""
 

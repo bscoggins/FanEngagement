@@ -37,7 +37,7 @@ export const useNotifications = (): NotificationContextType => {
     dismissToast,
   } = useToast();
 
-  return {
+  return React.useMemo(() => ({
     notifications: toasts,
     showSuccess: (message: string, options?: ToastOptions) => {
       toastSuccess(message, options);
@@ -52,5 +52,5 @@ export const useNotifications = (): NotificationContextType => {
       toastWarning(message, options);
     },
     removeNotification: dismissToast,
-  };
+  }), [toasts, toastSuccess, toastError, toastInfo, toastWarning, dismissToast]);
 };

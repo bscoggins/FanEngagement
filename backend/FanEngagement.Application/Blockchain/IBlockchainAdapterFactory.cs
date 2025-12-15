@@ -9,4 +9,9 @@ public interface IBlockchainAdapterFactory
     /// Gets the appropriate blockchain adapter for the specified organization.
     /// </summary>
     Task<IBlockchainAdapter> GetAdapterAsync(Guid organizationId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets the appropriate blockchain adapter for the specified blockchain type.
+    /// </summary>
+    IBlockchainAdapter GetAdapter(Domain.Enums.BlockchainType blockchainType);
 }
