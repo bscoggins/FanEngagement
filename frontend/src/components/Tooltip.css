@@ -1,0 +1,62 @@
+.tooltip {
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-inverse);
+  border: 1px solid var(--color-border-dark);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  z-index: 1200;
+  animation: tooltip-fade-in var(--duration-normal) var(--ease-out);
+  transform-origin: center;
+}
+
+.tooltip[data-placement^="top"] {
+  transform-origin: bottom center;
+}
+
+.tooltip[data-placement^="bottom"] {
+  transform-origin: top center;
+}
+
+.tooltip[data-placement^="left"] {
+  transform-origin: center right;
+}
+
+.tooltip[data-placement^="right"] {
+  transform-origin: center left;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--spacing-1));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    animation: none;
+    transition: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .tooltip {
+    background-color: var(--color-neutral-900);
+    border-color: var(--color-neutral-700);
+    color: var(--color-text-inverse);
+  }
+}
+
+body.theme-dark .tooltip {
+  background-color: var(--color-neutral-900);
+  border-color: var(--color-neutral-700);
+  color: var(--color-text-inverse);
+}

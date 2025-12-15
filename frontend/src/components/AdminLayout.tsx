@@ -8,6 +8,7 @@ import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navi
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
+import { Tooltip } from './Tooltip';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
 
@@ -221,15 +222,17 @@ export const AdminLayout: React.FC = () => {
       <div className="admin-layout">
         <header className="admin-header" role="banner">
           <div className="admin-header-left">
-            <button
-              className="admin-mobile-menu-button"
-              onClick={() => setIsMobileNavOpen(true)}
-              aria-label="Open navigation menu"
-              aria-expanded={isMobileNavOpen}
-              aria-controls="mobile-nav-drawer"
-            >
-              <span className="hamburger-icon" aria-hidden="true">☰</span>
-            </button>
+            <Tooltip content="Open navigation menu" placement="bottom">
+              <button
+                className="admin-mobile-menu-button"
+                onClick={() => setIsMobileNavOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={isMobileNavOpen}
+                aria-controls="mobile-nav-drawer"
+              >
+                <span className="hamburger-icon" aria-hidden="true">☰</span>
+              </button>
+            </Tooltip>
             <h1>FanEngagement Admin</h1>
           </div>
           <div className="admin-header-right">
@@ -336,5 +339,4 @@ export const AdminLayout: React.FC = () => {
     </>
   );
 };
-
 

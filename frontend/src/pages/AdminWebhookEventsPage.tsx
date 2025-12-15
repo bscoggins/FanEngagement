@@ -9,6 +9,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 
@@ -276,9 +277,20 @@ export const AdminWebhookEventsPage: React.FC = () => {
                   <td
                     className="admin-secondary-text"
                     style={{ color: event.lastError ? 'var(--color-error-600)' : undefined }}
-                    title={event.lastError || undefined}
                   >
-                    {truncateError(event.lastError)}
+                    {event.lastError ? (
+                      <Tooltip content={event.lastError} placement="top">
+                        <span
+                          className="text-truncate text-truncate-md"
+                          tabIndex={0}
+                          style={{ display: 'inline-block' }}
+                        >
+                          {truncateError(event.lastError)}
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      '-'
+                    )}
                   </td>
                   <td>
                     <div className="admin-table-actions">
