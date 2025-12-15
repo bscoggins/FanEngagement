@@ -5,6 +5,9 @@ RUN npm ci
 COPY adapters/solana/ .
 RUN npm run build
 
+FROM builder AS test
+RUN npm test
+
 FROM node:20-alpine
 WORKDIR /app
 COPY adapters/solana/package*.json ./
