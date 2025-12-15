@@ -283,7 +283,6 @@ export const AdminWebhookEventsPage: React.FC = () => {
                         <span
                           className="text-truncate text-truncate-md"
                           tabIndex={0}
-                          style={{ display: 'inline-block' }}
                         >
                           {truncateError(event.lastError)}
                         </span>
