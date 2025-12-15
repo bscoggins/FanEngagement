@@ -66,9 +66,12 @@ export const Sortable: Story = {
       sorted.sort((a, b) => {
         const aValue = (a as Record<string, unknown>)[sortConfig.key];
         const bValue = (b as Record<string, unknown>)[sortConfig.key];
-        if (aValue === bValue) return 0;
-        if (aValue! > bValue!) return sortConfig.direction === 'asc' ? 1 : -1;
-        return sortConfig.direction === 'asc' ? -1 : 1;
+        const aComparable = typeof aValue === 'string' ? aValue.toLowerCase() : aValue ?? '';
+        const bComparable = typeof bValue === 'string' ? bValue.toLowerCase() : bValue ?? '';
+
+        if (aComparable === bComparable) return 0;
+        const comparison = aComparable > bComparable ? 1 : -1;
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
       });
       return sorted;
     }, [args.data, sortConfig]);
