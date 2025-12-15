@@ -9,6 +9,7 @@ import { MobileNav, type MobileNavItem } from './MobileNav';
 import { GlobalSearch } from './GlobalSearch';
 import { RecentsDropdown } from './RecentsDropdown';
 import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
+import { Tooltip } from './Tooltip';
 import { isMacPlatform } from '../utils/platformUtils';
 import './PlatformAdminLayout.css';
 import '../pages/AdminPage.css';
@@ -138,15 +139,17 @@ export const PlatformAdminLayout: React.FC = () => {
       <div className="admin-layout">
         <header className="admin-header" role="banner">
           <div className="admin-header-left">
-            <button
-              className="admin-mobile-menu-button"
-              onClick={() => setIsMobileNavOpen(true)}
-              aria-label="Open navigation menu"
-              aria-expanded={isMobileNavOpen}
-              aria-controls="mobile-nav-drawer"
-            >
-              <span className="hamburger-icon" aria-hidden="true">☰</span>
-            </button>
+            <Tooltip content="Open navigation menu" placement="bottom">
+              <button
+                className="admin-mobile-menu-button"
+                onClick={() => setIsMobileNavOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={isMobileNavOpen}
+                aria-controls="mobile-nav-drawer"
+              >
+                <span className="hamburger-icon" aria-hidden="true">☰</span>
+              </button>
+            </Tooltip>
             <h1>FanEngagement Platform Admin</h1>
           </div>
           <div className="admin-header-center">
@@ -221,4 +224,3 @@ export const PlatformAdminLayout: React.FC = () => {
     </>
   );
 };
-

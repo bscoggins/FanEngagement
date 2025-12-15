@@ -12,6 +12,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Button } from '../components/Button';
+import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { 
   ShareIssuanceDto, 
@@ -255,9 +256,11 @@ export const AdminOrganizationShareIssuancePage: React.FC = () => {
                     <td>{issuance.reason || '-'}</td>
                     <td>
                       {issuance.blockchainTransactionId ? (
-                        <span className="badge badge-success" title={issuance.blockchainTransactionId}>
-                          Recorded
-                        </span>
+                        <Tooltip content={issuance.blockchainTransactionId}>
+                          <span className="badge badge-success">
+                            Recorded
+                          </span>
+                        </Tooltip>
                       ) : (
                         <span className="badge badge-secondary">Off-chain</span>
                       )}

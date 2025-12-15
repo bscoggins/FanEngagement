@@ -3,6 +3,7 @@ import { blockchainApi } from '../api/blockchainApi';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Button } from '../components/Button';
+import { Tooltip } from '../components/Tooltip';
 import { Select } from '../components/Select';
 import './AdminPage.css';
 import type { PlatformWalletDto } from '../types/api';
@@ -73,14 +74,15 @@ export const PlatformAdminWalletPage: React.FC = () => {
                   <label className="form-label text-muted">Address</label>
                   <div className="d-flex align-items-center">
                     <code className="fs-5 me-2">{wallet.address}</code>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => navigator.clipboard.writeText(wallet.address)}
-                      title="Copy to clipboard"
-                    >
-                      Copy
-                    </Button>
+                    <Tooltip content="Copy to clipboard">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => navigator.clipboard.writeText(wallet.address)}
+                      >
+                        Copy
+                      </Button>
+                    </Tooltip>
                   </div>
                 </div>
               </div>
