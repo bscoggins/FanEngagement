@@ -53,24 +53,13 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         </p>
       )}
       {!message && (
-        <span className="sr-only">Loading...</span>
+        <span className="visually-hidden">Loading...</span>
       )}
       <style>
         {`
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-          }
-          .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
           }
         `}
       </style>

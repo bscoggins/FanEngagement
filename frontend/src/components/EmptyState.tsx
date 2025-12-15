@@ -51,7 +51,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ message, icon, action })
             cursor: 'pointer',
             fontSize: '0.875rem',
           }}
-          aria-label={action.label}
         >
           {action.label}
         </button>
