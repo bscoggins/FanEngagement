@@ -140,12 +140,18 @@ public class OrganizationService(
         // Audit after successful commit
         try
         {
+            // Fetch creator's display name for the audit log
+            var creator = await dbContext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == creatorUserId, cancellationToken);
+            var creatorName = creator?.DisplayName ?? "Unknown User";
+
             await auditService.LogAsync(
                 new AuditEventBuilder()
                     .WithAction(AuditActionType.Created)
                     .WithResource(AuditResourceType.Organization, organization.Id, organization.Name)
                     .WithOrganization(organization.Id, organization.Name)
-                    .WithActor(creatorUserId, string.Empty) // TODO: DisplayName not available here; consider fetching from User entity if needed for completeness
+                    .WithActor(creatorUserId, creatorName)
                     .WithDetails(new
                     {
                         organization.Name,

@@ -24,4 +24,16 @@ public class NullBlockchainAdapter : IBlockchainAdapter
 
     public Task<BlockchainTransactionResult> CommitProposalResultsAsync(CommitProposalResultsCommand command, CancellationToken cancellationToken)
         => Task.FromResult(new BlockchainTransactionResult(string.Empty));
+
+    public Task<object?> GetTransactionAsync(string transactionId, CancellationToken cancellationToken)
+        => Task.FromResult<object?>(null);
+
+    public Task<object?> GetAccountAsync(string address, CancellationToken cancellationToken)
+        => Task.FromResult<object?>(null);
+
+    public Task<CreateWalletResult> CreateWalletAsync(CancellationToken cancellationToken)
+        => Task.FromResult(new CreateWalletResult(string.Empty, string.Empty));
+
+    public Task<PlatformWalletDto> GetPlatformWalletAsync(CancellationToken cancellationToken)
+        => Task.FromResult(new PlatformWalletDto(string.Empty, 0, string.Empty));
 }

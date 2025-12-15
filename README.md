@@ -314,17 +314,12 @@ FanEngagement supports optional blockchain integration for governance transparen
 
 ### Starting Blockchain Adapters
 
-Adapters run as separate Docker containers and are enabled via compose profiles:
+Adapters run as separate Docker containers. The Solana adapter is enabled by default and connects to Devnet.
 
 **Solana Adapter (Devnet):**
 ```bash
-# Start Solana adapter pointed at devnet
-docker compose --profile solana up -d solana-adapter
-
-# Or with local validator for deterministic testing
-export SOLANA_RPC_URL=http://solana-test-validator:8899
-export SOLANA_NETWORK=localnet
-docker compose --profile solana up -d solana-test-validator solana-adapter
+# Solana adapter starts automatically with docker compose up
+# It is configured to use Solana Devnet by default
 ```
 
 **Polygon Adapter:**
@@ -370,7 +365,7 @@ Control which services start with compose profiles:
 | Profile | Services | Use Case |
 |---------|----------|----------|
 | (default) | db, api, frontend, polygon-adapter | Full stack with Polygon |
-| `solana` | solana-adapter, (optional) solana-test-validator | Solana blockchain integration |
+| `solana` | solana-adapter | Solana blockchain integration |
 | `tests` | backend test runner | Run backend tests in container |
 | `e2e` | E2E test runner | Run Playwright tests |
 | `tools` | Playwright MCP helper | Development tools |

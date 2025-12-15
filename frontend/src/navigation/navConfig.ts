@@ -109,12 +109,28 @@ export const navItems: NavItem[] = [
     order: 11,
   },
   {
+    id: 'platformBlockchain',
+    label: 'Blockchain',
+    path: '/platform-admin/blockchain',
+    roles: ['PlatformAdmin'],
+    scope: 'global',
+    order: 12,
+  },
+  {
+    id: 'platformWallet',
+    label: 'Platform Wallet',
+    path: '/platform-admin/wallet',
+    roles: ['PlatformAdmin'],
+    scope: 'global',
+    order: 12.5,
+  },
+  {
     id: 'platformMyAccount',
     label: 'My Account',
     path: '/platform-admin/my-account',
     roles: ['PlatformAdmin'],
     scope: 'global',
-    order: 12,
+    order: 13,
   },
   {
     id: 'adminDashboard',
@@ -183,12 +199,20 @@ export const navItems: NavItem[] = [
     order: 22,
   },
   {
+    id: 'manageShareIssuance',
+    label: 'Share Issuance',
+    path: '/admin/organizations/:orgId/share-issuance',
+    roles: ['PlatformAdmin', 'OrgAdmin'],
+    scope: 'org',
+    order: 23,
+  },
+  {
     id: 'manageProposals',
     label: 'Proposals',
     path: '/admin/organizations/:orgId/proposals',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
-    order: 23,
+    order: 24,
   },
   {
     id: 'webhookEvents',
@@ -196,7 +220,7 @@ export const navItems: NavItem[] = [
     path: '/admin/organizations/:orgId/webhook-events',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
-    order: 24,
+    order: 25,
   },
   {
     id: 'auditLog',
@@ -204,7 +228,7 @@ export const navItems: NavItem[] = [
     path: '/admin/organizations/:orgId/audit-log',
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
-    order: 25,
+    order: 26,
   },
 ];
 

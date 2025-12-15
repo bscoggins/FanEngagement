@@ -66,29 +66,22 @@ docker compose up -d --build
 - **Backend API**: http://localhost:8080
 - **Frontend**: http://localhost:3000
 
-#### Solana Adapter + Validator (On Demand)
+#### Solana Adapter
 
-The Solana adapter and the local `solana-test-validator` live behind the `solana` compose profile so they stay off by default. The adapter now targets Solana **devnet** unless you override its `SOLANA_RPC_URL`.
+The Solana adapter is now included in the default `docker-compose.yml` configuration and will start automatically. It is configured to target **Solana Devnet** by default.
 
 ```bash
-# Routine development: adapter only, pointed at devnet
-docker compose --profile solana up -d solana-adapter
+# The adapter starts with the rest of the stack
+docker compose up -d
 
-# Deterministic local testing: start adapter + validator and override RPC
-# Recommended: use an env file
-echo "SOLANA_RPC_URL=http://solana-test-validator:8899" > .env.local
-echo "SOLANA_NETWORK=localnet" >> .env.local
-docker compose --env-file .env.local --profile solana up -d solana-test-validator solana-adapter
-
-# Or export variables in your shell before running
-export SOLANA_RPC_URL=http://solana-test-validator:8899
-export SOLANA_NETWORK=localnet
-docker compose --profile solana up -d solana-test-validator solana-adapter
-# Tear everything down when finished
-docker compose --profile solana down
+# View adapter logs
+docker compose logs -f solana-adapter
 ```
 
-Any scripts or test runs that rely on Solana should add `--profile solana` so the adapter container is present. If a workflow truly needs the embedded validator, include it explicitly (as shown above) or run the validator manually before launching the adapter.
+The adapter uses a pre-configured public key for development. If you need to fund the wallet for testing:
+
+1. Get the wallet address from the logs or the Admin UI.
+2. Use the Solana Faucet or CLI to airdrop SOL to that address on Devnet.
 
 ##### Generating and Funding a Devnet Keypair
 

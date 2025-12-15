@@ -164,8 +164,17 @@ public class WebhookDeliveryBackgroundService(
                 outboundEvent.EventType,
                 outboundEvent.Id);
             
-            // Keep event as Pending to allow for future webhook subscriptions
-            // This prevents losing events when endpoints are added later
+            // Treat "no endpoints" as an attempt so we don't loop forever
+            outboundEvent.LastAttemptAt = DateTimeOffset.UtcNow;
+            outboundEvent.AttemptCount++;
+            outboundEvent.LastError = "No active webhook endpoints found";
+
+            if (outboundEvent.AttemptCount >= MaxRetries)
+            {
+                outboundEvent.Status = OutboundEventStatus.Failed;
+                logger.LogWarning("Event {EventId} failed after {MaxRetries} attempts with no subscribers.", outboundEvent.Id, MaxRetries);
+            }
+            
             return;
         }
 

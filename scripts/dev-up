@@ -24,7 +24,7 @@ echo ""
 
 # Start database and Solana services
 echo "Starting PostgreSQL database and Solana services..."
-docker compose --profile solana up -d db solana-test-validator solana-adapter
+docker compose --profile solana up -d db solana-adapter
 
 # Wait for database to be healthy
 echo "Waiting for database to be healthy..."

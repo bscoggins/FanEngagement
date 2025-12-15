@@ -273,6 +273,95 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         }
     }
 
+    public async Task<object?> GetTransactionAsync(string transactionId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            // Temporary logging for debugging
+            Console.WriteLine($"[BlockchainAdapter] Fetching transaction {transactionId} from {client.BaseAddress}");
+            
+            var url = BuildUrl($"transactions/{transactionId}");
+            var response = await client.GetAsync(url, cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Console.WriteLine($"[BlockchainAdapter] Transaction {transactionId} not found (404)");
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<object>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[BlockchainAdapter] Error fetching transaction {transactionId}: {ex}");
+            return null;
+        }
+    }
+
+    public async Task<object?> GetAccountAsync(string address, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            var url = BuildUrl($"accounts/{address}");
+            var response = await client.GetAsync(url, cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<object>(cancellationToken);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public async Task<CreateWalletResult> CreateWalletAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            var url = BuildUrl("wallets");
+            var response = await client.PostAsync(url, null, cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<CreateWalletResult>(cancellationToken);
+            return result ?? throw new InvalidOperationException("Failed to create wallet: Empty response");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Failed to create wallet on {BlockchainName} blockchain: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<PlatformWalletDto> GetPlatformWalletAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = CreateHttpClient();
+            var url = BuildUrl("wallet");
+            var response = await client.GetAsync(url, cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<PlatformWalletDto>(cancellationToken);
+            return result ?? new PlatformWalletDto(string.Empty, 0, string.Empty);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Failed to get platform wallet info from {BlockchainName} blockchain: {ex.Message}", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Request to {BlockchainName} blockchain adapter timed out while getting wallet info.", ex);
+        }
+    }
+
     private static Dictionary<string, object?> BuildOrganizationPayload(CreateOrganizationCommand command)
     {
         var payload = new Dictionary<string, object?>

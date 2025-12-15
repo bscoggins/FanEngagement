@@ -1,13 +1,12 @@
 # Solana Test Environment Notes
 
-These details capture how the Solana adapter and on-chain tests are configured in the local, fully controlled test environment.
+These details capture how the Solana adapter and on-chain tests are configured. The environment has been updated to use **Solana Devnet** by default instead of a local validator.
 
 ## Key constants
 
-- Program ID (placeholder): `11111111111111111111111111111111` (currently the system program; replace with the deployed program when available).
-- Memo program ID: `MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr`.
+- Program ID: `MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb` (Devnet).
 - Adapter signer: loaded from `SOLANA_PRIVATE_KEY`; the public key is exported as `SOLANA_ADAPTER_PUBKEY` by `scripts/run-solana-onchain-tests.sh` (derived from `test-keypair.json` by default).
-- RPC: `http://localhost:8899` (local validator), commitment `confirmed`.
+- RPC: `https://api.devnet.solana.com` (Devnet), commitment `confirmed`.
 
 ## PDA derivations (from `adapters/solana/src/solana-service.ts`)
 
@@ -27,13 +26,13 @@ All UUIDs are hex-encoded without dashes before use in seeds, and all PDAs are d
 
 - `SOLANA_ADAPTER_PUBKEY` is exported for tests to verify balances.
 - `SOLANA_ADAPTER_BASE_URL`, `SOLANA_ADAPTER_API_KEY`, `SOLANA_ON_CHAIN_RPC_URL`, `RUN_SOLANA_ON_CHAIN_TESTS=true` are set before running the backend test suite.
-- The harness funds the adapter signer with 25 SOL on the local validator prior to tests.
+- **Note:** The harness no longer funds the adapter automatically. You must ensure the Devnet wallet is funded via airdrop or faucet.
 
 ## Using a real Solana test cluster (devnet or testnet)
 
-- Deploy the real program and record its Program ID; update adapter config and tests to use it (replace the placeholder ID above).
-- Point RPC to the cluster (`SOLANA_ON_CHAIN_RPC_URL=https://api.devnet.solana.com` or testnet endpoint) and remove local-validator startup/funding from the harness.
-- Ensure the adapter signer keypair is funded via faucet/airdrop (devnet) or manual transfer (testnet) and has enough SOL for rent and compute; set `SOLANA_PRIVATE_KEY` to that key.
+- **Default Configuration:** The system is now configured to use Devnet by default.
+- Point RPC to the cluster (`SOLANA_ON_CHAIN_RPC_URL=https://api.devnet.solana.com`).
+- Ensure the adapter signer keypair is funded via faucet/airdrop (devnet) and has enough SOL for rent and compute; set `SOLANA_PRIVATE_KEY` to that key.
 - Recreate mints on the chosen cluster; set mint/freeze authority to the adapter signer or a managed authority; update any pre-seeded share types to reference the new mint addresses.
 - Verify PDAs derived with the real Program ID and confirm their data layouts; extend tests to read PDA account data once program structs are finalized.
 

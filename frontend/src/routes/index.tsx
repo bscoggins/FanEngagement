@@ -25,12 +25,15 @@ import { AdminOrganizationsPage } from '../pages/AdminOrganizationsPage';
 import { AdminOrganizationEditPage } from '../pages/AdminOrganizationEditPage';
 import { AdminOrganizationMembershipsPage } from '../pages/AdminOrganizationMembershipsPage';
 import { AdminOrganizationShareTypesPage } from '../pages/AdminOrganizationShareTypesPage';
+import { AdminOrganizationShareIssuancePage } from '../pages/AdminOrganizationShareIssuancePage';
 import { AdminOrganizationProposalsPage } from '../pages/AdminOrganizationProposalsPage';
 import { AdminProposalDetailPage } from '../pages/AdminProposalDetailPage';
 import { AdminWebhookEventsPage } from '../pages/AdminWebhookEventsPage';
 import { AdminAuditLogPage } from '../pages/AdminAuditLogPage';
 import { AdminDevToolsPage } from '../pages/AdminDevToolsPage';
 import { PlatformAdminAuditLogPage } from '../pages/PlatformAdminAuditLogPage';
+import { PlatformAdminBlockchainPage } from '../pages/PlatformAdminBlockchainPage';
+import { PlatformAdminWalletPage } from '../pages/PlatformAdminWalletPage';
 
 export const router = createBrowserRouter([
   {
@@ -136,6 +139,14 @@ export const router = createBrowserRouter([
         element: <PlatformAdminAuditLogPage />,
       },
       {
+        path: 'blockchain',
+        element: <PlatformAdminBlockchainPage />,
+      },
+      {
+        path: 'wallet',
+        element: <PlatformAdminWalletPage />,
+      },
+      {
         path: 'my-account',
         element: <MyAccountPage />,
       },
@@ -214,6 +225,14 @@ export const router = createBrowserRouter([
         element: (
           <OrgAdminRoute>
             <AdminOrganizationShareTypesPage />
+          </OrgAdminRoute>
+        ),
+      },
+      {
+        path: 'organizations/:orgId/share-issuance',
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationShareIssuancePage />
           </OrgAdminRoute>
         ),
       },

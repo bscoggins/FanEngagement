@@ -3,6 +3,7 @@ using System;
 using FanEngagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FanEngagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FanEngagementDbContext))]
-    partial class FanEngagementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251214232402_AddBlockchainTransactionIds")]
+    partial class AddBlockchainTransactionIds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -403,14 +406,8 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("IssuedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("IssuedByUserId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric(20,4)");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("text");
 
                     b.Property<Guid>("ShareTypeId")
                         .HasColumnType("uuid");
@@ -544,9 +541,6 @@ namespace FanEngagement.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EncryptedPrivateKey")
-                        .HasColumnType("text");
 
                     b.Property<bool>("IsPrimary")
                         .ValueGeneratedOnAdd()

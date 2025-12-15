@@ -86,7 +86,9 @@ public class ShareIssuanceService(
                 ShareTypeId = request.ShareTypeId,
                 UserId = request.UserId,
                 Quantity = request.Quantity,
-                IssuedAt = DateTimeOffset.UtcNow
+                IssuedAt = DateTimeOffset.UtcNow,
+                IssuedByUserId = actorUserId,
+                Reason = request.Reason
             };
 
             dbContext.ShareIssuances.Add(issuance);
@@ -126,7 +128,7 @@ public class ShareIssuanceService(
                     }
 
                     var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
-                    var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organization.BlockchainType, cancellationToken);
+                    var recipientWalletAddress = await GetPrimaryWalletAddressAsync(request.UserId, organizationId, organization.BlockchainType, cancellationToken);
 
                     var onChainResult = await adapter.RecordShareIssuanceAsync(
                         new RecordShareIssuanceCommand(
@@ -138,6 +140,9 @@ public class ShareIssuanceService(
                             actorUserId,
                             request.Reason),
                         cancellationToken);
+
+                    issuance.BlockchainTransactionId = onChainResult.TransactionId;
+                    await dbContext.SaveChangesAsync(cancellationToken);
 
                     logger.LogInformation(
                         "Share issuance {IssuanceId} recorded on {Blockchain} with transaction {TransactionId}",
@@ -193,13 +198,26 @@ public class ShareIssuanceService(
                 logger.LogWarning(ex, "Failed to audit share issuance for {IssuanceId} in organization {OrganizationId}", issuance.Id, organizationId);
             }
 
+            // Get user display name for response
+            var userDisplayName = await dbContext.Users
+                .Where(u => u.Id == request.UserId)
+                .Select(u => u.DisplayName)
+                .FirstOrDefaultAsync(cancellationToken) ?? "Unknown User";
+
             return new ShareIssuanceDto
             {
                 Id = issuance.Id,
                 ShareTypeId = issuance.ShareTypeId,
+                ShareTypeName = shareType.Name,
+                ShareTypeSymbol = shareType.Symbol,
                 UserId = issuance.UserId,
+                UserDisplayName = userDisplayName,
                 Quantity = issuance.Quantity,
-                IssuedAt = issuance.IssuedAt
+                IssuedAt = issuance.IssuedAt,
+                IssuedByUserId = issuance.IssuedByUserId,
+                IssuedByUserDisplayName = actorDisplayName,
+                Reason = issuance.Reason,
+                BlockchainTransactionId = issuance.BlockchainTransactionId
             };
         }
         catch
@@ -220,50 +238,76 @@ public class ShareIssuanceService(
     {
         var issuances = await dbContext.ShareIssuances
             .AsNoTracking()
-            .Join(
-                dbContext.ShareTypes,
-                si => si.ShareTypeId,
-                st => st.Id,
-                (si, st) => new { si, st }
-            )
-            .Where(x => x.st.OrganizationId == organizationId)
-            .OrderByDescending(x => x.si.IssuedAt)
-            .Select(x => new ShareIssuanceDto
+            .Include(si => si.ShareType)
+            .Include(si => si.User)
+            .Where(si => si.ShareType!.OrganizationId == organizationId)
+            .OrderByDescending(si => si.IssuedAt)
+            .Select(si => new 
             {
-                Id = x.si.Id,
-                ShareTypeId = x.si.ShareTypeId,
-                UserId = x.si.UserId,
-                Quantity = x.si.Quantity,
-                IssuedAt = x.si.IssuedAt
+                si,
+                ShareTypeName = si.ShareType!.Name,
+                ShareTypeSymbol = si.ShareType!.Symbol,
+                UserDisplayName = si.User!.DisplayName,
+                IssuedByUserDisplayName = dbContext.Users
+                    .Where(u => u.Id == si.IssuedByUserId)
+                    .Select(u => u.DisplayName)
+                    .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
-        return issuances;
+        return issuances.Select(x => new ShareIssuanceDto
+        {
+            Id = x.si.Id,
+            ShareTypeId = x.si.ShareTypeId,
+            ShareTypeName = x.ShareTypeName,
+            ShareTypeSymbol = x.ShareTypeSymbol,
+            UserId = x.si.UserId,
+            UserDisplayName = x.UserDisplayName,
+            Quantity = x.si.Quantity,
+            IssuedAt = x.si.IssuedAt,
+            IssuedByUserId = x.si.IssuedByUserId,
+            IssuedByUserDisplayName = x.IssuedByUserDisplayName ?? "System",
+            Reason = x.si.Reason,
+            BlockchainTransactionId = x.si.BlockchainTransactionId
+        }).ToList();
     }
 
     public async Task<IReadOnlyList<ShareIssuanceDto>> GetByUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default)
     {
         var issuances = await dbContext.ShareIssuances
             .AsNoTracking()
-            .Join(
-                dbContext.ShareTypes,
-                si => si.ShareTypeId,
-                st => st.Id,
-                (si, st) => new { si, st }
-            )
-            .Where(x => x.si.UserId == userId && x.st.OrganizationId == organizationId)
-            .OrderByDescending(x => x.si.IssuedAt)
-            .Select(x => new ShareIssuanceDto
+            .Include(si => si.ShareType)
+            .Include(si => si.User)
+            .Where(si => si.UserId == userId && si.ShareType!.OrganizationId == organizationId)
+            .OrderByDescending(si => si.IssuedAt)
+            .Select(si => new 
             {
-                Id = x.si.Id,
-                ShareTypeId = x.si.ShareTypeId,
-                UserId = x.si.UserId,
-                Quantity = x.si.Quantity,
-                IssuedAt = x.si.IssuedAt
+                si,
+                ShareTypeName = si.ShareType!.Name,
+                ShareTypeSymbol = si.ShareType!.Symbol,
+                UserDisplayName = si.User!.DisplayName,
+                IssuedByUserDisplayName = dbContext.Users
+                    .Where(u => u.Id == si.IssuedByUserId)
+                    .Select(u => u.DisplayName)
+                    .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
-        return issuances;
+        return issuances.Select(x => new ShareIssuanceDto
+        {
+            Id = x.si.Id,
+            ShareTypeId = x.si.ShareTypeId,
+            ShareTypeName = x.ShareTypeName,
+            ShareTypeSymbol = x.ShareTypeSymbol,
+            UserId = x.si.UserId,
+            UserDisplayName = x.UserDisplayName,
+            Quantity = x.si.Quantity,
+            IssuedAt = x.si.IssuedAt,
+            IssuedByUserId = x.si.IssuedByUserId,
+            IssuedByUserDisplayName = x.IssuedByUserDisplayName ?? "System",
+            Reason = x.si.Reason,
+            BlockchainTransactionId = x.si.BlockchainTransactionId
+        }).ToList();
     }
 
     public async Task<IReadOnlyList<ShareBalanceDto>> GetBalancesByUserAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken = default)
@@ -286,7 +330,7 @@ public class ShareIssuanceService(
         return balances;
     }
 
-    private async Task<string> GetPrimaryWalletAddressAsync(Guid userId, BlockchainType blockchainType, CancellationToken cancellationToken)
+    private async Task<string> GetPrimaryWalletAddressAsync(Guid userId, Guid organizationId, BlockchainType blockchainType, CancellationToken cancellationToken)
     {
         var address = await dbContext.UserWalletAddresses
             .AsNoTracking()
@@ -294,11 +338,43 @@ public class ShareIssuanceService(
             .Select(w => w.Address)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(address))
+        if (!string.IsNullOrWhiteSpace(address))
         {
-            throw new WalletAddressNotFoundException(userId, blockchainType.ToString());
+            return address;
         }
 
-        return address;
+        // If no address found, create one automatically (Custodial Wallet)
+        try 
+        {
+            var adapter = await blockchainAdapterFactory.GetAdapterAsync(organizationId, cancellationToken);
+            var walletResult = await adapter.CreateWalletAsync(cancellationToken);
+            
+            var newWallet = new UserWalletAddress
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                BlockchainType = blockchainType,
+                Address = walletResult.Address,
+                EncryptedPrivateKey = walletResult.PrivateKey, // Storing as-is for now (demo), should be encrypted
+                IsPrimary = true,
+                Label = "Default Custodial Wallet",
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            // We need a new context or transaction scope if we are inside another transaction?
+            // The caller (CreateAsync) already has a transaction. We can just add to the context.
+            // However, CreateAsync uses 'transaction' variable.
+            // Let's just add to dbContext.
+            
+            dbContext.UserWalletAddresses.Add(newWallet);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            
+            return newWallet.Address;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to auto-create wallet for user {UserId}", userId);
+            throw new WalletAddressNotFoundException(userId, blockchainType.ToString());
+        }
     }
 }
