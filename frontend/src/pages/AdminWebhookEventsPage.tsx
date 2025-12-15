@@ -280,10 +280,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
                   >
                     {event.lastError ? (
                       <Tooltip content={event.lastError} placement="top">
-                        <span
-                          className="text-truncate text-truncate-md"
-                          tabIndex={0}
-                        >
+                        <span className="text-truncate text-truncate-md">
                           {truncateError(event.lastError)}
                         </span>
                       </Tooltip>

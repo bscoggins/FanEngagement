@@ -107,8 +107,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   const child = React.Children.only(children);
   const describedBy = open
-    ? [child.props?.['aria-describedby'], tooltipId].filter(Boolean).join(' ')
-    : child.props?.['aria-describedby'];
+    ? [child.props['aria-describedby'], tooltipId].filter(Boolean).join(' ')
+    : child.props['aria-describedby'];
 
   return (
     <>
