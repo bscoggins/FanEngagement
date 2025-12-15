@@ -25,6 +25,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -34,6 +37,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       }}
     >
       <div
+        aria-hidden="true"
         style={{
           width: spinnerSize,
           height: spinnerSize,
@@ -48,11 +52,25 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           {message}
         </p>
       )}
+      {!message && (
+        <span className="sr-only">Loading...</span>
+      )}
       <style>
         {`
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+          }
+          .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
           }
         `}
       </style>
