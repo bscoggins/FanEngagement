@@ -183,6 +183,28 @@ describe('Modal', () => {
     expect(thirdButton).toHaveFocus();
   });
 
+  it('redirects focus into modal when tabbing from outside', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <div>
+        <button data-testid="outside-button">Outside</button>
+        <Modal isOpen={true} onClose={() => {}} title="Focus Trap Modal">
+          <button>Inside</button>
+        </Modal>
+      </div>
+    );
+
+    const outsideButton = screen.getByTestId('outside-button');
+    outsideButton.focus();
+    expect(outsideButton).toHaveFocus();
+
+    await user.tab();
+
+    const closeButton = screen.getByRole('button', { name: 'Close modal' });
+    expect(closeButton).toHaveFocus();
+  });
+
   it('has proper ARIA attributes', () => {
     render(
       <Modal isOpen={true} onClose={() => {}} title="Accessible Modal">

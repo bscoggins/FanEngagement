@@ -121,15 +121,24 @@ export const Modal: React.FC<ModalProps> = ({
       if (!modal) return;
 
       // Get all focusable elements within the modal
-      const focusableElements = modal.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      const focusableArray = Array.from(focusableElements);
+      const focusableArray = Array.from(
+        modal.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(el => el.getAttribute('aria-hidden') !== 'true');
 
       if (focusableArray.length === 0) return;
 
       const firstElement = focusableArray[0];
       const lastElement = focusableArray[focusableArray.length - 1];
+      const activeElement = document.activeElement as HTMLElement | null;
+      const isFocusedInside = activeElement ? modal.contains(activeElement) : false;
+
+      if (!isFocusedInside) {
+        e.preventDefault();
+        (e.shiftKey ? lastElement : firstElement).focus();
+        return;
+      }
 
       // Trap focus within modal
       if (e.shiftKey) {
