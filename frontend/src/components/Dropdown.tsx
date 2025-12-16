@@ -190,7 +190,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   useEffect(() => {
     if (open) return;
-    refs.reference.current?.focus();
+    (refs.reference.current as HTMLElement)?.focus();
   }, [open, refs.reference]);
 
   const menuId = useMemo(() => (testId ? `${testId}-menu` : 'dropdown-menu'), [testId]);
