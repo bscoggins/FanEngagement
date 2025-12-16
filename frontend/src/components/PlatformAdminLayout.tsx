@@ -208,7 +208,7 @@ export const PlatformAdminLayout: React.FC = () => {
               )}
             </nav>
           </aside>
-          <main className="admin-main" id="main-content" role="main">
+          <main className="admin-main" id="main-content" role="main" tabIndex={-1}>
             <Outlet />
           </main>
         </div>

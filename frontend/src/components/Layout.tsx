@@ -146,17 +146,20 @@ export const Layout: React.FC = () => {
   // For unauthenticated users, show simplified layout
   if (!isAuthenticated) {
     return (
-      <div className="layout">
-        <header className="header" role="banner">
-          <h1>FanEngagement</h1>
-          <nav className="nav" role="navigation" aria-label="Main navigation">
-            <Link to="/login">Login</Link>
-          </nav>
-        </header>
-        <main className="main-content" role="main">
-          <Outlet />
-        </main>
-      </div>
+      <>
+        <SkipLink href="#main-content">Skip to main content</SkipLink>
+        <div className="layout">
+          <header className="header" role="banner">
+            <h1>FanEngagement</h1>
+            <nav className="nav" role="navigation" aria-label="Main navigation">
+              <Link to="/login">Login</Link>
+            </nav>
+          </header>
+          <main className="main-content" role="main" id="main-content" tabIndex={-1}>
+            <Outlet />
+          </main>
+        </div>
+      </>
     );
   }
 
@@ -250,7 +253,7 @@ export const Layout: React.FC = () => {
               )}
             </nav>
           </aside>
-          <main className="unified-main" id="main-content" role="main">
+          <main className="unified-main" id="main-content" role="main" tabIndex={-1}>
             <Outlet />
           </main>
         </div>
@@ -269,4 +272,3 @@ export const Layout: React.FC = () => {
     </>
   );
 };
-

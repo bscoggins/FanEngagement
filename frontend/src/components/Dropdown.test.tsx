@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Dropdown, type DropdownItem } from './Dropdown';
 
 const baseItems: DropdownItem[] = [
@@ -93,5 +94,20 @@ describe('Dropdown', () => {
     fireEvent.click(screen.getByText('Show'));
 
     expect(screen.getAllByRole('separator')).toHaveLength(1);
+  });
+
+  it('closes on Escape and returns focus to trigger', async () => {
+    const user = userEvent.setup();
+    render(<Dropdown items={baseItems} triggerLabel="Menu" testId="escape-test" />);
+
+    const trigger = screen.getByRole('button', { name: /menu/i });
+    await user.click(trigger);
+
+    expect(screen.getByTestId('escape-test-menu')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByTestId('escape-test-menu')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 });

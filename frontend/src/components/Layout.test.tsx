@@ -77,6 +77,22 @@ describe('Layout', () => {
       expect(screen.queryByRole('link', { name: /users/i })).not.toBeInTheDocument();
       expect(screen.queryByTestId('unified-sidebar')).not.toBeInTheDocument();
     });
+
+    it('renders skip link and moves focus to main content', async () => {
+      const user = userEvent.setup();
+      renderLayout({ isAuthenticated: false, role: 'User' });
+
+      const skipLink = screen.getByRole('link', { name: /skip to main content/i });
+      expect(skipLink).toBeInTheDocument();
+
+      await user.tab();
+      expect(skipLink).toHaveFocus();
+
+      await user.keyboard('{Enter}');
+      const main = screen.getByRole('main');
+      expect(main).toHaveAttribute('id', 'main-content');
+      expect(main).toHaveFocus();
+    });
   });
 
   describe('Navigation visibility for regular members', () => {

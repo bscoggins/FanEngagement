@@ -132,6 +132,14 @@ export const Dropdown: React.FC<DropdownProps> = ({
     []
   );
 
+  const syncOpenState = useCallback(
+    (nextOpen: boolean) => {
+      setOpen(nextOpen);
+      onOpenChange?.(nextOpen);
+    },
+    [onOpenChange]
+  );
+
   const middleware = useMemo(() => {
     const base = [offset(MENU_OFFSET), shift({ padding: MENU_SHIFT_PADDING })];
     if (placement === 'auto') {
@@ -145,10 +153,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const { refs, floatingStyles, context, placement: computedPlacement } = useFloating({
     placement: placementMap[placement],
     open,
-    onOpenChange: nextOpen => {
-      setOpen(nextOpen);
-      onOpenChange?.(nextOpen);
-    },
+    onOpenChange: syncOpenState,
     whileElementsMounted: autoUpdate,
     middleware,
   });
@@ -183,6 +188,11 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
   }, [open, selectedIndex]);
 
+  useEffect(() => {
+    if (open) return;
+    (refs.reference.current as HTMLElement)?.focus();
+  }, [open, refs.reference]);
+
   const menuId = useMemo(() => (testId ? `${testId}-menu` : 'dropdown-menu'), [testId]);
 
   const selectItem = (item: DropdownItem) => {
@@ -190,7 +200,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     item.onSelect?.();
     onSelect?.(item);
     if (closeOnSelect) {
-      setOpen(false);
+      syncOpenState(false);
     }
   };
 
