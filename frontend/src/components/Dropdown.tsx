@@ -189,18 +189,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
   }, [open, selectedIndex]);
 
   useEffect(() => {
-    if (!open) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      syncOpenState(false);
-      refs.reference.current?.focus();
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [open, refs.reference, syncOpenState]);
+    if (open) return;
+    refs.reference.current?.focus();
+  }, [open, refs.reference]);
 
   const menuId = useMemo(() => (testId ? `${testId}-menu` : 'dropdown-menu'), [testId]);
 
