@@ -304,7 +304,7 @@ Semantic text color tokens for different hierarchy levels.
 ```css
 --color-text-primary: var(--color-neutral-700)       /* #333 - Main text */
 --color-text-secondary: var(--color-neutral-600)     /* #666 - Secondary text */
---color-text-tertiary: hsl(0, 0%, 44%)               /* #707070 - Tertiary/muted text (AA for normal text on light bg) */
+--color-text-tertiary: hsl(0, 0%, 42%)               /* #6b6b6b - Tertiary/muted text (AA for normal text on light bg with margin) */
 --color-text-inverse: hsl(0, 0%, 100%)               /* white - Text on dark backgrounds */
 --color-text-on-primary: hsl(0, 0%, 100%)            /* white - Text on primary color */
 ```
@@ -312,7 +312,7 @@ Semantic text color tokens for different hierarchy levels.
 **Contrast Ratios (WCAG 2.1 AA):**
 - Primary text (#333) on white: **12.6:1** ✓ (AAA)
 - Secondary text (#666) on white: **5.7:1** ✓ (AA)
-- Tertiary text (#707070) on white: **4.9:1** ✓ (AA for normal text)
+- Tertiary text (#6b6b6b) on white: **5.33:1** ✓ (AA for normal text)
 
 ### Border Colors
 
@@ -340,7 +340,7 @@ Transparent overlays for layering effects.
 --focus-ring-shadow: 0 0 0 4px rgba(31, 123, 255, 0.25) /* Soft blue glow with stronger visibility */
 ```
 
-**Contrast Ratio:** Focus ring holds **3.9:1 on white** and **4.4:1 on #1a1a1a**, exceeding the WCAG 2.1 AA **3:1** requirement for non-text UI.
+**Contrast Ratio:** Focus ring holds **3.9:1 on white** and **4.4:1 on #1a1a1a**, exceeding the WCAG 2.1 AA **3:1** requirement for non-text UI (verified with WebAIM Contrast Checker).
 
 ### WCAG AA Contrast Pairings (Light Theme)
 
@@ -348,16 +348,16 @@ Transparent overlays for layering effects.
 |---------|----------------|-------|
 | `--color-text-primary` (#333) on `--color-surface` (#fff) | **12.63:1** | Primary body text, headings |
 | `--color-text-secondary` (#666) on `--color-surface` (#fff) | **5.74:1** | Secondary labels, meta |
-| `--color-text-tertiary` (#707070) on `--color-surface` (#fff) | **4.95:1** | Tertiary/meta text still AA-compliant |
+| `--color-text-tertiary` (#6b6b6b) on `--color-surface` (#fff) | **5.33:1** (WebAIM) | Tertiary/meta text with safety margin |
 | `--color-text-primary` (#333) on `--color-background` (#f5f5f5) | **11.59:1** | Page background |
-| `--color-text-tertiary` (#707070) on `--color-background` (#f5f5f5) | **4.54:1** | Muted text on background sections |
+| `--color-text-tertiary` (#6b6b6b) on `--color-background` (#f5f5f5) | **4.89:1** | Muted text on background sections |
 | `--color-border-default` (#808080) on `--color-surface` (#fff) | **3.95:1** | Standard borders, dividers |
 | `--color-border-default` (#808080) on `--color-background` (#f5f5f5) | **3.62:1** | Cards on subtle backgrounds |
 | `--focus-ring-color` (#1f7bff) on `--color-surface` (#fff) | **3.94:1** | Keyboard focus, light theme |
 | `--focus-ring-color` (#1f7bff) on `--color-surface-dark` (#1a1a1a) | **4.42:1** | Keyboard focus, dark chrome |
 | `--color-text-inverse` (#fff) on `--color-surface-elevated` (#2a2a2a) | **14.35:1** | Sidebar/header text |
 
-> Non-color indicator: links remain underlined on focus/hover, so state changes are communicated via decoration as well as hue.
+> Non-color indicator: apply the `.content-link` class to inline links so they stay underlined at all times, with underline thickness increasing on hover/focus for additional state feedback.
 
 ---
 
@@ -1333,14 +1333,14 @@ All tokens required for dark mode are defined and actively used. Here's the comp
 |-------|------------|-----------|-------|
 | `--color-text-primary` | `#333333` | `#fafafa` | Primary content |
 | `--color-text-secondary` | `#666666` | `#cccccc` | Secondary content |
-| `--color-text-tertiary` | `#707070` | `#808080` | Muted/disabled text |
+| `--color-text-tertiary` | `#6b6b6b` (`hsl(0,0%,42%)`) | `#8b96a7` (`hsl(216.43°,13.73%,60%)`) | Muted/disabled text |
 | `--color-text-inverse` | `white` | `#1a1a1a` | Text on colored backgrounds |
 
 **Contrast ratios (WCAG 2.1 AA):**
 
 - Primary text on dark background: **15.9:1** ✓ AAA
 - Secondary text on dark background: **10.0:1** ✓ AAA
-- Tertiary text on dark background: **5.8:1** ✓ AA (normal text)
+- Tertiary text (#8b96a7) on dark background (#1a1a1a): **5.8:1** ✓ AA (normal text)
 
 #### Border Colors
 

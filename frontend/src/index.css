@@ -62,7 +62,7 @@
   /* ===== Text Colors ===== */
   --color-text-primary: var(--color-neutral-700);      /* #333 - Main text */
   --color-text-secondary: var(--color-neutral-600);    /* #666 - Secondary text */
-  --color-text-tertiary: hsl(0, 0%, 44%);              /* #707070 - Tertiary/muted text (AA on light bg) */
+  --color-text-tertiary: hsl(0, 0%, 42%);              /* #6b6b6b - Tertiary/muted text (AA on light bg with margin) */
   --color-text-inverse: hsl(0, 0%, 100%);              /* white - Text on dark backgrounds */
   --color-text-on-primary: hsl(0, 0%, 100%);           /* white - Text on primary color */
 
@@ -251,16 +251,16 @@ h6 {
   letter-spacing: var(--letter-spacing-normal);
 }
 
-/* Accessible link styling - color plus underline for non-color state indication */
-a {
+/* Accessible link styling - opt-in class for inline content links */
+.content-link {
   color: var(--color-primary-700);
   text-decoration: underline;
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.15em;
 }
 
-a:hover,
-a:focus-visible {
+.content-link:hover,
+.content-link:focus-visible {
   color: var(--color-primary-800);
   text-decoration-thickness: 0.12em;
 }
