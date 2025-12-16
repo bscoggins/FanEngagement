@@ -304,7 +304,7 @@ Semantic text color tokens for different hierarchy levels.
 ```css
 --color-text-primary: var(--color-neutral-700)       /* #333 - Main text */
 --color-text-secondary: var(--color-neutral-600)     /* #666 - Secondary text */
---color-text-tertiary: hsl(0, 0%, 42%)               /* #6b6b6b - Tertiary/muted text (AA for normal text on light bg with margin) */
+--color-text-tertiary: hsl(0, 0%, 42%)               /* #6b6b6b - Tertiary/muted text (meets WCAG AA ≥4.5:1 on light backgrounds) */
 --color-text-inverse: hsl(0, 0%, 100%)               /* white - Text on dark backgrounds */
 --color-text-on-primary: hsl(0, 0%, 100%)            /* white - Text on primary color */
 ```
@@ -318,7 +318,7 @@ Semantic text color tokens for different hierarchy levels.
 
 ```css
 --color-border-subtle: hsl(0, 0%, 55%)      /* #8c8c8c - Light borders (≥3:1 on light bg) */
---color-border-default: hsl(0, 0%, 50%)     /* #808080 - Default borders (3.9:1 on white) */
+--color-border-default: hsl(0, 0%, 46.27%)  /* #757575 - Default borders */
 --color-border-strong: hsl(0, 0%, 42%)      /* #6b6b6b - Emphasized borders */
 --color-border-dark: hsl(0, 0%, 35%)        /* #595959 - Borders on dark surfaces */
 ```
@@ -351,8 +351,8 @@ Transparent overlays for layering effects.
 | `--color-text-tertiary` (#6b6b6b) on `--color-surface` (#fff) | **5.33:1** (WebAIM) | Tertiary/meta text with safety margin |
 | `--color-text-primary` (#333) on `--color-background` (#f5f5f5) | **11.59:1** | Page background |
 | `--color-text-tertiary` (#6b6b6b) on `--color-background` (#f5f5f5) | **4.89:1** | Muted text on background sections |
-| `--color-border-default` (#808080) on `--color-surface` (#fff) | **3.95:1** | Standard borders, dividers |
-| `--color-border-default` (#808080) on `--color-background` (#f5f5f5) | **3.62:1** | Cards on subtle backgrounds |
+| `--color-border-default` (#757575) on `--color-surface` (#fff) | **4.61:1** | Standard borders, dividers |
+| `--color-border-default` (#757575) on `--color-background` (#f5f5f5) | **4.23:1** | Cards on subtle backgrounds |
 | `--focus-ring-color` (#1f7bff) on `--color-surface` (#fff) | **3.94:1** | Keyboard focus, light theme |
 | `--focus-ring-color` (#1f7bff) on `--color-surface-dark` (#1a1a1a) | **4.42:1** | Keyboard focus, dark chrome |
 | `--color-text-inverse` (#fff) on `--color-surface-elevated` (#2a2a2a) | **14.35:1** | Sidebar/header text |
@@ -1333,14 +1333,14 @@ All tokens required for dark mode are defined and actively used. Here's the comp
 |-------|------------|-----------|-------|
 | `--color-text-primary` | `#333333` | `#fafafa` | Primary content |
 | `--color-text-secondary` | `#666666` | `#cccccc` | Secondary content |
-| `--color-text-tertiary` | `#6b6b6b` (`hsl(0,0%,42%)`) | `#8b96a7` (`hsl(216.43°,13.73%,60%)`) | Muted/disabled text |
+| `--color-text-tertiary` | `#6b6b6b` (`hsl(0,0%,42%)`) | `#8a95a5` (`hsl(216,14%,60%)`) | Muted/disabled text |
 | `--color-text-inverse` | `white` | `#1a1a1a` | Text on colored backgrounds |
 
 **Contrast ratios (WCAG 2.1 AA):**
 
 - Primary text on dark background: **15.9:1** ✓ AAA
 - Secondary text on dark background: **10.0:1** ✓ AAA
-- Tertiary text (#8b96a7) on dark background (#1a1a1a): **5.8:1** ✓ AA (normal text)
+- Tertiary text (#8a95a5) on dark background (#1a1a1a): **5.74:1** ✓ AA (normal text)
 
 #### Border Colors
 
