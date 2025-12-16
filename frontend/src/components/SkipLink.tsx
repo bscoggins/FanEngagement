@@ -15,7 +15,7 @@ export const SkipLink: React.FC<SkipLinkProps> = ({ href, children }) => {
     if (!href.startsWith('#')) return;
     const targetId = href.slice(1);
     const target = document.getElementById(targetId);
-    if (target && 'focus' in target && typeof target.focus === 'function') {
+    if (target) {
       target.focus();
     }
   };

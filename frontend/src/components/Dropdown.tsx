@@ -195,7 +195,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
       if (event.key !== 'Escape') return;
       event.stopPropagation();
       syncOpenState(false);
-      refs.reference.current?.focus?.();
+      refs.reference.current?.focus();
     };
 
     document.addEventListener('keydown', handleEscape);
