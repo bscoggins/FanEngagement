@@ -47,6 +47,9 @@ export const UserCreatePage: React.FC = () => {
       validationErrors.password = 'Password is required';
     } else if (formData.password.length < 12) {
       validationErrors.password = 'Password must be at least 12 characters';
+    } else if (!/(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/.test(formData.password)) {
+      validationErrors.password =
+        'Password must contain at least one uppercase letter, one number, and one special character';
     }
     if (!formData.displayName.trim()) {
       validationErrors.displayName = 'Display name is required';

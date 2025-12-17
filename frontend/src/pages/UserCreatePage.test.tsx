@@ -68,7 +68,7 @@ describe('UserCreatePage', () => {
     
     // Fill in the form
     await user.type(screen.getByLabelText(/email/i), 'newuser@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
     await user.type(screen.getByLabelText(/display name/i), 'New User');
     
     // Submit the form
@@ -82,7 +82,7 @@ describe('UserCreatePage', () => {
     // Verify API was called with correct data
     expect(usersApi.create).toHaveBeenCalledWith({
       email: 'newuser@example.com',
-      password: 'password123',
+      password: 'Password123!',
       displayName: 'New User',
     });
   });
@@ -102,7 +102,7 @@ describe('UserCreatePage', () => {
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/email/i), 'adminnew@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
     await user.type(screen.getByLabelText(/display name/i), 'Admin New User');
 
     await user.click(screen.getByRole('button', { name: /create user/i }));
@@ -113,7 +113,7 @@ describe('UserCreatePage', () => {
 
     expect(usersApi.create).toHaveBeenCalledWith({
       email: 'adminnew@example.com',
-      password: 'password123',
+      password: 'Password123!',
       displayName: 'Admin New User',
     });
   });
@@ -135,7 +135,7 @@ describe('UserCreatePage', () => {
     
     // Fill in the form
     await user.type(screen.getByLabelText(/email/i), 'existing@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
     await user.type(screen.getByLabelText(/display name/i), 'Test User');
     
     // Submit the form
@@ -158,7 +158,7 @@ describe('UserCreatePage', () => {
     
     // Fill in the form
     await user.type(screen.getByLabelText(/email/i), 'newuser@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
     await user.type(screen.getByLabelText(/display name/i), 'New User');
     
     // Submit the form
@@ -186,7 +186,7 @@ describe('UserCreatePage', () => {
     
     // Fill in the form
     await user.type(screen.getByLabelText(/email/i), 'newuser@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.type(screen.getByLabelText(/password/i), 'Password123!');
     await user.type(screen.getByLabelText(/display name/i), 'New User');
     
     // Submit the form

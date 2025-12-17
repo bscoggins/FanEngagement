@@ -46,4 +46,9 @@ describe('Radio', () => {
     render(<Radio label="Disabled" name="group2" value="d" disabled />);
     expect(screen.getByLabelText('Disabled')).toBeDisabled();
   });
+
+  it('marks required radios with aria-required', () => {
+    render(<Radio label="Choice" name="group3" value="c" required />);
+    expect(screen.getByLabelText(/Choice/i)).toHaveAttribute('aria-required', 'true');
+  });
 });

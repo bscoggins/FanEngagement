@@ -147,6 +147,10 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       if (endDate < startDate) {
         validationErrors.endAt = 'End date must be after the start date';
       }
+    } else if (!formData.startAt && formData.endAt) {
+      validationErrors.startAt = 'Start date is required when an end date is provided';
+    } else if (formData.startAt && !formData.endAt) {
+      validationErrors.endAt = 'End date is required when a start date is provided';
     }
 
     if (formData.quorumRequirement !== undefined) {

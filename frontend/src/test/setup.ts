@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom/vitest';
-import { afterAll } from 'vitest';
+import { afterAll, vi } from 'vitest';
 
 const SUPPRESSED_ERROR_PREFIXES = ['Failed to ', 'Could not '];
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
+
+// jsdom does not implement scrollIntoView; mock to avoid test failures when components call it
+Element.prototype.scrollIntoView = vi.fn();
 
 console.error = ((...args: Parameters<typeof originalConsoleError>) => {
 	const [message] = args;
