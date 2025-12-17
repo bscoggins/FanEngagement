@@ -39,6 +39,12 @@ describe('Input', () => {
     expect(screen.getByLabelText('Disabled')).toBeDisabled();
   });
 
+  it('marks required inputs with aria-required', () => {
+    render(<Input label="Required field" required />);
+    const input = screen.getByLabelText(/Required field/i);
+    expect(input).toHaveAttribute('aria-required', 'true');
+  });
+
   it('auto-generates an id when not provided', async () => {
     const user = userEvent.setup();
     render(<Input label="Name" />);

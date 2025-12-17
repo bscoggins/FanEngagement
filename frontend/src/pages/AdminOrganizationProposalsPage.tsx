@@ -7,6 +7,7 @@ import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
 import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
 import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
+import { FormErrorSummary } from '../components/FormErrorSummary';
 import './AdminPage.css';
 import type { Proposal, Organization, CreateProposalRequest, ProposalStatus, PagedResult } from '../types/api';
 import { Input } from '../components/Input';
@@ -39,6 +40,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     createdByUserId: '', // Will be set from auth context when creating
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Helper function to convert datetime-local to ISO 8601 with timezone
   const convertToISO8601 = (dateTimeLocal?: string): string | undefined => {
@@ -108,6 +110,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
     setShowForm(true);
     setError(null);
     setSuccessMessage(null);
+    setFormErrors({});
   };
 
   const handleCancel = () => {
@@ -121,15 +124,43 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       createdByUserId: '',
     });
     setError(null);
+    setFormErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!orgId || !formData.title.trim() || !formData.createdByUserId) {
-      setError('Title and creator are required');
+    if (!orgId) {
+      setError('Organization is required to create a proposal.');
       return;
     }
+
+    const validationErrors: Record<string, string> = {};
+
+    if (!formData.title.trim()) {
+      validationErrors.title = 'Proposal title is required';
+    }
+
+    if (formData.startAt && formData.endAt) {
+      const startDate = new Date(formData.startAt);
+      const endDate = new Date(formData.endAt);
+      if (endDate < startDate) {
+        validationErrors.endAt = 'End date must be after the start date';
+      }
+    }
+
+    if (formData.quorumRequirement !== undefined) {
+      if (formData.quorumRequirement < 0 || formData.quorumRequirement > 100) {
+        validationErrors.quorumRequirement = 'Quorum must be between 0 and 100';
+      }
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
+      return;
+    }
+
+    setFormErrors({});
 
     try {
       setIsSaving(true);
@@ -267,6 +298,9 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
       {showForm && (
         <div className="admin-card">
           <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Create New Proposal</h2>
+          <FormErrorSummary
+            errors={Object.entries(formErrors).map(([fieldId, message]) => ({ fieldId, message }))}
+          />
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
               <Input
@@ -275,6 +309,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                error={formErrors.title}
               />
             </div>
 
@@ -314,6 +349,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   label="End Date & Time"
                   value={formData.endAt ?? ''}
                   onChange={(e) => setFormData({ ...formData, endAt: e.target.value || undefined })}
+                  error={formErrors.endAt}
                 />
               </div>
             </div>
@@ -331,6 +367,7 @@ export const AdminOrganizationProposalsPage: React.FC = () => {
                   ...formData,
                   quorumRequirement: e.target.value ? parseFloat(e.target.value) : undefined
                 })}
+                error={formErrors.quorumRequirement}
               />
             </div>
 

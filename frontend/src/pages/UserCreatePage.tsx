@@ -5,6 +5,7 @@ import type { CreateUserRequest } from '../types/api';
 import { InfoBox } from '../components/InfoBox';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { FormErrorSummary } from '../components/FormErrorSummary';
 import { parseApiError } from '../utils/errorUtils';
 import './AdminPage.css';
 
@@ -21,6 +22,7 @@ export const UserCreatePage: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     return () => {
@@ -37,6 +39,25 @@ export const UserCreatePage: React.FC = () => {
     e.preventDefault();
     if (!isMountedRef.current) return;
     
+    const validationErrors: Record<string, string> = {};
+    if (!formData.email.trim()) {
+      validationErrors.email = 'Email is required';
+    }
+    if (!formData.password.trim()) {
+      validationErrors.password = 'Password is required';
+    } else if (formData.password.length < 12) {
+      validationErrors.password = 'Password must be at least 12 characters';
+    }
+    if (!formData.displayName.trim()) {
+      validationErrors.displayName = 'Display name is required';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
+      return;
+    }
+
+    setFormErrors({});
     setError(null);
     setIsLoading(true);
 
@@ -59,6 +80,7 @@ export const UserCreatePage: React.FC = () => {
 
   const handleCancel = () => {
     if (!isMountedRef.current) return;
+    setFormErrors({});
     navigate(usersListRoute);
   };
 
@@ -83,6 +105,10 @@ export const UserCreatePage: React.FC = () => {
           </div>
         )}
 
+        <FormErrorSummary
+          errors={Object.entries(formErrors).map(([fieldId, message]) => ({ fieldId, message }))}
+        />
+
         <form onSubmit={handleSubmit} className="admin-form" data-testid="create-user-form">
           <div className="admin-form-field">
             <Input
@@ -93,11 +119,11 @@ export const UserCreatePage: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              aria-required="true"
               maxLength={256}
               autoComplete="email"
               disabled={isLoading}
               className="admin-input"
+              error={formErrors.email}
             />
           </div>
 
@@ -110,11 +136,11 @@ export const UserCreatePage: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              aria-required="true"
               maxLength={128}
               autoComplete="new-password"
               disabled={isLoading}
               className="admin-input"
+              error={formErrors.password}
             />
             <InfoBox>
               <strong>Password Requirements:</strong>
@@ -136,11 +162,11 @@ export const UserCreatePage: React.FC = () => {
               value={formData.displayName}
               onChange={handleChange}
               required
-              aria-required="true"
               maxLength={120}
               autoComplete="name"
               disabled={isLoading}
               className="admin-input"
+              error={formErrors.displayName}
             />
           </div>
 

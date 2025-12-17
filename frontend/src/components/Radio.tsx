@@ -42,6 +42,7 @@ export const Radio = React.forwardRef<HTMLInputElement, RadioProps>((props, ref)
         type="radio"
         className="choice-input choice-input--radio"
         aria-invalid={hasError}
+        aria-required={props.required ? 'true' : undefined}
         aria-describedby={ariaDescribedBy}
         disabled={disabled}
         {...rest}

@@ -42,6 +42,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
         type="checkbox"
         className="choice-input choice-input--checkbox"
         aria-invalid={hasError}
+        aria-required={props.required ? 'true' : undefined}
         aria-describedby={ariaDescribedBy}
         disabled={disabled}
         {...rest}
