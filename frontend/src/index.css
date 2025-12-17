@@ -68,7 +68,7 @@
 
   /* ===== Border Colors ===== */
   --color-border-subtle: hsl(0, 0%, 55%);              /* #8c8c8c - Light borders (~3.1:1 on white) */
-  --color-border-default: hsl(0, 0%, 46.27%);          /* #757575 - Default borders */
+  --color-border-default: hsl(0, 0%, 46%);             /* #757575 - Default borders */
   --color-border-strong: hsl(0, 0%, 42%);              /* #6b6b6b - Emphasized borders */
   --color-border-dark: hsl(0, 0%, 35%);                /* #595959 - Borders on dark surfaces */
 

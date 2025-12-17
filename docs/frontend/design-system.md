@@ -318,7 +318,7 @@ Semantic text color tokens for different hierarchy levels.
 
 ```css
 --color-border-subtle: hsl(0, 0%, 55%)      /* #8c8c8c - Light borders (≥3:1 on light bg) */
---color-border-default: hsl(0, 0%, 46.27%)  /* #757575 - Default borders */
+--color-border-default: hsl(0, 0%, 46%)     /* #757575 - Default borders */
 --color-border-strong: hsl(0, 0%, 42%)      /* #6b6b6b - Emphasized borders */
 --color-border-dark: hsl(0, 0%, 35%)        /* #595959 - Borders on dark surfaces */
 ```
@@ -354,7 +354,7 @@ Transparent overlays for layering effects.
 | `--color-border-default` (#757575) on `--color-surface` (#fff) | **4.61:1** | Standard borders, dividers |
 | `--color-border-default` (#757575) on `--color-background` (#f5f5f5) | **4.23:1** | Cards on subtle backgrounds |
 | `--focus-ring-color` (#1f7bff) on `--color-surface` (#fff) | **3.94:1** | Keyboard focus, light theme |
-| `--focus-ring-color` (#1f7bff) on `--color-surface-dark` (#1a1a1a) | **4.42:1** | Keyboard focus, dark chrome |
+| `--focus-ring-color` (#1f7bff) on `--color-surface-dark` (#0d1116) | **4.81:1** | Keyboard focus, dark chrome (cross-theme: light focus ring on dark surface) |
 | `--color-text-inverse` (#fff) on `--color-surface-elevated` (#2a2a2a) | **14.35:1** | Sidebar/header text |
 
 > Non-color indicator: apply the `.content-link` class to inline links so they stay underlined at all times, with underline thickness increasing on hover/focus for additional state feedback.
@@ -1340,14 +1340,14 @@ All tokens required for dark mode are defined and actively used. Here's the comp
 
 - Primary text on dark background: **15.9:1** ✓ AAA
 - Secondary text on dark background: **10.0:1** ✓ AAA
-- Tertiary text (#8a95a5) on dark background (#1a1a1a): **5.74:1** ✓ AA (normal text)
+- Tertiary text (#8a95a5) on dark background (#0f1419): **6.10:1** ✓ AA (normal text)
 
 #### Border Colors
 
 | Token | Light Mode | Dark Mode | Usage |
 |-------|------------|-----------|-------|
 | `--color-border-subtle` | `#8c8c8c` | `#858585` | Subtle separators |
-| `--color-border-default` | `#808080` | `#9e9e9e` | Default borders |
+| `--color-border-default` | `#757575` | `#9e9e9e` | Default borders |
 | `--color-border-strong` | `#6b6b6b` | `#bdbdbd` | Emphasized borders |
 | `--color-border-dark` | `#595959` | `#d9d9d9` | Borders on dark surfaces |
 
