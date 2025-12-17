@@ -340,7 +340,7 @@ Transparent overlays for layering effects.
 --focus-ring-shadow: 0 0 0 4px rgba(31, 123, 255, 0.25) /* Soft blue glow with stronger visibility */
 ```
 
-**Contrast Ratio:** Focus ring holds **3.9:1 on white** and **4.4:1 on #1a1a1a**, exceeding the WCAG 2.1 AA **3:1** requirement for non-text UI (verified with WebAIM Contrast Checker).
+**Contrast Ratio:** Focus ring holds **3.9:1 on white** and **4.81:1 on #0b0e13**, exceeding the WCAG 2.1 AA **3:1** requirement for non-text UI (verified with WebAIM Contrast Checker). Values are consistent across references; dark surface uses the actual `--color-surface-dark` token.
 
 ### WCAG AA Contrast Pairings (Light Theme)
 
@@ -354,7 +354,7 @@ Transparent overlays for layering effects.
 | `--color-border-default` (#757575) on `--color-surface` (#fff) | **4.61:1** | Standard borders, dividers |
 | `--color-border-default` (#757575) on `--color-background` (#f5f5f5) | **4.23:1** | Cards on subtle backgrounds |
 | `--focus-ring-color` (#1f7bff) on `--color-surface` (#fff) | **3.94:1** | Keyboard focus, light theme |
-| `--focus-ring-color` (#1f7bff) on `--color-surface-dark` (#0d1116) | **4.81:1** | Keyboard focus, dark chrome (cross-theme: light focus ring on dark surface) |
+| `--focus-ring-color` (#1f7bff) on `--color-surface-dark` (#0b0e13) | **4.81:1** | Keyboard focus, dark chrome (cross-theme: light focus ring on dark surface) |
 | `--color-text-inverse` (#fff) on `--color-surface-elevated` (#2a2a2a) | **14.35:1** | Sidebar/header text |
 
 > Non-color indicator: apply the `.content-link` class to inline links so they stay underlined at all times, with underline thickness increasing on hover/focus for additional state feedback.
@@ -1331,8 +1331,8 @@ All tokens required for dark mode are defined and actively used. Here's the comp
 
 | Token | Light Mode | Dark Mode | Usage |
 |-------|------------|-----------|-------|
-| `--color-text-primary` | `#333333` | `#fafafa` | Primary content |
-| `--color-text-secondary` | `#666666` | `#cccccc` | Secondary content |
+| `--color-text-primary` | `#333333` | `#f1f5f9` | Primary content |
+| `--color-text-secondary` | `#666666` | `#bbc5d3` | Secondary content |
 | `--color-text-tertiary` | `#6b6b6b` (`hsl(0,0%,42%)`) | `#8a95a5` (`hsl(216,14%,60%)`) | Muted/disabled text |
 | `--color-text-inverse` | `white` | `#1a1a1a` | Text on colored backgrounds |
 
@@ -1365,7 +1365,7 @@ All tokens required for dark mode are defined and actively used. Here's the comp
 
 | Token | Light Mode | Dark Mode | Usage |
 |-------|------------|-----------|-------|
-| `--focus-ring-color` | `#1f7bff` | `#5aa2ff` | Keyboard focus outline |
+| `--focus-ring-color` | `#1f7bff` | `#70a7ff` | Keyboard focus outline |
 | `--focus-ring-shadow` | `0 0 0 4px rgba(31,123,255,0.25)` | `0 0 0 4px rgba(31,123,255,0.35)` | Focus glow |
 
 **Dark mode adjustment:**
