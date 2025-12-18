@@ -7,6 +7,7 @@ const NAV_OPEN_STATUS = 'Navigation menu opened.';
 const NAV_CLOSED_STATUS = 'Navigation menu closed.';
 const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-list a, .mobile-nav-list button';
 const NAV_INTERACTION_DELAY_MS = 200;
+const scheduleNavDelay = (callback: () => void) => window.setTimeout(callback, NAV_INTERACTION_DELAY_MS);
 
 export interface MobileNavItem {
   id: string;
@@ -65,11 +66,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
-      statusTimeoutRef.current = setTimeout(() => {
+      statusTimeoutRef.current = scheduleNavDelay(() => {
         setStatusMessage(NAV_OPEN_STATUS);
-      }, NAV_INTERACTION_DELAY_MS);
+      });
       
-      focusTimeoutRef.current = setTimeout(() => {
+      focusTimeoutRef.current = scheduleNavDelay(() => {
         const drawer = drawerRef.current;
         const firstNavItem = drawer?.querySelector<HTMLElement>(FIRST_NAV_ITEM_SELECTOR);
         if (firstNavItem) {
@@ -81,7 +82,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           return;
         }
         drawer?.focus();
-      }, NAV_INTERACTION_DELAY_MS);
+      });
     } else {
       // Restore focus to the element that opened the drawer
       if (previouslyFocusedElement.current) {
@@ -210,7 +211,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             className="mobile-nav-drawer"
             aria-label="Mobile navigation"
             role="navigation"
-            tabIndex={-1}
+            tabIndex={0}
           >
             <div className="mobile-nav-header">
               <h2 className="mobile-nav-title">Menu</h2>
