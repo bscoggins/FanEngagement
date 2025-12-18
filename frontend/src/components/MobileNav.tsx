@@ -55,7 +55,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
-      setStatusMessage('Navigation menu opened. Navigation links are now available.');
+      setStatusMessage('Navigation menu opened.');
       
       focusTimeoutRef.current = setTimeout(() => {
         const drawer = drawerRef.current;
@@ -191,7 +191,6 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             id="mobile-nav-drawer"
             className="mobile-nav-drawer"
             aria-label="Mobile navigation"
-            aria-describedby={statusMessageId}
             role="navigation"
           >
             <div className="mobile-nav-header">
