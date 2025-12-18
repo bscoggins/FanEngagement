@@ -7,6 +7,7 @@ const NAV_OPEN_STATUS = 'Navigation menu opened.';
 const NAV_CLOSED_STATUS = 'Navigation menu closed.';
 const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-org-list button, .mobile-nav-list a, .mobile-nav-list button';
 const NAV_INTERACTION_DELAY_MS = 200;
+const STATUS_CLEAR_DELAY_MS = 1000;
 const getNavInteractionDelayMs = (): number => {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return NAV_INTERACTION_DELAY_MS;
@@ -79,21 +80,40 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
   const focusTimeoutRef = useRef<number | null>(null);
   const statusTimeoutRef = useRef<number | null>(null);
+  const statusClearTimeoutRef = useRef<number | null>(null);
   const previousIsOpen = useRef(isOpen);
   const [statusMessage, setStatusMessage] = useState('');
+
+  const scheduleStatusMessage = (message: string) => {
+    if (statusTimeoutRef.current) {
+      window.clearTimeout(statusTimeoutRef.current);
+    }
+    if (statusClearTimeoutRef.current) {
+      window.clearTimeout(statusClearTimeoutRef.current);
+    }
+
+    statusTimeoutRef.current = scheduleNavDelay(() => {
+      setStatusMessage(message);
+      statusClearTimeoutRef.current = window.setTimeout(() => {
+        setStatusMessage('');
+        statusClearTimeoutRef.current = null;
+      }, STATUS_CLEAR_DELAY_MS);
+    });
+  };
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
     if (statusTimeoutRef.current) {
       window.clearTimeout(statusTimeoutRef.current);
     }
+    if (statusClearTimeoutRef.current) {
+      window.clearTimeout(statusClearTimeoutRef.current);
+    }
 
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
-      statusTimeoutRef.current = scheduleNavDelay(() => {
-        setStatusMessage(NAV_OPEN_STATUS);
-      });
+      scheduleStatusMessage(NAV_OPEN_STATUS);
       
       focusTimeoutRef.current = scheduleNavDelay(() => {
         const drawer = drawerRef.current;
@@ -113,9 +133,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         previouslyFocusedElement.current.focus();
       }
       if (previousIsOpen.current) {
-        statusTimeoutRef.current = scheduleNavDelay(() => {
-          setStatusMessage(NAV_CLOSED_STATUS);
-        });
+        scheduleStatusMessage(NAV_CLOSED_STATUS);
       }
     }
 
@@ -127,6 +145,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       }
       if (statusTimeoutRef.current) {
         window.clearTimeout(statusTimeoutRef.current);
+      }
+      if (statusClearTimeoutRef.current) {
+        window.clearTimeout(statusClearTimeoutRef.current);
       }
     };
   }, [isOpen]);
@@ -211,16 +232,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
   return (
     <>
-      {statusMessage && (
-        <div
-          className="visually-hidden"
-          aria-live="polite"
-          aria-atomic="true"
-          role="status"
-        >
-          {statusMessage}
-        </div>
-      )}
+      <div
+        className="visually-hidden"
+        aria-live="polite"
+        aria-atomic="true"
+        role="status"
+      >
+        {statusMessage}
+      </div>
 
       {isOpen && (
         <>
