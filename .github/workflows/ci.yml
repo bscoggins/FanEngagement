@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,7 +70,7 @@ jobs:
       POLYGON_PRIVATE_KEY: ${{ secrets.POLYGON_PRIVATE_KEY }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -134,7 +134,7 @@ jobs:
 
       - name: Upload accessibility reports (HTML)
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: accessibility-playwright-report
           path: frontend/playwright-report
@@ -143,7 +143,7 @@ jobs:
 
       - name: Upload accessibility JSON results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: a11y-reports
           path: frontend/test-results/a11y/**/*.json
@@ -152,7 +152,7 @@ jobs:
 
       - name: Upload accessibility summary
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: accessibility-playwright-summary
           path: frontend/test-results/playwright-report.json
@@ -170,7 +170,7 @@ jobs:
         adapter: [polygon]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -191,7 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Start database (docker compose)
         run: |
@@ -228,7 +228,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: 'test-results/**/*.trx'

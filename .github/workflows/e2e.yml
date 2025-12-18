@@ -16,7 +16,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Docker info
         run: |
@@ -33,7 +33,7 @@ jobs:
 
       - name: Upload Playwright HTML report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: frontend/playwright-report
@@ -42,7 +42,7 @@ jobs:
 
       - name: Upload Playwright raw test-results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results
           path: frontend/test-results
