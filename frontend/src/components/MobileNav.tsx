@@ -28,8 +28,7 @@ const getNavInteractionDelayMs = (): number => {
       return Number.isFinite(value) ? value * 1000 : NAV_INTERACTION_DELAY_MS;
     }
 
-    const numericValue = parseFloat(raw);
-    return Number.isFinite(numericValue) ? numericValue : NAV_INTERACTION_DELAY_MS;
+    return NAV_INTERACTION_DELAY_MS;
   } catch {
     return NAV_INTERACTION_DELAY_MS;
   }
@@ -84,7 +83,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const previousIsOpen = useRef(isOpen);
   const [statusMessage, setStatusMessage] = useState('');
 
-  const scheduleStatusMessage = (message: string) => {
+  const scheduleStatusMessage = React.useCallback((message: string) => {
     if (statusTimeoutRef.current) {
       window.clearTimeout(statusTimeoutRef.current);
     }
@@ -99,7 +98,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         statusClearTimeoutRef.current = null;
       }, STATUS_CLEAR_DELAY_MS);
     });
-  };
+  }, []);
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
@@ -150,7 +149,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         window.clearTimeout(statusClearTimeoutRef.current);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, scheduleStatusMessage]);
 
   // Close on Escape key
   useEffect(() => {
