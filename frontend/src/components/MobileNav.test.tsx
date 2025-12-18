@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { MobileNav, type MobileNavItem, type MobileNavOrganization } from './MobileNav';
@@ -184,21 +184,21 @@ describe('MobileNav', () => {
       items,
     });
 
-    const closeButton = screen.getByRole('button', { name: 'Close navigation' });
     const homeLink = screen.getByRole('link', { name: 'Home' });
+    const accountLink = screen.getByRole('link', { name: 'My Account' });
     const settingsLink = screen.getByRole('link', { name: 'Settings' });
+    const closeButton = screen.getByRole('button', { name: 'Close navigation' });
 
-    // Wait for focus to be set on close button
-    await vi.waitFor(() => {
-      expect(closeButton).toHaveFocus();
+    // Wait for focus to be set on first nav item
+    await waitFor(() => {
+      expect(homeLink).toHaveFocus();
     });
 
     // Tab to first link
     await user.tab();
-    expect(homeLink).toHaveFocus();
+    expect(accountLink).toHaveFocus();
 
     // Tab through to last link
-    await user.tab();
     await user.tab();
     expect(settingsLink).toHaveFocus();
 
@@ -209,6 +209,61 @@ describe('MobileNav', () => {
     // Shift+Tab should wrap to last link
     await user.tab({ shift: true });
     expect(settingsLink).toHaveFocus();
+  });
+
+  it('announces open and close state changes', async () => {
+    const baseProps = {
+      isOpen: true,
+      onClose: vi.fn(),
+      items: [],
+    };
+
+    const view = renderMobileNav(baseProps);
+    const status = await screen.findByRole('status');
+
+    await waitFor(() => {
+      expect(status).toHaveTextContent('Navigation menu opened.');
+    });
+
+    view.rerender(
+      <BrowserRouter>
+        <MobileNav {...baseProps} isOpen={false} />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(status).toHaveTextContent('Navigation menu closed.');
+    });
+  });
+
+  it('returns focus to trigger when closed', async () => {
+    const trigger = document.createElement('button');
+    trigger.textContent = 'Open menu';
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    const baseProps = {
+      isOpen: true,
+      onClose: vi.fn(),
+      items: [],
+    };
+
+    const view = renderMobileNav(baseProps);
+
+    const closeButton = await screen.findByRole('button', { name: 'Close navigation' });
+    expect(closeButton).toBeInTheDocument();
+
+    view.rerender(
+      <BrowserRouter>
+        <MobileNav {...baseProps} isOpen={false} />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+
+    document.body.removeChild(trigger);
   });
 
   describe('Organization switcher', () => {

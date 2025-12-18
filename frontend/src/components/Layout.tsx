@@ -17,6 +17,7 @@ export const Layout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const mobileMenuLabel = 'Open navigation menu';
 
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
@@ -173,7 +174,7 @@ export const Layout: React.FC = () => {
             <button
               className="unified-mobile-menu-button"
               onClick={() => setIsMobileNavOpen(true)}
-              aria-label="Open navigation menu"
+              aria-label={mobileMenuLabel}
               aria-expanded={isMobileNavOpen}
               aria-controls="mobile-nav-drawer"
             >

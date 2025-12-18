@@ -1,7 +1,39 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getRoleBadgeClass, getRoleLabel, type RoleType } from '../utils/roleUtils';
 import './MobileNav.css';
+
+const NAV_OPEN_STATUS = 'Navigation menu opened.';
+const NAV_CLOSED_STATUS = 'Navigation menu closed.';
+const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-org-list button, .mobile-nav-list a, .mobile-nav-list button';
+const NAV_INTERACTION_DELAY_MS = 200;
+const STATUS_CLEAR_DELAY_MS = 1000;
+const getNavInteractionDelayMs = (): number => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return NAV_INTERACTION_DELAY_MS;
+  }
+
+  try {
+    const root = document.documentElement;
+    const raw = window.getComputedStyle(root).getPropertyValue('--duration-slow').trim();
+    if (!raw) return NAV_INTERACTION_DELAY_MS;
+
+    if (raw.endsWith('ms')) {
+      const value = parseFloat(raw.slice(0, -2));
+      return Number.isFinite(value) ? value : NAV_INTERACTION_DELAY_MS;
+    }
+
+    if (raw.endsWith('s')) {
+      const value = parseFloat(raw.slice(0, -1));
+      return Number.isFinite(value) ? value * 1000 : NAV_INTERACTION_DELAY_MS;
+    }
+
+    return NAV_INTERACTION_DELAY_MS;
+  } catch {
+    return NAV_INTERACTION_DELAY_MS;
+  }
+};
+const scheduleNavDelay = (callback: () => void) => window.setTimeout(callback, getNavInteractionDelayMs());
 
 export interface MobileNavItem {
   id: string;
@@ -45,31 +77,79 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
-  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusTimeoutRef = useRef<number | null>(null);
+  const statusTimeoutRef = useRef<number | null>(null);
+  const statusClearTimeoutRef = useRef<number | null>(null);
+  const previousIsOpen = useRef(isOpen);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  const scheduleStatusMessage = React.useCallback((message: string) => {
+    if (statusTimeoutRef.current) {
+      window.clearTimeout(statusTimeoutRef.current);
+    }
+    if (statusClearTimeoutRef.current) {
+      window.clearTimeout(statusClearTimeoutRef.current);
+    }
+
+    statusTimeoutRef.current = scheduleNavDelay(() => {
+      setStatusMessage(message);
+      statusClearTimeoutRef.current = window.setTimeout(() => {
+        setStatusMessage('');
+        statusClearTimeoutRef.current = null;
+      }, STATUS_CLEAR_DELAY_MS);
+    });
+  }, []);
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
+    if (statusTimeoutRef.current) {
+      window.clearTimeout(statusTimeoutRef.current);
+    }
+    if (statusClearTimeoutRef.current) {
+      window.clearTimeout(statusClearTimeoutRef.current);
+    }
+
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
+      scheduleStatusMessage(NAV_OPEN_STATUS);
       
-      // Focus the close button when drawer opens
-      focusTimeoutRef.current = setTimeout(() => {
-        closeButtonRef.current?.focus();
-      }, 100);
+      focusTimeoutRef.current = scheduleNavDelay(() => {
+        const drawer = drawerRef.current;
+        const firstNavItem = drawer?.querySelector<HTMLElement>(FIRST_NAV_ITEM_SELECTOR);
+        if (firstNavItem) {
+          firstNavItem.focus();
+          return;
+        }
+        if (closeButtonRef.current) {
+          closeButtonRef.current.focus();
+          return;
+        }
+      });
     } else {
       // Restore focus to the element that opened the drawer
       if (previouslyFocusedElement.current) {
         previouslyFocusedElement.current.focus();
       }
+      if (previousIsOpen.current) {
+        scheduleStatusMessage(NAV_CLOSED_STATUS);
+      }
     }
+
+    previousIsOpen.current = isOpen;
 
     return () => {
       if (focusTimeoutRef.current) {
-        clearTimeout(focusTimeoutRef.current);
+        window.clearTimeout(focusTimeoutRef.current);
+      }
+      if (statusTimeoutRef.current) {
+        window.clearTimeout(statusTimeoutRef.current);
+      }
+      if (statusClearTimeoutRef.current) {
+        window.clearTimeout(statusClearTimeoutRef.current);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, scheduleStatusMessage]);
 
   // Close on Escape key
   useEffect(() => {
@@ -149,123 +229,131 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     return () => document.removeEventListener('keydown', handleTab);
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="mobile-nav-backdrop"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      
-      {/* Drawer */}
-      <nav 
-        ref={drawerRef}
-        id="mobile-nav-drawer"
-        className="mobile-nav-drawer"
-        aria-label="Mobile navigation"
-        role="navigation"
+      <div
+        className="visually-hidden"
+        aria-live="polite"
+        aria-atomic="true"
+        role="status"
       >
-        <div className="mobile-nav-header">
-          <h2 className="mobile-nav-title">Menu</h2>
-          <button
-            ref={closeButtonRef}
-            className="mobile-nav-close"
+        {statusMessage}
+      </div>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="mobile-nav-backdrop"
             onClick={onClose}
-            aria-label="Close navigation"
+            aria-hidden="true"
+          />
+          
+          {/* Drawer */}
+          <nav 
+            ref={drawerRef}
+            id="mobile-nav-drawer"
+            className="mobile-nav-drawer"
+            aria-label="Mobile navigation"
           >
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        
-        <div className="mobile-nav-content">
-          {/* Organization switcher - shown only when multiple orgs are available */}
-          {organizations && organizations.length > 1 && (
-            <div className="mobile-nav-org-section">
-              <div className="mobile-nav-org-label">
-                Organization
-              </div>
-              <div className="mobile-nav-org-list">
-                {organizations.map(org => {
-                  const isActive = org.id === activeOrgId;
-                  const roleLabel = getRoleLabel(org.role);
-                  return (
-                    <button
-                      key={org.id}
-                      className={`mobile-nav-org-button ${isActive ? 'active' : ''}`}
-                      onClick={() => {
-                        if (onOrgChange) {
-                          onOrgChange(org.id);
-                        }
-                      }}
-                      aria-current={isActive ? 'true' : undefined}
-                      aria-label={`Switch to ${org.name} (${roleLabel})`}
-                      data-testid={`mobile-org-${org.id}`}
-                    >
-                      <span className="mobile-nav-org-name">
-                        {org.name}
-                      </span>
-                      <span className={`mobile-nav-org-badge ${getRoleBadgeClass(org.role)}`}>
-                        {roleLabel}
-                      </span>
-                      {isActive && (
-                        <span className="mobile-nav-org-checkmark" aria-hidden="true">
-                          ✓
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="mobile-nav-header">
+              <h2 className="mobile-nav-title">Menu</h2>
+              <button
+                ref={closeButtonRef}
+                className="mobile-nav-close"
+                onClick={onClose}
+                aria-label="Close navigation"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
             </div>
-          )}
-          
-          {/* Main items */}
-          {items.length > 0 && (
-            <ul className="mobile-nav-list">
-              {items.map(item => (
-                <li key={item.id} className="mobile-nav-item">
-                  <Link
-                    to={item.path}
-                    className={`mobile-nav-link ${item.isActive ? 'active' : ''}`}
-                    onClick={onClose}
-                    aria-current={item.isActive ? 'page' : undefined}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
+            
+            <div className="mobile-nav-content">
+              {/* Organization switcher - shown only when multiple orgs are available */}
+              {organizations && organizations.length > 1 && (
+                <div className="mobile-nav-org-section">
+                  <div className="mobile-nav-org-label">
+                    Organization
+                  </div>
+                  <div className="mobile-nav-org-list">
+                    {organizations.map(org => {
+                      const isActive = org.id === activeOrgId;
+                      const roleLabel = getRoleLabel(org.role);
+                      return (
+                        <button
+                          key={org.id}
+                          className={`mobile-nav-org-button ${isActive ? 'active' : ''}`}
+                          onClick={() => {
+                            if (onOrgChange) {
+                              onOrgChange(org.id);
+                            }
+                          }}
+                          aria-current={isActive ? 'true' : undefined}
+                          aria-label={`Switch to ${org.name} (${roleLabel})`}
+                          data-testid={`mobile-org-${org.id}`}
+                        >
+                          <span className="mobile-nav-org-name">
+                            {org.name}
+                          </span>
+                          <span className={`mobile-nav-org-badge ${getRoleBadgeClass(org.role)}`}>
+                            {roleLabel}
+                          </span>
+                          {isActive && (
+                            <span className="mobile-nav-org-checkmark" aria-hidden="true">
+                              ✓
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Main items */}
+              {items.length > 0 && (
+                <ul className="mobile-nav-list">
+                  {items.map(item => (
+                    <li key={item.id} className="mobile-nav-item">
+                      <Link
+                        to={item.path}
+                        className={`mobile-nav-link ${item.isActive ? 'active' : ''}`}
+                        onClick={onClose}
+                        aria-current={item.isActive ? 'page' : undefined}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              
+              {/* Sectioned items */}
+              {sections && sections.map((section, idx) => (
+                <div key={idx} className="mobile-nav-section">
+                  <div className="mobile-nav-section-label">
+                    {section.label}
+                  </div>
+                  <ul className="mobile-nav-list">
+                    {section.items.map(item => (
+                      <li key={item.id} className="mobile-nav-item">
+                        <Link
+                          to={item.path}
+                          className={`mobile-nav-link ${item.isActive ? 'active' : ''}`}
+                          onClick={onClose}
+                          aria-current={item.isActive ? 'page' : undefined}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          )}
-          
-          {/* Sectioned items */}
-          {sections && sections.map((section, idx) => (
-            <div key={idx} className="mobile-nav-section">
-              <div className="mobile-nav-section-label">
-                {section.label}
-              </div>
-              <ul className="mobile-nav-list">
-                {section.items.map(item => (
-                  <li key={item.id} className="mobile-nav-item">
-                    <Link
-                      to={item.path}
-                      className={`mobile-nav-link ${item.isActive ? 'active' : ''}`}
-                      onClick={onClose}
-                      aria-current={item.isActive ? 'page' : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             </div>
-          ))}
-        </div>
-      </nav>
+          </nav>
+        </>
+      )}
     </>
   );
 };
