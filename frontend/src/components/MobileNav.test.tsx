@@ -221,7 +221,7 @@ describe('MobileNav', () => {
     const view = renderMobileNav(baseProps);
     const status = screen.getByRole('status');
 
-    expect(status).toHaveTextContent('Navigation menu opened');
+    expect(status).toHaveTextContent('Navigation menu opened.');
 
     view.rerender(
       <BrowserRouter>
