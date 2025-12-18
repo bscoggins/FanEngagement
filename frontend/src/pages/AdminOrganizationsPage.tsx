@@ -10,7 +10,9 @@ import { SearchInput } from '../components/SearchInput';
 import { Table, type TableColumn } from '../components/Table';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { Select } from '../components/Select';
 import { Toggle } from '../components/Toggle';
+import { FormErrorSummary } from '../components/FormErrorSummary';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useTableData } from '../hooks/useTableData';
@@ -18,6 +20,18 @@ import type { Organization, CreateOrganizationRequest, User, BlockchainType } fr
 import './AdminPage.css';
 
 const PAGE_SIZE = 10;
+const DEFAULT_BLOCKCHAIN_TYPE: BlockchainType = 'None';
+const initialCreateFormState: CreateOrganizationRequest = {
+  name: '',
+  description: '',
+  logoUrl: '',
+  primaryColor: '#000000',
+  secondaryColor: '#ffffff',
+  blockchainType: DEFAULT_BLOCKCHAIN_TYPE,
+  blockchainConfig: '',
+  enableBlockchainFeature: false,
+  initialAdminUserId: '',
+};
 
 export const AdminOrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,17 +44,8 @@ export const AdminOrganizationsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [createFormData, setCreateFormData] = useState<CreateOrganizationRequest>({
-    name: '',
-    description: '',
-    logoUrl: '',
-    primaryColor: '#000000',
-    secondaryColor: '#ffffff',
-    blockchainType: 'None',
-    blockchainConfig: '',
-    enableBlockchainFeature: false,
-    initialAdminUserId: '',
-  });
+  const [createFormData, setCreateFormData] = useState<CreateOrganizationRequest>({ ...initialCreateFormState });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (searchParams.get('action') === 'create') {
@@ -123,13 +128,31 @@ export const AdminOrganizationsPage: React.FC = () => {
   const handleCreateOrganization = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    const validationErrors: Record<string, string> = {};
+    if (!createFormData.name.trim()) {
+      validationErrors.name = 'Organization name is required';
+    }
+    if (!createFormData.initialAdminUserId) {
+      validationErrors.initialAdmin = 'Select an initial organization admin';
+    }
+    if (createFormData.blockchainType !== DEFAULT_BLOCKCHAIN_TYPE && !createFormData.blockchainConfig?.trim()) {
+      validationErrors.blockchainConfig = 'Provide blockchain configuration or choose "None"';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
+      return;
+    }
+
+    setFormErrors({});
+
     try {
       setIsCreating(true);
       const newOrg = await organizationsApi.create(createFormData);
       showSuccess('Organization created successfully');
       await fetchOrganizations();
       setShowCreateForm(false);
-      setCreateFormData({ name: '', description: '' });
+      setCreateFormData({ ...initialCreateFormState });
       navigate(`/admin/organizations/${newOrg.id}/edit`);
     } catch (err) {
       console.error('Failed to create organization:', err);
@@ -268,6 +291,9 @@ export const AdminOrganizationsPage: React.FC = () => {
           <p className="admin-secondary-text" style={{ marginTop: 'var(--spacing-1)', marginBottom: 'var(--spacing-5)' }}>
             Provide a name and optional description. Configure share types, memberships, and proposals after creation.
           </p>
+          <FormErrorSummary
+            errors={Object.entries(formErrors).map(([fieldId, message]) => ({ fieldId, message }))}
+          />
           <form
             onSubmit={handleCreateOrganization}
             className="admin-form"
@@ -284,31 +310,26 @@ export const AdminOrganizationsPage: React.FC = () => {
                 maxLength={200}
                 disabled={isCreating}
                 className="admin-input"
+                error={formErrors.name}
               />
               
-              <div>
-                <label htmlFor="initialAdmin" className="form-field__label admin-form-label">
-                  Initial Organization Admin
-                </label>
-                <select
-                  id="initialAdmin"
-                  value={createFormData.initialAdminUserId || ''}
-                  onChange={(e) => setCreateFormData({ ...createFormData, initialAdminUserId: e.target.value })}
-                  className="form-control admin-input"
-                  disabled={isCreating}
-                  required
-                >
-                  <option value="">Select a user...</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.displayName} ({user.email})
-                    </option>
-                  ))}
-                </select>
-                <p className="form-field__help" style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-                  This user will be assigned as the Organization Admin.
-                </p>
-              </div>
+              <Select
+                id="initialAdmin"
+                label="Initial Organization Admin"
+                value={createFormData.initialAdminUserId || ''}
+                onChange={(e) => setCreateFormData({ ...createFormData, initialAdminUserId: e.target.value })}
+                disabled={isCreating}
+                required
+                helperText="This user will be assigned as the Organization Admin."
+                error={formErrors.initialAdmin}
+              >
+                <option value="">Select a user...</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.displayName} ({user.email})
+                  </option>
+                ))}
+              </Select>
             </div>
 
             <div>
@@ -372,18 +393,18 @@ export const AdminOrganizationsPage: React.FC = () => {
                 </label>
                 <select
                   id="blockchainType"
-                  value={createFormData.blockchainType || 'None'}
+                  value={createFormData.blockchainType}
                   onChange={(e) => setCreateFormData({ ...createFormData, blockchainType: e.target.value as BlockchainType })}
                   className="form-control admin-input"
                   disabled={isCreating}
                 >
-                  <option value="None">None</option>
+                  <option value={DEFAULT_BLOCKCHAIN_TYPE}>None</option>
                   <option value="Solana">Solana</option>
                   <option value="Polygon">Polygon</option>
                 </select>
               </div>
               
-              {createFormData.blockchainType !== 'None' ? (
+              {createFormData.blockchainType !== DEFAULT_BLOCKCHAIN_TYPE ? (
                 <div>
                   <label htmlFor="blockchainConfig" className="form-field__label admin-form-label">
                     Configuration (JSON)
@@ -396,6 +417,7 @@ export const AdminOrganizationsPage: React.FC = () => {
                     disabled={isCreating}
                     className="admin-input"
                     placeholder='{"network": "devnet"}'
+                    error={formErrors.blockchainConfig}
                   />
                 </div>
               ) : (
@@ -425,16 +447,9 @@ export const AdminOrganizationsPage: React.FC = () => {
                 onClick={() => {
                   setShowCreateForm(false);
                   setCreateFormData({ 
-                    name: '', 
-                    description: '',
-                    logoUrl: '',
-                    primaryColor: '#000000',
-                    secondaryColor: '#ffffff',
-                    blockchainType: 'None',
-                    blockchainConfig: '',
-                    enableBlockchainFeature: false,
-                    initialAdminUserId: ''
+                    ...initialCreateFormState
                   });
+                  setFormErrors({});
                   if (searchParams.get('action') === 'create') {
                     setSearchParams({});
                   }

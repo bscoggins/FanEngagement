@@ -42,4 +42,14 @@ describe('Select', () => {
     );
     expect(screen.getByLabelText('Disabled')).toBeDisabled();
   });
+
+  it('marks required selects with aria-required', () => {
+    render(
+      <Select label="Role" required>
+        <option value="user">User</option>
+      </Select>
+    );
+
+    expect(screen.getByLabelText(/Role/i)).toHaveAttribute('aria-required', 'true');
+  });
 });

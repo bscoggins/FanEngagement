@@ -198,6 +198,35 @@
   box-shadow: 0 0 0 3px var(--color-primary-alpha-10);
 }
 
+.form-error-summary {
+  border: 1px solid var(--color-error-200, #fecdd3);
+  background-color: var(--color-error-50, #fff1f2);
+  color: var(--color-error-800, #9f1239);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-4);
+  box-shadow: var(--shadow-xs);
+}
+
+.form-error-summary__title {
+  margin: 0 0 var(--spacing-2);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+.form-error-summary__list {
+  margin: 0;
+  padding-left: var(--spacing-4);
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.form-error-summary__link {
+  color: var(--color-error-800, #9f1239);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}
+
 .choice-input--checkbox:checked::after {
   border-color: var(--color-primary-700);
 }

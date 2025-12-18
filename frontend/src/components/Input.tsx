@@ -24,6 +24,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref)
   const generatedId = useId();
   const id = providedId ?? generatedId;
   const hasError = Boolean(error);
+  const showRequiredIndicator = props.required && !label?.includes('*');
   const helperId = helperText ? `${id}-helper` : undefined;
   const errorId = hasError ? `${id}-error` : undefined;
   const ariaDescribedBy = [helperId, errorId].filter(Boolean).join(' ') || undefined;
@@ -43,7 +44,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref)
       {label && (
         <label className="form-field__label" htmlFor={id}>
           {label}
-          {props.required && (
+          {showRequiredIndicator && (
             <span className="form-field__required" aria-hidden="true">
               *
             </span>
@@ -63,6 +64,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref)
           id={id}
           className={controlClassName}
           aria-invalid={hasError}
+          aria-required={props.required ? 'true' : undefined}
           aria-describedby={ariaDescribedBy}
           {...rest}
         />

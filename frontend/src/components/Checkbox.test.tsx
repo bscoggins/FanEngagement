@@ -35,4 +35,9 @@ describe('Checkbox', () => {
     render(<Checkbox label="Disabled checkbox" disabled />);
     expect(screen.getByLabelText('Disabled checkbox')).toBeDisabled();
   });
+
+  it('marks required checkboxes with aria-required', () => {
+    render(<Checkbox label="Agree" required />);
+    expect(screen.getByLabelText(/Agree/i)).toHaveAttribute('aria-required', 'true');
+  });
 });
