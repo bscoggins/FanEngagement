@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { MobileNav, type MobileNavItem, type MobileNavOrganization } from './MobileNav';
@@ -190,7 +190,7 @@ describe('MobileNav', () => {
     const closeButton = screen.getByRole('button', { name: 'Close navigation' });
 
     // Wait for focus to be set on first nav item
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(homeLink).toHaveFocus();
     });
 
@@ -221,7 +221,9 @@ describe('MobileNav', () => {
     const view = renderMobileNav(baseProps);
     const status = screen.getByRole('status');
 
-    expect(status).toHaveTextContent('Navigation menu opened.');
+    await waitFor(() => {
+      expect(status).toHaveTextContent('Navigation menu opened.');
+    });
 
     view.rerender(
       <BrowserRouter>
@@ -229,7 +231,7 @@ describe('MobileNav', () => {
       </BrowserRouter>
     );
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(status).toHaveTextContent('Navigation menu closed.');
     });
   });
@@ -257,7 +259,7 @@ describe('MobileNav', () => {
       </BrowserRouter>
     );
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(trigger).toHaveFocus();
     });
 

@@ -36,6 +36,7 @@ interface MobileNavProps {
 const NAV_OPEN_STATUS = 'Navigation menu opened.';
 const NAV_CLOSED_STATUS = 'Navigation menu closed.';
 const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-list a, .mobile-nav-list button';
+const NAV_INTERACTION_DELAY_MS = 100;
 
 export const MobileNav: React.FC<MobileNavProps> = ({ 
   isOpen, 
@@ -50,16 +51,23 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const drawerRef = useRef<HTMLElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousIsOpen = useRef(isOpen);
   const statusMessageId = useId();
   const [statusMessage, setStatusMessage] = useState('');
-  const wasOpenRef = useRef(false);
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
+    if (statusTimeoutRef.current) {
+      clearTimeout(statusTimeoutRef.current);
+    }
+
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
-      setStatusMessage(NAV_OPEN_STATUS);
+      statusTimeoutRef.current = setTimeout(() => {
+        setStatusMessage(NAV_OPEN_STATUS);
+      }, NAV_INTERACTION_DELAY_MS);
       
       focusTimeoutRef.current = setTimeout(() => {
         const drawer = drawerRef.current;
@@ -69,23 +77,25 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           return;
         }
         closeButtonRef.current?.focus();
-      }, 100);
+      }, NAV_INTERACTION_DELAY_MS);
     } else {
       // Restore focus to the element that opened the drawer
       if (previouslyFocusedElement.current) {
         previouslyFocusedElement.current.focus();
       }
-      if (wasOpenRef.current) {
+      if (previousIsOpen.current) {
         setStatusMessage(NAV_CLOSED_STATUS);
       }
     }
 
-    // Track last open state to only announce close after the drawer has been opened
-    wasOpenRef.current = isOpen;
+    previousIsOpen.current = isOpen;
 
     return () => {
       if (focusTimeoutRef.current) {
         clearTimeout(focusTimeoutRef.current);
+      }
+      if (statusTimeoutRef.current) {
+        clearTimeout(statusTimeoutRef.current);
       }
     };
   }, [isOpen]);
