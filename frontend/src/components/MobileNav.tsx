@@ -33,6 +33,10 @@ interface MobileNavProps {
  * MobileNav component for mobile-friendly navigation
  * Slide-out drawer with touch-friendly tap targets
  */
+const NAV_OPEN_STATUS = 'Navigation menu opened.';
+const NAV_CLOSED_STATUS = 'Navigation menu closed.';
+const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-list a, .mobile-nav-list button';
+
 export const MobileNav: React.FC<MobileNavProps> = ({ 
   isOpen, 
   onClose, 
@@ -55,11 +59,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
-      setStatusMessage('Navigation menu opened.');
+      setStatusMessage(NAV_OPEN_STATUS);
       
       focusTimeoutRef.current = setTimeout(() => {
         const drawer = drawerRef.current;
-        const firstNavItem = drawer?.querySelector<HTMLElement>('.mobile-nav-list a, .mobile-nav-list button');
+        const firstNavItem = drawer?.querySelector<HTMLElement>(FIRST_NAV_ITEM_SELECTOR);
         if (firstNavItem) {
           firstNavItem.focus();
           return;
@@ -72,7 +76,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         previouslyFocusedElement.current.focus();
       }
       if (wasOpenRef.current) {
-        setStatusMessage('Navigation menu closed.');
+        setStatusMessage(NAV_CLOSED_STATUS);
       }
     }
 
