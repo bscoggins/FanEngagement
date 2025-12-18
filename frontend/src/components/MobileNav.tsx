@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom';
 import { getRoleBadgeClass, getRoleLabel, type RoleType } from '../utils/roleUtils';
 import './MobileNav.css';
 
+const NAV_OPEN_STATUS = 'Navigation menu opened.';
+const NAV_CLOSED_STATUS = 'Navigation menu closed.';
+const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-list a, .mobile-nav-list button';
+const NAV_INTERACTION_DELAY_MS = 200;
+
 export interface MobileNavItem {
   id: string;
   label: string;
@@ -33,11 +38,6 @@ interface MobileNavProps {
  * MobileNav component for mobile-friendly navigation
  * Slide-out drawer with touch-friendly tap targets
  */
-const NAV_OPEN_STATUS = 'Navigation menu opened.';
-const NAV_CLOSED_STATUS = 'Navigation menu closed.';
-const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-list a, .mobile-nav-list button';
-const NAV_INTERACTION_DELAY_MS = 100;
-
 export const MobileNav: React.FC<MobileNavProps> = ({ 
   isOpen, 
   onClose, 
@@ -76,7 +76,11 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           firstNavItem.focus();
           return;
         }
-        closeButtonRef.current?.focus();
+        if (closeButtonRef.current) {
+          closeButtonRef.current.focus();
+          return;
+        }
+        drawer?.focus();
       }, NAV_INTERACTION_DELAY_MS);
     } else {
       // Restore focus to the element that opened the drawer
@@ -206,6 +210,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             className="mobile-nav-drawer"
             aria-label="Mobile navigation"
             role="navigation"
+            tabIndex={-1}
           >
             <div className="mobile-nav-header">
               <h2 className="mobile-nav-title">Menu</h2>
