@@ -48,15 +48,14 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusMessageId = useId();
   const [statusMessage, setStatusMessage] = useState('');
-  const hasAnnouncedRef = useRef(false);
+  const wasOpenRef = useRef(false);
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
     if (isOpen) {
       // Store the currently focused element to restore focus later
       previouslyFocusedElement.current = document.activeElement as HTMLElement;
-      hasAnnouncedRef.current = true;
-      setStatusMessage('Navigation menu opened. Focus is inside the drawer.');
+      setStatusMessage('Navigation menu opened. Navigation links are now available.');
       
       focusTimeoutRef.current = setTimeout(() => {
         const drawer = drawerRef.current;
@@ -72,10 +71,13 @@ export const MobileNav: React.FC<MobileNavProps> = ({
       if (previouslyFocusedElement.current) {
         previouslyFocusedElement.current.focus();
       }
-      if (hasAnnouncedRef.current) {
+      if (wasOpenRef.current) {
         setStatusMessage('Navigation menu closed.');
       }
     }
+
+    // Track last open state to only announce close after the drawer has been opened
+    wasOpenRef.current = isOpen;
 
     return () => {
       if (focusTimeoutRef.current) {
