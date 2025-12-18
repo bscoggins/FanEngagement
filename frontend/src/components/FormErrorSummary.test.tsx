@@ -1,24 +1,9 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FormErrorSummary } from './FormErrorSummary';
 
 describe('FormErrorSummary', () => {
-  const originalScrollIntoView = Element.prototype.scrollIntoView;
-
-  beforeEach(() => {
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
-      cb(performance.now())
-    );
-    // jsdom doesn't implement scrollIntoView
-    Element.prototype.scrollIntoView = vi.fn();
-  });
-
-  afterEach(() => {
-    Element.prototype.scrollIntoView = originalScrollIntoView;
-    vi.unstubAllGlobals();
-  });
-
   it('renders nothing when there are no errors', () => {
     const { container } = render(<FormErrorSummary errors={[]} />);
     expect(container).toBeEmptyDOMElement();
