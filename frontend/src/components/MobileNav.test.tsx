@@ -219,7 +219,7 @@ describe('MobileNav', () => {
     };
 
     const view = renderMobileNav(baseProps);
-    const status = screen.getByRole('status');
+    const status = await screen.findByRole('status');
 
     await waitFor(() => {
       expect(status).toHaveTextContent('Navigation menu opened.');

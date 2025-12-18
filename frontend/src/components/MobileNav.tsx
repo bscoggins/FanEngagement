@@ -1,13 +1,39 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getRoleBadgeClass, getRoleLabel, type RoleType } from '../utils/roleUtils';
 import './MobileNav.css';
 
 const NAV_OPEN_STATUS = 'Navigation menu opened.';
 const NAV_CLOSED_STATUS = 'Navigation menu closed.';
-const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-list a, .mobile-nav-list button';
+const FIRST_NAV_ITEM_SELECTOR = '.mobile-nav-org-list button, .mobile-nav-list a, .mobile-nav-list button';
 const NAV_INTERACTION_DELAY_MS = 200;
-const scheduleNavDelay = (callback: () => void) => window.setTimeout(callback, NAV_INTERACTION_DELAY_MS);
+const getNavInteractionDelayMs = (): number => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return NAV_INTERACTION_DELAY_MS;
+  }
+
+  try {
+    const root = document.documentElement;
+    const raw = window.getComputedStyle(root).getPropertyValue('--duration-slow').trim();
+    if (!raw) return NAV_INTERACTION_DELAY_MS;
+
+    if (raw.endsWith('ms')) {
+      const value = parseFloat(raw.slice(0, -2));
+      return Number.isFinite(value) ? value : NAV_INTERACTION_DELAY_MS;
+    }
+
+    if (raw.endsWith('s')) {
+      const value = parseFloat(raw.slice(0, -1));
+      return Number.isFinite(value) ? value * 1000 : NAV_INTERACTION_DELAY_MS;
+    }
+
+    const numericValue = parseFloat(raw);
+    return Number.isFinite(numericValue) ? numericValue : NAV_INTERACTION_DELAY_MS;
+  } catch {
+    return NAV_INTERACTION_DELAY_MS;
+  }
+};
+const scheduleNavDelay = (callback: () => void) => window.setTimeout(callback, getNavInteractionDelayMs());
 
 export interface MobileNavItem {
   id: string;
@@ -51,16 +77,15 @@ export const MobileNav: React.FC<MobileNavProps> = ({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
-  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusTimeoutRef = useRef<number | null>(null);
+  const statusTimeoutRef = useRef<number | null>(null);
   const previousIsOpen = useRef(isOpen);
-  const statusMessageId = useId();
   const [statusMessage, setStatusMessage] = useState('');
 
   // Handle focus management when drawer opens/closes
   useEffect(() => {
     if (statusTimeoutRef.current) {
-      clearTimeout(statusTimeoutRef.current);
+      window.clearTimeout(statusTimeoutRef.current);
     }
 
     if (isOpen) {
@@ -81,7 +106,6 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           closeButtonRef.current.focus();
           return;
         }
-        drawer?.focus();
       });
     } else {
       // Restore focus to the element that opened the drawer
@@ -89,7 +113,9 @@ export const MobileNav: React.FC<MobileNavProps> = ({
         previouslyFocusedElement.current.focus();
       }
       if (previousIsOpen.current) {
-        setStatusMessage(NAV_CLOSED_STATUS);
+        statusTimeoutRef.current = scheduleNavDelay(() => {
+          setStatusMessage(NAV_CLOSED_STATUS);
+        });
       }
     }
 
@@ -97,10 +123,10 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
     return () => {
       if (focusTimeoutRef.current) {
-        clearTimeout(focusTimeoutRef.current);
+        window.clearTimeout(focusTimeoutRef.current);
       }
       if (statusTimeoutRef.current) {
-        clearTimeout(statusTimeoutRef.current);
+        window.clearTimeout(statusTimeoutRef.current);
       }
     };
   }, [isOpen]);
@@ -185,15 +211,16 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
   return (
     <>
-      <div
-        id={statusMessageId}
-        className="visually-hidden"
-        aria-live="polite"
-        aria-atomic="true"
-        role="status"
-      >
-        {statusMessage}
-      </div>
+      {statusMessage && (
+        <div
+          className="visually-hidden"
+          aria-live="polite"
+          aria-atomic="true"
+          role="status"
+        >
+          {statusMessage}
+        </div>
+      )}
 
       {isOpen && (
         <>
@@ -210,8 +237,6 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             id="mobile-nav-drawer"
             className="mobile-nav-drawer"
             aria-label="Mobile navigation"
-            role="navigation"
-            tabIndex={0}
           >
             <div className="mobile-nav-header">
               <h2 className="mobile-nav-title">Menu</h2>

@@ -19,7 +19,7 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const mobileMenuLabel = isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu';
+  const mobileMenuLabel = 'Open navigation menu';
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const keyboardHelpTimeoutRef = useRef<number | undefined>(undefined);
 
@@ -226,7 +226,7 @@ export const AdminLayout: React.FC = () => {
             <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
                 className="admin-mobile-menu-button"
-                onClick={() => setIsMobileNavOpen(prev => !prev)}
+                onClick={() => setIsMobileNavOpen(true)}
                 aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}
                 aria-controls="mobile-nav-drawer"
