@@ -59,8 +59,10 @@ jobs:
         run: npm run test
         working-directory: ./frontend
 
-  accessibility-a11y:
+  a11y-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
       API_KEY: ${{ secrets.API_KEY }}
@@ -143,7 +145,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: accessibility-a11y-json
+          name: a11y-reports
           path: frontend/test-results/a11y/**/*.json
           if-no-files-found: ignore
           retention-days: 7

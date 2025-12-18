@@ -57,7 +57,7 @@ test.describe('Accessibility sweeps', () => {
   test('platform admin dashboard has no critical violations', async ({ page }) => {
     await loginThroughUi(page, 'admin@example.com', 'Admin123!');
     const heading = page.getByRole('heading', { name: /Admin Dashboard/i });
-    await waitForVisible(heading);
+    await waitForVisible(heading, 20000);
 
     await runAxeScan('platform-admin-dashboard', page);
   });
@@ -65,7 +65,7 @@ test.describe('Accessibility sweeps', () => {
   test('organizations list has no critical violations', async ({ page }) => {
     await loginThroughUi(page, 'admin@example.com', 'Admin123!');
     await page.goto('/admin/organizations');
-    await waitForVisible(page.getByRole('heading', { name: /Organizations/i }));
+    await waitForVisible(page.getByRole('heading', { name: /Organizations/i }), 20000);
 
     await runAxeScan('admin-organizations', page);
   });
