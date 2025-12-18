@@ -21,7 +21,7 @@ test.describe('Mobile navigation', () => {
     await expect(desktopSidebar).not.toBeVisible();
     
     // Hamburger menu should be visible
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await waitForVisible(hamburgerButton);
     
     // Click hamburger to open drawer
@@ -36,7 +36,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile drawer shows navigation items', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -49,7 +49,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile drawer closes when backdrop is clicked', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -64,7 +64,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile drawer closes when close button is clicked', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -79,7 +79,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile drawer closes when Escape key is pressed', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -93,7 +93,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile drawer closes when navigation link is clicked', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -111,7 +111,7 @@ test.describe('Mobile navigation', () => {
 
   test('mobile drawer shows organization switcher for users with multiple orgs', async ({ page }) => {
     // alice@example.com has multiple org memberships
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -126,7 +126,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile drawer org switcher shows role badges', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -141,7 +141,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('tapping organization in mobile drawer switches org and closes drawer', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -159,7 +159,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile org buttons meet 44px minimum tap target', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -174,7 +174,7 @@ test.describe('Mobile navigation', () => {
   });
 
   test('mobile nav links meet 44px minimum tap target', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await hamburgerButton.click();
     
     const drawer = page.getByRole('navigation', { name: 'Mobile navigation' });
@@ -200,7 +200,7 @@ test.describe('Mobile navigation on small phone', () => {
   });
 
   test('works on 320px viewport (smallest common mobile)', async ({ page }) => {
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     await waitForVisible(hamburgerButton);
     
     await hamburgerButton.click();
@@ -229,7 +229,7 @@ test.describe('Mobile navigation on tablet', () => {
   test('above 768px breakpoint, shows desktop sidebar instead of mobile hamburger', async ({ page }) => {
     // At 769px (above max-width: 768px), mobile nav should be hidden, desktop should be visible
     const desktopSidebar = page.getByTestId('unified-sidebar');
-    const hamburgerButton = page.getByRole('button', { name: 'Open navigation menu' });
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
     
     await waitForVisible(desktopSidebar);
     await expect(hamburgerButton).not.toBeVisible();

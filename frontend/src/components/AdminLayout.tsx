@@ -19,6 +19,7 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const mobileMenuLabel = isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu';
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const keyboardHelpTimeoutRef = useRef<number | undefined>(undefined);
 
@@ -222,11 +223,11 @@ export const AdminLayout: React.FC = () => {
       <div className="admin-layout">
         <header className="admin-header" role="banner">
           <div className="admin-header-left">
-            <Tooltip content="Open navigation menu" placement="bottom">
+            <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
                 className="admin-mobile-menu-button"
-                onClick={() => setIsMobileNavOpen(true)}
-                aria-label="Open navigation menu"
+                onClick={() => setIsMobileNavOpen(prev => !prev)}
+                aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}
                 aria-controls="mobile-nav-drawer"
               >
