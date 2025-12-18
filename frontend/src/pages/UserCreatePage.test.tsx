@@ -170,6 +170,38 @@ describe('UserCreatePage', () => {
     });
   });
 
+  it('shows validation errors and prevents submit when password is too short', async () => {
+    renderUserCreatePage();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/email/i), 'short@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'Abc1!');
+    await user.type(screen.getByLabelText(/display name/i), 'Short Password');
+
+    await user.click(screen.getByRole('button', { name: /create user/i }));
+
+    const summary = await screen.findByTestId('form-error-summary');
+    expect(summary).toHaveTextContent('Password must be at least 12 characters');
+    expect(usersApi.create).not.toHaveBeenCalled();
+  });
+
+  it('shows validation errors and prevents submit when password lacks required character types', async () => {
+    renderUserCreatePage();
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/email/i), 'invalid@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'passwordonly');
+    await user.type(screen.getByLabelText(/display name/i), 'Invalid Password');
+
+    await user.click(screen.getByRole('button', { name: /create user/i }));
+
+    const summary = await screen.findByTestId('form-error-summary');
+    expect(summary).toHaveTextContent(
+      'Password must contain at least one uppercase letter, one number, and one special character'
+    );
+    expect(usersApi.create).not.toHaveBeenCalled();
+  });
+
   it('disables submit button while creating', async () => {
     vi.mocked(usersApi.create).mockImplementation(() => {
       return new Promise(resolve => setTimeout(() => resolve({
