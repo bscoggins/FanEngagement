@@ -146,7 +146,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             —
           </div>
           <div style={{ color: '#666', marginTop: '0.5rem' }}>Active Proposals</div>
-          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
             Platform-wide aggregation pending
           </div>
         </div>
@@ -185,7 +185,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
             —
           </div>
           <div style={{ color: '#666', marginTop: '0.5rem' }}>Recent Webhook Failures</div>
-          <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
             Platform-wide aggregation pending
           </div>
         </div>

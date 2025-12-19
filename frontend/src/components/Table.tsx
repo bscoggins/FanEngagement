@@ -252,7 +252,6 @@ export function Table<T>({
                   }
                 }}
                 tabIndex={column.sortable ? 0 : undefined}
-                role={column.sortable ? 'button' : undefined}
                 aria-sort={
                   column.sortable && sortConfig?.key === (column.sortKey || column.key)
                     ? sortConfig.direction === 'asc'
