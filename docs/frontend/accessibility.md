@@ -106,6 +106,7 @@ Use HTML5 semantic elements with explicit ARIA roles for screen reader compatibi
 ```
 
 **Required Landmarks:**
+
 - `<header role="banner">` - Site header
 - `<nav role="navigation">` - Navigation menus (use descriptive `aria-label`)
 - `<main role="main" id="main-content">` - Primary content (targeted by skip links)
@@ -138,6 +139,7 @@ Use `aria-live="polite"` for non-critical updates:
 ```
 
 **Use for:**
+
 - Loading states
 - Success messages
 - Info notifications
@@ -162,6 +164,7 @@ Use `aria-live="assertive"` or `role="alert"` for critical updates:
 ```
 
 **Use for:**
+
 - Error messages
 - Validation failures
 - Critical system notifications
@@ -191,6 +194,7 @@ All buttons must have accessible names:
 ```
 
 **Best Practices:**
+
 - Use `<button>` for actions, `<a>` for navigation
 - Provide descriptive `aria-label` for icon-only buttons
 - Use `aria-busy="true"` for loading states
@@ -258,6 +262,7 @@ All form controls require proper labels and error handling:
 ```
 
 **Best Practices:**
+
 - Always use `<label>` with `htmlFor` attribute
 - Use `aria-required="true"` for required fields
 - Use `aria-invalid="true"` when validation fails
@@ -295,6 +300,7 @@ Implement the WCAG dialog pattern:
 ```
 
 **Required Features:**
+
 - `role="dialog"` and `aria-modal="true"`
 - `aria-labelledby` pointing to modal title
 - Focus trap (Tab/Shift+Tab cycles within modal)
@@ -338,6 +344,7 @@ Implement accessible data tables:
 ```
 
 **Best Practices:**
+
 - Use `<caption>` to describe table contents
 - Use `<th scope="col">` for column headers
 - Use `<th scope="row">` for row headers
@@ -368,6 +375,7 @@ All interactive elements display a **consistent, high-contrast focus ring**:
 ```
 
 **Design Requirements:**
+
 - Minimum 2px outline width
 - High contrast ratio (3:1 minimum against background)
 - 2px offset from element border
@@ -400,6 +408,7 @@ Provide skip links at the top of each page:
 ```
 
 **Implementation:**
+
 - Hidden off-screen by default
 - Visible when focused (first Tab press)
 - Links to `#main-content` element
@@ -416,6 +425,7 @@ Tab order must follow **natural reading order**:
 5. Interactive elements within content
 
 **Best Practices:**
+
 - Never use `tabindex` > 0 (breaks natural order)
 - Use `tabindex="0"` to make custom elements focusable
 - Use `tabindex="-1"` for programmatic focus only
@@ -472,10 +482,12 @@ function Modal({ isOpen, onClose, children }) {
 Document and implement keyboard shortcuts:
 
 **Organization Admin Navigation:**
+
 - `Ctrl+1` (Windows/Linux) / `Cmd+1` (Mac): Navigate to first org admin page
 - `Ctrl+2–6`: Navigate to subsequent org admin pages
 
 **Global Shortcuts:**
+
 - `?`: Show keyboard shortcuts help
 - `Esc`: Close modals, dropdowns, drawers
 - `Enter`: Activate buttons and links
@@ -485,6 +497,7 @@ Document and implement keyboard shortcuts:
 - `Shift+Tab`: Move to previous focusable element
 
 **Implementation Notes:**
+
 - Prevent conflicts with browser shortcuts
 - Show brief notification toast on shortcut use
 - Document shortcuts in help overlay or settings
@@ -537,12 +550,14 @@ Our design tokens meet AA standards:
 ### Common Violations to Avoid
 
 ❌ **Don't:**
+
 - Use light gray text (#999) on white background (2.8:1 - fails)
 - Use color alone to convey information
 - Use low-contrast placeholder text for critical info
 - Rely on hover-only indicators
 
 ✓ **Do:**
+
 - Use our design system tokens (pre-tested)
 - Combine color with icons or text labels
 - Ensure disabled states are visually distinct
@@ -568,6 +583,7 @@ Navigate by landmarks to verify page structure:
 **VoiceOver:** `VO+U`, select Landmarks
 
 **Verify:**
+
 - Banner (header) landmark announced
 - Navigation landmarks with descriptive labels
 - Main content landmark present
@@ -580,6 +596,7 @@ Navigate by headings to verify hierarchy:
 **VoiceOver:** `VO+U`, select Headings
 
 **Verify:**
+
 - Logical h1 → h2 → h3 structure
 - No skipped heading levels
 - Headings accurately describe content
@@ -591,6 +608,7 @@ Navigate through form controls:
 **VoiceOver:** Tab through form
 
 **Verify:**
+
 - Each input announces its label
 - Required fields announced
 - Error messages announced immediately
@@ -603,6 +621,7 @@ Navigate through buttons and links:
 **VoiceOver:** Tab through page
 
 **Verify:**
+
 - Buttons announce as "button" with descriptive label
 - Links announce destination or purpose
 - Current page link marked with "current page"
@@ -612,6 +631,7 @@ Navigate through buttons and links:
 Trigger dynamic updates:
 
 **Test scenarios:**
+
 - Show loading spinner → Should announce "Loading..."
 - Trigger error → Should announce error immediately
 - Show success toast → Should announce success message
@@ -619,7 +639,7 @@ Trigger dynamic updates:
 
 ### NVDA Quick Commands (Windows)
 
-```
+```text
 NVDA + Space       - Toggle browse/focus mode
 D / Shift+D        - Next/previous landmark
 H / Shift+H        - Next/previous heading  
@@ -631,7 +651,7 @@ Insert+F7          - Elements list (view all landmarks, headings, links)
 
 ### VoiceOver Quick Commands (macOS)
 
-```
+```text
 VO = Ctrl+Option
 
 VO+U               - Rotor (navigate by element type)
@@ -821,6 +841,7 @@ Use for screen reader-only content:
 **Symptoms:** Keyboard users can't see which element is focused
 
 **Solutions:**
+
 1. Check if `:focus-visible` styles are defined in `index.css`
 2. Ensure custom components don't override focus styles
 3. Verify contrast ratio meets 3:1 minimum
@@ -839,6 +860,7 @@ Use for screen reader-only content:
 **Symptoms:** Loading states, errors, or success messages are silent
 
 **Solutions:**
+
 1. Ensure live region is present in DOM before update
 2. Use `aria-live="assertive"` for critical updates
 3. For immediate announcements, use `role="alert"` instead
@@ -861,6 +883,7 @@ Use for screen reader-only content:
 **Symptoms:** Tab key escapes modal or dropdown
 
 **Solutions:**
+
 1. Verify focus trap implementation (see [Keyboard Navigation](#focus-trap))
 2. Check that all focusable elements are queried correctly
 3. Ensure event listener is attached to document or modal
@@ -871,6 +894,7 @@ Use for screen reader-only content:
 **Symptoms:** Screen reader doesn't announce label when focusing input
 
 **Solutions:**
+
 1. Use `<label htmlFor="input-id">` with matching `id` on input
 2. Alternatively, wrap input with `<label>` element
 3. Verify IDs are unique on the page
@@ -893,6 +917,7 @@ Use for screen reader-only content:
 **Symptoms:** axe DevTools reports contrast issues
 
 **Solutions:**
+
 1. Use design system tokens (pre-tested for contrast)
 2. Check contrast with Chrome DevTools color picker
 3. Ensure text is not over low-contrast backgrounds
@@ -915,6 +940,7 @@ Use for screen reader-only content:
 **Symptoms:** Ctrl+1, Cmd+K, etc. don't trigger actions
 
 **Solutions:**
+
 1. Check that event listener prevents default browser behavior
 2. Verify modifier keys (Ctrl/Cmd) are correctly detected
 3. Ensure shortcuts don't conflict with browser/OS shortcuts
@@ -942,6 +968,7 @@ useEffect(() => {
 **Symptoms:** Screen reader doesn't announce sort direction changes
 
 **Solutions:**
+
 1. Add `aria-sort="ascending|descending|none"` to `<th>`
 2. Include sort state in `aria-label`: "Name, sorted ascending. Click to sort descending."
 3. Mark sort icons with `aria-hidden="true"`
@@ -956,10 +983,12 @@ useEffect(() => {
 #### 1. axe DevTools (Browser Extension)
 
 **Installation:**
+
 - [Chrome/Edge](https://chrome.google.com/webstore/detail/axe-devtools-web-accessib/lhdoppojpmngadmnindnejefpokejbdd)
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/axe-devtools/)
 
 **Usage:**
+
 1. Open browser DevTools (F12)
 2. Navigate to "axe DevTools" tab
 3. Click "Scan All of My Page"
@@ -984,10 +1013,12 @@ test('should not have accessibility violations', async ({ page }) => {
 #### 2. WAVE (Web Accessibility Evaluation Tool)
 
 **Installation:**
+
 - [Chrome Extension](https://chrome.google.com/webstore/detail/wave-evaluation-tool/jbbplnpkjmmeebjpijfedlgcdilocofh)
 - [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/wave-accessibility-tool/)
 
 **Usage:**
+
 1. Navigate to page to test
 2. Click WAVE extension icon
 3. Review errors (red), alerts (yellow), and features (green)
@@ -996,6 +1027,7 @@ test('should not have accessibility violations', async ({ page }) => {
 #### 3. Lighthouse (Built into Chrome DevTools)
 
 **Usage:**
+
 1. Open Chrome DevTools (F12)
 2. Navigate to "Lighthouse" tab
 3. Select "Accessibility" category
@@ -1038,6 +1070,7 @@ npm run storybook
 7. Press Escape to close modals/menus
 
 **Checklist:**
+
 - [ ] All interactive elements are reachable
 - [ ] Focus order is logical
 - [ ] Focus indicators are visible
@@ -1047,6 +1080,7 @@ npm run storybook
 #### 2. Color Contrast Testing
 
 **Chrome DevTools:**
+
 1. Inspect element with text
 2. Click color swatch in Styles panel
 3. Look for contrast ratio indicator
@@ -1141,6 +1175,7 @@ lighthouse http://localhost:3000 --only-categories=accessibility --view
 ### Report Accessibility Issues
 
 Open a GitHub issue with:
+
 - **Label**: `accessibility`
 - **Description**: What's not accessible and why
 - **Tool Used**: axe DevTools, screen reader, manual testing
