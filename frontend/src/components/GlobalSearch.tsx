@@ -177,6 +177,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => query.trim() && setIsOpen(true)}
+          role="combobox"
           aria-label="Global search"
           aria-expanded={isOpen}
           aria-controls="global-search-results"

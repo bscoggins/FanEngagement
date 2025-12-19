@@ -8,6 +8,9 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -16,10 +19,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
@@ -39,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -56,6 +59,110 @@ jobs:
         run: npm run test
         working-directory: ./frontend
 
+  a11y-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+      API_KEY: ${{ secrets.API_KEY }}
+      SOLANA_PRIVATE_KEY: ${{ secrets.SOLANA_PRIVATE_KEY }}
+      POLYGON_PRIVATE_KEY: ${{ secrets.POLYGON_PRIVATE_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Install Playwright (Chromium only)
+        run: npx playwright install --with-deps chromium
+        working-directory: ./frontend
+
+      - name: Start application stack for accessibility sweep
+        run: |
+          docker compose up -d --build db api frontend
+          cid=$(docker compose ps -q api || true)
+          if [ -z "$cid" ]; then
+            echo "Failed to resolve api container id" && exit 1
+          fi
+          for i in {1..30}; do
+            status=$(docker inspect -f '{{json .State.Health.Status}}' "$cid" 2>/dev/null || echo '"starting"')
+            echo "api health: $status"
+            if [ "$status" = '"healthy"' ]; then
+              break
+            fi
+            sleep 2
+          done
+          [ "$status" = '"healthy"' ] || (echo "API failed to become healthy" && exit 1)
+          for i in {1..30}; do
+            if curl -sf http://localhost:3000 >/dev/null; then
+              break
+            fi
+            echo "frontend not ready yet (attempt $i)"
+            sleep 2
+          done
+          if ! curl -sf http://localhost:3000 >/dev/null; then
+            echo "Frontend failed to become ready" && exit 1
+          fi
+
+      - name: Reset dev data for deterministic fixtures
+        run: |
+          LOGIN_PAYLOAD='{"email":"admin@example.com","password":"Admin123!"}'
+          LOGIN_RESPONSE=$(curl -s -X POST "http://localhost:8080/auth/login" -H 'Content-Type: application/json' -d "$LOGIN_PAYLOAD")
+          TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.token // empty')
+          if [ -z "$TOKEN" ]; then
+            echo "Failed to obtain admin token for reset" && exit 1
+          fi
+          RESET_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:8080/admin/reset-dev-data" -H "Authorization: Bearer $TOKEN")
+          [ "$RESET_STATUS" = "200" ] || (echo "reset-dev-data failed with status $RESET_STATUS" && exit 1)
+
+      - name: Run accessibility suite
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          VITE_API_BASE_URL: http://localhost:8080
+        run: npm run test:a11y
+        working-directory: ./frontend
+
+      - name: Upload accessibility reports (HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload accessibility JSON results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-reports
+          path: frontend/test-results/a11y/**/*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload accessibility summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-playwright-summary
+          path: frontend/test-results/playwright-report.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
+
   adapter-tests:
     runs-on: ubuntu-latest
     strategy:
@@ -63,7 +170,7 @@ jobs:
         adapter: [polygon]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -84,7 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Start database (docker compose)
         run: |
@@ -121,7 +228,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: 'test-results/**/*.trx'

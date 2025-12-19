@@ -208,6 +208,19 @@ VITE_API_BASE_URL=http://localhost:8080 npm run e2e
 
 > **Note:** Playwright specs must interact with the product exactly as a user would. Avoid calling backend APIs or mutating storage directly from a test—drive the UI using page actions instead. The `./scripts/run-e2e.sh` helper logs in as the seeded admin, resets dev data, and cleans up after the run, so new tests should assume a fresh seed rather than attempting to seed data themselves.
 
+### Accessibility (Playwright + axe-core)
+
+```bash
+# Start the stack (Docker Compose exposes the SPA at http://localhost:3000)
+docker compose up -d db api frontend
+
+# Run the accessibility sweep against the running stack
+cd frontend
+E2E_BASE_URL=http://localhost:3000 VITE_API_BASE_URL=http://localhost:8080 npm run test:a11y
+```
+
+Accessibility reports are written to `frontend/test-results/a11y`, and the Playwright HTML report is available under `frontend/playwright-report`.
+
 ## Common Workflows
 
 ### Spin Up Everything and Start Coding
