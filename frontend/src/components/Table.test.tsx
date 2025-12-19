@@ -186,7 +186,7 @@ describe('Table', () => {
   });
 
   describe('Sortable Columns', () => {
-    it('should render sortable column header as button', () => {
+    it('should render sortable column header as interactive column header', () => {
       const columns: TableColumn<TestData>[] = [
         { key: 'name', label: 'Name', render: (item) => item.name, sortable: true },
       ];
@@ -199,7 +199,7 @@ describe('Table', () => {
         />
       );
 
-      const nameHeader = screen.getByRole('button', { name: /Name/i });
+      const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
       expect(nameHeader).toBeInTheDocument();
     });
 
@@ -219,7 +219,7 @@ describe('Table', () => {
         />
       );
 
-      const nameHeader = screen.getByRole('button', { name: /Name/i });
+      const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
       await user.click(nameHeader);
 
       expect(handleSort).toHaveBeenCalledWith('name');
@@ -247,7 +247,7 @@ describe('Table', () => {
         />
       );
 
-      const nameHeader = screen.getByRole('button', { name: /Name/i });
+      const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
       await user.click(nameHeader);
 
       expect(handleSort).toHaveBeenCalledWith('displayName');
@@ -269,7 +269,7 @@ describe('Table', () => {
         />
       );
 
-      const nameHeader = screen.getByRole('button', { name: /Name/i });
+      const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
       nameHeader.focus();
       await user.keyboard('{Enter}');
 
@@ -292,7 +292,7 @@ describe('Table', () => {
         />
       );
 
-      const nameHeader = screen.getByRole('button', { name: /Name/i });
+      const nameHeader = screen.getByRole('columnheader', { name: /Name/i });
       nameHeader.focus();
       await user.keyboard(' ');
 

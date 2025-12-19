@@ -12,7 +12,7 @@
   --color-primary-500: hsl(210, 100%, 55%);
   --color-primary-600: hsl(210, 100%, 35%);  /* Main brand color: #0056b3 - Darkened for WCAG AA contrast */
   --color-primary-700: hsl(210, 100%, 30%);  /* Hover/active: #004c9e */
-  --color-primary-800: hsl(210, 100%, 35%);
+  --color-primary-800: hsl(210, 100%, 25%);
   --color-primary-900: hsl(210, 100%, 20%);
 
   /* ===== Semantic Colors ===== */
