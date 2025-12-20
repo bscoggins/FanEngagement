@@ -31,7 +31,7 @@ const iconByType: Record<ToastModel['type'], string> = {
   info: 'ℹ',
 };
 
-const iconColorByType: Record<ToastModel['type'], string> = {
+const accentColorByType: Record<ToastModel['type'], string> = {
   success: 'var(--color-success-600)',
   warning: 'var(--color-warning-700)',
   error: 'var(--color-error-700)',
@@ -43,13 +43,6 @@ const trackColorByType: Record<ToastModel['type'], string> = {
   warning: 'var(--color-warning-100)',
   error: 'var(--color-error-100)',
   info: 'var(--color-info-100)',
-};
-
-const progressColorByType: Record<ToastModel['type'], string> = {
-  success: 'var(--color-success-600)',
-  warning: 'var(--color-warning-700)',
-  error: 'var(--color-error-700)',
-  info: 'var(--color-info-700)',
 };
 
 export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
@@ -65,17 +58,17 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
+    const frameId = window.requestAnimationFrame(() => {
       setProgress(0);
-    }, 16);
+    });
 
-    return () => clearTimeout(timeoutId);
+    return () => window.cancelAnimationFrame(frameId);
   }, [toast.duration, toast.id]);
 
   const icon = useMemo(() => iconByType[toast.type], [toast.type]);
-  const iconColor = useMemo(() => iconColorByType[toast.type], [toast.type]);
+  const iconColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
   const trackColor = useMemo(() => trackColorByType[toast.type], [toast.type]);
-  const progressColor = useMemo(() => progressColorByType[toast.type], [toast.type]);
+  const progressColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
 
   return (
     <div
@@ -112,7 +105,6 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             background: 'var(--color-surface-elevated, var(--color-surface))',
             color: iconColor,
             boxShadow: 'var(--shadow-sm)',
-            transform: 'translateX(0)',
             transition: 'transform var(--duration-normal) var(--ease-out)',
           }}
         >
