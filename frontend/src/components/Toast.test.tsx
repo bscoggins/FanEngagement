@@ -26,7 +26,7 @@ describe('Toast', () => {
     const progress = screen.getByTestId('toast-progress');
 
     act(() => {
-      vi.advanceTimersByTime(20);
+      vi.advanceTimersByTime(2000);
     });
 
     expect(progress).toHaveStyle({ width: '0%' });

@@ -67,11 +67,22 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       return;
     }
 
-    const frameId = window.requestAnimationFrame(() => {
-      setProgress(0);
-    });
+    const start = performance.now();
+    const tickInterval = Math.min(150, Math.max(30, toast.duration / 30));
 
-    return () => window.cancelAnimationFrame(frameId);
+    const intervalId = window.setInterval(() => {
+      const elapsed = performance.now() - start;
+      const ratio = Math.min(elapsed / toast.duration, 1);
+      const nextProgress = 100 - ratio * 100;
+      setProgress(nextProgress);
+
+      if (ratio >= 1) {
+        setProgress(0);
+        window.clearInterval(intervalId);
+      }
+    }, tickInterval);
+
+    return () => window.clearInterval(intervalId);
   }, [toast.duration, toast.id]);
 
   const icon = useMemo(() => iconByType[toast.type], [toast.type]);
@@ -151,7 +162,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
               height: '100%',
               background: accentColor,
               borderRadius: 'inherit',
-              transition: `width ${toast.duration}ms linear`,
+              transition: 'width 80ms linear',
             }}
           />
         </div>
