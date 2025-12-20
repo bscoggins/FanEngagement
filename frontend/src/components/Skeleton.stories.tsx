@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
 import { Skeleton, SkeletonCardGrid, SkeletonList, SkeletonTable, SkeletonTextLines } from './Skeleton';
 
 const meta: Meta<typeof Skeleton> = {
