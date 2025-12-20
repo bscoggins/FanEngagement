@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { blockchainApi } from '../api/blockchainApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Skeleton, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Button } from '../components/Button';
 import { Tooltip } from '../components/Tooltip';
@@ -63,7 +63,28 @@ export const PlatformAdminWalletPage: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <LoadingSpinner />
+        <div role="status" aria-live="polite" className="card">
+          <div className="card-body">
+            <h5 className="card-title">Wallet Details</h5>
+            <div className="row mt-4">
+              <div className="col-md-8">
+                <SkeletonTextLines count={2} widths={['50%', '80%']} />
+                <div style={{ marginTop: 'var(--spacing-3)' }}>
+                  <Skeleton width="18rem" height="1.5rem" />
+                </div>
+              </div>
+              <div className="col-md-4">
+                <SkeletonTextLines count={2} widths={['40%', '60%']} />
+                <div style={{ marginTop: 'var(--spacing-3)' }}>
+                  <Skeleton width="8rem" height="2rem" />
+                </div>
+              </div>
+            </div>
+            <p className="admin-subtitle" style={{ marginTop: 'var(--spacing-4)' }}>
+              Loading platform wallet...
+            </p>
+          </div>
+        </div>
       ) : wallet ? (
         <div className="card">
           <div className="card-body">

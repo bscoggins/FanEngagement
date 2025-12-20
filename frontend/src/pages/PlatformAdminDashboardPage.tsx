@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usersApi } from '../api/usersApi';
 import { organizationsApi } from '../api/organizationsApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SkeletonCardGrid, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { QuickActionCard } from '../components/QuickActionCard';
 import { parseApiError } from '../utils/errorUtils';
@@ -53,7 +53,20 @@ export const PlatformAdminDashboardPage: React.FC = () => {
   }, [fetchStats]);
 
   if (loading) {
-    return <LoadingSpinner message="Loading platform statistics..." />;
+    return (
+      <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }} role="status" aria-live="polite">
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ margin: 0, fontSize: '2rem', color: '#333' }} data-testid="platform-overview-heading">
+            Platform Overview
+          </h1>
+          <SkeletonTextLines count={2} widths={['70%', '50%']} />
+        </div>
+        <SkeletonCardGrid items={4} linesPerCard={2} />
+        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-4)' }}>
+          Loading platform statistics...
+        </p>
+      </div>
+    );
   }
 
   if (error) {

@@ -6,7 +6,7 @@ import { shareTypesApi } from '../api/shareTypesApi';
 import { membershipsApi } from '../api/membershipsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Input } from '../components/Input';
@@ -136,7 +136,22 @@ export const AdminOrganizationShareIssuancePage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="admin-page" role="status" aria-live="polite">
+        <div className="admin-header">
+          <div>
+            <h1>Share Issuance</h1>
+            <p className="text-muted">Issue shares to members</p>
+          </div>
+          <Skeleton width="9rem" height="2.75rem" />
+        </div>
+        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <SkeletonTextLines count={2} widths={['70%', '55%']} />
+          <SkeletonTable columns={4} rows={5} />
+          <p className="text-muted" style={{ margin: 0 }}>Loading share issuance...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!organization) {

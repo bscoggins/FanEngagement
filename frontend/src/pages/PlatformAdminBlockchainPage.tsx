@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { blockchainApi } from '../api/blockchainApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
@@ -11,6 +10,7 @@ import { Select } from '../components/Select';
 import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { BlockchainRecordDto, Organization, PagedResult, BlockchainVerificationDto } from '../types/api';
+import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 
 export const PlatformAdminBlockchainPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -155,7 +155,11 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <LoadingSpinner />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <SkeletonTextLines count={2} widths={['55%', '35%']} />
+          <SkeletonTable columns={7} rows={7} />
+          <p className="admin-secondary-text">Loading blockchain records...</p>
+        </div>
       ) : !records || records.items.length === 0 ? (
         <EmptyState
           message="No blockchain records found. Try adjusting your filters or ensure blockchain integration is enabled."

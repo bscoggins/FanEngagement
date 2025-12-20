@@ -5,7 +5,7 @@ import type { OutboundEventsFilter } from '../api/outboundEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -152,8 +152,18 @@ export const AdminWebhookEventsPage: React.FC = () => {
 
   if (isLoading && !organization) {
     return (
-      <div className="admin-page">
-        <LoadingSpinner message="Loading webhook events..." />
+      <div className="admin-page" role="status" aria-live="polite">
+        <div className="admin-page-header">
+          <div className="admin-page-title-group">
+            <h1>Webhook Events</h1>
+            <div className="admin-page-subtitle">Monitoring outbound webhook deliveries.</div>
+          </div>
+        </div>
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <SkeletonTextLines count={2} widths={['60%', '45%']} />
+          <SkeletonTable columns={5} rows={6} />
+          <p className="admin-secondary-text">Loading webhook events...</p>
+        </div>
       </div>
     );
   }
@@ -245,7 +255,11 @@ export const AdminWebhookEventsPage: React.FC = () => {
       </Card>
 
       {isLoading ? (
-        <LoadingSpinner message="Loading webhook events..." />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <SkeletonTextLines count={2} widths={['65%', '40%']} />
+          <SkeletonTable columns={6} rows={7} />
+          <p className="admin-secondary-text">Loading webhook events...</p>
+        </div>
       ) : events.length === 0 ? (
         <div className="admin-empty-state">
           {statusFilter || eventTypeFilter
@@ -322,7 +336,13 @@ export const AdminWebhookEventsPage: React.FC = () => {
 
       <Modal isOpen={showDetailModal} onClose={handleCloseModal} title="Event Details">
         {isDetailLoading ? (
-          <LoadingSpinner message="Loading event details..." />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }} role="status" aria-live="polite">
+            <SkeletonTextLines count={3} widths={['50%', '65%', '40%']} />
+            <SkeletonTable columns={3} rows={3} />
+            <p className="admin-secondary-text" style={{ margin: 0 }}>
+              Loading event details...
+            </p>
+          </div>
         ) : selectedEvent ? (
           <>
             <Card padding="compact" style={{ marginBottom: 'var(--spacing-4)' }}>

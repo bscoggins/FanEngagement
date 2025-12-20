@@ -4,7 +4,6 @@ import { usersApi } from '../api/usersApi';
 import { membershipsApi } from '../api/membershipsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -12,6 +11,7 @@ import { Select } from '../components/Select';
 import { Checkbox } from '../components/Checkbox';
 import './AdminPage.css';
 import type { UpdateUserRequest, User, MembershipWithOrganizationDto } from '../types/api';
+import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 
 export const AdminUserDetailPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -112,9 +112,16 @@ export const AdminUserDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="admin-page">
-        <div className="admin-card compact">
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }} role="status" aria-live="polite">
           <h1>Edit User</h1>
-          <LoadingSpinner message="Loading user..." />
+          <SkeletonTextLines count={3} widths={['50%', '60%', '40%']} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--spacing-3)' }}>
+            <Skeleton height="2.75rem" />
+            <Skeleton height="2.75rem" />
+            <Skeleton height="2.75rem" />
+          </div>
+          <SkeletonTable columns={3} rows={3} />
+          <p className="admin-secondary-text">Loading user...</p>
         </div>
       </div>
     );

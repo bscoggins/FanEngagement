@@ -4,10 +4,10 @@ import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
 import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeClass, getActionBadgeClass, formatDate } from '../utils/auditUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Pagination } from '../components/Pagination';
 import './AdminPage.css';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
+import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 
 export const AdminAuditLogPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -94,8 +94,13 @@ export const AdminAuditLogPage: React.FC = () => {
 
   if (isLoading && !organization) {
     return (
-      <div className="admin-page">
-        <LoadingSpinner message="Loading audit log..." />
+      <div className="admin-page" role="status" aria-live="polite">
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <h1>Audit Log</h1>
+          <SkeletonTextLines count={2} widths={['60%', '45%']} />
+          <SkeletonTable columns={5} rows={6} />
+          <p className="admin-secondary-text">Loading audit log...</p>
+        </div>
       </div>
     );
   }
@@ -244,7 +249,11 @@ export const AdminAuditLogPage: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <LoadingSpinner message="Loading audit events..." />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <SkeletonTextLines count={2} widths={['55%', '35%']} />
+          <SkeletonTable columns={6} rows={7} />
+          <p className="admin-secondary-text">Loading audit events...</p>
+        </div>
       ) : !auditEvents || auditEvents.items.length === 0 ? (
         <div className="admin-empty-state">
           {dateFrom || dateTo || selectedActionTypes.length > 0 || selectedResourceTypes.length > 0
