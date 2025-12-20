@@ -205,6 +205,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }
   }, [toast.type]);
   const animationStyle: ToastAnimationStyle = {
+    // Override CSS fallback offsets (pixel values) to ensure viewport-percentage slide-in
     '--toast-translate-x': offsetX,
     '--toast-translate-y': offsetY,
   };
