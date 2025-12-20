@@ -66,9 +66,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   }, [toast.duration, toast.id]);
 
   const icon = useMemo(() => iconByType[toast.type], [toast.type]);
-  const iconColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
+  const accentColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
   const trackColor = useMemo(() => trackColorByType[toast.type], [toast.type]);
-  const progressColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
 
   return (
     <div
@@ -103,7 +102,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             height: '2.5rem',
             borderRadius: 'var(--radius-full, 9999px)',
             background: 'var(--color-surface-elevated, var(--color-surface))',
-            color: iconColor,
+            color: accentColor,
             boxShadow: 'var(--shadow-sm)',
             transition: 'transform var(--duration-normal) var(--ease-out)',
           }}
@@ -128,7 +127,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
           aria-hidden="true"
           data-testid="toast-progress-track"
           style={{
-            gridColumn: '1 / -1',
+            gridColumn: '1 / span 2',
             marginTop: 'var(--spacing-2)',
             height: '0.35rem',
             borderRadius: 'var(--radius-full, 9999px)',
@@ -141,7 +140,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             style={{
               width: `${progress}%`,
               height: '100%',
-              background: progressColor,
+              background: accentColor,
               borderRadius: 'inherit',
               transition: `width ${toast.duration}ms linear`,
             }}
