@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
@@ -12,6 +11,7 @@ import { Button } from '../components/Button';
 import { parseApiError } from '../utils/errorUtils';
 import { useTableData } from '../hooks/useTableData';
 import type { User } from '../types/api';
+import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 
 const PAGE_SIZE = 10;
 
@@ -140,7 +140,17 @@ export const AdminUsersPage: React.FC = () => {
     return (
       <div>
         <h1 data-testid="users-heading">User Management</h1>
-        <LoadingSpinner message="Loading users..." />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <div style={{ display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Skeleton width="16rem" height="2.75rem" />
+            <Skeleton width="10rem" height="2.75rem" />
+          </div>
+          <SkeletonTextLines count={2} widths={['65%', '40%']} />
+          <SkeletonTable columns={4} rows={6} />
+          <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-2)' }}>
+            Loading users...
+          </p>
+        </div>
       </div>
     );
   }

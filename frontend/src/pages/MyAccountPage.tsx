@@ -3,13 +3,13 @@ import { useAuth } from '../auth/AuthContext';
 import { usersApi } from '../api/usersApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { MfaSettings } from '../components/MfaSettings';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import '../pages/AdminPage.css';
 import type { UserProfile, ThemePreference } from '../types/api';
+import { Skeleton, SkeletonTextLines } from '../components/Skeleton';
 
 export const MyAccountPage: React.FC = () => {
   const { user: authUser, isAdmin, setUserThemePreference } = useAuth();
@@ -127,7 +127,22 @@ export const MyAccountPage: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading account..." />;
+    return (
+      <div className="admin-page" role="status" aria-live="polite">
+        <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+          <h1>Loading account</h1>
+          <SkeletonTextLines count={3} widths={['55%', '70%', '40%']} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--spacing-3)' }}>
+            <Skeleton height="2.75rem" />
+            <Skeleton height="2.75rem" />
+            <Skeleton height="2.75rem" />
+          </div>
+          <p className="admin-secondary-text" style={{ margin: 0 }}>
+            Loading account...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (error && !user) {

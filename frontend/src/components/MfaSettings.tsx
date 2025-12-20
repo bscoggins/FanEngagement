@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { mfaApi } from '../api/authApi';
 import { useNotifications } from '../contexts/NotificationContext';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Skeleton, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import type { MfaSetupResult } from '../types/api';
 import { Input } from './Input';
@@ -99,7 +99,22 @@ export const MfaSettings: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading MFA settings..." />;
+    return (
+      <div
+        className="admin-card"
+        style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}
+        role="status"
+        aria-live="polite"
+      >
+        <h3>Multi-Factor Authentication</h3>
+        <SkeletonTextLines count={3} widths={['80%', '70%', '60%']} />
+        <div style={{ display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+          <Skeleton width="9rem" height="2.75rem" />
+          <Skeleton width="9rem" height="2.75rem" />
+        </div>
+        <p className="admin-secondary-text">Loading MFA settings...</p>
+      </div>
+    );
   }
 
   if (error && !mfaEnabled && !showSetup) {

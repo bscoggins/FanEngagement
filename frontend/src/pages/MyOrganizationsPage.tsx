@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { membershipsApi } from '../api/membershipsApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SkeletonCardGrid, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { parseApiError } from '../utils/errorUtils';
@@ -79,7 +79,16 @@ export const MyOrganizationsPage: React.FC = () => {
   }, [user?.userId]);
 
   if (loading) {
-    return <LoadingSpinner message="Loading your organizations..." />;
+    return (
+      <div style={pageContainerStyle} role="status" aria-live="polite">
+        <h1>My Organizations</h1>
+        <SkeletonTextLines count={2} widths={['70%', '45%']} />
+        <SkeletonCardGrid items={3} linesPerCard={2} />
+        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-4)' }}>
+          Loading your organizations...
+        </p>
+      </div>
+    );
   }
 
   if (error) {
