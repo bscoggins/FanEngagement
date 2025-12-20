@@ -319,7 +319,6 @@ Implement accessible data tables:
     <tr>
       <th scope="col">
         <button
-          role="button"
           tabIndex={0}
           aria-sort="ascending"
           aria-label="Name, sorted ascending. Click to sort descending."
