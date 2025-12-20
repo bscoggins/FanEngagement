@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { type Toast as ToastModel } from '../contexts/ToastContext';
 import './Toast.css';
 
@@ -8,17 +8,27 @@ type ToastAnimationStyle = React.CSSProperties & {
 };
 
 const SLIDE_DISTANCE = '120%';
-const FULL_RADIUS = '9999px';
+const PILL_RADIUS = '9999px';
 const SURFACE_ELEVATED = 'var(--color-surface-elevated, var(--color-surface))';
 const MAX_TICK_INTERVAL = 150;
 const MIN_TICK_INTERVAL = 30;
 const TARGET_TICKS = 30;
+const SR_ONLY_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
 
 const CONTENT_GRID_STYLE: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'auto 1fr',
+  display: 'flex',
   gap: 'var(--spacing-3)',
-  alignItems: 'start',
+  alignItems: 'flex-start',
 };
 
 const ICON_BASE_STYLE: React.CSSProperties = {
@@ -27,17 +37,16 @@ const ICON_BASE_STYLE: React.CSSProperties = {
   justifyContent: 'center',
   width: '2.5rem',
   height: '2.5rem',
-  borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
+  borderRadius: `var(--radius-full, ${PILL_RADIUS})`,
   background: SURFACE_ELEVATED,
   boxShadow: 'var(--shadow-sm)',
   transition: 'transform var(--duration-normal) var(--ease-out)',
 };
 
 const PROGRESS_TRACK_BASE_STYLE: React.CSSProperties = {
-  gridColumn: '1 / span 2',
   marginTop: 'var(--spacing-2)',
   height: '0.35rem',
-  borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
+  borderRadius: `var(--radius-full, ${PILL_RADIUS})`,
   overflow: 'hidden',
 };
 
@@ -84,11 +93,49 @@ const getSlideOffset = (direction: ReturnType<typeof getAnimationDirection>) => 
   }
 };
 
-const iconByType: Record<ToastModel['type'], string> = {
-  success: '✓',
-  warning: '⚠',
-  error: '✗',
-  info: 'ℹ',
+const iconByType: Record<ToastModel['type'], React.ReactNode> = {
+  success: (
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+      <path
+        d="M20 6 9 17l-5-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  warning: (
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+      <path
+        d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a1 1 0 0 0 .86 1.5h18.64a1 1 0 0 0 .86-1.5L13.71 3.86a1 1 0 0 0-1.72 0Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  error: (
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+      <path
+        d="m6 6 12 12M18 6 6 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  info: (
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 const accentColorByType: Record<ToastModel['type'], string> = {
@@ -110,7 +157,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const direction = getAnimationDirection(toast.position);
   const [progress, setProgress] = useState(100);
   const { x: offsetX, y: offsetY } = getSlideOffset(direction);
-  const animationKey = `${toast.id}:${toast.duration}`;
+  const animationKey = toast.id;
 
   useEffect(() => {
     setProgress(100);
@@ -120,7 +167,10 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
 
     const start = performance.now();
     const duration = toast.duration;
-    const tickInterval = Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, duration / TARGET_TICKS));
+    const maxFeasibleTicks = Math.max(1, Math.floor(duration / MIN_TICK_INTERVAL));
+    const effectiveTargetTicks = Math.min(TARGET_TICKS, maxFeasibleTicks);
+    const rawInterval = duration / effectiveTargetTicks;
+    const tickInterval = Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, rawInterval));
 
     const intervalId = window.setInterval(() => {
       const elapsed = performance.now() - start;
@@ -135,11 +185,25 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }, tickInterval);
 
     return () => window.clearInterval(intervalId);
-  }, [animationKey]);
+  }, [animationKey, toast.duration]);
 
   const icon = iconByType[toast.type];
   const accentColor = accentColorByType[toast.type];
   const trackColor = trackColorByType[toast.type];
+  const remainingMs = useMemo(() => Math.max(0, Math.round((progress / 100) * toast.duration)), [progress, toast.duration]);
+  const typeLabel = useMemo(() => {
+    switch (toast.type) {
+      case 'success':
+        return 'Success notification';
+      case 'error':
+        return 'Error notification';
+      case 'warning':
+        return 'Warning notification';
+      case 'info':
+      default:
+        return 'Information notification';
+    }
+  }, [toast.type]);
   const animationStyle: ToastAnimationStyle = {
     '--toast-translate-x': offsetX,
     '--toast-translate-y': offsetY,
@@ -169,6 +233,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
           {icon}
         </span>
         <div className="toast__body">
+          <span style={SR_ONLY_STYLE}>{typeLabel}</span>
           <div className="toast__message">{toast.message}</div>
           {toast.description ? <div className="toast__description">{toast.description}</div> : null}
         </div>
@@ -199,6 +264,11 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             }}
           />
         </div>
+      ) : null}
+      {toast.duration > 0 ? (
+        <span style={SR_ONLY_STYLE} aria-live="polite">
+          Dismissing in {Math.ceil(remainingMs / 1000)} seconds
+        </span>
       ) : null}
     </div>
   );
