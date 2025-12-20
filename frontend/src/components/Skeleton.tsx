@@ -154,7 +154,7 @@ export const SkeletonList: React.FC<SkeletonListProps> = ({
         <div style={{ flex: 1 }}>
           <SkeletonTextLines
             count={linesPerItem}
-            widths={[ '70%', metaWidth ]}
+            widths={['70%', metaWidth]}
           />
         </div>
       </div>
