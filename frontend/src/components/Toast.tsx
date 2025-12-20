@@ -10,6 +10,42 @@ type ToastAnimationStyle = React.CSSProperties & {
 const SLIDE_DISTANCE = '120%';
 const FULL_RADIUS = '9999px';
 const SURFACE_ELEVATED = 'var(--color-surface-elevated, var(--color-surface))';
+const MAX_TICK_INTERVAL = 150;
+const MIN_TICK_INTERVAL = 30;
+const TARGET_TICKS = 30;
+
+const CONTENT_GRID_STYLE: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'auto 1fr',
+  gap: 'var(--spacing-3)',
+  alignItems: 'start',
+};
+
+const ICON_BASE_STYLE: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '2.5rem',
+  height: '2.5rem',
+  borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
+  background: SURFACE_ELEVATED,
+  boxShadow: 'var(--shadow-sm)',
+  transition: 'transform var(--duration-normal) var(--ease-out)',
+};
+
+const PROGRESS_TRACK_BASE_STYLE: React.CSSProperties = {
+  gridColumn: '1 / span 2',
+  marginTop: 'var(--spacing-2)',
+  height: '0.35rem',
+  borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
+  overflow: 'hidden',
+};
+
+const PROGRESS_BAR_BASE_STYLE: React.CSSProperties = {
+  height: '100%',
+  borderRadius: 'inherit',
+  transition: 'width 80ms linear',
+};
 
 interface ToastProps {
   toast: ToastModel;
@@ -30,6 +66,21 @@ const getAnimationDirection = (position: ToastModel['position']) => {
       return 'bottom';
     default:
       return 'right';
+  }
+};
+
+const getSlideOffset = (direction: ReturnType<typeof getAnimationDirection>) => {
+  switch (direction) {
+    case 'left':
+      return { x: `-${SLIDE_DISTANCE}`, y: '0' };
+    case 'right':
+      return { x: SLIDE_DISTANCE, y: '0' };
+    case 'top':
+      return { x: '0', y: `-${SLIDE_DISTANCE}` };
+    case 'bottom':
+      return { x: '0', y: SLIDE_DISTANCE };
+    default:
+      return { x: SLIDE_DISTANCE, y: '0' };
   }
 };
 
@@ -58,8 +109,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const isError = toast.type === 'error';
   const direction = getAnimationDirection(toast.position);
   const [progress, setProgress] = useState(100);
-  const offsetX = direction === 'left' ? `-${SLIDE_DISTANCE}` : direction === 'right' ? SLIDE_DISTANCE : '0';
-  const offsetY = direction === 'top' ? `-${SLIDE_DISTANCE}` : direction === 'bottom' ? SLIDE_DISTANCE : '0';
+  const { x: offsetX, y: offsetY } = getSlideOffset(direction);
   const animationKey = `${toast.id}:${toast.duration}`;
 
   useEffect(() => {
@@ -70,7 +120,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
 
     const start = performance.now();
     const duration = toast.duration;
-    const tickInterval = Math.min(150, Math.max(30, duration / 30));
+    const tickInterval = Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, duration / TARGET_TICKS));
 
     const intervalId = window.setInterval(() => {
       const elapsed = performance.now() - start;
@@ -106,27 +156,14 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     >
       <div
         className="toast__content"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 1fr',
-          gap: 'var(--spacing-3)',
-          alignItems: 'start',
-        }}
+        style={CONTENT_GRID_STYLE}
       >
         <span
           aria-hidden="true"
           data-testid="toast-icon"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '2.5rem',
-            height: '2.5rem',
-            borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
-            background: SURFACE_ELEVATED,
+            ...ICON_BASE_STYLE,
             color: accentColor,
-            boxShadow: 'var(--shadow-sm)',
-            transition: 'transform var(--duration-normal) var(--ease-out)',
           }}
         >
           {icon}
@@ -149,22 +186,16 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
           aria-hidden="true"
           data-testid="toast-progress-track"
           style={{
-            gridColumn: '1 / span 2',
-            marginTop: 'var(--spacing-2)',
-            height: '0.35rem',
-            borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
+            ...PROGRESS_TRACK_BASE_STYLE,
             background: trackColor,
-            overflow: 'hidden',
           }}
         >
           <div
             data-testid="toast-progress"
             style={{
+              ...PROGRESS_BAR_BASE_STYLE,
               width: `${progress}%`,
-              height: '100%',
               background: accentColor,
-              borderRadius: 'inherit',
-              transition: 'width 80ms linear',
             }}
           />
         </div>
