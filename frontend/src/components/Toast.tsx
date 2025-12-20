@@ -2,6 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { type Toast as ToastModel } from '../contexts/ToastContext';
 import './Toast.css';
 
+type ToastAnimationStyle = React.CSSProperties & {
+  '--toast-translate-x'?: string;
+  '--toast-translate-y'?: string;
+};
+
+const SLIDE_DISTANCE = '120%';
+const FULL_RADIUS = '9999px';
+const SURFACE_ELEVATED = 'var(--color-surface-elevated, var(--color-surface))';
+
 interface ToastProps {
   toast: ToastModel;
   onDismiss: (id: string) => void;
@@ -49,8 +58,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const isError = toast.type === 'error';
   const direction = getAnimationDirection(toast.position);
   const [progress, setProgress] = useState(100);
-  const offsetX = direction === 'left' ? '-120%' : direction === 'right' ? '120%' : '0';
-  const offsetY = direction === 'top' ? '-120%' : direction === 'bottom' ? '120%' : '0';
+  const offsetX = direction === 'left' ? `-${SLIDE_DISTANCE}` : direction === 'right' ? SLIDE_DISTANCE : '0';
+  const offsetY = direction === 'top' ? `-${SLIDE_DISTANCE}` : direction === 'bottom' ? SLIDE_DISTANCE : '0';
 
   useEffect(() => {
     setProgress(100);
@@ -68,6 +77,10 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const icon = useMemo(() => iconByType[toast.type], [toast.type]);
   const accentColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
   const trackColor = useMemo(() => trackColorByType[toast.type], [toast.type]);
+  const animationStyle: ToastAnimationStyle = {
+    '--toast-translate-x': offsetX,
+    '--toast-translate-y': offsetY,
+  };
 
   return (
     <div
@@ -76,11 +89,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       data-position={toast.position}
       data-direction={direction}
       data-testid={`toast-${toast.type}`}
-      style={{
-        // Ensure slide-in starts from viewport edge using transform for performance
-        ['--toast-translate-x' as string]: offsetX,
-        ['--toast-translate-y' as string]: offsetY,
-      }}
+      style={animationStyle}
     >
       <div
         className="toast__content"
@@ -100,8 +109,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             justifyContent: 'center',
             width: '2.5rem',
             height: '2.5rem',
-            borderRadius: 'var(--radius-full, 9999px)',
-            background: 'var(--color-surface-elevated, var(--color-surface))',
+            borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
+            background: SURFACE_ELEVATED,
             color: accentColor,
             boxShadow: 'var(--shadow-sm)',
             transition: 'transform var(--duration-normal) var(--ease-out)',
@@ -130,7 +139,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             gridColumn: '1 / span 2',
             marginTop: 'var(--spacing-2)',
             height: '0.35rem',
-            borderRadius: 'var(--radius-full, 9999px)',
+            borderRadius: `var(--radius-full, ${FULL_RADIUS})`,
             background: trackColor,
             overflow: 'hidden',
           }}
