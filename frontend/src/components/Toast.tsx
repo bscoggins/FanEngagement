@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { type Toast as ToastModel } from '../contexts/ToastContext';
 import './Toast.css';
 
@@ -60,6 +60,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const [progress, setProgress] = useState(100);
   const offsetX = direction === 'left' ? `-${SLIDE_DISTANCE}` : direction === 'right' ? SLIDE_DISTANCE : '0';
   const offsetY = direction === 'top' ? `-${SLIDE_DISTANCE}` : direction === 'bottom' ? SLIDE_DISTANCE : '0';
+  const animationKey = `${toast.id}:${toast.duration}`;
 
   useEffect(() => {
     setProgress(100);
@@ -68,11 +69,12 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }
 
     const start = performance.now();
-    const tickInterval = Math.min(150, Math.max(30, toast.duration / 30));
+    const duration = toast.duration;
+    const tickInterval = Math.min(150, Math.max(30, duration / 30));
 
     const intervalId = window.setInterval(() => {
       const elapsed = performance.now() - start;
-      const ratio = Math.min(elapsed / toast.duration, 1);
+      const ratio = Math.min(elapsed / duration, 1);
       const nextProgress = 100 - ratio * 100;
       setProgress(nextProgress);
 
@@ -83,11 +85,11 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }, tickInterval);
 
     return () => window.clearInterval(intervalId);
-  }, [toast.duration, toast.id]);
+  }, [animationKey]);
 
-  const icon = useMemo(() => iconByType[toast.type], [toast.type]);
-  const accentColor = useMemo(() => accentColorByType[toast.type], [toast.type]);
-  const trackColor = useMemo(() => trackColorByType[toast.type], [toast.type]);
+  const icon = iconByType[toast.type];
+  const accentColor = accentColorByType[toast.type];
+  const trackColor = trackColorByType[toast.type];
   const animationStyle: ToastAnimationStyle = {
     '--toast-translate-x': offsetX,
     '--toast-translate-y': offsetY,
