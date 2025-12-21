@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { type Toast as ToastModel } from '../contexts/ToastContext';
 import './Toast.css';
 
@@ -10,21 +10,10 @@ type ToastAnimationStyle = React.CSSProperties & {
 const SLIDE_DISTANCE = '120%';
 const PILL_RADIUS = '9999px';
 const SURFACE_ELEVATED = 'var(--color-surface-elevated, var(--color-surface))';
+// Balance smooth animation updates with minimal timer churn (~30 steps over typical 5s lifetime)
 const MAX_TICK_INTERVAL = 150;
 const MIN_TICK_INTERVAL = 30;
 const TARGET_TICKS = 30;
-const SR_ONLY_STYLE: React.CSSProperties = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  padding: 0,
-  margin: '-1px',
-  overflow: 'hidden',
-  clip: 'rect(0, 0, 0, 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-};
-
 const CONTENT_GRID_STYLE: React.CSSProperties = {
   display: 'flex',
   gap: 'var(--spacing-3)',
@@ -95,7 +84,7 @@ const getSlideOffset = (direction: ReturnType<typeof getAnimationDirection>) => 
 
 const iconByType: Record<ToastModel['type'], React.ReactNode> = {
   success: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
       <path
         d="M20 6 9 17l-5-5"
         fill="none"
@@ -107,7 +96,7 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
     </svg>
   ),
   warning: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
       <path
         d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a1 1 0 0 0 .86 1.5h18.64a1 1 0 0 0 .86-1.5L13.71 3.86a1 1 0 0 0-1.72 0Z"
         fill="none"
@@ -119,7 +108,7 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
     </svg>
   ),
   error: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
       <path
         d="m6 6 12 12M18 6 6 18"
         fill="none"
@@ -131,7 +120,7 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
     </svg>
   ),
   info: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
       <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
       <path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
@@ -160,7 +149,6 @@ const trackColorByType: Record<ToastModel['type'], string> = {
 };
 
 export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
-  const isError = toast.type === 'error';
   const direction = getAnimationDirection(toast.position);
   const [progress, setProgress] = useState(100);
   const { x: offsetX, y: offsetY } = getSlideOffset(direction);
@@ -179,6 +167,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     const rawInterval = duration / effectiveTargetTicks;
     const tickInterval = Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, rawInterval));
 
+    let cancelled = false;
+    // Use elapsed time from performance.now() to mitigate interval drift for short-lived toasts
     const intervalId = window.setInterval(() => {
       const elapsed = performance.now() - start;
       const ratio = Math.min(elapsed / duration, 1);
@@ -191,11 +181,16 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       if (ratio >= 1) {
         setProgress(0);
         window.clearInterval(intervalId);
-        onDismiss(toast.id);
+        if (!cancelled) {
+          onDismiss(toast.id);
+        }
       }
     }, tickInterval);
 
-    return () => window.clearInterval(intervalId);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
   }, [toast.id, toast.duration, onDismiss]);
 
   const icon = iconByType[toast.type];
@@ -211,7 +206,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   return (
     <div
       className={`toast toast--${toast.type}`}
-      role={isError ? 'alert' : undefined}
+      role={toast.type === 'error' ? 'alert' : undefined}
       data-position={toast.position}
       data-direction={direction}
       data-testid={`toast-${toast.type}`}
@@ -232,7 +227,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
           {icon}
         </span>
         <div className="toast__body">
-          <span style={SR_ONLY_STYLE}>{typeLabel}</span>
+          <span className="sr-only">{typeLabel}</span>
           <div className="toast__message">{toast.message}</div>
           {toast.description ? <div className="toast__description">{toast.description}</div> : null}
         </div>
@@ -265,7 +260,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         </div>
       ) : null}
       {toast.duration > 0 ? (
-        <span style={SR_ONLY_STYLE} aria-live="polite">
+        <span className="sr-only" aria-live="polite">
           Dismissing in {remainingSeconds} {remainingSeconds === 1 ? 'second' : 'seconds'}
         </span>
       ) : null}

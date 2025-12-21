@@ -39,7 +39,7 @@ describe('Toast', () => {
     const progress = screen.getByTestId('toast-progress');
 
     act(() => {
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(1300);
     });
 
     expect(progress).toHaveStyle({ width: '0%' });
@@ -101,5 +101,18 @@ describe('Toast', () => {
   it('omits countdown when duration is non-positive', () => {
     render(<Toast toast={createToast({ duration: 0 })} onDismiss={vi.fn()} />);
     expect(screen.queryByText(/Dismissing in/i)).toBeNull();
+  });
+
+  it('auto-dismisses after duration elapses', () => {
+    vi.useFakeTimers();
+    const onDismiss = vi.fn();
+    render(<Toast toast={createToast({ duration: 1200 })} onDismiss={onDismiss} />);
+
+    act(() => {
+      vi.advanceTimersByTime(1300);
+    });
+
+    expect(onDismiss).toHaveBeenCalledWith('toast-1');
+    vi.useRealTimers();
   });
 });
