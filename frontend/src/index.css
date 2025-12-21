@@ -212,9 +212,7 @@ body {
   min-height: 100vh;
 }
 
-a,
-button,
-[role="button"] {
+:where(a, button, [role="button"]):not([data-transition="custom"]) {
   transition: var(--transition-interactive);
 }
 

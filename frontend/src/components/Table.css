@@ -80,7 +80,6 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 .data-table th[role="button"]:hover {
   background-color: var(--color-neutral-200);
   box-shadow: var(--shadow-xs);
-  transform: translateY(-1px);
 }
 
 .data-table th[role="button"]:focus {
