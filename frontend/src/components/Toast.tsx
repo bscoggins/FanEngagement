@@ -35,8 +35,8 @@ const ICON_BASE_STYLE: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '2.5rem',
-  height: '2.5rem',
+  width: 'var(--size-icon-lg, 2.5rem)',
+  height: 'var(--size-icon-lg, 2.5rem)',
   borderRadius: `var(--radius-full, ${PILL_RADIUS})`,
   background: SURFACE_ELEVATED,
   boxShadow: 'var(--shadow-sm)',
@@ -53,7 +53,7 @@ const PROGRESS_TRACK_BASE_STYLE: React.CSSProperties = {
 const PROGRESS_BAR_BASE_STYLE: React.CSSProperties = {
   height: '100%',
   borderRadius: 'inherit',
-  transition: 'width 80ms linear',
+  transition: 'width var(--duration-fast) linear',
 };
 
 interface ToastProps {
@@ -95,7 +95,7 @@ const getSlideOffset = (direction: ReturnType<typeof getAnimationDirection>) => 
 
 const iconByType: Record<ToastModel['type'], React.ReactNode> = {
   success: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
       <path
         d="M20 6 9 17l-5-5"
         fill="none"
@@ -107,7 +107,7 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
     </svg>
   ),
   warning: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
       <path
         d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a1 1 0 0 0 .86 1.5h18.64a1 1 0 0 0 .86-1.5L13.71 3.86a1 1 0 0 0-1.72 0Z"
         fill="none"
@@ -119,7 +119,7 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
     </svg>
   ),
   error: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
       <path
         d="m6 6 12 12M18 6 6 18"
         fill="none"
@@ -131,7 +131,7 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
     </svg>
   ),
   info: (
-    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false" width="100%" height="100%">
       <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
       <path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
@@ -194,19 +194,14 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const icon = iconByType[toast.type];
   const accentColor = accentColorByType[toast.type];
   const trackColor = trackColorByType[toast.type];
-  const typeLabel = useMemo(() => {
-    switch (toast.type) {
-      case 'success':
-        return 'Success notification';
-      case 'error':
-        return 'Error notification';
-      case 'warning':
-        return 'Warning notification';
-      case 'info':
-      default:
-        return 'Information notification';
-    }
-  }, [toast.type]);
+  const typeLabel =
+    toast.type === 'success'
+      ? 'Success notification'
+      : toast.type === 'error'
+        ? 'Error notification'
+        : toast.type === 'warning'
+          ? 'Warning notification'
+          : 'Information notification';
   const animationStyle: ToastAnimationStyle = {
     // Override CSS fallback offsets (pixel values) with percentage-based translations
     '--toast-translate-x': offsetX,
@@ -271,7 +266,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       ) : null}
       {toast.duration > 0 ? (
         <span style={SR_ONLY_STYLE} aria-live="polite">
-          Dismissing in {remainingSeconds} seconds
+          Dismissing in {remainingSeconds} {remainingSeconds === 1 ? 'second' : 'seconds'}
         </span>
       ) : null}
     </div>
