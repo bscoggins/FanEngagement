@@ -138,6 +138,13 @@ const iconByType: Record<ToastModel['type'], React.ReactNode> = {
   ),
 };
 
+const typeLabelMap: Record<ToastModel['type'], string> = {
+  success: 'Success notification',
+  error: 'Error notification',
+  warning: 'Warning notification',
+  info: 'Information notification',
+};
+
 const accentColorByType: Record<ToastModel['type'], string> = {
   success: 'var(--color-success-600)',
   warning: 'var(--color-warning-700)',
@@ -194,13 +201,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const icon = iconByType[toast.type];
   const accentColor = accentColorByType[toast.type];
   const trackColor = trackColorByType[toast.type];
-  const typeLabelMap: Record<ToastModel['type'], string> = {
-    success: 'Success notification',
-    error: 'Error notification',
-    warning: 'Warning notification',
-    info: 'Information notification',
-  };
-  const typeLabel = typeLabelMap[toast.type] ?? 'Notification';
+  const typeLabel = typeLabelMap[toast.type];
   const animationStyle: ToastAnimationStyle = {
     // Override CSS fallback offsets (pixel values) with percentage-based translations
     '--toast-translate-x': offsetX,
