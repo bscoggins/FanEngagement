@@ -155,6 +155,7 @@ body.theme-dark .card--interactive:hover {
 }
 
 body.theme-dark .card--interactive:active {
+  background-color: var(--color-overlay-light);
   border-color: var(--color-border-dark);
   box-shadow: var(--shadow-sm);
 }
