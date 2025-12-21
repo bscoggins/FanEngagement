@@ -32,8 +32,8 @@ const ICON_BASE_STYLE: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 'var(--size-icon-lg, 2.5rem)',
-  height: 'var(--size-icon-lg, 2.5rem)',
+  width: 'var(--spacing-10, 2.5rem)',
+  height: 'var(--spacing-10, 2.5rem)',
   borderRadius: `var(--radius-full, ${PILL_RADIUS})`,
   background: SURFACE_ELEVATED,
   boxShadow: 'var(--shadow-sm)',
@@ -50,7 +50,7 @@ const PROGRESS_TRACK_BASE_STYLE: React.CSSProperties = {
 const PROGRESS_BAR_BASE_STYLE: React.CSSProperties = {
   height: '100%',
   borderRadius: 'inherit',
-  transition: 'width var(--duration-fast) linear',
+  transition: 'width calc(var(--duration-fast) / 2) linear',
 };
 
 interface ToastProps {
@@ -160,10 +160,11 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const direction = getAnimationDirection(toast.position);
   const [progress, setProgress] = useState(100);
   const { x: offsetX, y: offsetY } = getSlideOffset(direction);
-  const [remainingSeconds, setRemainingSeconds] = useState(() => Math.ceil(Math.max(0, toast.duration) / 1000));
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
 
   useEffect(() => {
     setProgress(100);
+    setRemainingSeconds(Math.ceil(Math.max(0, toast.duration) / 1000));
     if (toast.duration <= 0) {
       return;
     }

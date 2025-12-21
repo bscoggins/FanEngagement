@@ -32,6 +32,14 @@ describe('Toast', () => {
     expect(icon()).toHaveStyle({ color: 'var(--color-info-700)' });
   });
 
+  it('exposes sr-only variant labels for accessibility', () => {
+    const { rerender } = render(<Toast toast={createToast({ type: 'success' })} onDismiss={vi.fn()} />);
+    expect(screen.getByText('Success notification')).toBeInTheDocument();
+
+    rerender(<Toast toast={createToast({ type: 'error', id: 'toast-2' })} onDismiss={vi.fn()} />);
+    expect(screen.getByText('Error notification')).toBeInTheDocument();
+  });
+
   it('animates progress bar toward dismissal', () => {
     vi.useFakeTimers();
     render(<Toast toast={createToast({ duration: 1200 })} onDismiss={vi.fn()} />);
@@ -95,6 +103,11 @@ describe('Toast', () => {
       vi.advanceTimersByTime(1500);
     });
     expect(srText).toHaveTextContent('2 seconds');
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(srText).toHaveTextContent('1 second');
     vi.useRealTimers();
   });
 
@@ -113,6 +126,19 @@ describe('Toast', () => {
     });
 
     expect(onDismiss).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('hides countdown text when remaining seconds reaches zero', () => {
+    vi.useFakeTimers();
+    render(<Toast toast={createToast({ duration: 800 })} onDismiss={vi.fn()} />);
+    expect(screen.getByText(/Dismissing in/i)).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+
+    expect(screen.queryByText(/Dismissing in/i)).toBeNull();
     vi.useRealTimers();
   });
 });
