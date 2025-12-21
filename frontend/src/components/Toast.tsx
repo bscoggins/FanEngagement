@@ -194,14 +194,13 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const icon = iconByType[toast.type];
   const accentColor = accentColorByType[toast.type];
   const trackColor = trackColorByType[toast.type];
-  const typeLabel =
-    toast.type === 'success'
-      ? 'Success notification'
-      : toast.type === 'error'
-        ? 'Error notification'
-        : toast.type === 'warning'
-          ? 'Warning notification'
-          : 'Information notification';
+  const typeLabelMap: Record<ToastModel['type'], string> = {
+    success: 'Success notification',
+    error: 'Error notification',
+    warning: 'Warning notification',
+    info: 'Information notification',
+  };
+  const typeLabel = typeLabelMap[toast.type] ?? 'Notification';
   const animationStyle: ToastAnimationStyle = {
     // Override CSS fallback offsets (pixel values) with percentage-based translations
     '--toast-translate-x': offsetX,
