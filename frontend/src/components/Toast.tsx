@@ -14,6 +14,14 @@ const SURFACE_ELEVATED = 'var(--color-surface-elevated, var(--color-surface))';
 const MAX_TICK_INTERVAL = 150;
 const MIN_TICK_INTERVAL = 30;
 const TARGET_TICKS = 30;
+
+const calculateTickInterval = (duration: number) => {
+  // Aim for TARGET_TICKS updates; clamp to avoid over-frequent timers while keeping motion smooth.
+  const maxFeasibleTicks = Math.max(1, Math.floor(duration / MIN_TICK_INTERVAL));
+  const effectiveTargetTicks = Math.min(TARGET_TICKS, maxFeasibleTicks);
+  const rawInterval = duration / effectiveTargetTicks;
+  return Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, rawInterval));
+};
 const CONTENT_GRID_STYLE: React.CSSProperties = {
   display: 'flex',
   gap: 'var(--spacing-3)',
@@ -162,12 +170,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
 
     const start = performance.now();
     const duration = toast.duration;
-    const maxFeasibleTicks = Math.max(1, Math.floor(duration / MIN_TICK_INTERVAL));
-    const effectiveTargetTicks = Math.min(TARGET_TICKS, maxFeasibleTicks);
-    const rawInterval = duration / effectiveTargetTicks;
-    const tickInterval = Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, rawInterval));
+    const tickInterval = calculateTickInterval(duration);
 
-    let cancelled = false;
     // Use elapsed time from performance.now() to mitigate interval drift for short-lived toasts
     const intervalId = window.setInterval(() => {
       const elapsed = performance.now() - start;
@@ -181,24 +185,20 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       if (ratio >= 1) {
         setProgress(0);
         window.clearInterval(intervalId);
-        if (!cancelled) {
-          onDismiss(toast.id);
-        }
       }
     }, tickInterval);
 
     return () => {
-      cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [toast.id, toast.duration, onDismiss]);
+  }, [toast.id, toast.duration]);
 
   const icon = iconByType[toast.type];
   const accentColor = accentColorByType[toast.type];
   const trackColor = trackColorByType[toast.type];
   const typeLabel = typeLabelMap[toast.type];
   const animationStyle: ToastAnimationStyle = {
-    // Override CSS fallback offsets (pixel values) with percentage-based translations
+    // Override CSS fallback offsets (pixel values) with percentage-based translations; CSS remains a subtle fallback if JS is disabled.
     '--toast-translate-x': offsetX,
     '--toast-translate-y': offsetY,
   };
@@ -259,7 +259,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
           />
         </div>
       ) : null}
-      {toast.duration > 0 ? (
+      {toast.duration > 0 && remainingSeconds > 0 ? (
         <span className="sr-only" aria-live="polite">
           Dismissing in {remainingSeconds} {remainingSeconds === 1 ? 'second' : 'seconds'}
         </span>

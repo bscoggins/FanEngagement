@@ -103,7 +103,7 @@ describe('Toast', () => {
     expect(screen.queryByText(/Dismissing in/i)).toBeNull();
   });
 
-  it('auto-dismisses after duration elapses', () => {
+  it('does not call dismiss automatically; progress is visual only', () => {
     vi.useFakeTimers();
     const onDismiss = vi.fn();
     render(<Toast toast={createToast({ duration: 1200 })} onDismiss={onDismiss} />);
@@ -112,7 +112,7 @@ describe('Toast', () => {
       vi.advanceTimersByTime(1300);
     });
 
-    expect(onDismiss).toHaveBeenCalledWith('toast-1');
+    expect(onDismiss).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 });
