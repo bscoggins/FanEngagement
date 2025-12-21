@@ -73,11 +73,14 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 /* Sortable column headers */
 .data-table th[role="button"] {
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-out);
+  transition: var(--transition-interactive), color var(--duration-fast) var(--ease-out);
+  border-radius: var(--radius-sm);
 }
 
 .data-table th[role="button"]:hover {
   background-color: var(--color-neutral-200);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
 }
 
 .data-table th[role="button"]:focus {
@@ -200,34 +203,49 @@ body.theme-dark .table-container--sticky-header .data-table thead {
   padding: var(--spacing-2) var(--spacing-3);
   background-color: var(--color-primary-600);
   color: var(--color-text-on-primary);
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  transition: background-color var(--duration-fast) var(--ease-out);
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-interactive);
 }
 
 .table-action-button:hover {
   background-color: var(--color-primary-700);
+  border-color: var(--color-primary-600);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .table-action-button.secondary {
   background-color: var(--color-neutral-200);
   color: var(--color-text-primary);
+  border-color: var(--color-border-subtle);
 }
 
 .table-action-button.secondary:hover {
   background-color: var(--color-neutral-300);
+  border-color: var(--color-border-default);
 }
 
 .table-action-button.danger {
   background-color: var(--color-error-500);
   color: var(--color-text-on-primary);
+  border-color: var(--color-error-500);
 }
 
 .table-action-button.danger:hover {
   background-color: var(--color-error-600);
+  border-color: var(--color-error-600);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.table-action-button:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 /* ===== Empty State ===== */
