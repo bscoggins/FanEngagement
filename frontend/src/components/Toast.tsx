@@ -157,7 +157,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const direction = getAnimationDirection(toast.position);
   const [progress, setProgress] = useState(100);
   const { x: offsetX, y: offsetY } = getSlideOffset(direction);
-  const animationKey = toast.id;
+  const [remainingSeconds, setRemainingSeconds] = useState(() => Math.ceil(Math.max(0, toast.duration) / 1000));
 
   useEffect(() => {
     setProgress(100);
@@ -177,20 +177,23 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       const ratio = Math.min(elapsed / duration, 1);
       const nextProgress = 100 - ratio * 100;
       setProgress(nextProgress);
+      const remainingMs = Math.max(0, duration - elapsed);
+      const nextSeconds = Math.ceil(remainingMs / 1000);
+      setRemainingSeconds((prev) => (prev !== nextSeconds ? nextSeconds : prev));
 
       if (ratio >= 1) {
         setProgress(0);
         window.clearInterval(intervalId);
+        onDismiss(toast.id);
       }
     }, tickInterval);
 
     return () => window.clearInterval(intervalId);
-  }, [animationKey, toast.duration]);
+  }, [toast.id, toast.duration, onDismiss]);
 
   const icon = iconByType[toast.type];
   const accentColor = accentColorByType[toast.type];
   const trackColor = trackColorByType[toast.type];
-  const remainingMs = useMemo(() => Math.max(0, Math.round((progress / 100) * toast.duration)), [progress, toast.duration]);
   const typeLabel = useMemo(() => {
     switch (toast.type) {
       case 'success':
@@ -205,7 +208,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     }
   }, [toast.type]);
   const animationStyle: ToastAnimationStyle = {
-    // Override CSS fallback offsets (pixel values) to ensure viewport-percentage slide-in
+    // Override CSS fallback offsets (pixel values) with percentage-based translations
     '--toast-translate-x': offsetX,
     '--toast-translate-y': offsetY,
   };
@@ -268,7 +271,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       ) : null}
       {toast.duration > 0 ? (
         <span style={SR_ONLY_STYLE} aria-live="polite">
-          Dismissing in {Math.ceil(remainingMs / 1000)} seconds
+          Dismissing in {remainingSeconds} seconds
         </span>
       ) : null}
     </div>

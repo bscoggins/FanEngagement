@@ -46,6 +46,21 @@ describe('Toast', () => {
     vi.useRealTimers();
   });
 
+  it('animates progress bar mid-way', () => {
+    vi.useFakeTimers();
+    render(<Toast toast={createToast({ duration: 1200 })} onDismiss={vi.fn()} />);
+    const progress = screen.getByTestId('toast-progress');
+
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+
+    const widthValue = parseFloat(progress.style.width);
+    expect(widthValue).toBeGreaterThan(20);
+    expect(widthValue).toBeLessThan(80);
+    vi.useRealTimers();
+  });
+
   it('hides progress bar when duration is non-positive', () => {
     render(<Toast toast={createToast({ duration: 0 })} onDismiss={vi.fn()} />);
     expect(screen.queryByTestId('toast-progress-track')).toBeNull();
@@ -68,5 +83,23 @@ describe('Toast', () => {
     rerender(<Toast toast={createToast({ position: 'bottom-center', id: 'toast-2' })} onDismiss={vi.fn()} />);
     expect(toast().style.getPropertyValue('--toast-translate-x')).toBe('0');
     expect(toast().style.getPropertyValue('--toast-translate-y')).toBe('120%');
+  });
+
+  it('announces countdown for screen readers when duration is set', () => {
+    vi.useFakeTimers();
+    render(<Toast toast={createToast({ duration: 3000 })} onDismiss={vi.fn()} />);
+    const srText = screen.getByText(/Dismissing in/i);
+    expect(srText).toHaveTextContent('3 seconds');
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(srText).toHaveTextContent('2 seconds');
+    vi.useRealTimers();
+  });
+
+  it('omits countdown when duration is non-positive', () => {
+    render(<Toast toast={createToast({ duration: 0 })} onDismiss={vi.fn()} />);
+    expect(screen.queryByText(/Dismissing in/i)).toBeNull();
   });
 });
