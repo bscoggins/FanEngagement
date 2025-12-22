@@ -123,6 +123,7 @@ export const MyProposalPage: React.FC = () => {
   const handleVote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proposalId || !user?.userId || !selectedOptionId || !proposal) return;
+    if (submitting) return;
 
     const previousResults = results;
     const previousUserVote = userVote;
@@ -167,10 +168,7 @@ export const MyProposalPage: React.FC = () => {
       totalVotingPower: adjustedTotalVotingPower + userVotingPower,
     };
 
-    const optimisticVoteId =
-      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const optimisticVoteId = crypto?.randomUUID?.() ?? `temp-${Date.now()}-${Math.random()}`;
 
     const optimisticVote: Vote = {
       id: optimisticVoteId,
