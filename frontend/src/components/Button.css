@@ -134,6 +134,7 @@
   background-color: var(--color-neutral-300);
   border-color: var(--color-neutral-400);
   box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .btn--secondary:active:not(:disabled) {

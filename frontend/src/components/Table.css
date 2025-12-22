@@ -73,17 +73,17 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 /* Sortable column headers */
 .data-table th[role="button"] {
   cursor: pointer;
+  box-shadow: var(--shadow-xs);
   transition:
     background-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
     border-color var(--duration-fast) var(--ease-out);
-  border-radius: var(--radius-sm);
 }
 
 .data-table th[role="button"]:hover {
   background-color: var(--color-neutral-200);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-sm);
 }
 
 .data-table th[role="button"]:focus {
