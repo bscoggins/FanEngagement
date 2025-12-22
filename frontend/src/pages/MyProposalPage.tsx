@@ -136,13 +136,24 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower: 0,
       };
 
-    const optimisticOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
+    const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
+      if (previousUserVote?.proposalOptionId === optionResult.optionId) {
+        return {
+          ...optionResult,
+          voteCount: Math.max(optionResult.voteCount, 1),
+          totalVotingPower: Math.max(optionResult.totalVotingPower, previousUserVote.votingPower),
+        };
+      }
+      return optionResult;
+    });
+
+    const optimisticOptionResults = normalizedOptionResults.map((optionResult) => {
       let voteCount = optionResult.voteCount;
       let totalVotingPower = optionResult.totalVotingPower;
 
       if (previousUserVote?.proposalOptionId === optionResult.optionId) {
-        voteCount = Math.max(0, voteCount - 1);
-        totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
+        voteCount -= 1;
+        totalVotingPower -= previousUserVote.votingPower;
       }
 
       if (optionResult.optionId === selectedOptionId) {
@@ -157,10 +168,8 @@ export const MyProposalPage: React.FC = () => {
       };
     });
 
-    const adjustedTotalVotingPower = Math.max(
-      0,
-      resultsSnapshot.totalVotingPower - (previousUserVote?.votingPower ?? 0)
-    );
+    const baseTotalVotingPower = Math.max(resultsSnapshot.totalVotingPower, previousUserVote?.votingPower ?? 0);
+    const adjustedTotalVotingPower = baseTotalVotingPower - (previousUserVote?.votingPower ?? 0);
 
     const optimisticResults: ProposalResults = {
       ...resultsSnapshot,
