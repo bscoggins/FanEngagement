@@ -67,7 +67,7 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
         }
 
         // Act: Query audit events for this organization
-        var response = await client.GetAsync($"/organizations/{org.Id}/audit-events?page=1&pageSize=10");
+        var response = await client.GetAsync($"/organizations/{org.Id}/audit-events?page=1&pageSize=10&resourceType=Proposal&actorUserId={adminId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

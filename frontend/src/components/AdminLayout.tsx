@@ -9,6 +9,7 @@ import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { Tooltip } from './Tooltip';
+import { PageTransition } from './PageTransition';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
 
@@ -322,7 +323,9 @@ export const AdminLayout: React.FC = () => {
             </nav>
           </aside>
           <main className="admin-main" id="main-content" role="main" tabIndex={-1}>
-            <Outlet />
+            <PageTransition transitionKey={location.key}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
         
