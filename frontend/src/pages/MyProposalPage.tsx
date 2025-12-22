@@ -135,20 +135,32 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower: 0,
       };
 
-    const optimisticOptionResults = resultsSnapshot.optionResults.map((optionResult) =>
-      optionResult.optionId === selectedOptionId
-        ? {
-            ...optionResult,
-            voteCount: optionResult.voteCount + 1,
-            totalVotingPower: optionResult.totalVotingPower + userVotingPower,
-          }
-        : optionResult
-    );
+    const optimisticOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
+      let voteCount = optionResult.voteCount;
+      let totalVotingPower = optionResult.totalVotingPower;
+
+      if (previousUserVote?.proposalOptionId === optionResult.optionId) {
+        voteCount = Math.max(0, voteCount - 1);
+        totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
+      }
+
+      if (optionResult.optionId === selectedOptionId) {
+        voteCount += 1;
+        totalVotingPower += userVotingPower;
+      }
+
+      return {
+        ...optionResult,
+        voteCount,
+        totalVotingPower,
+      };
+    });
 
     const optimisticResults: ProposalResults = {
       ...resultsSnapshot,
       optionResults: optimisticOptionResults,
-      totalVotingPower: resultsSnapshot.totalVotingPower + userVotingPower,
+      totalVotingPower:
+        resultsSnapshot.totalVotingPower - (previousUserVote?.votingPower ?? 0) + userVotingPower,
     };
 
     const optimisticVote: Vote = {
@@ -168,7 +180,6 @@ export const MyProposalPage: React.FC = () => {
       setResults(optimisticResults);
       setUserVote(optimisticVote);
       setSuccessMessage('Casting your vote...');
-      setSelectedOptionId('');
 
       const vote = await proposalsApi.castVote(proposalId, {
         proposalOptionId: selectedOptionId,
