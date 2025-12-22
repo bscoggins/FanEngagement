@@ -69,6 +69,7 @@ export const MyProposalPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [selectedOptionId, setSelectedOptionId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const userVotingPower = calculateVotingPower(balances, shareTypes);
 
   useEffect(() => {
     if (!proposalId || !user?.userId) return;
@@ -249,9 +250,6 @@ export const MyProposalPage: React.FC = () => {
   if (!proposal) {
     return <div style={{ padding: '2rem' }}>Proposal not found.</div>;
   }
-
-  // Calculate user's voting power using share types and balances
-  const userVotingPower = calculateVotingPower(balances, shareTypes);
 
   // Check eligibility
   const eligibilityCheck = checkVotingEligibility(
