@@ -156,15 +156,24 @@ export const MyProposalPage: React.FC = () => {
       };
     });
 
+    const adjustedTotalVotingPower = Math.max(
+      0,
+      resultsSnapshot.totalVotingPower - (previousUserVote?.votingPower ?? 0)
+    );
+
     const optimisticResults: ProposalResults = {
       ...resultsSnapshot,
       optionResults: optimisticOptionResults,
-      totalVotingPower:
-        resultsSnapshot.totalVotingPower - (previousUserVote?.votingPower ?? 0) + userVotingPower,
+      totalVotingPower: adjustedTotalVotingPower + userVotingPower,
     };
 
+    const optimisticVoteId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
     const optimisticVote: Vote = {
-      id: `temp-${Date.now()}`,
+      id: optimisticVoteId,
       proposalId,
       proposalOptionId: selectedOptionId,
       userId: user.userId,
