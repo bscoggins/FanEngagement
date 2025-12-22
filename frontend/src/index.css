@@ -191,6 +191,10 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-interactive: background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 body {
@@ -206,6 +210,17 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+:where(a, button, [role="button"]):not([data-transition="custom"]) {
+  transition: var(--transition-interactive);
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 /* ===== Heading Styles ===== */
