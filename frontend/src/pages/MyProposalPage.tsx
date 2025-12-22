@@ -12,10 +12,45 @@ import { parseApiError } from '../utils/errorUtils';
 import type { ProposalDetails, Vote, ProposalResults, ShareBalance, ShareType } from '../types/api';
 import { Radio } from '../components/Radio';
 import { Button } from '../components/Button';
+import { useNotifications } from '../contexts/NotificationContext';
+
+const mergeResultsWithOptions = (
+  resultsData: ProposalResults | null,
+  proposalData: ProposalDetails | null
+): ProposalResults | null => {
+  if (!proposalData) return resultsData;
+
+  const optionResults = proposalData.options.map((option) => {
+    const existing = resultsData?.optionResults.find((o) => o.optionId === option.id);
+    return (
+      existing ?? {
+        optionId: option.id,
+        optionText: option.text,
+        voteCount: 0,
+        totalVotingPower: 0,
+      }
+    );
+  });
+
+  if (!resultsData) {
+    return {
+      proposalId: proposalData.id,
+      optionResults,
+      totalVotingPower: optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
+    };
+  }
+
+  return {
+    ...resultsData,
+    optionResults,
+    totalVotingPower: resultsData.totalVotingPower ?? optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
+  };
+};
 
 export const MyProposalPage: React.FC = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
   const { user } = useAuth();
+  const { showError, showSuccess } = useNotifications();
   const [proposal, setProposal] = useState<ProposalDetails | null>(null);
   const [userVote, setUserVote] = useState<Vote | null>(null);
   const [results, setResults] = useState<ProposalResults | null>(null);
@@ -69,7 +104,7 @@ export const MyProposalPage: React.FC = () => {
         ) {
           try {
             const resultsData = await proposalsApi.getResults(proposalId);
-            setResults(resultsData);
+            setResults(mergeResultsWithOptions(resultsData, proposalData));
           } catch (err) {
             console.error('Failed to fetch results:', err);
           }
@@ -87,12 +122,53 @@ export const MyProposalPage: React.FC = () => {
 
   const handleVote = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proposalId || !user?.userId || !selectedOptionId) return;
+    if (!proposalId || !user?.userId || !selectedOptionId || !proposal) return;
+
+    const previousResults = results;
+    const previousUserVote = userVote;
+    const previousSelection = selectedOptionId;
+
+    const resultsSnapshot =
+      mergeResultsWithOptions(results, proposal) ?? {
+        proposalId,
+        optionResults: [],
+        totalVotingPower: 0,
+      };
+
+    const optimisticOptionResults = resultsSnapshot.optionResults.map((optionResult) =>
+      optionResult.optionId === selectedOptionId
+        ? {
+            ...optionResult,
+            voteCount: optionResult.voteCount + 1,
+            totalVotingPower: optionResult.totalVotingPower + userVotingPower,
+          }
+        : optionResult
+    );
+
+    const optimisticResults: ProposalResults = {
+      ...resultsSnapshot,
+      optionResults: optimisticOptionResults,
+      totalVotingPower: resultsSnapshot.totalVotingPower + userVotingPower,
+    };
+
+    const optimisticVote: Vote = {
+      id: `temp-${Date.now()}`,
+      proposalId,
+      proposalOptionId: selectedOptionId,
+      userId: user.userId,
+      votingPower: userVotingPower,
+      castAt: new Date().toISOString(),
+    };
 
     try {
       setSubmitting(true);
       setError('');
       setSuccessMessage('');
+
+      setResults(optimisticResults);
+      setUserVote(optimisticVote);
+      setSuccessMessage('Casting your vote...');
+      setSelectedOptionId('');
 
       const vote = await proposalsApi.castVote(proposalId, {
         proposalOptionId: selectedOptionId,
@@ -102,11 +178,12 @@ export const MyProposalPage: React.FC = () => {
       setUserVote(vote);
       setSuccessMessage('Your vote has been cast successfully!');
       setSelectedOptionId('');
+      showSuccess('Your vote has been cast successfully!');
       
       // Refetch results to show updated vote counts
       try {
         const resultsData = await proposalsApi.getResults(proposalId);
-        setResults(resultsData);
+        setResults(mergeResultsWithOptions(resultsData, proposal));
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
       }
@@ -114,6 +191,11 @@ export const MyProposalPage: React.FC = () => {
       console.error('Failed to cast vote:', err);
       const errorMessage = parseApiError(err);
       setError(errorMessage);
+      setResults(previousResults);
+      setUserVote(previousUserVote);
+      setSelectedOptionId(previousSelection);
+      setSuccessMessage('');
+      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }

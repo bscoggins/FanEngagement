@@ -7,6 +7,8 @@ import { MyProposalPage } from './MyProposalPage';
 import { proposalsApi } from '../api/proposalsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
 import { shareTypesApi } from '../api/shareTypesApi';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { NotificationContainer } from '../components/NotificationContainer';
 
 vi.mock('../api/proposalsApi');
 vi.mock('../api/shareBalancesApi');
@@ -28,9 +30,12 @@ const renderWithAuth = (proposalId: string, userId: string) => {
   return render(
     <MemoryRouter initialEntries={[`/me/proposals/${proposalId}`]}>
       <AuthProvider>
-        <Routes>
-          <Route path="/me/proposals/:proposalId" element={<MyProposalPage />} />
-        </Routes>
+        <NotificationProvider>
+          <NotificationContainer />
+          <Routes>
+            <Route path="/me/proposals/:proposalId" element={<MyProposalPage />} />
+          </Routes>
+        </NotificationProvider>
       </AuthProvider>
     </MemoryRouter>
   );
@@ -111,9 +116,9 @@ describe('MyProposalPage', () => {
     });
 
     expect(screen.getByText('A test proposal description')).toBeInTheDocument();
-    expect(screen.getByText('Option A')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Option A/i })).toBeInTheDocument();
     expect(screen.getByText('First option')).toBeInTheDocument();
-    expect(screen.getByText('Option B')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Option B/i })).toBeInTheDocument();
     expect(screen.getByText('Second option')).toBeInTheDocument();
   });
 
@@ -190,9 +195,7 @@ describe('MyProposalPage', () => {
       });
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Your vote has been cast successfully!')).toBeInTheDocument();
-    });
+    await screen.findAllByText('Your vote has been cast successfully!');
   });
 
   it('displays error message when vote fails', async () => {
@@ -234,9 +237,77 @@ describe('MyProposalPage', () => {
     await user.click(screen.getByRole('radio', { name: /Option A/i }));
     await user.click(screen.getByRole('button', { name: /Cast Vote/i }));
 
+    await screen.findAllByText('User has no voting power in this organization.');
+  });
+
+  it('optimistically updates vote results and rolls back on failure', async () => {
+    const user = userEvent.setup();
+    const mockProposal = {
+      id: 'proposal-1',
+      organizationId: 'org-1',
+      title: 'Test Proposal',
+      description: '',
+      status: 'Open' as const,
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
+      quorumRequirement: undefined,
+      createdByUserId: 'user-2',
+      createdAt: '2020-01-10T00:00:00Z',
+      options: [
+        {
+          id: 'option-1',
+          proposalId: 'proposal-1',
+          text: 'Option A',
+          description: '',
+        },
+        {
+          id: 'option-2',
+          proposalId: 'proposal-1',
+          text: 'Option B',
+          description: '',
+        },
+      ],
+    };
+
+    const mockResults = {
+      proposalId: 'proposal-1',
+      optionResults: [
+        { optionId: 'option-1', optionText: 'Option A', voteCount: 0, totalVotingPower: 0 },
+        { optionId: 'option-2', optionText: 'Option B', voteCount: 0, totalVotingPower: 0 },
+      ],
+      totalVotingPower: 0,
+    };
+
+    vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
+    vi.mocked(proposalsApi.getUserVote).mockRejectedValue({ response: { status: 404 } });
+    vi.mocked(proposalsApi.getResults).mockResolvedValue(mockResults);
+
+    let rejectVote: ((value: unknown) => void) | null = null;
+    vi.mocked(proposalsApi.castVote).mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          rejectVote = reject;
+        })
+    );
+
+    renderWithAuth('proposal-1', 'user-1');
+
     await waitFor(() => {
-      expect(screen.getByText('User has no voting power in this organization.')).toBeInTheDocument();
+      expect(screen.getByText('Test Proposal')).toBeInTheDocument();
     });
+
+    await user.click(screen.getByRole('radio', { name: /Option A/i }));
+    await user.click(screen.getByRole('button', { name: /Cast Vote/i }));
+
+    await screen.findByText('Votes: 1 | Voting Power: 100.00');
+
+    rejectVote?.({
+      response: { data: { Error: 'Voting failed' } },
+    });
+
+    await screen.findAllByText('Voting failed');
+
+    expect(screen.queryByText('Votes: 1 | Voting Power: 100.00')).not.toBeInTheDocument();
   });
 
   it('displays user vote when already voted', async () => {
