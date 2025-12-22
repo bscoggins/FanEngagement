@@ -110,6 +110,7 @@ body.theme-dark .quick-action-card {
 body.theme-dark .quick-action-card:hover {
   background-color: var(--color-overlay-subtle);
   border-color: var(--color-border-dark);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Respect reduced motion preferences */

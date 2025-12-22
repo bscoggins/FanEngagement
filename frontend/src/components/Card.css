@@ -18,9 +18,6 @@
   position: relative;
 }
 
-.card:focus-visible {
-}
-
 /* ===== Card Variants ===== */
 
 /* Default variant - simple card with shadow */
