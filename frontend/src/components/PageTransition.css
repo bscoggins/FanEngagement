@@ -4,7 +4,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .page-transition {
-    animation: page-fade-slide var(--duration-normal) ease-out;
+    animation: page-fade-slide var(--duration-normal) var(--ease-out);
     will-change: transform, opacity;
   }
 
