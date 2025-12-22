@@ -1,22 +1,28 @@
 .page-transition {
-  animation: page-fade-slide 240ms ease-out;
-  will-change: transform, opacity;
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-transition {
+    animation: page-fade-slide var(--duration-normal) ease-out;
+    will-change: transform, opacity;
+  }
+
+  @keyframes page-fade-slide {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .page-transition {
     animation: none;
     will-change: auto;
-  }
-}
-
-@keyframes page-fade-slide {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
