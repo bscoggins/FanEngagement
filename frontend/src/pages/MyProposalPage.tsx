@@ -14,8 +14,6 @@ import { Radio } from '../components/Radio';
 import { Button } from '../components/Button';
 import { useNotifications } from '../contexts/NotificationContext';
 
-let optimisticVoteCounter = 0;
-
 const mergeResultsWithOptions = (
   resultsData: ProposalResults | null,
   proposalData: ProposalDetails | null
@@ -47,6 +45,14 @@ const mergeResultsWithOptions = (
     optionResults,
     totalVotingPower: resultsData.totalVotingPower ?? optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
   };
+};
+
+const generateOptimisticVoteId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `temp-vote-${Date.now()}-${Math.random()}`;
 };
 
 export const MyProposalPage: React.FC = () => {
@@ -138,7 +144,8 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower: 0,
       };
 
-    // Ensure we have a stable baseline when removing a previous vote (e.g., when the API response lags behind)
+    // Ensure we have a stable baseline when removing a previous vote so we can rollback optimistically
+    // even if the current results snapshot has not yet reflected the user's prior vote.
     const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
       if (previousUserVote?.proposalOptionId === optionResult.optionId) {
         return {
@@ -180,10 +187,7 @@ export const MyProposalPage: React.FC = () => {
       totalVotingPower: adjustedTotalVotingPower + userVotingPower,
     };
 
-    const optimisticVoteId =
-      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `temp-vote-${Date.now()}-${++optimisticVoteCounter}`;
+    const optimisticVoteId = generateOptimisticVoteId();
 
     const optimisticVote: Vote = {
       id: optimisticVoteId,
