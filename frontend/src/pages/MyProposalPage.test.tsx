@@ -171,7 +171,13 @@ describe('MyProposalPage', () => {
 
     vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
     vi.mocked(proposalsApi.getUserVote).mockRejectedValue({ response: { status: 404 } });
-    vi.mocked(proposalsApi.castVote).mockResolvedValue(mockVote);
+    let resolveVote: (() => void) | null = null;
+    vi.mocked(proposalsApi.castVote).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveVote = () => resolve(mockVote);
+        })
+    );
     vi.mocked(proposalsApi.getResults).mockResolvedValue(mockResults);
 
     renderWithAuth('proposal-1', 'user-1');
@@ -187,6 +193,11 @@ describe('MyProposalPage', () => {
     // Submit vote
     const voteButton = screen.getByRole('button', { name: /Cast Vote/i });
     await user.click(voteButton);
+
+    // Optimistic feedback shown while request is in flight
+    await screen.findByText('Casting your vote...');
+
+    resolveVote?.();
 
     await waitFor(() => {
       expect(proposalsApi.castVote).toHaveBeenCalledWith('proposal-1', {
@@ -299,6 +310,7 @@ describe('MyProposalPage', () => {
     await user.click(screen.getByRole('radio', { name: /Option A/i }));
     await user.click(screen.getByRole('button', { name: /Cast Vote/i }));
 
+    await screen.findByText('Casting your vote...');
     await screen.findByText('Votes: 1 | Voting Power: 100.00');
 
     rejectVote?.({

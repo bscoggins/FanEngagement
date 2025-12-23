@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { proposalsApi } from '../api/proposalsApi';
@@ -48,11 +48,24 @@ const mergeResultsWithOptions = (
 };
 
 const generateOptimisticVoteId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
+  if (typeof crypto !== 'undefined') {
+    if (typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+
+    if (typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+      return `temp-vote-${hex}`;
+    }
   }
 
-  return `temp-vote-${Date.now()}-${Math.random()}`;
+  const randomPart =
+    Math.random().toString(36).slice(2) +
+    Math.random().toString(36).slice(2) +
+    Math.random().toString(36).slice(2);
+  return `temp-vote-${randomPart}`;
 };
 
 export const MyProposalPage: React.FC = () => {
@@ -69,7 +82,10 @@ export const MyProposalPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [selectedOptionId, setSelectedOptionId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
-  const userVotingPower = calculateVotingPower(balances, shareTypes);
+  const userVotingPower = useMemo(
+    () => calculateVotingPower(balances, shareTypes),
+    [balances, shareTypes]
+  );
 
   useEffect(() => {
     if (!proposalId || !user?.userId) return;
@@ -146,7 +162,7 @@ export const MyProposalPage: React.FC = () => {
       };
 
     // Ensure we have a stable baseline when removing a previous vote so we can rollback optimistically
-    // even if the current results snapshot has not yet reflected the user's prior vote.
+    // even if the current results snapshot has not yet reflected the user's prior vote (e.g., server lag).
     const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
       if (previousUserVote?.proposalOptionId === optionResult.optionId) {
         return {
@@ -179,7 +195,7 @@ export const MyProposalPage: React.FC = () => {
       };
     });
 
-    const previousVotePower = previousUserVote?.proposalOptionId ? previousUserVote.votingPower : 0;
+    const previousVotePower = previousUserVote ? previousUserVote.votingPower : 0;
     const adjustedTotalVotingPower = Math.max(0, resultsSnapshot.totalVotingPower - previousVotePower);
 
     const optimisticResults: ProposalResults = {
@@ -224,6 +240,12 @@ export const MyProposalPage: React.FC = () => {
         setResults(mergeResultsWithOptions(resultsData, proposal));
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
+        setResults(previousResults);
+        setUserVote(previousUserVote);
+        const refreshErrorMessage =
+          'We could not refresh the latest results. Showing previous data instead.';
+        setError(refreshErrorMessage);
+        showError(refreshErrorMessage);
       }
     } catch (err: any) {
       console.error('Failed to cast vote:', err);
