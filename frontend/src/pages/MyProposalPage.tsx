@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { proposalsApi } from '../api/proposalsApi';
@@ -47,29 +47,6 @@ const mergeResultsWithOptions = (
   };
 };
 
-let optimisticVoteCounter = 0;
-
-const generateOptimisticVoteId = () => {
-  if (typeof crypto !== 'undefined') {
-    if (typeof crypto.randomUUID === 'function') {
-      return crypto.randomUUID();
-    }
-
-    if (typeof crypto.getRandomValues === 'function') {
-      const bytes = new Uint8Array(16);
-      crypto.getRandomValues(bytes);
-      const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-      return `temp-vote-${hex}`;
-    }
-  }
-
-  optimisticVoteCounter += 1;
-  const timestamp = Date.now();
-  const randomPart =
-    Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-  return `temp-vote-${timestamp}-${optimisticVoteCounter}-${randomPart}`;
-};
-
 export const MyProposalPage: React.FC = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
   const { user } = useAuth();
@@ -85,6 +62,28 @@ export const MyProposalPage: React.FC = () => {
   const [refreshWarning, setRefreshWarning] = useState<string>('');
   const [selectedOptionId, setSelectedOptionId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const optimisticVoteCounter = useRef(0);
+
+  const generateOptimisticVoteId = useCallback(() => {
+    if (typeof crypto !== 'undefined') {
+      if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+
+      if (typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        return `temp-vote-${hex}`;
+      }
+    }
+
+    optimisticVoteCounter.current += 1;
+    const timestamp = Date.now();
+    const randomPart =
+      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    return `temp-vote-${timestamp}-${optimisticVoteCounter.current}-${randomPart}`;
+  }, []);
   const userVotingPower = useMemo(
     () => calculateVotingPower(balances, shareTypes),
     [balances, shareTypes]
@@ -157,9 +156,7 @@ export const MyProposalPage: React.FC = () => {
     const previousUserVote = userVote;
     const previousSelection = selectedOptionId;
     const votingPowerChanged =
-      previousUserVote !== null &&
-      previousUserVote !== undefined &&
-      previousUserVote.votingPower !== userVotingPower;
+      previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
     const resultsSnapshot =
       mergeResultsWithOptions(results, proposal) ?? {
@@ -171,7 +168,6 @@ export const MyProposalPage: React.FC = () => {
     // If the server snapshot hasn't reflected the previous vote yet, prime a minimal baseline.
     const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
       const shouldNormalizePreviousVote =
-        !votingPowerChanged &&
         previousUserVote?.proposalOptionId === optionResult.optionId &&
         optionResult.voteCount === 0 &&
         optionResult.totalVotingPower === 0;
@@ -187,9 +183,7 @@ export const MyProposalPage: React.FC = () => {
     });
 
     const isRevotingSameOption =
-      previousUserVote !== null &&
-      previousUserVote !== undefined &&
-      previousUserVote.proposalOptionId === selectedOptionId;
+      previousUserVote != null && previousUserVote.proposalOptionId === selectedOptionId;
 
     const optimisticOptionResults = normalizedOptionResults.map((optionResult) => {
       let voteCount = optionResult.voteCount;
@@ -198,21 +192,16 @@ export const MyProposalPage: React.FC = () => {
       if (isRevotingSameOption && optionResult.optionId === selectedOptionId) {
         const powerDelta = userVotingPower - (previousUserVote?.votingPower ?? 0);
         totalVotingPower += powerDelta;
-        return {
-          ...optionResult,
-          voteCount,
-          totalVotingPower,
-        };
-      }
+      } else {
+        if (previousUserVote?.proposalOptionId === optionResult.optionId) {
+          voteCount -= 1;
+          totalVotingPower -= previousUserVote.votingPower;
+        }
 
-      if (previousUserVote?.proposalOptionId === optionResult.optionId) {
-        voteCount -= 1;
-        totalVotingPower -= previousUserVote.votingPower;
-      }
-
-      if (optionResult.optionId === selectedOptionId) {
-        voteCount += 1;
-        totalVotingPower += userVotingPower;
+        if (optionResult.optionId === selectedOptionId) {
+          voteCount += 1;
+          totalVotingPower += userVotingPower;
+        }
       }
 
       return {
@@ -275,45 +264,48 @@ export const MyProposalPage: React.FC = () => {
         setSelectedOptionId('');
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
-        const baseResults = mergeResultsWithOptions(resultsSnapshot, proposal);
-        const correctedOptionResults =
-          baseResults?.optionResults.map((optionResult) => {
-            let voteCount = optionResult.voteCount;
-            let totalVotingPower = optionResult.totalVotingPower;
+        setResults((current) => {
+          const baseResults = mergeResultsWithOptions(current ?? resultsSnapshot, proposal);
+          const correctedOptionResults =
+            baseResults?.optionResults.map((optionResult) => {
+              let voteCount = optionResult.voteCount;
+              let totalVotingPower = optionResult.totalVotingPower;
 
-            if (previousUserVote?.proposalOptionId === optionResult.optionId) {
-              voteCount = Math.max(0, voteCount - 1);
-              totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
-            }
+              if (previousUserVote?.proposalOptionId === optionResult.optionId) {
+                voteCount = Math.max(0, voteCount - 1);
+                totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
+              }
 
-            if (optionResult.optionId === vote.proposalOptionId) {
-              voteCount = Math.max(1, voteCount);
-              totalVotingPower += vote.votingPower;
-            }
+              if (optionResult.optionId === vote.proposalOptionId) {
+                voteCount = Math.max(1, voteCount);
+                totalVotingPower += vote.votingPower;
+              }
 
-            return {
-              ...optionResult,
-              voteCount,
-              totalVotingPower,
-            };
-          }) ?? [];
+              return {
+                ...optionResult,
+                voteCount,
+                totalVotingPower,
+              };
+            }) ?? [];
 
-        const correctedResults: ProposalResults = {
-          ...(baseResults ?? {
-            proposalId,
+          const correctedResults: ProposalResults = {
+            ...(baseResults ?? {
+              proposalId,
+              optionResults: correctedOptionResults,
+              totalVotingPower: 0,
+            }),
             optionResults: correctedOptionResults,
-            totalVotingPower: 0,
-          }),
-          optionResults: correctedOptionResults,
-          totalVotingPower: correctedOptionResults.reduce(
-            (sum, optionResult) => sum + optionResult.totalVotingPower,
-            0
-          ),
-        };
-        setResults(correctedResults);
+            totalVotingPower: correctedOptionResults.reduce(
+              (sum, optionResult) => sum + optionResult.totalVotingPower,
+              0
+            ),
+          };
+          return correctedResults;
+        });
         const refreshErrorMessage =
           'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';
         setRefreshWarning(refreshErrorMessage);
+        setSelectedOptionId('');
         showError(refreshErrorMessage);
       }
     } catch (err: any) {
@@ -324,6 +316,7 @@ export const MyProposalPage: React.FC = () => {
       setUserVote(previousUserVote);
       setSelectedOptionId(previousSelection);
       setSuccessMessage('');
+      setRefreshWarning('');
       showError(errorMessage);
     } finally {
       setSubmitting(false);

@@ -327,6 +327,7 @@ describe('MyProposalPage', () => {
     expect(screen.getAllByText('Votes: 0 | Voting Power: 0.00')).toHaveLength(2);
     const optionARadio = screen.getByRole('radio', { name: /Option A/i }) as HTMLInputElement;
     expect(optionARadio.checked).toBe(true);
+    expect(screen.queryByTestId('results-refresh-warning')).not.toBeInTheDocument();
   });
 
   it('supports changing a vote with optimistic counts updated', async () => {
@@ -409,10 +410,18 @@ describe('MyProposalPage', () => {
     await screen.findByText('Casting your vote...');
     await screen.findByText('Votes: 0 | Voting Power: 0.00');
     await screen.findByText('Votes: 1 | Voting Power: 100.00');
+    await screen.findByText(
+      'Your voting power changed since your last vote. Totals will refresh after the latest results load.'
+    );
 
     resolveVote?.(updatedVote);
 
     await screen.findAllByText('Your vote has been cast successfully!');
+    expect(
+      screen.queryByText(
+        'Your voting power changed since your last vote. Totals will refresh after the latest results load.'
+      )
+    ).not.toBeInTheDocument();
 
     eligibilitySpy.mockRestore();
   });
