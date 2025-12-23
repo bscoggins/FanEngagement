@@ -83,14 +83,9 @@ export const MyProposalPage: React.FC = () => {
   const [refreshWarning, setRefreshWarning] = useState<string>('');
   const [selectedOptionId, setSelectedOptionId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
-  const votingPowerKey = useMemo(
-    () => JSON.stringify({ balances, shareTypes }),
-    [balances, shareTypes]
-  );
-
   const userVotingPower = useMemo(
     () => calculateVotingPower(balances, shareTypes),
-    [votingPowerKey]
+    [balances, shareTypes]
   );
 
   useEffect(() => {
@@ -159,6 +154,8 @@ export const MyProposalPage: React.FC = () => {
     const previousResults = results;
     const previousUserVote = userVote;
     const previousSelection = selectedOptionId;
+    const votingPowerChanged =
+      previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
     const resultsSnapshot =
       mergeResultsWithOptions(results, proposal) ?? {
@@ -169,11 +166,13 @@ export const MyProposalPage: React.FC = () => {
 
     // If the server snapshot hasn't reflected the previous vote yet, prime a minimal baseline.
     const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
-      if (
+      const shouldNormalizePreviousVote =
+        !votingPowerChanged &&
         previousUserVote?.proposalOptionId === optionResult.optionId &&
         optionResult.voteCount === 0 &&
-        optionResult.totalVotingPower === 0
-      ) {
+        optionResult.totalVotingPower === 0;
+
+      if (shouldNormalizePreviousVote) {
         return {
           ...optionResult,
           voteCount: 1,
@@ -230,6 +229,12 @@ export const MyProposalPage: React.FC = () => {
       setRefreshWarning('');
       setSuccessMessage('');
 
+      if (votingPowerChanged) {
+        const powerChangeWarning =
+          'Your voting power changed since your last vote. Totals will refresh after the latest results load.';
+        setRefreshWarning(powerChangeWarning);
+      }
+
       setResults(optimisticResults);
       setUserVote(optimisticVote);
       setSuccessMessage('Casting your vote...');
@@ -248,6 +253,7 @@ export const MyProposalPage: React.FC = () => {
       try {
         const resultsData = await proposalsApi.getResults(proposalId);
         setResults(mergeResultsWithOptions(resultsData, proposal));
+        setRefreshWarning('');
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
         const refreshErrorMessage =

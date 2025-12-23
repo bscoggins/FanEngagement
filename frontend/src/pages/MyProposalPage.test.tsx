@@ -324,7 +324,7 @@ describe('MyProposalPage', () => {
     await screen.findAllByText('Voting failed');
 
     expect(screen.queryByText('Votes: 1 | Voting Power: 100.00')).not.toBeInTheDocument();
-    expect(screen.getByText('Votes: 0 | Voting Power: 0.00')).toBeInTheDocument();
+    expect(screen.getAllByText('Votes: 0 | Voting Power: 0.00')).toHaveLength(2);
     const optionARadio = screen.getByRole('radio', { name: /Option A/i }) as HTMLInputElement;
     expect(optionARadio.checked).toBe(true);
   });
