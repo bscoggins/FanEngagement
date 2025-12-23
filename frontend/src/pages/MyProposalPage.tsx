@@ -165,6 +165,12 @@ export const MyProposalPage: React.FC = () => {
         optionResult.voteCount === 0 &&
         optionResult.totalVotingPower === 0;
 
+      const shouldNormalizeFirstVoteSelection =
+        !previousUserVote &&
+        optionResult.optionId === selectedOptionId &&
+        optionResult.voteCount === 0 &&
+        optionResult.totalVotingPower === 0;
+
       if (shouldNormalizePreviousVote) {
         return {
           ...optionResult,
@@ -172,6 +178,15 @@ export const MyProposalPage: React.FC = () => {
           totalVotingPower: previousUserVote.votingPower,
         };
       }
+
+      if (shouldNormalizeFirstVoteSelection) {
+        return {
+          ...optionResult,
+          voteCount: 0,
+          totalVotingPower: 0,
+        };
+      }
+
       return optionResult;
     });
 
@@ -225,7 +240,6 @@ export const MyProposalPage: React.FC = () => {
     };
 
     try {
-      setSubmitting(true);
       setError('');
       setRefreshWarning('');
       setSuccessMessage('');
