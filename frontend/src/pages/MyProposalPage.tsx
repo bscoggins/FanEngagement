@@ -155,7 +155,9 @@ export const MyProposalPage: React.FC = () => {
     const previousUserVote = userVote;
     const previousSelection = selectedOptionId;
     const votingPowerChanged =
-      previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
+      previousUserVote !== null &&
+      previousUserVote !== undefined &&
+      previousUserVote.votingPower !== userVotingPower;
 
     const resultsSnapshot =
       mergeResultsWithOptions(results, proposal) ?? {
