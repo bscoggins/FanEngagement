@@ -32,18 +32,10 @@ const mergeResultsWithOptions = (
     );
   });
 
-  if (!resultsData) {
-    return {
-      proposalId: proposalData.id,
-      optionResults,
-      totalVotingPower: optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
-    };
-  }
-
   return {
-    ...resultsData,
+    proposalId: resultsData?.proposalId ?? proposalData.id,
     optionResults,
-    totalVotingPower: resultsData.totalVotingPower ?? optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
+    totalVotingPower: optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
   };
 };
 
@@ -152,6 +144,7 @@ export const MyProposalPage: React.FC = () => {
     if (!proposalId || !user?.userId || !selectedOptionId || !proposal) return;
     if (submitting) return;
 
+    setSubmitting(true);
     const previousResults = results;
     const previousUserVote = userVote;
     const previousSelection = selectedOptionId;
@@ -271,14 +264,29 @@ export const MyProposalPage: React.FC = () => {
               let voteCount = optionResult.voteCount;
               let totalVotingPower = optionResult.totalVotingPower;
 
-              if (previousUserVote?.proposalOptionId === optionResult.optionId) {
-                voteCount = Math.max(0, voteCount - 1);
-                totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
-              }
+              const isPreviousOption = previousUserVote?.proposalOptionId === optionResult.optionId;
+              const isNewOption = vote.proposalOptionId === optionResult.optionId;
+              const isSameOptionRevote =
+                previousUserVote?.proposalOptionId === vote.proposalOptionId && isNewOption;
 
-              if (optionResult.optionId === vote.proposalOptionId) {
+              if (isSameOptionRevote) {
                 voteCount = Math.max(1, voteCount);
-                totalVotingPower += vote.votingPower;
+                totalVotingPower =
+                  Math.max(0, totalVotingPower - (previousUserVote?.votingPower ?? 0)) +
+                  vote.votingPower;
+              } else {
+                if (isPreviousOption) {
+                  voteCount = Math.max(0, voteCount - 1);
+                  totalVotingPower = Math.max(
+                    0,
+                    totalVotingPower - (previousUserVote?.votingPower ?? 0)
+                  );
+                }
+
+                if (isNewOption) {
+                  voteCount = Math.max(1, voteCount);
+                  totalVotingPower += vote.votingPower;
+                }
               }
 
               return {
