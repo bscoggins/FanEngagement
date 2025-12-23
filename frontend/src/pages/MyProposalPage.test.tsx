@@ -390,7 +390,12 @@ describe('MyProposalPage', () => {
     vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
     vi.mocked(proposalsApi.getUserVote).mockResolvedValue(previousVote);
     vi.mocked(proposalsApi.getResults).mockResolvedValueOnce(initialResults).mockResolvedValueOnce(finalResults);
-    vi.mocked(proposalsApi.castVote).mockResolvedValue(updatedVote);
+
+    let resolveVote: ((value: typeof updatedVote) => void) | null = null;
+    const castPromise = new Promise<typeof updatedVote>((resolve) => {
+      resolveVote = resolve;
+    });
+    vi.mocked(proposalsApi.castVote).mockReturnValue(castPromise);
 
     renderWithAuth('proposal-1', 'user-1');
 
@@ -401,10 +406,11 @@ describe('MyProposalPage', () => {
     await user.click(screen.getByRole('radio', { name: /Option B/i }));
     await user.click(screen.getByRole('button', { name: /Cast Vote/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Votes: 0 | Voting Power: 0.00')).toBeInTheDocument();
-      expect(screen.getByText('Votes: 1 | Voting Power: 100.00')).toBeInTheDocument();
-    });
+    await screen.findByText('Casting your vote...');
+    await screen.findByText('Votes: 0 | Voting Power: 0.00');
+    await screen.findByText('Votes: 1 | Voting Power: 100.00');
+
+    resolveVote?.(updatedVote);
 
     await screen.findAllByText('Your vote has been cast successfully!');
 
