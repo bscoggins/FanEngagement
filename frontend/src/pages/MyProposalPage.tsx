@@ -80,11 +80,17 @@ export const MyProposalPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [refreshWarning, setRefreshWarning] = useState<string>('');
   const [selectedOptionId, setSelectedOptionId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const votingPowerKey = useMemo(
+    () => JSON.stringify({ balances, shareTypes }),
+    [balances, shareTypes]
+  );
+
   const userVotingPower = useMemo(
     () => calculateVotingPower(balances, shareTypes),
-    [balances, shareTypes]
+    [votingPowerKey]
   );
 
   useEffect(() => {
@@ -161,14 +167,17 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower: 0,
       };
 
-    // Ensure we have a stable baseline when removing a previous vote so we can rollback optimistically
-    // even if the current results snapshot has not yet reflected the user's prior vote (e.g., server lag).
+    // If the server snapshot hasn't reflected the previous vote yet, prime a minimal baseline.
     const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
-      if (previousUserVote?.proposalOptionId === optionResult.optionId) {
+      if (
+        previousUserVote?.proposalOptionId === optionResult.optionId &&
+        optionResult.voteCount === 0 &&
+        optionResult.totalVotingPower === 0
+      ) {
         return {
           ...optionResult,
-          voteCount: Math.max(optionResult.voteCount, 1),
-          totalVotingPower: Math.max(optionResult.totalVotingPower, previousUserVote.votingPower),
+          voteCount: 1,
+          totalVotingPower: previousUserVote.votingPower,
         };
       }
       return optionResult;
@@ -195,13 +204,13 @@ export const MyProposalPage: React.FC = () => {
       };
     });
 
-    const previousVotePower = previousUserVote ? previousUserVote.votingPower : 0;
-    const adjustedTotalVotingPower = Math.max(0, resultsSnapshot.totalVotingPower - previousVotePower);
-
     const optimisticResults: ProposalResults = {
       ...resultsSnapshot,
       optionResults: optimisticOptionResults,
-      totalVotingPower: adjustedTotalVotingPower + userVotingPower,
+      totalVotingPower: optimisticOptionResults.reduce(
+        (sum, optionResult) => sum + optionResult.totalVotingPower,
+        0
+      ),
     };
 
     const optimisticVoteId = generateOptimisticVoteId();
@@ -218,6 +227,7 @@ export const MyProposalPage: React.FC = () => {
     try {
       setSubmitting(true);
       setError('');
+      setRefreshWarning('');
       setSuccessMessage('');
 
       setResults(optimisticResults);
@@ -240,11 +250,9 @@ export const MyProposalPage: React.FC = () => {
         setResults(mergeResultsWithOptions(resultsData, proposal));
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
-        setResults(previousResults);
-        setUserVote(previousUserVote);
         const refreshErrorMessage =
-          'We could not refresh the latest results. Showing previous data instead.';
-        setError(refreshErrorMessage);
+          'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';
+        setRefreshWarning(refreshErrorMessage);
         showError(refreshErrorMessage);
       }
     } catch (err: any) {
@@ -359,6 +367,22 @@ export const MyProposalPage: React.FC = () => {
               <strong>Note:</strong> {eligibilityCheck.reason}
             </div>
           )}
+        </div>
+      )}
+
+      {refreshWarning && (
+        <div
+          data-testid="results-refresh-warning"
+          style={{
+            padding: '1rem',
+            backgroundColor: '#fff3cd',
+            color: '#856404',
+            border: '1px solid #ffeeba',
+            borderRadius: '4px',
+            marginTop: '1rem',
+          }}
+        >
+          {refreshWarning}
         </div>
       )}
 

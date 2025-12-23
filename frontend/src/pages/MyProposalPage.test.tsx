@@ -9,6 +9,7 @@ import { shareBalancesApi } from '../api/shareBalancesApi';
 import { shareTypesApi } from '../api/shareTypesApi';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { NotificationContainer } from '../components/NotificationContainer';
+import * as checkVotingEligibilityModule from '../utils/proposalUtils';
 
 vi.mock('../api/proposalsApi');
 vi.mock('../api/shareBalancesApi');
@@ -197,6 +198,9 @@ describe('MyProposalPage', () => {
     // Optimistic feedback shown while request is in flight
     await screen.findByText('Casting your vote...');
 
+    // Ensure optimistic state stays visible before resolving
+    expect(screen.queryByText('Your vote has been cast successfully!')).toBeNull();
+
     resolveVote?.();
 
     await waitFor(() => {
@@ -320,6 +324,91 @@ describe('MyProposalPage', () => {
     await screen.findAllByText('Voting failed');
 
     expect(screen.queryByText('Votes: 1 | Voting Power: 100.00')).not.toBeInTheDocument();
+    expect(screen.getByText('Votes: 0 | Voting Power: 0.00')).toBeInTheDocument();
+    const optionARadio = screen.getByRole('radio', { name: /Option A/i }) as HTMLInputElement;
+    expect(optionARadio.checked).toBe(true);
+  });
+
+  it('supports changing a vote with optimistic counts updated', async () => {
+    const user = userEvent.setup();
+    const mockProposal = {
+      id: 'proposal-1',
+      organizationId: 'org-1',
+      title: 'Test Proposal',
+      description: '',
+      status: 'Open' as const,
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
+      quorumRequirement: undefined,
+      createdByUserId: 'user-2',
+      createdAt: '2020-01-10T00:00:00Z',
+      options: [
+        { id: 'option-1', proposalId: 'proposal-1', text: 'Option A', description: '' },
+        { id: 'option-2', proposalId: 'proposal-1', text: 'Option B', description: '' },
+      ],
+    };
+
+    const previousVote = {
+      id: 'vote-prev',
+      proposalId: 'proposal-1',
+      proposalOptionId: 'option-1',
+      userId: 'user-1',
+      votingPower: 50,
+      castAt: '2020-01-16T00:00:00Z',
+    };
+
+    const updatedVote = {
+      ...previousVote,
+      id: 'vote-new',
+      proposalOptionId: 'option-2',
+      votingPower: 100,
+      castAt: '2020-01-17T00:00:00Z',
+    };
+
+    const initialResults = {
+      proposalId: 'proposal-1',
+      optionResults: [
+        { optionId: 'option-1', optionText: 'Option A', voteCount: 1, totalVotingPower: 50 },
+        { optionId: 'option-2', optionText: 'Option B', voteCount: 0, totalVotingPower: 0 },
+      ],
+      totalVotingPower: 50,
+    };
+
+    const finalResults = {
+      proposalId: 'proposal-1',
+      optionResults: [
+        { optionId: 'option-1', optionText: 'Option A', voteCount: 0, totalVotingPower: 0 },
+        { optionId: 'option-2', optionText: 'Option B', voteCount: 1, totalVotingPower: 100 },
+      ],
+      totalVotingPower: 100,
+    };
+
+    const eligibilitySpy = vi
+      .spyOn(checkVotingEligibilityModule, 'checkVotingEligibility')
+      .mockReturnValue({ eligible: true, reason: '' });
+
+    vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
+    vi.mocked(proposalsApi.getUserVote).mockResolvedValue(previousVote);
+    vi.mocked(proposalsApi.getResults).mockResolvedValueOnce(initialResults).mockResolvedValueOnce(finalResults);
+    vi.mocked(proposalsApi.castVote).mockResolvedValue(updatedVote);
+
+    renderWithAuth('proposal-1', 'user-1');
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Proposal')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('radio', { name: /Option B/i }));
+    await user.click(screen.getByRole('button', { name: /Cast Vote/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Votes: 0 | Voting Power: 0.00')).toBeInTheDocument();
+      expect(screen.getByText('Votes: 1 | Voting Power: 100.00')).toBeInTheDocument();
+    });
+
+    await screen.findAllByText('Your vote has been cast successfully!');
+
+    eligibilitySpy.mockRestore();
   });
 
   it('displays user vote when already voted', async () => {
