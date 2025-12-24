@@ -168,7 +168,7 @@ export const MyProposalPage: React.FC = () => {
       // Store the error state and surface the toast so the user sees immediate feedback.
       setError(noPowerMessage);
       showError(noPowerMessage);
-      setSelectedOptionId(previousUserVote?.proposalOptionId ?? '');
+      setSelectedOptionId('');
       setSubmitting(false);
       return;
     }
@@ -263,6 +263,7 @@ export const MyProposalPage: React.FC = () => {
         setSelectedOptionId('');
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
+        // Preserve the optimistic view; server state may differ until the next successful refresh.
         setResults((current) => mergeResultsWithOptions(current ?? resultsSnapshot, proposal));
         const refreshErrorMessage =
           'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';

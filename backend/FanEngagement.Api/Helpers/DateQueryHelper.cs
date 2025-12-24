@@ -23,5 +23,11 @@ public static class DateQueryHelper
         {
             dateTo = parsedDateTo;
         }
+
+        // If the range was provided in reverse order, swap to ensure a valid window.
+        if (dateFrom.HasValue && dateTo.HasValue && dateFrom > dateTo)
+        {
+            (dateFrom, dateTo) = (dateTo, dateFrom);
+        }
     }
 }

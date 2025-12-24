@@ -79,6 +79,64 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task OrganizationAuditEvents_AllowsWhitespaceDatesAndSwapsRange()
+    {
+        var (adminId, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        var client = _factory.CreateClient();
+        client.AddAuthorizationHeader(adminToken);
+
+        var createOrgRequest = new CreateOrganizationRequest { Name = $"Test Org {Guid.NewGuid()}" };
+        var createOrgResponse = await client.PostAsJsonAsync("/organizations", createOrgRequest);
+        var org = await createOrgResponse.Content.ReadFromJsonAsync<Organization>();
+        Assert.NotNull(org);
+
+        var now = DateTimeOffset.UtcNow;
+        var midPoint = now.AddDays(-1);
+        var older = now.AddDays(-3);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
+
+            await auditService.LogSyncAsync(new AuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = midPoint,
+                ActionType = AuditActionType.Created,
+                ResourceType = AuditResourceType.Proposal,
+                ResourceId = Guid.NewGuid(),
+                OrganizationId = org.Id,
+                ActorUserId = adminId,
+                Outcome = AuditOutcome.Success
+            });
+
+            await auditService.LogSyncAsync(new AuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = older,
+                ActionType = AuditActionType.Created,
+                ResourceType = AuditResourceType.Proposal,
+                ResourceId = Guid.NewGuid(),
+                OrganizationId = org.Id,
+                ActorUserId = adminId,
+                Outcome = AuditOutcome.Success
+            });
+        }
+
+        var dateFrom = now.ToString("O") + " ";
+        var dateTo = midPoint.AddHours(-6).ToString("O") + " ";
+
+        var response = await client.GetAsync($"/organizations/{org.Id}/audit-events?dateFrom={Uri.EscapeDataString(dateFrom)}&dateTo={Uri.EscapeDataString(dateTo)}&page=1&pageSize=10");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<PagedResult<AuditEventDto>>();
+        Assert.NotNull(result);
+        Assert.Equal(1, result!.TotalCount);
+        Assert.Single(result.Items);
+        Assert.All(result.Items, item => Assert.Equal(org.Id, item.OrganizationId));
+    }
+
+    [Fact]
     public async Task OrganizationAuditEvents_FilterByActionType_ReturnsOnlyMatching()
     {
         // Arrange
