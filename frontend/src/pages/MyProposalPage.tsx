@@ -232,6 +232,7 @@ export const MyProposalPage: React.FC = () => {
         setSuccessMessage('Casting your vote...');
       } else {
         const noPowerMessage = 'You do not have any voting power for this proposal.';
+        // Store the error state and surface the toast so the user sees immediate feedback.
         setError(noPowerMessage);
         showError(noPowerMessage);
         setSubmitting(false);

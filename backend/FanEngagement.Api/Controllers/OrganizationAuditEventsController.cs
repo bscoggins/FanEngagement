@@ -59,6 +59,12 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
             dateFrom = parsedDateFrom;
         }
 
+        if (!dateTo.HasValue && Request.Query.TryGetValue("dateTo", out var rawDateTo) &&
+            DateTimeOffset.TryParse(rawDateTo, out var parsedDateTo))
+        {
+            dateTo = parsedDateTo;
+        }
+
         // Validate pagination parameters
         var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
         if (validationError != null)
