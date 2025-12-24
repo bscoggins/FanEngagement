@@ -123,6 +123,19 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         [FromQuery] string? outcome = null,
         CancellationToken cancellationToken = default)
     {
+        // Fallback parsing for cases where custom clients send pre-encoded timestamps that fail model binding.
+        if (!dateFrom.HasValue && Request.Query.TryGetValue("dateFrom", out var rawDateFrom) &&
+            DateTimeOffset.TryParse(rawDateFrom, out var parsedDateFrom))
+        {
+            dateFrom = parsedDateFrom;
+        }
+
+        if (!dateTo.HasValue && Request.Query.TryGetValue("dateTo", out var rawDateTo) &&
+            DateTimeOffset.TryParse(rawDateTo, out var parsedDateTo))
+        {
+            dateTo = parsedDateTo;
+        }
+
         // Validate format
         format = format.ToLowerInvariant();
         if (format != "csv" && format != "json")

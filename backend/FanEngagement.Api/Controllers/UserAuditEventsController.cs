@@ -54,6 +54,19 @@ public class UserAuditEventsController(IAuditService auditService) : ControllerB
             return Unauthorized();
         }
 
+        // Fallback parsing for cases where custom clients send pre-encoded timestamps that fail model binding.
+        if (!dateFrom.HasValue && Request.Query.TryGetValue("dateFrom", out var rawDateFrom) &&
+            DateTimeOffset.TryParse(rawDateFrom, out var parsedDateFrom))
+        {
+            dateFrom = parsedDateFrom;
+        }
+
+        if (!dateTo.HasValue && Request.Query.TryGetValue("dateTo", out var rawDateTo) &&
+            DateTimeOffset.TryParse(rawDateTo, out var parsedDateTo))
+        {
+            dateTo = parsedDateTo;
+        }
+
         // Validate pagination parameters
         var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
         if (validationError != null)
