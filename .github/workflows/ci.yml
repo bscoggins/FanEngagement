@@ -134,7 +134,7 @@ jobs:
 
       - name: Upload accessibility reports (HTML)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: accessibility-playwright-report
           path: frontend/playwright-report
@@ -143,7 +143,7 @@ jobs:
 
       - name: Upload accessibility JSON results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: a11y-reports
           path: frontend/test-results/a11y/**/*.json
@@ -152,7 +152,7 @@ jobs:
 
       - name: Upload accessibility summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: accessibility-playwright-summary
           path: frontend/test-results/playwright-report.json
@@ -228,7 +228,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-results
           path: 'test-results/**/*.trx'
