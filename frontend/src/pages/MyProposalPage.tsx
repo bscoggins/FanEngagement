@@ -177,7 +177,7 @@ export const MyProposalPage: React.FC = () => {
     // Note: userVotingPower is derived from the currently loaded balances/shareTypes.
     // If balances/shareTypes are stale, this comparison is a best-effort signal only and only checked on re-votes.
     const votingPowerChanged =
-      previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
+      previousUserVote !== null && previousUserVote.votingPower !== userVotingPower;
 
     const resultsSnapshot =
       mergeResultsWithOptions(results, proposal) ?? {
@@ -189,7 +189,7 @@ export const MyProposalPage: React.FC = () => {
     const optionResultsSnapshot = resultsSnapshot.optionResults;
 
     const isRevotingSameOption =
-      previousUserVote != null && previousUserVote.proposalOptionId === selectedOptionId;
+      previousUserVote !== null && previousUserVote.proposalOptionId === selectedOptionId;
 
     const optimisticOptionResults = optionResultsSnapshot.map((optionResult) => {
       let voteCount = optionResult.voteCount;
@@ -225,6 +225,7 @@ export const MyProposalPage: React.FC = () => {
     };
 
     const optimisticVoteId = generateOptimisticVoteId();
+    const votedOptionId = selectedOptionId;
 
     const optimisticVote: Vote = {
       id: optimisticVoteId,
@@ -264,15 +265,19 @@ export const MyProposalPage: React.FC = () => {
         const resultsData = await proposalsApi.getResults(proposalId);
         setResults(mergeResultsWithOptions(resultsData, proposal));
         setRefreshWarning('');
-        setSelectedOptionId('');
+        setSelectedOptionId((current) =>
+          current === votedOptionId ? '' : current
+        );
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
-        // Preserve the optimistic view; server state may differ until the next successful refresh.
+        // Prefer the optimistic view; server state may differ until the next successful refresh.
         setResults((current) => mergeResultsWithOptions(current ?? resultsSnapshot, proposal));
         const refreshErrorMessage =
           'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';
         setRefreshWarning(refreshErrorMessage);
-        setSelectedOptionId('');
+        setSelectedOptionId((current) =>
+          current === votedOptionId ? '' : current
+        );
         showError(refreshErrorMessage);
       }
     } catch (err: any) {
@@ -281,7 +286,8 @@ export const MyProposalPage: React.FC = () => {
       setError(errorMessage);
       setResults(previousResults);
       setUserVote(previousUserVote);
-      setSelectedOptionId(previousSelection);
+      // Preserve whatever the user most recently selected; fall back to the prior selection if nothing is set.
+      setSelectedOptionId((current) => current ?? previousSelection ?? '');
       setSuccessMessage('');
       setRefreshWarning('');
       showError(errorMessage);

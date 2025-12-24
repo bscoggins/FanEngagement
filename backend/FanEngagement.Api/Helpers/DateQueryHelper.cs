@@ -11,6 +11,7 @@ namespace FanEngagement.Api.Helpers;
 /// Existing non-null values are never overwritten; this helper only populates null inputs from query parameters.
 /// When both values are present but reversed, they are swapped to form a valid range. No additional range
 /// constraints (such as maximum span) are enforced here; callers should validate business-specific limits as needed.
+/// If both inputs are null and no query parameters are provided, the helper is a no-op.
 /// </para>
 /// </remarks>
 public static class DateQueryHelper
@@ -22,23 +23,21 @@ public static class DateQueryHelper
     /// <param name="request">The current HTTP request whose query string may contain <c>dateFrom</c> and <c>dateTo</c>.</param>
     /// <param name="dateFrom">Nullable start of the date range; only set when currently null.</param>
     /// <param name="dateTo">Nullable end of the date range; only set when currently null.</param>
-    public static void ApplyDateRangeFallback(HttpRequest request, ref DateTimeOffset? dateFrom, ref DateTimeOffset? dateTo)
+    public static void ApplyDateRangeFallback(HttpRequest? request, ref DateTimeOffset? dateFrom, ref DateTimeOffset? dateTo)
     {
-        if (request == null || request.Query.Count == 0)
+        if (request != null && request.Query.Count > 0)
         {
-            return;
-        }
+            if (!dateFrom.HasValue && request.Query.TryGetValue("dateFrom", out var rawDateFrom) &&
+                DateTimeOffset.TryParse(rawDateFrom, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var parsedDateFrom))
+            {
+                dateFrom = parsedDateFrom;
+            }
 
-        if (!dateFrom.HasValue && request.Query.TryGetValue("dateFrom", out var rawDateFrom) &&
-            DateTimeOffset.TryParse(rawDateFrom, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var parsedDateFrom))
-        {
-            dateFrom = parsedDateFrom;
-        }
-
-        if (!dateTo.HasValue && request.Query.TryGetValue("dateTo", out var rawDateTo) &&
-            DateTimeOffset.TryParse(rawDateTo, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var parsedDateTo))
-        {
-            dateTo = parsedDateTo;
+            if (!dateTo.HasValue && request.Query.TryGetValue("dateTo", out var rawDateTo) &&
+                DateTimeOffset.TryParse(rawDateTo, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var parsedDateTo))
+            {
+                dateTo = parsedDateTo;
+            }
         }
 
         // If the range was provided in reverse order, swap to ensure a valid window.

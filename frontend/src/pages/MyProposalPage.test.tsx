@@ -330,6 +330,77 @@ describe('MyProposalPage', () => {
     expect(screen.queryByTestId('results-refresh-warning')).not.toBeInTheDocument();
   });
 
+  it('keeps the newly selected option after a failed re-vote with prior vote present', async () => {
+    const user = userEvent.setup();
+    const eligibilitySpy = vi
+      .spyOn(checkVotingEligibilityModule, 'checkVotingEligibility')
+      .mockReturnValue({ eligible: true, reason: '' });
+    const mockProposal = {
+      id: 'proposal-1',
+      organizationId: 'org-1',
+      title: 'Test Proposal',
+      description: '',
+      status: 'Open' as const,
+      startAt: '2020-01-15T00:00:00Z',
+      endAt: '2099-02-15T00:00:00Z',
+      quorumRequirement: undefined,
+      createdByUserId: 'user-2',
+      createdAt: '2020-01-10T00:00:00Z',
+      options: [
+        { id: 'option-1', proposalId: 'proposal-1', text: 'Option A', description: '' },
+        { id: 'option-2', proposalId: 'proposal-1', text: 'Option B', description: '' },
+      ],
+    };
+
+    const mockResults = {
+      proposalId: 'proposal-1',
+      optionResults: [
+        { optionId: 'option-1', optionText: 'Option A', voteCount: 1, totalVotingPower: 100 },
+        { optionId: 'option-2', optionText: 'Option B', voteCount: 0, totalVotingPower: 0 },
+      ],
+      totalVotingPower: 100,
+    };
+
+    const previousVote = {
+      id: 'vote-prev',
+      proposalId: 'proposal-1',
+      proposalOptionId: 'option-1',
+      userId: 'user-1',
+      votingPower: 100,
+      castAt: '2020-01-16T00:00:00Z',
+    };
+
+    vi.mocked(proposalsApi.getById).mockResolvedValue(mockProposal);
+    vi.mocked(proposalsApi.getUserVote).mockResolvedValue(previousVote as Vote);
+    vi.mocked(proposalsApi.getResults).mockResolvedValue(mockResults);
+
+    let rejectVote: ((value: unknown) => void) | null = null;
+    vi.mocked(proposalsApi.castVote).mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          rejectVote = reject;
+        })
+    );
+
+    renderWithAuth('proposal-1', 'user-1');
+
+    await screen.findByText('Test Proposal');
+
+    await user.click(screen.getByRole('radio', { name: /Option B/i }));
+    await user.click(screen.getByRole('button', { name: /Cast Vote/i }));
+
+    await screen.findByText('Casting your vote...');
+
+    rejectVote?.({
+      response: { data: { Error: 'Voting failed' } },
+    });
+
+    await screen.findAllByText('Voting failed');
+    const optionBRadio = screen.getByRole('radio', { name: /Option B/i }) as HTMLInputElement;
+    expect(optionBRadio.checked).toBe(true);
+    eligibilitySpy.mockRestore();
+  });
+
   it('supports changing a vote with optimistic counts updated', async () => {
     const user = userEvent.setup();
     const mockProposal = {
