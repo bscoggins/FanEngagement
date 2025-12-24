@@ -11,6 +11,7 @@ import { RecentsDropdown } from './RecentsDropdown';
 import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import { Tooltip } from './Tooltip';
 import { isMacPlatform } from '../utils/platformUtils';
+import { PageTransition } from './PageTransition';
 import './PlatformAdminLayout.css';
 import '../pages/AdminPage.css';
 
@@ -210,7 +211,9 @@ export const PlatformAdminLayout: React.FC = () => {
             </nav>
           </aside>
           <main className="admin-main" id="main-content" role="main" tabIndex={-1}>
-            <Outlet />
+            <PageTransition transitionKey={location.key}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
         

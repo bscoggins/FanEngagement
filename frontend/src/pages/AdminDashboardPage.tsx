@@ -8,11 +8,11 @@ import { proposalsApi } from '../api/proposalsApi';
 import { outboundEventsApi } from '../api/outboundEventsApi';
 import { auditEventsApi } from '../api/auditEventsApi';
 import { QuickActionCard } from '../components/QuickActionCard';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { parseApiError } from '../utils/errorUtils';
 import { formatDate } from '../utils/auditUtils';
 import type { AuditEvent, MembershipWithUserDto, Proposal } from '../types/api';
+import { SkeletonCardGrid, SkeletonList, SkeletonTextLines } from '../components/Skeleton';
 
 interface OrgDashboardStats {
   totalMembers: number;
@@ -139,8 +139,12 @@ export const AdminDashboardPage: React.FC = () => {
 
   if ((isLoading || orgContextLoading) && !activeOrg) {
     return (
-      <div className="admin-page">
-        <LoadingSpinner message="Loading your organizations..." />
+      <div className="admin-page" role="status" aria-live="polite">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <SkeletonTextLines count={2} widths={['60%', '40%']} />
+          <SkeletonCardGrid items={3} linesPerCard={2} />
+          <p className="admin-secondary-text">Loading your organizations...</p>
+        </div>
       </div>
     );
   }
@@ -217,7 +221,12 @@ export const AdminDashboardPage: React.FC = () => {
           )}
 
           {loadingDashboard && !stats ? (
-            <LoadingSpinner message="Loading organization insights..." />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+              <SkeletonCardGrid items={4} linesPerCard={2} />
+              <SkeletonTextLines count={1} widths={['35%']} />
+              <SkeletonList items={3} withAvatar={false} linesPerItem={2} />
+              <p className="admin-secondary-text">Loading organization insights...</p>
+            </div>
           ) : (
             <>
               <div className="admin-dashboard-stats-grid" data-testid="stats-grid">

@@ -8,6 +8,7 @@ import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavCo
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
+import { PageTransition } from './PageTransition';
 import './Layout.css';
 
 export const Layout: React.FC = () => {
@@ -157,7 +158,9 @@ export const Layout: React.FC = () => {
             </nav>
           </header>
           <main className="main-content" role="main" id="main-content" tabIndex={-1}>
-            <Outlet />
+            <PageTransition transitionKey={location.key}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
       </>
@@ -255,7 +258,9 @@ export const Layout: React.FC = () => {
             </nav>
           </aside>
           <main className="unified-main" id="main-content" role="main" tabIndex={-1}>
-            <Outlet />
+            <PageTransition transitionKey={location.key}>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
         

@@ -1,7 +1,7 @@
 # Frontend Documentation
 
 **Version:** 1.0  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-12-19  
 **Repository:** FanEngagement
 
 ---
@@ -38,6 +38,16 @@
 - Implementing sidebar, mobile nav, or organization switcher
 - Need navigation-specific token usage
 
+### ♿ **Accessibility**
+**[accessibility.md](./accessibility.md)** — Complete accessibility playbook and checklist  
+**[keyboard-navigation.md](./keyboard-navigation.md)** — Keyboard navigation implementation
+
+**Start here** if you're:
+- Building new features or components
+- Need an accessibility checklist for PR review
+- Looking for ARIA, keyboard, or screen reader guidance
+- Setting up accessibility testing tools
+
 ---
 
 ## 📖 Complete Documentation Index
@@ -69,6 +79,12 @@
 | [navigation-visual-mockup-guide.md](./navigation-visual-mockup-guide.md) | Visual design mockups | Designers, PMs |
 | [navigation-token-usage-guide.md](./navigation-token-usage-guide.md) | Token usage in navigation | Developers |
 | [keyboard-navigation.md](./keyboard-navigation.md) | Keyboard accessibility guide | Developers, QA, Accessibility |
+
+### Accessibility
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [accessibility.md](./accessibility.md) | **Complete accessibility playbook and checklist** | All developers, QA, Accessibility |
+| [keyboard-navigation.md](./keyboard-navigation.md) | Detailed keyboard navigation implementation | Developers |
 
 ---
 
@@ -180,7 +196,13 @@ All documentation in this directory follows these standards:
 → [design-tokens-showcase.html](./design-tokens-showcase.html) — Open in browser, scroll to "Colors"
 
 ### "I need to make my component keyboard accessible"
-→ [keyboard-navigation.md](./keyboard-navigation.md) — Complete keyboard navigation guide
+→ [accessibility.md](./accessibility.md) — See "Keyboard Navigation" section
+
+### "I need to ensure my component is accessible"
+→ [accessibility.md](./accessibility.md) — Complete accessibility playbook with checklist
+
+### "I need to test for accessibility issues"
+→ [accessibility.md](./accessibility.md) — See "Tools & Setup" section
 
 ### "I need visual mockups for navigation"
 → [navigation-visual-mockup-guide.md](./navigation-visual-mockup-guide.md) — Visual design reference
@@ -211,6 +233,7 @@ When adding or updating documentation:
 
 - **Questions about design tokens?** See [design-system.md](./design-system.md) or open the [interactive showcase](./design-tokens-showcase.html)
 - **Questions about navigation?** Start with [README-navigation-design.md](./README-navigation-design.md)
+- **Questions about accessibility?** See [accessibility.md](./accessibility.md) for complete guidance
 - **Can't find what you need?** Check the main [docs/](../) directory
 - **Found an issue?** Open a GitHub issue with the `documentation` label
 
@@ -224,9 +247,10 @@ When adding or updating documentation:
 | Figma Design Library | ✅ Complete | 2025-12-09 |
 | Navigation Design | ✅ Complete | 2025-12-08 |
 | Keyboard Navigation | ✅ Complete | 2025-12-08 |
+| Accessibility Playbook | ✅ Complete | 2025-12-19 |
 | Interactive Demos | ✅ Complete | 2025-12-09 |
 
 ---
 
 **Maintained by:** FanEngagement Frontend Team  
-**Last Reviewed:** 2025-12-09
+**Last Reviewed:** 2025-12-19

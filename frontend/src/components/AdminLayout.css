@@ -44,13 +44,14 @@ body.theme-dark {
 .admin-mobile-menu-button {
   display: none; /* Hidden on desktop, shown on mobile */
   background: none;
-  border: none;
+  border: 1px solid transparent;
   color: var(--color-text-inverse);
   font-size: var(--font-size-2xl);
   padding: var(--spacing-2);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background-color var(--duration-normal) var(--ease-out);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive);
   min-width: 44px;
   min-height: 44px;
   align-items: center;
@@ -59,6 +60,8 @@ body.theme-dark {
 
 .admin-mobile-menu-button:hover {
   background-color: var(--color-overlay-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .admin-mobile-menu-button:focus {
@@ -194,16 +197,20 @@ body.theme-dark {
 .admin-logout-button {
   background-color: var(--color-border-dark);
   color: var(--color-text-inverse);
-  border: none;
+  border: 1px solid transparent;
   padding: var(--spacing-2) var(--spacing-4);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-base);
-  transition: background-color var(--duration-normal) var(--ease-out);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-interactive);
 }
 
 .admin-logout-button:hover {
   background-color: var(--color-neutral-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  border-color: var(--color-border-dark);
 }
 
 .admin-container {
@@ -231,10 +238,9 @@ body.theme-dark {
   color: var(--color-neutral-200);
   text-decoration: none;
   padding: var(--spacing-3) var(--spacing-6);
-  transition: background-color var(--duration-fast) var(--ease-out), 
+  transition: var(--transition-interactive),
               color var(--duration-fast) var(--ease-out), 
-              border-left-color var(--duration-fast) var(--ease-out),
-              box-shadow var(--duration-fast) var(--ease-out);
+              border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
   font-weight: var(--font-weight-medium);
   display: flex;
@@ -252,6 +258,8 @@ body.theme-dark {
   background-color: var(--nav-item-hover-bg);
   color: var(--nav-item-hover-color);
   border-left-color: var(--color-primary-600);
+  transform: translateX(2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-nav-link.active {
@@ -399,4 +407,3 @@ body.theme-dark .admin-nav-link:hover {
     max-width: none;
   }
 }
-
