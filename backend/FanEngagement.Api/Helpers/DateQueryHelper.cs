@@ -6,6 +6,13 @@ namespace FanEngagement.Api.Helpers;
 /// <summary>
 /// Applies fallback date range values from the HTTP query string when not already provided by the caller.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Existing non-null values are never overwritten; this helper only populates null inputs from query parameters.
+/// When both values are present but reversed, they are swapped to form a valid range. No additional range
+/// constraints (such as maximum span) are enforced here; callers should validate business-specific limits as needed.
+/// </para>
+/// </remarks>
 public static class DateQueryHelper
 {
     /// <summary>

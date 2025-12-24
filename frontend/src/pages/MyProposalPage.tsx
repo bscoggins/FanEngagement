@@ -220,10 +220,8 @@ export const MyProposalPage: React.FC = () => {
     const optimisticResults: ProposalResults = {
       ...resultsSnapshot,
       optionResults: optimisticOptionResults,
-      totalVotingPower: optimisticOptionResults.reduce(
-        (sum, optionResult) => sum + optionResult.totalVotingPower,
-        0
-      ),
+      // Preserve the snapshot total to avoid double-counting across options during optimistic updates.
+      totalVotingPower: resultsSnapshot.totalVotingPower,
     };
 
     const optimisticVoteId = generateOptimisticVoteId();
