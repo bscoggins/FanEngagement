@@ -225,7 +225,7 @@ export const MyProposalPage: React.FC = () => {
     };
 
     const optimisticVoteId = generateOptimisticVoteId();
-    const votedOptionId = selectedOptionId;
+    const attemptedVoteOptionId = selectedOptionId;
 
     const optimisticVote: Vote = {
       id: optimisticVoteId,
@@ -266,7 +266,7 @@ export const MyProposalPage: React.FC = () => {
         setResults(mergeResultsWithOptions(resultsData, proposal));
         setRefreshWarning('');
         setSelectedOptionId((current) =>
-          current === votedOptionId ? '' : current
+          current === attemptedVoteOptionId ? '' : current
         );
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
@@ -276,7 +276,7 @@ export const MyProposalPage: React.FC = () => {
           'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';
         setRefreshWarning(refreshErrorMessage);
         setSelectedOptionId((current) =>
-          current === votedOptionId ? '' : current
+          current === attemptedVoteOptionId ? '' : current
         );
         showError(refreshErrorMessage);
       }

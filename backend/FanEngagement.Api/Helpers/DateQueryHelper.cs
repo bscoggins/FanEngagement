@@ -23,7 +23,7 @@ public static class DateQueryHelper
     /// <param name="request">The current HTTP request whose query string may contain <c>dateFrom</c> and <c>dateTo</c>.</param>
     /// <param name="dateFrom">Nullable start of the date range; only set when currently null.</param>
     /// <param name="dateTo">Nullable end of the date range; only set when currently null.</param>
-    public static void ApplyDateRangeFallback(HttpRequest? request, ref DateTimeOffset? dateFrom, ref DateTimeOffset? dateTo)
+    public static void ApplyDateRangeFallback(HttpRequest request, ref DateTimeOffset? dateFrom, ref DateTimeOffset? dateTo)
     {
         if (request != null && request.Query.Count > 0)
         {
