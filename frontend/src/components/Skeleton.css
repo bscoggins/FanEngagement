@@ -1,0 +1,127 @@
+.skeleton {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--color-neutral-100) 25%,
+    var(--color-neutral-200) 50%,
+    var(--color-neutral-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s var(--ease-in-out) infinite;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.skeleton--pulse {
+  background: var(--color-neutral-100);
+  animation: skeleton-pulse 1.3s ease-in-out infinite;
+}
+
+.skeleton--text {
+  height: 0.875rem;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton--circle {
+  border-radius: var(--radius-full);
+}
+
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.skeleton-table {
+  width: 100%;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+.skeleton-table__header,
+.skeleton-table__row {
+  display: grid;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  align-items: center;
+}
+
+.skeleton-table__header {
+  background: var(--color-neutral-50);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.skeleton-table__row {
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.skeleton-table__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-table__row:nth-of-type(even) {
+  background: var(--color-neutral-50);
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.skeleton-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.skeleton-card-grid {
+  display: grid;
+  gap: var(--spacing-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.skeleton-card {
+  padding: var(--spacing-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}

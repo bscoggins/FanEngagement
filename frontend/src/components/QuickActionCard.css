@@ -13,8 +13,8 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--spacing-6);
-  transition: box-shadow var(--duration-normal) var(--ease-out), 
-              transform var(--duration-normal) var(--ease-out);
+  border: 1px solid transparent;
+  transition: var(--transition-interactive);
   cursor: pointer;
   height: 100%;
 }
@@ -22,6 +22,8 @@
 .quick-action-card:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+  background-color: var(--color-neutral-50);
+  border-color: var(--color-border-default);
 }
 
 .quick-action-card-header {
@@ -98,6 +100,17 @@
   color: var(--color-primary-600);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
+}
+
+body.theme-dark .quick-action-card {
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-border-dark);
+}
+
+body.theme-dark .quick-action-card:hover {
+  background-color: var(--color-overlay-subtle);
+  border-color: var(--color-border-dark);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Respect reduced motion preferences */

@@ -1,6 +1,57 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { type Toast as ToastModel } from '../contexts/ToastContext';
 import './Toast.css';
+
+type ToastAnimationStyle = React.CSSProperties & {
+  '--toast-translate-x'?: string;
+  '--toast-translate-y'?: string;
+};
+
+const SLIDE_DISTANCE = '120%';
+const PILL_RADIUS = '9999px';
+const SURFACE_ELEVATED = 'var(--color-surface-elevated, var(--color-surface))';
+// Balance smooth animation updates with minimal timer churn (~30 steps over typical 5s lifetime)
+const MAX_TICK_INTERVAL = 150;
+const MIN_TICK_INTERVAL = 30;
+const TARGET_TICKS = 30;
+
+const calculateTickInterval = (duration: number) => {
+  // Aim for TARGET_TICKS updates; clamp to avoid over-frequent timers while keeping motion smooth.
+  const maxFeasibleTicks = Math.max(1, Math.floor(duration / MIN_TICK_INTERVAL));
+  const effectiveTargetTicks = Math.min(TARGET_TICKS, maxFeasibleTicks);
+  const rawInterval = duration / effectiveTargetTicks;
+  return Math.min(MAX_TICK_INTERVAL, Math.max(MIN_TICK_INTERVAL, rawInterval));
+};
+const CONTENT_GRID_STYLE: React.CSSProperties = {
+  display: 'flex',
+  gap: 'var(--spacing-3)',
+  alignItems: 'flex-start',
+};
+
+const ICON_BASE_STYLE: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 'var(--spacing-10, 2.5rem)',
+  height: 'var(--spacing-10, 2.5rem)',
+  borderRadius: `var(--radius-full, ${PILL_RADIUS})`,
+  background: SURFACE_ELEVATED,
+  boxShadow: 'var(--shadow-sm)',
+  transition: 'transform var(--duration-normal) var(--ease-out)',
+};
+
+const PROGRESS_TRACK_BASE_STYLE: React.CSSProperties = {
+  marginTop: 'var(--spacing-2)',
+  height: '0.35rem',
+  borderRadius: `var(--radius-full, ${PILL_RADIUS})`,
+  overflow: 'hidden',
+};
+
+const PROGRESS_BAR_BASE_STYLE: React.CSSProperties = {
+  height: '100%',
+  borderRadius: 'inherit',
+  transition: 'width calc(var(--duration-fast) / 2) linear',
+};
 
 interface ToastProps {
   toast: ToastModel;
@@ -24,21 +75,163 @@ const getAnimationDirection = (position: ToastModel['position']) => {
   }
 };
 
+const getSlideOffset = (direction: ReturnType<typeof getAnimationDirection>) => {
+  switch (direction) {
+    case 'left':
+      return { x: `-${SLIDE_DISTANCE}`, y: '0' };
+    case 'right':
+      return { x: SLIDE_DISTANCE, y: '0' };
+    case 'top':
+      return { x: '0', y: `-${SLIDE_DISTANCE}` };
+    case 'bottom':
+      return { x: '0', y: SLIDE_DISTANCE };
+    default:
+      return { x: SLIDE_DISTANCE, y: '0' };
+  }
+};
+
+const iconByType: Record<ToastModel['type'], React.ReactNode> = {
+  success: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
+      <path
+        d="M20 6 9 17l-5-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  warning: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
+      <path
+        d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a1 1 0 0 0 .86 1.5h18.64a1 1 0 0 0 .86-1.5L13.71 3.86a1 1 0 0 0-1.72 0Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  error: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
+      <path
+        d="m6 6 12 12M18 6 6 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  info: (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="100%" height="100%">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+};
+
+const typeLabelMap: Record<ToastModel['type'], string> = {
+  success: 'Success notification',
+  error: 'Error notification',
+  warning: 'Warning notification',
+  info: 'Information notification',
+};
+
+const accentColorByType: Record<ToastModel['type'], string> = {
+  success: 'var(--color-success-600)',
+  warning: 'var(--color-warning-700)',
+  error: 'var(--color-error-700)',
+  info: 'var(--color-info-700)',
+};
+
+const trackColorByType: Record<ToastModel['type'], string> = {
+  success: 'var(--color-success-100)',
+  warning: 'var(--color-warning-100)',
+  error: 'var(--color-error-100)',
+  info: 'var(--color-info-100)',
+};
+
 export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
-  const isError = toast.type === 'error';
   const direction = getAnimationDirection(toast.position);
+  const [progress, setProgress] = useState(100);
+  const { x: offsetX, y: offsetY } = getSlideOffset(direction);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+
+  useEffect(() => {
+    setProgress(100);
+    setRemainingSeconds(Math.ceil(Math.max(0, toast.duration) / 1000));
+    if (toast.duration <= 0) {
+      return;
+    }
+
+    const start = performance.now();
+    const duration = toast.duration;
+    const tickInterval = calculateTickInterval(duration);
+
+    // Use elapsed time from performance.now() to mitigate interval drift for short-lived toasts
+    const intervalId = window.setInterval(() => {
+      const elapsed = performance.now() - start;
+      const ratio = Math.min(elapsed / duration, 1);
+      const nextProgress = 100 - ratio * 100;
+      setProgress(nextProgress);
+      const remainingMs = Math.max(0, duration - elapsed);
+      const nextSeconds = Math.ceil(remainingMs / 1000);
+      setRemainingSeconds((prev) => (prev !== nextSeconds ? nextSeconds : prev));
+
+      if (ratio >= 1) {
+        setProgress(0);
+        window.clearInterval(intervalId);
+      }
+    }, tickInterval);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [toast.id, toast.duration]);
+
+  const icon = iconByType[toast.type];
+  const accentColor = accentColorByType[toast.type];
+  const trackColor = trackColorByType[toast.type];
+  const typeLabel = typeLabelMap[toast.type];
+  const animationStyle: ToastAnimationStyle = {
+    // Override CSS fallback offsets (pixel values) with percentage-based translations; CSS remains a subtle fallback if JS is disabled.
+    '--toast-translate-x': offsetX,
+    '--toast-translate-y': offsetY,
+  };
 
   return (
     <div
       className={`toast toast--${toast.type}`}
-      role={isError ? 'alert' : undefined}
+      role={toast.type === 'error' ? 'alert' : undefined}
       data-position={toast.position}
       data-direction={direction}
       data-testid={`toast-${toast.type}`}
+      style={animationStyle}
     >
-      <div className="toast__body">
-        <div className="toast__message">{toast.message}</div>
-        {toast.description ? <div className="toast__description">{toast.description}</div> : null}
+      <div
+        className="toast__content"
+        style={CONTENT_GRID_STYLE}
+      >
+        <span
+          aria-hidden="true"
+          data-testid="toast-icon"
+          style={{
+            ...ICON_BASE_STYLE,
+            color: accentColor,
+          }}
+        >
+          {icon}
+        </span>
+        <div className="toast__body">
+          <span className="sr-only">{typeLabel}</span>
+          <div className="toast__message">{toast.message}</div>
+          {toast.description ? <div className="toast__description">{toast.description}</div> : null}
+        </div>
       </div>
       <button
         type="button"
@@ -48,6 +241,30 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       >
         <span aria-hidden="true">×</span>
       </button>
+      {toast.duration > 0 ? (
+        <div
+          aria-hidden="true"
+          data-testid="toast-progress-track"
+          style={{
+            ...PROGRESS_TRACK_BASE_STYLE,
+            background: trackColor,
+          }}
+        >
+          <div
+            data-testid="toast-progress"
+            style={{
+              ...PROGRESS_BAR_BASE_STYLE,
+              width: `${progress}%`,
+              background: accentColor,
+            }}
+          />
+        </div>
+      ) : null}
+      {toast.duration > 0 && remainingSeconds > 0 ? (
+        <span className="sr-only" aria-live="polite">
+          Dismissing in {remainingSeconds} {remainingSeconds === 1 ? 'second' : 'seconds'}
+        </span>
+      ) : null}
     </div>
   );
 };

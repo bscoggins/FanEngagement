@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { membershipsApi } from '../api/membershipsApi';
 import { proposalsApi } from '../api/proposalsApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SkeletonCardGrid, SkeletonList, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { parseApiError } from '../utils/errorUtils';
 import type { MembershipWithOrganizationDto, Proposal } from '../types/api';
@@ -248,7 +248,20 @@ export const MemberDashboardPage: React.FC = () => {
   }, [data?.memberships, activeOrg]);
 
   if (loading) {
-    return <LoadingSpinner message="Loading your dashboard..." />;
+    return (
+      <div style={pageStyle} role="status" aria-live="polite">
+        <h1 style={welcomeHeadingStyle}>Welcome!</h1>
+        <SkeletonTextLines count={2} widths={['70%', '50%']} />
+        <div style={{ marginTop: 'var(--spacing-4)', marginBottom: 'var(--spacing-4)' }}>
+          <SkeletonCardGrid items={3} linesPerCard={2} />
+        </div>
+        <SkeletonTextLines count={1} widths={['40%']} />
+        <SkeletonList items={4} withAvatar linesPerItem={2} />
+        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-4)' }}>
+          Loading your dashboard...
+        </p>
+      </div>
+    );
   }
 
   if (error) {
