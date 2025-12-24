@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { proposalsApi } from '../api/proposalsApi';
@@ -12,10 +12,42 @@ import { parseApiError } from '../utils/errorUtils';
 import type { ProposalDetails, Vote, ProposalResults, ShareBalance, ShareType } from '../types/api';
 import { Radio } from '../components/Radio';
 import { Button } from '../components/Button';
+import { useNotifications } from '../contexts/NotificationContext';
+
+const mergeResultsWithOptions = (
+  resultsData: ProposalResults | null,
+  proposalData: ProposalDetails | null
+): ProposalResults | null => {
+  if (!proposalData) return resultsData;
+
+  const optionResults = proposalData.options.map((option) => {
+    const existing = resultsData?.optionResults.find((o) => o.optionId === option.id);
+    return (
+      existing ?? {
+        optionId: option.id,
+        optionText: option.text,
+        voteCount: 0,
+        totalVotingPower: 0,
+      }
+    );
+  });
+
+  const mergedTotalVotingPower =
+    resultsData && typeof resultsData.totalVotingPower === 'number'
+      ? resultsData.totalVotingPower
+      : optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0);
+
+  return {
+    proposalId: resultsData?.proposalId ?? proposalData.id,
+    optionResults,
+    totalVotingPower: mergedTotalVotingPower,
+  };
+};
 
 export const MyProposalPage: React.FC = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
   const { user } = useAuth();
+  const { showError, showSuccess } = useNotifications();
   const [proposal, setProposal] = useState<ProposalDetails | null>(null);
   const [userVote, setUserVote] = useState<Vote | null>(null);
   const [results, setResults] = useState<ProposalResults | null>(null);
@@ -24,8 +56,45 @@ export const MyProposalPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [refreshWarning, setRefreshWarning] = useState<string>('');
   const [selectedOptionId, setSelectedOptionId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const optimisticVoteCounter = useRef(0);
+
+  const generateOptimisticVoteId = useCallback(() => {
+    let optimisticId: string | null = null;
+
+    if (typeof crypto !== 'undefined') {
+      if (typeof crypto.randomUUID === 'function') {
+        try {
+          optimisticId = crypto.randomUUID();
+        } catch (err) {
+          console.warn('crypto.randomUUID failed, falling back to alternate ID generation', err);
+        }
+      }
+
+      if (!optimisticId && typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        optimisticId = `temp-vote-${hex}`;
+      }
+    }
+
+    if (optimisticId) {
+      return optimisticId;
+    }
+
+    optimisticVoteCounter.current += 1;
+    const timestamp = Date.now();
+    const randomPart =
+      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    return `temp-vote-${timestamp}-${optimisticVoteCounter.current}-${randomPart}`;
+  }, []);
+  const userVotingPower = useMemo(
+    () => calculateVotingPower(balances, shareTypes),
+    [balances, shareTypes]
+  );
 
   useEffect(() => {
     if (!proposalId || !user?.userId) return;
@@ -69,7 +138,7 @@ export const MyProposalPage: React.FC = () => {
         ) {
           try {
             const resultsData = await proposalsApi.getResults(proposalId);
-            setResults(resultsData);
+            setResults(mergeResultsWithOptions(resultsData, proposalData));
           } catch (err) {
             console.error('Failed to fetch results:', err);
           }
@@ -87,12 +156,100 @@ export const MyProposalPage: React.FC = () => {
 
   const handleVote = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proposalId || !user?.userId || !selectedOptionId) return;
+    if (!proposalId || !user?.userId || !selectedOptionId || !proposal) return;
+    if (submitting) return;
+
+    setSubmitting(true);
+
+    if (userVotingPower <= 0) {
+      const noPowerMessage = 'You do not have any voting power for this proposal.';
+      // Store the error state and surface the toast so the user sees immediate feedback.
+      setError(noPowerMessage);
+      showError(noPowerMessage);
+      setSelectedOptionId('');
+      setSubmitting(false);
+      return;
+    }
+
+    const previousResults = results;
+    const previousUserVote = userVote;
+    const previousSelection = selectedOptionId;
+    // Note: userVotingPower is derived from the currently loaded balances/shareTypes.
+    // If balances/shareTypes are stale, this comparison is a best-effort signal only and only checked on re-votes.
+    const votingPowerChanged =
+      previousUserVote !== null && previousUserVote.votingPower !== userVotingPower;
+
+    const resultsSnapshot =
+      mergeResultsWithOptions(results, proposal) ?? {
+        proposalId,
+        optionResults: [],
+        totalVotingPower: 0,
+      };
+
+    const optionResultsSnapshot = resultsSnapshot.optionResults;
+
+    const isRevotingSameOption =
+      previousUserVote !== null && previousUserVote.proposalOptionId === selectedOptionId;
+
+    const optimisticOptionResults = optionResultsSnapshot.map((optionResult) => {
+      let voteCount = optionResult.voteCount;
+      let totalVotingPower = optionResult.totalVotingPower;
+
+      if (isRevotingSameOption && optionResult.optionId === selectedOptionId) {
+        const powerDelta = userVotingPower - (previousUserVote?.votingPower ?? 0);
+        totalVotingPower += powerDelta;
+      } else {
+        if (previousUserVote?.proposalOptionId === optionResult.optionId) {
+          voteCount = Math.max(0, voteCount - 1);
+          totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
+        }
+
+        if (optionResult.optionId === selectedOptionId) {
+          voteCount += 1;
+          totalVotingPower += userVotingPower;
+        }
+      }
+
+      return {
+        ...optionResult,
+        voteCount,
+        totalVotingPower,
+      };
+    });
+
+    const optimisticResults: ProposalResults = {
+      ...resultsSnapshot,
+      optionResults: optimisticOptionResults,
+      // Preserve the snapshot total to avoid double-counting across options during optimistic updates.
+      totalVotingPower: resultsSnapshot.totalVotingPower,
+    };
+
+    const optimisticVoteId = generateOptimisticVoteId();
+    const attemptedVoteOptionId = selectedOptionId;
+
+    const optimisticVote: Vote = {
+      id: optimisticVoteId,
+      proposalId,
+      proposalOptionId: selectedOptionId,
+      userId: user.userId,
+      votingPower: userVotingPower,
+      castAt: new Date().toISOString(),
+    };
 
     try {
-      setSubmitting(true);
       setError('');
+      setRefreshWarning('');
       setSuccessMessage('');
+
+      if (votingPowerChanged) {
+        const powerChangeWarning =
+          'Your voting power changed since your last vote. Totals will refresh after the latest results load.';
+        setRefreshWarning(powerChangeWarning);
+      }
+
+      setResults(optimisticResults);
+      setUserVote(optimisticVote);
+      setSuccessMessage('Casting your vote...');
 
       const vote = await proposalsApi.castVote(proposalId, {
         proposalOptionId: selectedOptionId,
@@ -101,19 +258,39 @@ export const MyProposalPage: React.FC = () => {
 
       setUserVote(vote);
       setSuccessMessage('Your vote has been cast successfully!');
-      setSelectedOptionId('');
+      showSuccess('Your vote has been cast successfully!');
       
       // Refetch results to show updated vote counts
       try {
         const resultsData = await proposalsApi.getResults(proposalId);
-        setResults(resultsData);
+        setResults(mergeResultsWithOptions(resultsData, proposal));
+        setRefreshWarning('');
+        setSelectedOptionId((current) =>
+          current === attemptedVoteOptionId ? '' : current
+        );
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
+        // Prefer the optimistic view; server state may differ until the next successful refresh.
+        setResults((current) => mergeResultsWithOptions(current ?? resultsSnapshot, proposal));
+        const refreshErrorMessage =
+          'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';
+        setRefreshWarning(refreshErrorMessage);
+        setSelectedOptionId((current) =>
+          current === attemptedVoteOptionId ? '' : current
+        );
+        showError(refreshErrorMessage);
       }
     } catch (err: any) {
       console.error('Failed to cast vote:', err);
       const errorMessage = parseApiError(err);
       setError(errorMessage);
+      setResults(previousResults);
+      setUserVote(previousUserVote);
+      // Preserve whatever the user most recently selected; fall back to the prior selection if nothing is set.
+      setSelectedOptionId((current) => current ?? previousSelection ?? '');
+      setSuccessMessage('');
+      setRefreshWarning('');
+      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -130,9 +307,6 @@ export const MyProposalPage: React.FC = () => {
   if (!proposal) {
     return <div style={{ padding: '2rem' }}>Proposal not found.</div>;
   }
-
-  // Calculate user's voting power using share types and balances
-  const userVotingPower = calculateVotingPower(balances, shareTypes);
 
   // Check eligibility
   const eligibilityCheck = checkVotingEligibility(
@@ -223,8 +397,25 @@ export const MyProposalPage: React.FC = () => {
         </div>
       )}
 
+      {refreshWarning && (
+        <div
+          data-testid="results-refresh-warning"
+          style={{
+            padding: '1rem',
+            backgroundColor: '#fff3cd',
+            color: '#856404',
+            border: '1px solid #ffeeba',
+            borderRadius: '4px',
+            marginTop: '1rem',
+          }}
+        >
+          {refreshWarning}
+        </div>
+      )}
+
       {successMessage && (
         <div
+          data-testid="vote-success-message"
           style={{
             padding: '1rem',
             backgroundColor: '#d4edda',

@@ -54,6 +54,8 @@ public class AdminAuditEventsController(IAuditService auditService, ILogger<Admi
         [FromQuery] int pageSize = PaginationValidators.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
+        DateQueryHelper.ApplyDateRangeFallback(Request, ref dateFrom, ref dateTo);
+
         // Validate pagination parameters
         var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
         if (validationError != null)
@@ -112,6 +114,8 @@ public class AdminAuditEventsController(IAuditService auditService, ILogger<Admi
         [FromQuery] string? outcome = null,
         CancellationToken cancellationToken = default)
     {
+        DateQueryHelper.ApplyDateRangeFallback(Request, ref dateFrom, ref dateTo);
+
         // Validate format
         format = format.ToLowerInvariant();
         if (format != "csv" && format != "json")

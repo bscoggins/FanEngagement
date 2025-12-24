@@ -54,6 +54,8 @@ public class UserAuditEventsController(IAuditService auditService) : ControllerB
             return Unauthorized();
         }
 
+        DateQueryHelper.ApplyDateRangeFallback(Request, ref dateFrom, ref dateTo);
+
         // Validate pagination parameters
         var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
         if (validationError != null)
