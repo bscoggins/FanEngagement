@@ -188,8 +188,8 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower += powerDelta;
       } else {
         if (previousUserVote?.proposalOptionId === optionResult.optionId) {
-          voteCount -= 1;
-          totalVotingPower -= previousUserVote.votingPower;
+          voteCount = Math.max(0, voteCount - 1);
+          totalVotingPower = Math.max(0, totalVotingPower - previousUserVote.votingPower);
         }
 
         if (optionResult.optionId === selectedOptionId) {
