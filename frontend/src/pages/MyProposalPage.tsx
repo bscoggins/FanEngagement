@@ -32,10 +32,15 @@ const mergeResultsWithOptions = (
     );
   });
 
+  const mergedTotalVotingPower =
+    resultsData && typeof resultsData.totalVotingPower === 'number'
+      ? resultsData.totalVotingPower
+      : optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0);
+
   return {
     proposalId: resultsData?.proposalId ?? proposalData.id,
     optionResults,
-    totalVotingPower: optionResults.reduce((sum, result) => sum + result.totalVotingPower, 0),
+    totalVotingPower: mergedTotalVotingPower,
   };
 };
 
@@ -155,13 +160,6 @@ export const MyProposalPage: React.FC = () => {
     if (submitting) return;
 
     setSubmitting(true);
-    const previousResults = results;
-    const previousUserVote = userVote;
-    const previousSelection = selectedOptionId;
-    // Note: userVotingPower is derived from the currently loaded balances/shareTypes.
-    // If balances/shareTypes are stale, this comparison is a best-effort signal only and only checked on re-votes.
-    const votingPowerChanged =
-      previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
     if (userVotingPower <= 0) {
       const noPowerMessage = 'You do not have any voting power for this proposal.';
@@ -172,6 +170,14 @@ export const MyProposalPage: React.FC = () => {
       setSubmitting(false);
       return;
     }
+
+    const previousResults = results;
+    const previousUserVote = userVote;
+    const previousSelection = selectedOptionId;
+    // Note: userVotingPower is derived from the currently loaded balances/shareTypes.
+    // If balances/shareTypes are stale, this comparison is a best-effort signal only and only checked on re-votes.
+    const votingPowerChanged =
+      previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
     const resultsSnapshot =
       mergeResultsWithOptions(results, proposal) ?? {
@@ -405,6 +411,7 @@ export const MyProposalPage: React.FC = () => {
 
       {successMessage && (
         <div
+          data-testid="vote-success-message"
           style={{
             padding: '1rem',
             backgroundColor: '#d4edda',

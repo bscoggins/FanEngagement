@@ -210,7 +210,7 @@ describe('MyProposalPage', () => {
       });
     });
 
-    await screen.findByText('Your vote has been cast successfully!');
+    await screen.findByTestId('vote-success-message');
   });
 
   it('displays error message when vote fails', async () => {
