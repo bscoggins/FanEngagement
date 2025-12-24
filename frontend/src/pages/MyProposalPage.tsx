@@ -61,8 +61,8 @@ export const MyProposalPage: React.FC = () => {
       if (typeof crypto.randomUUID === 'function') {
         try {
           return crypto.randomUUID();
-        } catch {
-          // randomUUID can be unavailable or restricted; fall back to other strategies below
+        } catch (err) {
+          console.warn('crypto.randomUUID failed, falling back to alternate ID generation', err);
         }
       }
 
@@ -157,6 +157,15 @@ export const MyProposalPage: React.FC = () => {
     const votingPowerChanged =
       previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
+    if (userVotingPower <= 0) {
+      const noPowerMessage = 'You do not have any voting power for this proposal.';
+      // Store the error state and surface the toast so the user sees immediate feedback.
+      setError(noPowerMessage);
+      showError(noPowerMessage);
+      setSubmitting(false);
+      return;
+    }
+
     const resultsSnapshot =
       mergeResultsWithOptions(results, proposal) ?? {
         proposalId,
@@ -226,18 +235,9 @@ export const MyProposalPage: React.FC = () => {
         setRefreshWarning(powerChangeWarning);
       }
 
-      if (userVotingPower > 0) {
-        setResults(optimisticResults);
-        setUserVote(optimisticVote);
-        setSuccessMessage('Casting your vote...');
-      } else {
-        const noPowerMessage = 'You do not have any voting power for this proposal.';
-        // Store the error state and surface the toast so the user sees immediate feedback.
-        setError(noPowerMessage);
-        showError(noPowerMessage);
-        setSubmitting(false);
-        return;
-      }
+      setResults(optimisticResults);
+      setUserVote(optimisticVote);
+      setSuccessMessage('Casting your vote...');
 
       const vote = await proposalsApi.castVote(proposalId, {
         proposalOptionId: selectedOptionId,
