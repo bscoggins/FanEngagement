@@ -159,7 +159,7 @@ export const MyProposalPage: React.FC = () => {
     const previousUserVote = userVote;
     const previousSelection = selectedOptionId;
     // Note: userVotingPower is derived from the currently loaded balances/shareTypes.
-    // If balances/shareTypes are stale, this comparison is a best-effort signal only.
+    // If balances/shareTypes are stale, this comparison is a best-effort signal only and only checked on re-votes.
     const votingPowerChanged =
       previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
@@ -168,6 +168,7 @@ export const MyProposalPage: React.FC = () => {
       // Store the error state and surface the toast so the user sees immediate feedback.
       setError(noPowerMessage);
       showError(noPowerMessage);
+      setSelectedOptionId(previousUserVote?.proposalOptionId ?? '');
       setSubmitting(false);
       return;
     }
