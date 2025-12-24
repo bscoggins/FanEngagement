@@ -57,22 +57,27 @@ export const MyProposalPage: React.FC = () => {
   const optimisticVoteCounter = useRef(0);
 
   const generateOptimisticVoteId = useCallback(() => {
+    let optimisticId: string | null = null;
+
     if (typeof crypto !== 'undefined') {
       if (typeof crypto.randomUUID === 'function') {
         try {
-          return crypto.randomUUID();
+          optimisticId = crypto.randomUUID();
         } catch (err) {
           console.warn('crypto.randomUUID failed, falling back to alternate ID generation', err);
-          // Continue to crypto.getRandomValues or counter-based fallback below.
         }
       }
 
-      if (typeof crypto.getRandomValues === 'function') {
+      if (!optimisticId && typeof crypto.getRandomValues === 'function') {
         const bytes = new Uint8Array(16);
         crypto.getRandomValues(bytes);
         const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-        return `temp-vote-${hex}`;
+        optimisticId = `temp-vote-${hex}`;
       }
+    }
+
+    if (optimisticId) {
+      return optimisticId;
     }
 
     optimisticVoteCounter.current += 1;

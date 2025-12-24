@@ -7,7 +7,7 @@ public static class DateQueryHelper
 {
     public static void ApplyDateRangeFallback(HttpRequest request, ref DateTimeOffset? dateFrom, ref DateTimeOffset? dateTo)
     {
-        if (request == null)
+        if (request == null || request.Query.Count == 0)
         {
             return;
         }
