@@ -59,7 +59,11 @@ export const MyProposalPage: React.FC = () => {
   const generateOptimisticVoteId = useCallback(() => {
     if (typeof crypto !== 'undefined') {
       if (typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID();
+        try {
+          return crypto.randomUUID();
+        } catch {
+          // Fall through to other strategies
+        }
       }
 
       if (typeof crypto.getRandomValues === 'function') {
@@ -148,6 +152,8 @@ export const MyProposalPage: React.FC = () => {
     const previousResults = results;
     const previousUserVote = userVote;
     const previousSelection = selectedOptionId;
+    // Note: userVotingPower is derived from the currently loaded balances/shareTypes.
+    // If balances/shareTypes are stale, this comparison is a best-effort signal only.
     const votingPowerChanged =
       previousUserVote != null && previousUserVote.votingPower !== userVotingPower;
 
@@ -158,23 +164,7 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower: 0,
       };
 
-    // If the server snapshot hasn't reflected the previous vote yet, prime a minimal baseline.
-    const normalizedOptionResults = resultsSnapshot.optionResults.map((optionResult) => {
-      const shouldNormalizePreviousVote =
-        previousUserVote?.proposalOptionId === optionResult.optionId &&
-        optionResult.voteCount === 0 &&
-        optionResult.totalVotingPower === 0;
-
-      if (shouldNormalizePreviousVote) {
-        return {
-          ...optionResult,
-          voteCount: 1,
-          totalVotingPower: previousUserVote.votingPower,
-        };
-      }
-
-      return optionResult;
-    });
+    const normalizedOptionResults = resultsSnapshot.optionResults;
 
     const isRevotingSameOption =
       previousUserVote != null && previousUserVote.proposalOptionId === selectedOptionId;
@@ -236,9 +226,17 @@ export const MyProposalPage: React.FC = () => {
         setRefreshWarning(powerChangeWarning);
       }
 
-      setResults(optimisticResults);
-      setUserVote(optimisticVote);
-      setSuccessMessage('Casting your vote...');
+      if (userVotingPower > 0) {
+        setResults(optimisticResults);
+        setUserVote(optimisticVote);
+        setSuccessMessage('Casting your vote...');
+      } else {
+        const noPowerMessage = 'You do not have any voting power for this proposal.';
+        setError(noPowerMessage);
+        showError(noPowerMessage);
+        setSubmitting(false);
+        return;
+      }
 
       const vote = await proposalsApi.castVote(proposalId, {
         proposalOptionId: selectedOptionId,
@@ -257,59 +255,7 @@ export const MyProposalPage: React.FC = () => {
         setSelectedOptionId('');
       } catch (err) {
         console.error('Failed to fetch updated results:', err);
-        setResults((current) => {
-          const baseResults = mergeResultsWithOptions(current ?? resultsSnapshot, proposal);
-          const correctedOptionResults =
-            baseResults?.optionResults.map((optionResult) => {
-              let voteCount = optionResult.voteCount;
-              let totalVotingPower = optionResult.totalVotingPower;
-
-              const isPreviousOption = previousUserVote?.proposalOptionId === optionResult.optionId;
-              const isNewOption = vote.proposalOptionId === optionResult.optionId;
-              const isSameOptionRevote =
-                previousUserVote?.proposalOptionId === vote.proposalOptionId && isNewOption;
-
-              if (isSameOptionRevote) {
-                voteCount = Math.max(1, voteCount);
-                totalVotingPower =
-                  Math.max(0, totalVotingPower - (previousUserVote?.votingPower ?? 0)) +
-                  vote.votingPower;
-              } else {
-                if (isPreviousOption) {
-                  voteCount = Math.max(0, voteCount - 1);
-                  totalVotingPower = Math.max(
-                    0,
-                    totalVotingPower - (previousUserVote?.votingPower ?? 0)
-                  );
-                }
-
-                if (isNewOption) {
-                  voteCount = Math.max(1, voteCount);
-                  totalVotingPower += vote.votingPower;
-                }
-              }
-
-              return {
-                ...optionResult,
-                voteCount,
-                totalVotingPower,
-              };
-            }) ?? [];
-
-          const correctedResults: ProposalResults = {
-            ...(baseResults ?? {
-              proposalId,
-              optionResults: correctedOptionResults,
-              totalVotingPower: 0,
-            }),
-            optionResults: correctedOptionResults,
-            totalVotingPower: correctedOptionResults.reduce(
-              (sum, optionResult) => sum + optionResult.totalVotingPower,
-              0
-            ),
-          };
-          return correctedResults;
-        });
+        setResults((current) => mergeResultsWithOptions(current ?? resultsSnapshot, proposal));
         const refreshErrorMessage =
           'Your vote was recorded, but we could not refresh the latest results. The displayed results may be out of date.';
         setRefreshWarning(refreshErrorMessage);

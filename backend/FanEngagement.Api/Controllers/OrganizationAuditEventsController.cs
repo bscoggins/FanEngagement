@@ -52,6 +52,12 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         [FromQuery] int pageSize = PaginationValidators.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
+        if (!dateFrom.HasValue && Request.Query.TryGetValue("dateFrom", out var rawDateFrom) &&
+            DateTimeOffset.TryParse(rawDateFrom, out var parsedDateFrom))
+        {
+            dateFrom = parsedDateFrom;
+        }
+
         // Validate pagination parameters
         var validationError = PaginationHelper.ValidatePaginationParameters(page, pageSize);
         if (validationError != null)
