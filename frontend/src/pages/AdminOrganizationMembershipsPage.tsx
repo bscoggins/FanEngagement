@@ -5,12 +5,12 @@ import { organizationsApi } from '../api/organizationsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
 import { getRoleFullName } from '../utils/roleUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import './AdminPage.css';
 import type { MembershipWithUserDto, Organization, User } from '../types/api';
 import { Select } from '../components/Select';
+import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 
 export const AdminOrganizationMembershipsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -126,7 +126,11 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
     return (
       <div className="admin-page">
         <h1>Manage Memberships</h1>
-        <LoadingSpinner message="Loading memberships..." />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <SkeletonTextLines count={2} widths={['60%', '40%']} />
+          <SkeletonTable columns={4} rows={6} />
+          <p className="admin-secondary-text">Loading memberships...</p>
+        </div>
       </div>
     );
   }

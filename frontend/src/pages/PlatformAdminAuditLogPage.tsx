@@ -3,11 +3,11 @@ import { auditEventsApi } from '../api/auditEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { parseApiError } from '../utils/errorUtils';
 import { ACTION_TYPES, RESOURCE_TYPES, getOutcomeBadgeClass, getActionBadgeClass, formatDate } from '../utils/auditUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
 import { Button } from '../components/Button';
+import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import './AdminPage.css';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 
@@ -145,10 +145,25 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
 
   if (isLoading && organizations.length === 0) {
     return (
-      <div className="admin-page">
-        <div className="admin-card compact">
-          <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
-          <LoadingSpinner message="Loading audit log..." />
+      <div className="admin-page" role="status" aria-live="polite">
+        <div className="admin-page-header">
+          <div className="admin-page-title-group">
+            <h1 data-testid="platform-audit-log-heading">Platform Audit Log</h1>
+            <div className="admin-page-subtitle">
+              Cross-organization audit events for platform-wide security monitoring.
+            </div>
+          </div>
+        </div>
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+          <SkeletonTextLines count={2} widths={['55%', '35%']} />
+          <div className="admin-form" style={{ gap: 'var(--spacing-3)' }}>
+            <Skeleton width="12rem" height="2.75rem" />
+            <Skeleton width="12rem" height="2.75rem" />
+            <Skeleton width="10rem" height="2.75rem" />
+            <Skeleton width="10rem" height="2.75rem" />
+          </div>
+          <SkeletonTable columns={5} rows={6} />
+          <p className="admin-secondary-text">Loading audit log...</p>
         </div>
       </div>
     );
@@ -333,8 +348,12 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="admin-card compact">
-          <LoadingSpinner message="Loading audit events..." />
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <SkeletonTextLines count={2} widths={['55%', '35%']} />
+          <SkeletonTable columns={7} rows={7} />
+          <p className="admin-secondary-text" style={{ margin: 0 }}>
+            Loading audit events...
+          </p>
         </div>
       ) : !auditEvents || auditEvents.items.length === 0 ? (
         <EmptyState

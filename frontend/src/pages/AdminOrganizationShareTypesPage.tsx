@@ -4,7 +4,6 @@ import { shareTypesApi } from '../api/shareTypesApi';
 import { organizationsApi } from '../api/organizationsApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import { parseApiError } from '../utils/errorUtils';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Input } from '../components/Input';
@@ -12,6 +11,7 @@ import { Checkbox } from '../components/Checkbox';
 import { Button } from '../components/Button';
 import './AdminPage.css';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
+import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -173,7 +173,11 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     return (
       <div className="admin-page">
         <h1>Manage Share Types</h1>
-        <LoadingSpinner message="Loading share types..." />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
+          <SkeletonTextLines count={2} widths={['60%', '45%']} />
+          <SkeletonTable columns={4} rows={6} />
+          <p className="admin-secondary-text">Loading share types...</p>
+        </div>
       </div>
     );
   }

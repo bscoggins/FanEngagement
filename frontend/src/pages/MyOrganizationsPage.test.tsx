@@ -125,7 +125,7 @@ describe('MyOrganizationsPage', () => {
       expect(screen.getByText('My Organizations')).toBeInTheDocument();
     });
 
-    const links = screen.getAllByRole('link', { name: /Test Organization|View Details/i });
+    const links = await screen.findAllByRole('link', { name: /Test Organization|View Details/i });
     expect(links.length).toBeGreaterThan(0);
     expect(links[0]).toHaveAttribute('href', '/me/organizations/org-1');
   });

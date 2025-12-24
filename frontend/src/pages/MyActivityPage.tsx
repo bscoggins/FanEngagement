@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { auditEventsApi } from '../api/auditEventsApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Skeleton, SkeletonList, SkeletonTextLines } from '../components/Skeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
@@ -255,7 +255,30 @@ export const MyActivityPage: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading your activity..." />;
+    return (
+      <div style={pageContainerStyle} role="status" aria-live="polite">
+        <h1>My Activity</h1>
+        <p style={subtitleStyle}>
+          View your recent actions and activities across the platform.
+        </p>
+        <div style={{ ...filterGroupStyle, gap: 'var(--spacing-2)' }}>
+          {(['7days', '30days', 'all'] as DateFilter[]).map((filter) => (
+            <Skeleton
+              key={filter}
+              variant="rect"
+              width="7.5rem"
+              height="2.75rem"
+              borderRadius="md"
+            />
+          ))}
+        </div>
+        <SkeletonTextLines count={2} widths={['60%', '40%']} />
+        <SkeletonList items={4} withAvatar linesPerItem={2} />
+        <p style={{ color: 'var(--color-text-secondary)', marginTop: 'var(--spacing-4)' }}>
+          Loading your activity...
+        </p>
+      </div>
+    );
   }
 
   if (error) {

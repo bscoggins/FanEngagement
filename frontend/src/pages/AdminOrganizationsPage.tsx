@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { organizationsApi } from '../api/organizationsApi';
 import { usersApi } from '../api/usersApi';
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/Pagination';
@@ -16,6 +15,7 @@ import { FormErrorSummary } from '../components/FormErrorSummary';
 import { parseApiError } from '../utils/errorUtils';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useTableData } from '../hooks/useTableData';
+import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import type { Organization, CreateOrganizationRequest, User, BlockchainType } from '../types/api';
 import './AdminPage.css';
 
@@ -249,9 +249,15 @@ export const AdminOrganizationsPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="admin-page">
-        <div className="admin-card compact">
+        <div className="admin-card compact" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }} role="status" aria-live="polite">
           <h1>Organization Management</h1>
-          <LoadingSpinner message="Loading organizations..." />
+          <SkeletonTextLines count={2} widths={['65%', '45%']} />
+          <div style={{ display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+            <Skeleton width="14rem" height="2.75rem" />
+            <Skeleton width="10rem" height="2.75rem" />
+          </div>
+          <SkeletonTable columns={4} rows={6} />
+          <p className="admin-secondary-text">Loading organizations...</p>
         </div>
       </div>
     );
