@@ -62,7 +62,7 @@ export const MyProposalPage: React.FC = () => {
         try {
           return crypto.randomUUID();
         } catch {
-          // Fall through to other strategies
+          // Handle environments where randomUUID is unsupported or restricted by CSP
         }
       }
 

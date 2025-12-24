@@ -52,6 +52,7 @@ public class OrganizationAuditEventsController(IAuditService auditService, ILogg
         [FromQuery] int pageSize = PaginationValidators.DefaultPageSize,
         CancellationToken cancellationToken = default)
     {
+        // Fallback parsing for cases where custom clients send pre-encoded timestamps that fail model binding.
         if (!dateFrom.HasValue && Request.Query.TryGetValue("dateFrom", out var rawDateFrom) &&
             DateTimeOffset.TryParse(rawDateFrom, out var parsedDateFrom))
         {
