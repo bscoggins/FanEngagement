@@ -63,6 +63,7 @@ export const MyProposalPage: React.FC = () => {
           return crypto.randomUUID();
         } catch (err) {
           console.warn('crypto.randomUUID failed, falling back to alternate ID generation', err);
+          // Continue to crypto.getRandomValues or counter-based fallback below.
         }
       }
 
@@ -173,12 +174,12 @@ export const MyProposalPage: React.FC = () => {
         totalVotingPower: 0,
       };
 
-    const normalizedOptionResults = resultsSnapshot.optionResults;
+    const optionResultsSnapshot = resultsSnapshot.optionResults;
 
     const isRevotingSameOption =
       previousUserVote != null && previousUserVote.proposalOptionId === selectedOptionId;
 
-    const optimisticOptionResults = normalizedOptionResults.map((optionResult) => {
+    const optimisticOptionResults = optionResultsSnapshot.map((optionResult) => {
       let voteCount = optionResult.voteCount;
       let totalVotingPower = optionResult.totalVotingPower;
 
