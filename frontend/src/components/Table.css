@@ -207,7 +207,13 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 }
 
 .table-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
   padding: var(--spacing-2) var(--spacing-3);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   background-color: var(--color-primary-600);
   color: var(--color-text-on-primary);
   border: 1px solid transparent;

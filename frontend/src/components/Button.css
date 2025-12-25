@@ -16,6 +16,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   
   /* Transitions */
   transition: background-color var(--duration-normal) var(--ease-out), border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
@@ -39,21 +41,21 @@
   padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-xs);
   border-radius: var(--radius-sm);
-  min-height: 1.5rem;
+  min-height: 2.75rem;
 }
 
 .btn--sm {
   padding: var(--spacing-1-5) var(--spacing-3);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-md);
-  min-height: 2rem;
+  min-height: 2.75rem;
 }
 
 .btn--md {
   padding: var(--spacing-2) var(--spacing-4);
   font-size: var(--font-size-base);
   border-radius: var(--radius-md);
-  min-height: 2.5rem;
+  min-height: 2.75rem;
 }
 
 .btn--lg {
@@ -73,31 +75,36 @@
 /* Icon-only button adjustments */
 .btn--icon-only.btn--xs {
   padding: var(--spacing-1);
-  width: 1.5rem;
-  min-height: 1.5rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }
 
 .btn--icon-only.btn--sm {
   padding: var(--spacing-1-5);
-  width: 2rem;
-  min-height: 2rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }
 
 .btn--icon-only.btn--md {
   padding: var(--spacing-2);
-  width: 2.5rem;
-  min-height: 2.5rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }
 
 .btn--icon-only.btn--lg {
   padding: var(--spacing-3);
   width: 3rem;
+  min-width: 3rem;
   min-height: 3rem;
 }
 
 .btn--icon-only.btn--xl {
   padding: var(--spacing-4);
   width: 3.5rem;
+  min-width: 3.5rem;
   min-height: 3.5rem;
 }
 
