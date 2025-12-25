@@ -264,7 +264,7 @@ body.theme-dark .admin-card.compact {
   border: 1px solid var(--color-border-default);
   position: relative;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   max-width: 100%;
   -webkit-overflow-scrolling: touch;
 }
@@ -324,7 +324,11 @@ body.theme-dark .admin-table-wrapper {
 }
 
 body.theme-dark .admin-table-wrapper--scroll-hint::after {
-  background: linear-gradient(to left, rgba(14, 19, 30, 0.95) 45%, transparent);
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--color-surface-elevated) 95%, transparent) 45%,
+    transparent
+  );
 }
 
 body.theme-dark .admin-table-wrapper--scroll-hint::before {
