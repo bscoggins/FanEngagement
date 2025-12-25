@@ -848,7 +848,7 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   }
 
   .admin-table {
-    min-width: 600px;
+    min-width: min(600px, 95vw);
   }
 
   .admin-table th,

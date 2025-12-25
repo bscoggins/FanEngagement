@@ -288,12 +288,13 @@ body.theme-dark .table-container--sticky-header .data-table thead {
   }
 
   .table-container--scroll .data-table {
-    min-width: 600px; /* Minimum table width to prevent content squishing */
+    min-width: min(600px, 95vw); /* Prevent squishing while avoiding viewport overflow */
   }
 
   .data-table th,
   .data-table td {
     padding: var(--spacing-3);
+    /* Keep body text at 16px on small screens for readability */
     font-size: var(--font-size-base);
   }
 
