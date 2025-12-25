@@ -288,7 +288,7 @@ body.theme-dark .table-container--sticky-header .data-table thead {
   }
 
   .table-container--scroll .data-table {
-    min-width: 560px; /* Minimum table width to prevent content squishing */
+    min-width: 600px; /* Minimum table width to prevent content squishing */
   }
 
   .data-table th,
