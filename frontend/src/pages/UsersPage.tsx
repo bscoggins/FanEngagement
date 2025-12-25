@@ -1,47 +1,47 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Table, type TableColumn } from '../components/Table';
 import { usersApi } from '../api/usersApi';
 import type { User } from '../types/api';
 
+const userColumns: TableColumn<User>[] = [
+  {
+    key: 'name',
+    label: 'Name',
+    render: (user) => user.displayName,
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    render: (user) => user.email,
+  },
+  {
+    key: 'createdAt',
+    label: 'Created At',
+    render: (user) => new Date(user.createdAt).toLocaleDateString(),
+  },
+  {
+    key: 'actions',
+    label: 'Actions',
+    align: 'center',
+    render: (user) => (
+      <Link
+        to={`/users/${user.id}/edit`}
+        style={{
+          color: '#0066cc',
+          textDecoration: 'none',
+        }}
+      >
+        Edit
+      </Link>
+    ),
+  },
+];
+
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const userColumns = useMemo<TableColumn<User>[]>(() => [
-    {
-      key: 'name',
-      label: 'Name',
-      render: (user) => user.displayName,
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      render: (user) => user.email,
-    },
-    {
-      key: 'createdAt',
-      label: 'Created At',
-      render: (user) => new Date(user.createdAt).toLocaleDateString(),
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      align: 'center',
-      render: (user) => (
-        <Link
-          to={`/users/${user.id}/edit`}
-          style={{
-            color: '#0066cc',
-            textDecoration: 'none',
-          }}
-        >
-          Edit
-        </Link>
-      ),
-    },
-  ], []);
 
   useEffect(() => {
     const fetchUsers = async () => {
