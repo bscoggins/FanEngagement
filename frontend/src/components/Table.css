@@ -53,7 +53,7 @@
 
 /* Sticky header variant */
 .table-container--sticky-header {
-  max-height: 80vh;
+  max-height: var(--table-sticky-max-height, 80vh);
   overflow-y: auto;
   position: relative;
 }
