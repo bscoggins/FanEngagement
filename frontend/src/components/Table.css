@@ -8,7 +8,10 @@
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: var(--spacing-6);
 }
 
@@ -65,7 +68,7 @@ body.theme-dark .table-container--sticky-header .data-table thead {
   text-align: left;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   line-height: var(--line-height-tight);
   user-select: none;
 }
@@ -139,8 +142,9 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 .data-table td {
   padding: var(--spacing-4);
   color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
+  word-break: break-word;
 }
 
 .data-table td.text-center {
@@ -284,13 +288,13 @@ body.theme-dark .table-container--sticky-header .data-table thead {
   }
 
   .table-container--scroll .data-table {
-    min-width: 600px; /* Minimum table width to prevent content squishing */
+    min-width: 560px; /* Minimum table width to prevent content squishing */
   }
 
   .data-table th,
   .data-table td {
     padding: var(--spacing-3);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-base);
   }
 
   .data-table--compact th,

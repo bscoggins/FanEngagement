@@ -206,10 +206,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-background);
   color: var(--color-text-primary);
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  width: 100%;
 }
 
 :where(a, button, [role="button"]):not([data-transition="custom"]) {
@@ -265,6 +269,37 @@ h6 {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-normal);
+}
+
+p,
+li {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  max-width: 100%;
+}
+
+img,
+picture,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: clamp(1.75rem, 4vw + 1rem, var(--font-size-3xl));
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 3.5vw + 1rem, var(--font-size-2xl));
+  }
+
+  h3 {
+    font-size: clamp(1.25rem, 3vw + 1rem, var(--font-size-xl));
+  }
 }
 
 /* Accessible link styling - opt-in class for inline content links */
