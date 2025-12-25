@@ -262,8 +262,8 @@ export const AdminAuditLogPage: React.FC = () => {
         </div>
       ) : (
         <>
-        <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
-          <table data-testid="audit-log-table" className="admin-table">
+          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
+            <table data-testid="audit-log-table" className="admin-table">
               <thead>
                 <tr>
                   <th className="admin-table-toggle-column"></th>

@@ -28,7 +28,7 @@ const userColumns: TableColumn<User>[] = [
       <Link
         to={`/users/${user.id}/edit`}
         style={{
-          color: '#0066cc',
+          color: 'var(--color-primary-600)',
           textDecoration: 'none',
         }}
       >
