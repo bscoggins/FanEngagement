@@ -269,6 +269,7 @@ body.theme-dark .admin-card.compact {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Visual-only scroll affordances; assistive tech should rely on native scrolling. */
 .admin-table-wrapper--scroll-hint::after {
   content: '';
   position: absolute;
@@ -283,7 +284,7 @@ body.theme-dark .admin-card.compact {
 }
 
 .admin-table-wrapper--scroll-hint::before {
-  content: 'Scroll →';
+  content: var(--table-scroll-indicator-content, 'Scroll →');
   position: absolute;
   bottom: var(--spacing-3);
   right: var(--spacing-3);

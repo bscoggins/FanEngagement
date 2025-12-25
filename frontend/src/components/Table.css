@@ -16,6 +16,7 @@
   margin-bottom: var(--spacing-6);
 }
 
+/* Visual-only scroll affordances; assistive tech should rely on native scrolling. */
 .table-container--scroll::after {
   content: '';
   position: absolute;
@@ -30,7 +31,7 @@
 }
 
 .table-container--scroll::before {
-  content: 'Scroll →';
+  content: var(--table-scroll-indicator-content, 'Scroll →');
   position: absolute;
   bottom: var(--spacing-3);
   right: var(--spacing-3);
