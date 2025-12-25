@@ -98,21 +98,24 @@ Use the existing transition tokens (defined in `frontend/src/index.css` as CSS c
       box-shadow var(--duration-fast) var(--ease-out),
       background-color var(--duration-fast) var(--ease-out);
   }
-}
 
-.btn:hover,
-.btn:focus-visible {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: var(--shadow-md);
-}
+  .btn:hover,
+  .btn:focus-visible {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: var(--shadow-md);
+  }
 
-.btn:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn {
+  .btn,
+  .btn:hover,
+  .btn:focus-visible,
+  .btn:active {
     transition: none;
     transform: none;
   }
@@ -121,31 +124,28 @@ Use the existing transition tokens (defined in `frontend/src/index.css` as CSS c
 
 ### Modal Open / Close
 
-**Behavior:** Fade-in overlay, content scales from 96% to 100% with ease-out; closing uses ease-in and slightly faster duration.
+**Behavior:** Fade-in overlay, content scales from 96% to 100% with ease-out; closing uses ease-in and slightly faster duration. Opacity + small translate/scale is treated as a single, unified entrance motion.
 
 ```css
-/* Reduced-motion fallback: modal appears in its final state */
-.modal {
-  transform: none;
-  opacity: 1;
+/* Default: start in hidden state to avoid popping before animation */
+.modal-overlay {
+  opacity: 0;
 }
 
-.modal-overlay {
-  opacity: 1;
+.modal {
+  transform: translateY(8px) scale(0.96);
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .modal-overlay {
     transition: opacity var(--duration-slow) var(--ease-out);
-    opacity: 0;
   }
 
   .modal {
     transition:
       opacity var(--duration-slow) var(--ease-out),
       transform var(--duration-slow) var(--ease-out);
-    transform: translateY(8px) scale(0.96);
-    opacity: 0;
   }
 
   .modal[data-state="open"] {
@@ -175,9 +175,6 @@ Use the existing transition tokens (defined in `frontend/src/index.css` as CSS c
 
 ```css
 .toast {
-  transition:
-    transform var(--duration-normal) var(--ease-out),
-    opacity var(--duration-normal) var(--ease-out);
   transform: translateY(16px);
   opacity: 0;
 }
@@ -188,9 +185,20 @@ Use the existing transition tokens (defined in `frontend/src/index.css` as CSS c
 }
 
 .toast[data-state="closed"] {
-  transition-timing-function: var(--ease-in);
   transform: translateY(16px);
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      opacity var(--duration-normal) var(--ease-out);
+  }
+
+  .toast[data-state="closed"] {
+    transition-timing-function: var(--ease-in);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -205,20 +213,17 @@ Use the existing transition tokens (defined in `frontend/src/index.css` as CSS c
 
 ### Page Transition
 
-**Behavior:** Fade + 12px translate. Keep under 300ms; pair with skeletons or progress for loads >500ms.
+**Behavior:** Fade + 8px translate (matches current implementation). Keep under 300ms; pair with skeletons or progress for loads >500ms.
 
 ```css
 .page-enter {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
 }
 
 .page-enter-active {
   opacity: 1;
   transform: translateY(0);
-  transition:
-    opacity var(--duration-slow) var(--ease-out),
-    transform var(--duration-slow) var(--ease-out);
 }
 
 .page-exit {
@@ -229,9 +234,20 @@ Use the existing transition tokens (defined in `frontend/src/index.css` as CSS c
 .page-exit-active {
   opacity: 0;
   transform: translateY(-8px);
-  transition:
-    opacity var(--duration-normal) var(--ease-in),
-    transform var(--duration-normal) var(--ease-in);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter-active {
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out);
+  }
+
+  .page-exit-active {
+    transition:
+      opacity var(--duration-normal) var(--ease-in),
+      transform var(--duration-normal) var(--ease-in);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
