@@ -277,7 +277,7 @@ body.theme-dark .admin-card.compact {
   width: 48px;
   height: 100%;
   pointer-events: none;
-  background: linear-gradient(to left, var(--color-surface) 40%, transparent);
+  background: linear-gradient(to left, var(--color-surface) 45%, transparent);
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-out);
 }

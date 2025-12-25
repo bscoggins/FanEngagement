@@ -1,13 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Table, type TableColumn } from '../components/Table';
 import { usersApi } from '../api/usersApi';
 import type { User } from '../types/api';
-import './AdminPage.css';
 
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const userColumns = useMemo<TableColumn<User>[]>(() => [
+    {
+      key: 'name',
+      label: 'Name',
+      render: (user) => user.displayName,
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (user) => user.email,
+    },
+    {
+      key: 'createdAt',
+      label: 'Created At',
+      render: (user) => new Date(user.createdAt).toLocaleDateString(),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      align: 'center',
+      render: (user) => (
+        <Link
+          to={`/users/${user.id}/edit`}
+          style={{
+            color: '#0066cc',
+            textDecoration: 'none',
+          }}
+        >
+          Edit
+        </Link>
+      ),
+    },
+  ], []);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -73,48 +107,14 @@ export const UsersPage: React.FC = () => {
         </Link>
       </div>
 
-      {users.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
-          No users found. Create a user to get started.
-        </div>
-      ) : (
-        <div
-          className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
-          role="region"
-          aria-label="Users table"
-        >
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Created At</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.displayName}</td>
-                  <td>{user.email}</td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    <Link
-                      to={`/users/${user.id}/edit`}
-                      style={{
-                        color: '#0066cc',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      Edit
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table<User>
+        data={users}
+        columns={userColumns}
+        getRowKey={(user) => user.id}
+        mobileLayout="card"
+        caption="List of users"
+        emptyMessage="No users found. Create a user to get started."
+      />
     </div>
   );
 };
