@@ -1,7 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Table, type TableColumn } from '../components/Table';
 import { usersApi } from '../api/usersApi';
 import type { User } from '../types/api';
+
+const userColumns: TableColumn<User>[] = [
+  {
+    key: 'name',
+    label: 'Name',
+    render: (user) => user.displayName,
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    render: (user) => user.email,
+  },
+  {
+    key: 'createdAt',
+    label: 'Created At',
+    render: (user) => new Date(user.createdAt).toLocaleDateString(),
+  },
+  {
+    key: 'actions',
+    label: 'Actions',
+    align: 'center',
+    render: (user) => (
+      <Link
+        to={`/users/${user.id}/edit`}
+        style={{
+          color: 'var(--color-primary-600)',
+          textDecoration: 'none',
+        }}
+      >
+        Edit
+      </Link>
+    ),
+  },
+];
 
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -72,48 +107,14 @@ export const UsersPage: React.FC = () => {
         </Link>
       </div>
 
-      {users.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
-          No users found. Create a user to get started.
-        </div>
-      ) : (
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            border: '1px solid #ddd',
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: '#f5f5f5' }}>
-              <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Name</th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Email</th>
-              <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Created At</th>
-              <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #ddd' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} style={{ borderBottom: '1px solid #ddd' }}>
-                <td style={{ padding: '0.75rem' }}>{user.displayName}</td>
-                <td style={{ padding: '0.75rem' }}>{user.email}</td>
-                <td style={{ padding: '0.75rem' }}>{new Date(user.createdAt).toLocaleDateString()}</td>
-                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                  <Link
-                    to={`/users/${user.id}/edit`}
-                    style={{
-                      color: '#0066cc',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <Table<User>
+        data={users}
+        columns={userColumns}
+        getRowKey={(user) => user.id}
+        mobileLayout="card"
+        caption="List of users"
+        emptyMessage="No users found. Create a user to get started."
+      />
     </div>
   );
 };

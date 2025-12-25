@@ -12,6 +12,7 @@ import { Card } from '../components/Card';
 import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 const getStatusBadgeClass = (status: OutboundEventStatus): string => {
   switch (status) {
@@ -55,6 +56,7 @@ export const AdminWebhookEventsPage: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<OutboundEventDetails | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
 
   // Retry state
   const [retryingEventId, setRetryingEventId] = useState<string | null>(null);
@@ -267,7 +269,10 @@ export const AdminWebhookEventsPage: React.FC = () => {
             : 'No webhook events found for this organization.'}
         </div>
       ) : (
-        <div className="admin-table-wrapper">
+        <div
+          className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+          ref={tableWrapperRef}
+        >
           <table className="admin-table">
             <thead>
               <tr>

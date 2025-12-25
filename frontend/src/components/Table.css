@@ -8,6 +8,7 @@
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  position: relative;
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
@@ -15,9 +16,44 @@
   margin-bottom: var(--spacing-6);
 }
 
+/* Visual-only scroll affordances; assistive tech should rely on native scrolling. */
+.table-container--scroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to left, var(--color-surface) 45%, transparent);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.table-container--scroll::before {
+  content: var(--table-scroll-indicator-content, 'Scroll →');
+  position: absolute;
+  bottom: var(--spacing-3);
+  right: var(--spacing-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface-alpha-90, rgba(255, 255, 255, 0.9));
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.table-container--scroll.is-scrollable::after,
+.table-container--scroll.is-scrollable::before {
+  opacity: 1;
+}
+
 /* Sticky header variant */
 .table-container--sticky-header {
-  max-height: 600px;
+  max-height: var(--table-sticky-max-height, 80vh);
   overflow-y: auto;
   position: relative;
 }
@@ -297,6 +333,11 @@ body.theme-dark .table-container--sticky-header .data-table thead {
     min-width: min(600px, 95vw); /* Prevent squishing while avoiding viewport overflow */
   }
 
+  .table-container--scroll.is-scrollable::after,
+  .table-container--scroll.is-scrollable::before {
+    opacity: 1;
+  }
+
   .data-table th,
   .data-table td {
     padding: var(--spacing-3);
@@ -392,6 +433,15 @@ body.theme-dark .data-table tbody tr:hover {
 
 body.theme-dark .data-table th[role="button"]:hover {
   background-color: var(--color-overlay-light);
+}
+
+body.theme-dark .table-container--scroll::after {
+  background: linear-gradient(to left, var(--color-surface-elevated) 45%, transparent);
+}
+
+body.theme-dark .table-container--scroll::before {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-inverse);
 }
 
 body.theme-dark .data-table .status-badge.neutral {

@@ -12,6 +12,7 @@ import { Button } from '../components/Button';
 import './AdminPage.css';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
 import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -21,6 +22,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
   const [shareTypes, setShareTypes] = useState<ShareType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
   
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -318,7 +320,10 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       {shareTypes.length === 0 ? (
         <EmptyState message="No share types found. Create one to get started." />
       ) : (
-        <div className="admin-table-wrapper">
+        <div
+          className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+          ref={tableWrapperRef}
+        >
           <table data-testid="share-types-table" className="admin-table">
             <thead>
               <tr>

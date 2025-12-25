@@ -1,5 +1,6 @@
 import React from 'react';
 import './Table.css';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 export type TableLayout = 'scroll' | 'card';
 export type TableSize = 'default' | 'compact';
@@ -156,6 +157,8 @@ export function Table<T>({
   caption,
   onRowClick,
 }: TableProps<T>) {
+  const containerRef = useScrollHint<HTMLDivElement>();
+
   const handleSort = (column: TableColumn<T>) => {
     if (column.sortable && onSort) {
       const sortKey = column.sortKey || column.key;
@@ -224,7 +227,7 @@ export function Table<T>({
 
   if (data.length === 0) {
     return (
-      <div className={classes} data-testid={testId}>
+      <div className={classes} data-testid={testId} ref={containerRef}>
         <div className="table-empty">
           <div className="table-empty-icon" aria-hidden="true">📋</div>
           <div className="table-empty-message">{emptyMessage}</div>
@@ -234,7 +237,7 @@ export function Table<T>({
   }
 
   return (
-    <div className={classes} data-testid={testId}>
+    <div className={classes} data-testid={testId} ref={containerRef}>
       <table className={tableClasses}>
         {caption && <caption className="visually-hidden">{caption}</caption>}
         <thead>
