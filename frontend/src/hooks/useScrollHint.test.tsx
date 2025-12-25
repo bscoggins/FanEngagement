@@ -54,6 +54,8 @@ describe('useScrollHint', () => {
     render(<HookHost width={100} scrollWidth={200} />);
     const el = screen.getByTestId('container');
 
+    expect(el.classList.contains('is-scrollable')).toBe(true);
+
     act(() => {
       resizeObserverCallback?.([], [] as any, {} as any);
     });
@@ -64,6 +66,8 @@ describe('useScrollHint', () => {
   it('removes is-scrollable when content fits', () => {
     render(<HookHost width={200} scrollWidth={100} />);
     const el = screen.getByTestId('container');
+
+    expect(el.classList.contains('is-scrollable')).toBe(false);
 
     act(() => {
       resizeObserverCallback?.([], [] as any, {} as any);
