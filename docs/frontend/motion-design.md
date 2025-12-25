@@ -58,7 +58,7 @@ Purpose-built motion keeps the experience responsive, communicates hierarchy, an
 
 ## Durations & Easing Tokens
 
-Use the existing transition tokens (defined in `design-tokens.*`):
+Use the existing transition tokens (defined in `frontend/src/index.css` as CSS custom properties, sourced from `design-tokens.json`):
 
 ```css
 /* Durations */
@@ -88,10 +88,16 @@ Use the existing transition tokens (defined in `design-tokens.*`):
 
 ```css
 .btn {
-  transition:
-    transform var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out),
-    background-color var(--duration-fast) var(--ease-out);
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn {
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
 }
 
 .btn:hover,
@@ -118,26 +124,39 @@ Use the existing transition tokens (defined in `design-tokens.*`):
 **Behavior:** Fade-in overlay, content scales from 96% to 100% with ease-out; closing uses ease-in and slightly faster duration.
 
 ```css
-.modal-overlay {
-  transition: opacity var(--duration-slow) var(--ease-out);
-}
-
+/* Reduced-motion fallback: modal appears in its final state */
 .modal {
-  transition:
-    opacity var(--duration-slow) var(--ease-out),
-    transform var(--duration-slow) var(--ease-out);
-  transform: translateY(8px) scale(0.96);
-  opacity: 0;
-}
-
-.modal[data-state="open"] {
-  transform: translateY(0) scale(1);
+  transform: none;
   opacity: 1;
 }
 
-.modal[data-state="closed"] {
-  transition-duration: var(--duration-normal);
-  transition-timing-function: var(--ease-in);
+.modal-overlay {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .modal-overlay {
+    transition: opacity var(--duration-slow) var(--ease-out);
+    opacity: 0;
+  }
+
+  .modal {
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out);
+    transform: translateY(8px) scale(0.96);
+    opacity: 0;
+  }
+
+  .modal[data-state="open"] {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .modal[data-state="closed"] {
+    transition-duration: var(--duration-normal);
+    transition-timing-function: var(--ease-in);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -173,6 +192,15 @@ Use the existing transition tokens (defined in `design-tokens.*`):
   transform: translateY(16px);
   opacity: 0;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast[data-state="open"],
+  .toast[data-state="closed"] {
+    transition: none;
+    transform: none;
+  }
+}
 ```
 
 ### Page Transition
@@ -205,6 +233,26 @@ Use the existing transition tokens (defined in `design-tokens.*`):
     opacity var(--duration-normal) var(--ease-in),
     transform var(--duration-normal) var(--ease-in);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .page-enter-active,
+  .page-exit,
+  .page-exit-active {
+    transition: none;
+    transform: none;
+  }
+
+  .page-enter,
+  .page-enter-active {
+    opacity: 1;
+  }
+
+  .page-exit,
+  .page-exit-active {
+    opacity: 0;
+  }
+}
 ```
 
 ---
@@ -229,4 +277,3 @@ Use the existing transition tokens (defined in `design-tokens.*`):
 - [ ] `prefers-reduced-motion` path tested: motion removed but feedback preserved.
 - [ ] Component-specific recipes followed (button, modal, toast, page transitions).
 - [ ] Live regions applied where content changes without focus movement.
-
