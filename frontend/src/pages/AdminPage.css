@@ -298,11 +298,22 @@ body.theme-dark .admin-card.compact {
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
+.admin-table-wrapper--scroll-hint.is-scrollable::after,
+.admin-table-wrapper--scroll-hint.is-scrollable::before {
+  opacity: 1;
+}
+
 .admin-table-wrapper--sticky thead th {
   position: sticky;
   top: 0;
   z-index: 2;
   background-color: var(--admin-table-header-bg);
+}
+
+.admin-table-wrapper--sticky {
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
 }
 
 body.theme-dark .admin-table-wrapper {
@@ -893,8 +904,8 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
     align-items: stretch;
   }
 
-  .admin-table-wrapper--scroll-hint::after,
-  .admin-table-wrapper--scroll-hint::before {
+  .admin-table-wrapper--scroll-hint.is-scrollable::after,
+  .admin-table-wrapper--scroll-hint.is-scrollable::before {
     opacity: 1;
   }
 

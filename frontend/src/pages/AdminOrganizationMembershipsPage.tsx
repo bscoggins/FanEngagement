@@ -11,6 +11,7 @@ import './AdminPage.css';
 import type { MembershipWithUserDto, Organization, User } from '../types/api';
 import { Select } from '../components/Select';
 import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 export const AdminOrganizationMembershipsPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -21,6 +22,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
   
   // Add membership form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -219,7 +221,10 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       {memberships.length === 0 ? (
         <EmptyState message="No members found. Add members to this organization." />
       ) : (
-        <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
+        <div
+          className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+          ref={tableWrapperRef}
+        >
           <table className="admin-table">
             <thead>
               <tr>

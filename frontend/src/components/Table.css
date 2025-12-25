@@ -45,9 +45,14 @@
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
+.table-container--scroll.is-scrollable::after,
+.table-container--scroll.is-scrollable::before {
+  opacity: 1;
+}
+
 /* Sticky header variant */
 .table-container--sticky-header {
-  max-height: 600px;
+  max-height: 80vh;
   overflow-y: auto;
   position: relative;
 }
@@ -327,8 +332,8 @@ body.theme-dark .table-container--sticky-header .data-table thead {
     min-width: min(600px, 95vw); /* Prevent squishing while avoiding viewport overflow */
   }
 
-  .table-container--scroll::after,
-  .table-container--scroll::before {
+  .table-container--scroll.is-scrollable::after,
+  .table-container--scroll.is-scrollable::before {
     opacity: 1;
   }
 

@@ -11,6 +11,7 @@ import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { BlockchainRecordDto, Organization, PagedResult, BlockchainVerificationDto } from '../types/api';
 import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 export const PlatformAdminBlockchainPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -29,6 +30,7 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
   // Verification state
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [verificationResults, setVerificationResults] = useState<Record<string, BlockchainVerificationDto>>({});
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
 
   const fetchData = useCallback(async () => {
     try {
@@ -166,7 +168,10 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
         />
       ) : (
         <>
-          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
+          <div
+            className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+            ref={tableWrapperRef}
+          >
             <table className="admin-table">
               <thead>
                 <tr>

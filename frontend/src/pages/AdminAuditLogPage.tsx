@@ -8,6 +8,7 @@ import { Pagination } from '../components/Pagination';
 import './AdminPage.css';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
 import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 export const AdminAuditLogPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -25,6 +26,7 @@ export const AdminAuditLogPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
 
   const fetchData = useCallback(async () => {
     if (!orgId) {
@@ -262,7 +264,10 @@ export const AdminAuditLogPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
+          <div
+            className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+            ref={tableWrapperRef}
+          >
             <table data-testid="audit-log-table" className="admin-table">
               <thead>
                 <tr>

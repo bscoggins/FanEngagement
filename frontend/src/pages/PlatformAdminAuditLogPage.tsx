@@ -10,6 +10,7 @@ import { Button } from '../components/Button';
 import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import './AdminPage.css';
 import type { AuditEvent, Organization, PagedResult } from '../types/api';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 export const PlatformAdminAuditLogPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -32,6 +33,7 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
 
   // Expandable row state
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
 
   const fetchData = useCallback(async () => {
     try {
@@ -365,7 +367,10 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
         />
       ) : (
         <>
-          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
+          <div
+            className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+            ref={tableWrapperRef}
+          >
             <table data-testid="audit-log-table" className="admin-table">
               <thead>
                 <tr>

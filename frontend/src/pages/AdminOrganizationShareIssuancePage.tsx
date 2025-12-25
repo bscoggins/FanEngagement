@@ -21,6 +21,7 @@ import type {
   MembershipWithUserDto,
   CreateShareIssuanceRequest 
 } from '../types/api';
+import { useScrollHint } from '../hooks/useScrollHint';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();
@@ -36,6 +37,7 @@ export const AdminOrganizationShareIssuancePage: React.FC = () => {
   const [members, setMembers] = useState<MembershipWithUserDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const tableWrapperRef = useScrollHint<HTMLDivElement>();
   
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -247,7 +249,10 @@ export const AdminOrganizationShareIssuancePage: React.FC = () => {
             } : undefined}
           />
         ) : (
-          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
+          <div
+            className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint"
+            ref={tableWrapperRef}
+          >
             <table className="admin-table">
               <thead>
                 <tr>
