@@ -37,7 +37,7 @@
   right: var(--spacing-3);
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-  background-color: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  background-color: var(--color-surface-alpha-90, rgba(255, 255, 255, 0.9));
   padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
@@ -440,7 +440,7 @@ body.theme-dark .table-container--scroll::after {
 }
 
 body.theme-dark .table-container--scroll::before {
-  background-color: color-mix(in srgb, var(--color-surface-elevated) 90%, transparent);
+  background-color: var(--color-surface-elevated);
   color: var(--color-text-inverse);
 }
 

@@ -290,7 +290,7 @@ body.theme-dark .admin-card.compact {
   right: var(--spacing-3);
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
-  background-color: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  background-color: var(--admin-table-header-bg);
   padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
@@ -324,15 +324,11 @@ body.theme-dark .admin-table-wrapper {
 }
 
 body.theme-dark .admin-table-wrapper--scroll-hint::after {
-  background: linear-gradient(
-    to left,
-    color-mix(in srgb, var(--color-surface-elevated) 95%, transparent) 45%,
-    transparent
-  );
+  background: linear-gradient(to left, rgba(15, 23, 42, 0.9) 45%, transparent);
 }
 
 body.theme-dark .admin-table-wrapper--scroll-hint::before {
-  background-color: color-mix(in srgb, var(--color-surface-elevated) 90%, transparent);
+  background-color: var(--color-surface-elevated);
   color: var(--color-text-inverse);
 }
 
