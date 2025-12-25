@@ -110,6 +110,8 @@
   color: var(--color-text-inverse);
   border: 1px solid transparent;
   padding: var(--spacing-2) var(--spacing-4);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -148,12 +150,14 @@
   padding: var(--spacing-4) 0;
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .admin-nav-link {
   color: var(--color-neutral-200);
   text-decoration: none;
   padding: var(--spacing-3) var(--spacing-6);
+  min-height: 2.75rem;
   transition: var(--transition-interactive), color var(--duration-fast) var(--ease-out), border-left-color var(--duration-fast) var(--ease-out);
   border-left: 3px solid transparent;
   font-weight: var(--font-weight-medium);

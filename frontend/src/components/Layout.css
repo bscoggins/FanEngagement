@@ -30,12 +30,17 @@
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-text-inverse);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: var(--spacing-2) var(--spacing-3);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   transition: var(--transition-interactive), color var(--duration-fast) var(--ease-out),
     opacity var(--duration-fast) var(--ease-out);
 }
@@ -57,6 +62,8 @@
   color: var(--color-text-inverse);
   border: 1px solid transparent;
   padding: var(--spacing-2) var(--spacing-4);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -174,6 +181,7 @@
 
 .unified-header-org-select {
   padding: var(--spacing-2);
+  min-height: 2.75rem;
   border: 1px solid var(--color-border-dark);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
@@ -206,6 +214,8 @@
   color: var(--color-text-inverse);
   border: 1px solid transparent;
   padding: var(--spacing-2) var(--spacing-4);
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -257,12 +267,14 @@ body.theme-dark .unified-sidebar {
   padding: var(--spacing-4) 0;
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .unified-nav-link {
   color: var(--sidebar-link-color);
   text-decoration: none;
   padding: var(--spacing-3) var(--spacing-6);
+  min-height: 2.75rem;
   transition: var(--transition-interactive),
     color var(--duration-fast) var(--ease-out),
     border-left-color var(--duration-fast) var(--ease-out);
