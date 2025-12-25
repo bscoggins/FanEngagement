@@ -318,7 +318,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
       {shareTypes.length === 0 ? (
         <EmptyState message="No share types found. Create one to get started." />
       ) : (
-        <div className="admin-table-wrapper">
+        <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
           <table data-testid="share-types-table" className="admin-table">
             <thead>
               <tr>

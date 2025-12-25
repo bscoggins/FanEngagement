@@ -365,7 +365,7 @@ export const PlatformAdminAuditLogPage: React.FC = () => {
         />
       ) : (
         <>
-          <div className="admin-table-wrapper">
+          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
             <table data-testid="audit-log-table" className="admin-table">
               <thead>
                 <tr>

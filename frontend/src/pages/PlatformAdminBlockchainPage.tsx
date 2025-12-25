@@ -166,7 +166,7 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
         />
       ) : (
         <>
-          <div className="table-container">
+          <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
             <table className="admin-table">
               <thead>
                 <tr>

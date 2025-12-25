@@ -219,7 +219,7 @@ export const AdminOrganizationMembershipsPage: React.FC = () => {
       {memberships.length === 0 ? (
         <EmptyState message="No members found. Add members to this organization." />
       ) : (
-        <div className="admin-table-wrapper">
+        <div className="admin-table-wrapper admin-table-wrapper--sticky admin-table-wrapper--scroll-hint">
           <table className="admin-table">
             <thead>
               <tr>
