@@ -201,7 +201,7 @@
   overflow-y: auto;
 }
 
-@media (min-width: calc(var(--bp-md) + 1px)) {
+@media (min-width: var(--bp-md)) {
   .admin-header-center {
     max-width: 600px;
   }

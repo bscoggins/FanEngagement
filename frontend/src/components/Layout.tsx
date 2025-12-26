@@ -11,6 +11,8 @@ import { OrganizationDropdown } from './OrganizationDropdown';
 import { PageTransition } from './PageTransition';
 import './Layout.css';
 
+const mobileMenuDisplay: React.CSSProperties = { ['--responsive-display' as '--responsive-display']: 'inline-flex' };
+
 export const Layout: React.FC = () => {
   const { isAuthenticated, logout, isAdmin } = useAuth();
   const { isGlobalAdmin, memberships, canAccessAdminArea } = usePermissions();
@@ -176,7 +178,7 @@ export const Layout: React.FC = () => {
           <div className="unified-header-left">
             <button
               className="unified-mobile-menu-button show-md-down"
-              style={{ '--responsive-display': 'inline-flex' } as React.CSSProperties}
+              style={mobileMenuDisplay}
               onClick={() => setIsMobileNavOpen(true)}
               aria-label={mobileMenuLabel}
               aria-expanded={isMobileNavOpen}

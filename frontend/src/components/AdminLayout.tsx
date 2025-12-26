@@ -13,6 +13,8 @@ import { PageTransition } from './PageTransition';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
 
+const mobileMenuDisplay: React.CSSProperties = { ['--responsive-display' as '--responsive-display']: 'inline-flex' };
+
 export const AdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();
   const { isGlobalAdmin, memberships } = usePermissions();
@@ -227,7 +229,7 @@ export const AdminLayout: React.FC = () => {
             <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
                 className="admin-mobile-menu-button show-md-down"
-                style={{ '--responsive-display': 'inline-flex' } as React.CSSProperties}
+                style={mobileMenuDisplay}
                 onClick={() => setIsMobileNavOpen(true)}
                 aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}
