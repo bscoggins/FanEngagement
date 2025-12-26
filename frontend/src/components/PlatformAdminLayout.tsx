@@ -12,11 +12,11 @@ import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import { Tooltip } from './Tooltip';
 import { isMacPlatform } from '../utils/platformUtils';
 import { PageTransition } from './PageTransition';
-import { type ResponsiveDisplayStyles } from '../types/styles';
+import { type ResponsiveDisplayStyle } from '../types/styles';
 import './PlatformAdminLayout.css';
 import '../pages/AdminPage.css';
 
-const mobileMenuDisplay: ResponsiveDisplayStyles = { '--responsive-display': 'inline-flex' };
+const mobileMenuDisplay: ResponsiveDisplayStyle = { '--responsive-display': 'inline-flex' };
 
 export const PlatformAdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();

@@ -1,3 +1,3 @@
-import type React from 'react';
+import type { CSSProperties } from 'react';
 
-export type ResponsiveDisplayStyles = React.CSSProperties & { '--responsive-display'?: string };
+export type ResponsiveDisplayStyle = CSSProperties & { '--responsive-display'?: string };

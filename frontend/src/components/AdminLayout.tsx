@@ -10,11 +10,11 @@ import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { Tooltip } from './Tooltip';
 import { PageTransition } from './PageTransition';
-import { type ResponsiveDisplayStyles } from '../types/styles';
+import { type ResponsiveDisplayStyle } from '../types/styles';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
 
-const mobileMenuDisplay: ResponsiveDisplayStyles = { '--responsive-display': 'inline-flex' };
+const mobileMenuDisplay: ResponsiveDisplayStyle = { '--responsive-display': 'inline-flex' };
 
 export const AdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();
