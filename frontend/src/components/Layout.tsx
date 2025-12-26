@@ -11,7 +11,8 @@ import { OrganizationDropdown } from './OrganizationDropdown';
 import { PageTransition } from './PageTransition';
 import './Layout.css';
 
-const mobileMenuDisplay: React.CSSProperties = { ['--responsive-display' as '--responsive-display']: 'inline-flex' };
+type ResponsiveDisplayStyles = React.CSSProperties & { '--responsive-display'?: string };
+const mobileMenuDisplay: ResponsiveDisplayStyles = { '--responsive-display': 'inline-flex' };
 
 export const Layout: React.FC = () => {
   const { isAuthenticated, logout, isAdmin } = useAuth();

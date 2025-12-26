@@ -13,7 +13,8 @@ import { PageTransition } from './PageTransition';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
 
-const mobileMenuDisplay: React.CSSProperties = { ['--responsive-display' as '--responsive-display']: 'inline-flex' };
+type ResponsiveDisplayStyles = React.CSSProperties & { '--responsive-display'?: string };
+const mobileMenuDisplay: ResponsiveDisplayStyles = { '--responsive-display': 'inline-flex' };
 
 export const AdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();
