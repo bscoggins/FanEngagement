@@ -819,6 +819,18 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   gap: var(--spacing-2);
 }
 
+@media (min-width: 768px) and (max-width: 1024px) {
+  .admin-card-grid,
+  .admin-dashboard-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--spacing-5);
+  }
+
+  .admin-card {
+    padding: var(--spacing-5);
+  }
+}
+
 /* StatCard accent color variants */
 .admin-dashboard-stat-card.accent-blue {
   border-top: 3px solid var(--color-accent-blue);
@@ -883,7 +895,7 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   padding-bottom: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .admin-page-header,
   .admin-section-header {
     align-items: flex-start;
