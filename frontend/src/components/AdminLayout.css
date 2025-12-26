@@ -43,7 +43,6 @@ body.theme-dark {
 
 .admin-mobile-menu-button {
   --responsive-display: inline-flex;
-  display: inline-flex;
   background: none;
   border: 1px solid transparent;
   color: var(--color-text-inverse);
@@ -302,7 +301,7 @@ body.theme-dark .admin-nav-link:hover {
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .admin-header h1 {
     font-size: var(--font-size-xl);
   }
@@ -393,7 +392,7 @@ body.theme-dark .admin-nav-link:hover {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .keyboard-help-toast {
     bottom: var(--spacing-4);
     right: var(--spacing-4);

@@ -45,7 +45,6 @@
 
 .admin-mobile-menu-button {
   --responsive-display: inline-flex;
-  display: inline-flex;
   background: none;
   border: 1px solid transparent;
   color: var(--color-text-inverse);
@@ -203,7 +202,7 @@
   overflow-y: auto;
 }
 
-@media (min-width: 769px) {
+@media (min-width: calc(var(--bp-md) + 1px)) {
   .admin-header-center {
     max-width: 600px;
   }
@@ -217,7 +216,7 @@
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .admin-header h1 {
     font-size: var(--font-size-xl);
   }
