@@ -336,11 +336,6 @@ body.theme-dark .table-container--sticky-header .data-table thead {
   .data-table td {
     padding: var(--spacing-3);
   }
-
-  .table-action-button {
-    min-height: 44px;
-    min-width: 44px;
-  }
 }
 
 /* ===== Responsive: Scroll Layout (Default) ===== */

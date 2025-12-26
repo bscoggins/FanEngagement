@@ -408,6 +408,7 @@ body.theme-dark .unified-sidebar {
   .unified-nav-link {
     padding: var(--spacing-3) var(--spacing-5);
     min-height: 44px;
+    min-width: 44px;
   }
 
   .unified-main {
