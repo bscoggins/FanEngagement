@@ -175,7 +175,7 @@ export const Layout: React.FC = () => {
         <header className="unified-header" role="banner">
           <div className="unified-header-left">
             <button
-              className="unified-mobile-menu-button show-lg-down"
+              className="unified-mobile-menu-button show-md-down"
               onClick={() => setIsMobileNavOpen(true)}
               aria-label={mobileMenuLabel}
               aria-expanded={isMobileNavOpen}

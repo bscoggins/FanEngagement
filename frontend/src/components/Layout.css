@@ -432,10 +432,6 @@ body.theme-dark .unified-sidebar {
     flex-direction: column;
   }
 
-  .unified-sidebar {
-    display: none;
-  }
-
   .unified-main {
     padding: var(--spacing-5);
   }
