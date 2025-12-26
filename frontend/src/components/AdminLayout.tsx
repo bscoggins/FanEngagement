@@ -226,7 +226,7 @@ export const AdminLayout: React.FC = () => {
           <div className="admin-header-left">
             <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
-                className="admin-mobile-menu-button"
+                className="admin-mobile-menu-button show-md-down"
                 onClick={() => setIsMobileNavOpen(true)}
                 aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}
@@ -270,8 +270,8 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
         
-        <div className="admin-container">
-          <aside className="admin-sidebar" role="navigation" aria-label="Admin navigation">
+        <div className="admin-container stack-md">
+          <aside className="admin-sidebar hide-md-down" role="navigation" aria-label="Admin navigation">
             <nav className="admin-nav">
               {/* Global navigation items */}
               {globalNavItems.map(item => (

@@ -175,7 +175,7 @@ export const Layout: React.FC = () => {
         <header className="unified-header" role="banner">
           <div className="unified-header-left">
             <button
-              className="unified-mobile-menu-button"
+              className="unified-mobile-menu-button show-lg-down"
               onClick={() => setIsMobileNavOpen(true)}
               aria-label={mobileMenuLabel}
               aria-expanded={isMobileNavOpen}
@@ -219,8 +219,8 @@ export const Layout: React.FC = () => {
           </div>
         </header>
         
-        <div className="unified-container">
-          <aside className="unified-sidebar" data-testid="unified-sidebar" role="navigation" aria-label="User navigation">
+        <div className="unified-container stack-md">
+          <aside className="unified-sidebar hide-md-down" data-testid="unified-sidebar" role="navigation" aria-label="User navigation">
             <nav className="unified-nav">
               {/* User navigation items */}
               {userNavItems.map(item => (

@@ -38,6 +38,13 @@
 - Implementing sidebar, mobile nav, or organization switcher
 - Need navigation-specific token usage
 
+### 📱 **Responsive Layout**
+**[responsive-utilities.md](./responsive-utilities.md)** — Breakpoint tokens plus layout/visibility helpers
+
+**Start here** if you're:
+- Standardizing breakpoints across pages
+- Replacing bespoke media queries with shared utilities
+
 ### ♿ **Accessibility**
 **[accessibility.md](./accessibility.md)** — Complete accessibility playbook and checklist  
 **[keyboard-navigation.md](./keyboard-navigation.md)** — Keyboard navigation implementation

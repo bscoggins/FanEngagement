@@ -906,9 +906,7 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
     padding: var(--spacing-5);
   }
 
-  .admin-card-grid,
-  .admin-dashboard-panels,
-  .admin-dashboard-quick-actions {
+  .admin-card-grid {
     grid-template-columns: 1fr;
   }
 

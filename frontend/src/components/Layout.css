@@ -111,7 +111,8 @@
 }
 
 .unified-mobile-menu-button {
-  display: none; /* Hidden on desktop, shown on mobile */
+  --responsive-display: inline-flex;
+  display: inline-flex;
   background: none;
   border: 1px solid transparent;
   color: var(--color-text-inverse);
@@ -428,10 +429,6 @@ body.theme-dark .unified-sidebar {
     justify-content: space-between;
   }
 
-  .unified-mobile-menu-button {
-    display: flex;
-  }
-
   .unified-container {
     flex-direction: column;
   }
@@ -470,24 +467,12 @@ body.theme-dark .unified-sidebar {
     padding: var(--spacing-4);
   }
 
-  .unified-mobile-menu-button {
-    display: flex; /* Show hamburger menu on mobile */
-  }
-
   .unified-header h1 {
     font-size: var(--font-size-xl);
   }
 
   .unified-header {
     padding: var(--spacing-4);
-  }
-
-  .unified-container {
-    flex-direction: column;
-  }
-
-  .unified-sidebar {
-    display: none; /* Hide sidebar on mobile, use drawer instead */
   }
 
   .unified-main {

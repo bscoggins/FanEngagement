@@ -195,6 +195,12 @@
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
+
+  /* ===== Responsive Breakpoints ===== */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
 }
 
 body {
@@ -563,4 +569,118 @@ body.theme-dark {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ===== Responsive Visibility Utilities ===== */
+.hide-sm-down {
+  /* Hide elements on screens up to the small breakpoint */
+}
+
+@media (max-width: 480px) {
+  .hide-sm-down {
+    display: none !important;
+  }
+}
+
+.hide-md-down {
+  /* Hide elements on screens up to the medium breakpoint */
+}
+
+@media (max-width: 768px) {
+  .hide-md-down {
+    display: none !important;
+  }
+}
+
+.hide-lg-down {
+  /* Hide elements on screens up to the large breakpoint */
+}
+
+@media (max-width: 1024px) {
+  .hide-lg-down {
+    display: none !important;
+  }
+}
+
+.show-sm-down {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .show-sm-down {
+    display: var(--responsive-display, revert) !important;
+  }
+}
+
+.show-md-down {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .show-md-down {
+    display: var(--responsive-display, revert) !important;
+  }
+}
+
+.show-lg-down {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .show-lg-down {
+    display: var(--responsive-display, revert) !important;
+  }
+}
+
+/* ===== Responsive Layout Utilities ===== */
+.stack-sm {
+  display: flex;
+}
+
+@media (max-width: 480px) {
+  .stack-sm {
+    flex-direction: column;
+  }
+}
+
+.stack-md {
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  .stack-md {
+    flex-direction: column;
+  }
+}
+
+.stack-lg {
+  display: flex;
+}
+
+@media (max-width: 1024px) {
+  .stack-lg {
+    flex-direction: column;
+  }
+}
+
+.responsive-grid {
+  display: grid;
+  gap: var(--grid-gap, var(--spacing-4));
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-min, 240px), 1fr));
+}
+
+.responsive-grid.tight {
+  --grid-gap: var(--spacing-3);
+}
+
+.grid-min-220 {
+  --grid-min: 220px;
+}
+
+.grid-min-260 {
+  --grid-min: 260px;
+}
+
+.grid-min-300 {
+  --grid-min: 300px;
 }
