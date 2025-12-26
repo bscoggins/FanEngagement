@@ -19,7 +19,9 @@ Token | Value | Device / layout category
 - `.show-sm-down`, `.show-md-down`, `.show-lg-down` — show only at and below the breakpoint. Set `--responsive-display` on the element (e.g., `inline-flex`) when you need a specific display value.
 
 ```tsx
-const mobileMenuDisplay: React.CSSProperties = { ['--responsive-display' as '--responsive-display']: 'inline-flex' };
+import { type ResponsiveDisplayStyle } from '../types/styles';
+
+const mobileMenuDisplay: ResponsiveDisplayStyle = { '--responsive-display': 'inline-flex' };
 
 <button
   className="admin-mobile-menu-button show-md-down"

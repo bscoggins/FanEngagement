@@ -313,7 +313,7 @@ export const AdminDashboardPage: React.FC = () => {
                 />
               </div>
 
-              <div className="admin-dashboard-panels responsive-grid grid-min-300" style={{ marginTop: 'var(--spacing-6)' }}>
+              <div className="responsive-grid grid-min-300" style={{ marginTop: 'var(--spacing-6)' }}>
                 <div className="admin-card" data-testid="recent-activity-card">
                   <div className="admin-section-header">
                     <h3 style={{ margin: 0 }}>Recent Activity</h3>
