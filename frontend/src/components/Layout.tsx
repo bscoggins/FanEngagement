@@ -9,9 +9,9 @@ import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { PageTransition } from './PageTransition';
+import { type ResponsiveDisplayStyles } from '../types/styles';
 import './Layout.css';
 
-type ResponsiveDisplayStyles = React.CSSProperties & { '--responsive-display'?: string };
 const mobileMenuDisplay: ResponsiveDisplayStyles = { '--responsive-display': 'inline-flex' };
 
 export const Layout: React.FC = () => {
