@@ -5,7 +5,8 @@ const MEMBER_EMAIL = 'alice@example.com';
 const MEMBER_PASSWORD = 'UserDemo1!';
 const MOBILE_VIEWPORT = { width: 390, height: 844 };
 const SMALL_PHONE_VIEWPORT = { width: 320, height: 568 };
-const TABLET_VIEWPORT = { width: 769, height: 1024 };
+const TABLET_PORTRAIT = { width: 900, height: 1024 };
+const TABLET_LANDSCAPE = { width: 1024, height: 768 };
 
 test.describe('Mobile navigation', () => {
   test.beforeEach(async ({ page }) => {
@@ -219,18 +220,28 @@ test.describe('Mobile navigation on small phone', () => {
 });
 test.describe('Mobile navigation on tablet', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await page.setViewportSize(TABLET_VIEWPORT);
+  test('tablet portrait shows mobile hamburger', async ({ page }) => {
+    await page.setViewportSize(TABLET_PORTRAIT);
     await clearAuthState(page);
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     await page.goto('/me/home');
-  });
 
-  test('above 768px breakpoint, shows desktop sidebar instead of mobile hamburger', async ({ page }) => {
-    // At 769px (above max-width: 768px), mobile nav should be hidden, desktop should be visible
     const desktopSidebar = page.getByTestId('unified-sidebar');
     const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
-    
+
+    await waitForVisible(hamburgerButton);
+    await expect(desktopSidebar).toBeHidden();
+  });
+
+  test('tablet landscape keeps desktop sidebar visible', async ({ page }) => {
+    await page.setViewportSize(TABLET_LANDSCAPE);
+    await clearAuthState(page);
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
+    await page.goto('/me/home');
+
+    const desktopSidebar = page.getByTestId('unified-sidebar');
+    const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
+
     await waitForVisible(desktopSidebar);
     await expect(hamburgerButton).not.toBeVisible();
   });
