@@ -813,7 +813,7 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   gap: var(--spacing-2);
 }
 
-@media (min-width: var(--bp-md)) and (max-width: var(--bp-lg)) {
+@media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) {
   .admin-card-grid {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--spacing-5);

@@ -390,7 +390,7 @@ body.theme-dark .unified-sidebar {
 }
 
 /* Responsive design */
-@media (min-width: var(--bp-md)) and (max-width: var(--bp-lg)) and (orientation: landscape) {
+@media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) and (orientation: landscape) {
   .unified-header {
     padding: var(--spacing-4) var(--spacing-6);
   }
@@ -415,7 +415,7 @@ body.theme-dark .unified-sidebar {
   }
 }
 
-@media (min-width: var(--bp-md)) and (max-width: var(--bp-lg)) and (orientation: portrait) {
+@media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) and (orientation: portrait) {
   .unified-header {
     padding: var(--spacing-4) var(--spacing-5);
     align-items: flex-start;
