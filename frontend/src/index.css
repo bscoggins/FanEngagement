@@ -294,7 +294,7 @@ iframe {
   height: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   h1 {
     font-size: clamp(1.75rem, 4vw + 1rem, var(--font-size-3xl));
   }
@@ -576,7 +576,7 @@ body.theme-dark {
   /* Hide elements on screens up to the small breakpoint */
 }
 
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .hide-sm-down {
     display: none !important;
   }
@@ -586,7 +586,7 @@ body.theme-dark {
   /* Hide elements on screens up to the medium breakpoint */
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .hide-md-down {
     display: none !important;
   }
@@ -596,7 +596,7 @@ body.theme-dark {
   /* Hide elements on screens up to the large breakpoint */
 }
 
-@media (max-width: 1024px) {
+@media (max-width: var(--bp-lg)) {
   .hide-lg-down {
     display: none !important;
   }
@@ -606,7 +606,7 @@ body.theme-dark {
   display: none !important;
 }
 
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .show-sm-down {
     display: var(--responsive-display, revert) !important;
   }
@@ -616,7 +616,7 @@ body.theme-dark {
   display: none !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .show-md-down {
     display: var(--responsive-display, revert) !important;
   }
@@ -626,7 +626,7 @@ body.theme-dark {
   display: none !important;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: var(--bp-lg)) {
   .show-lg-down {
     display: var(--responsive-display, revert) !important;
   }
@@ -637,7 +637,7 @@ body.theme-dark {
   display: flex;
 }
 
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .stack-sm {
     flex-direction: column;
   }
@@ -647,7 +647,7 @@ body.theme-dark {
   display: flex;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .stack-md {
     flex-direction: column;
   }
@@ -657,7 +657,7 @@ body.theme-dark {
   display: flex;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: var(--bp-lg)) {
   .stack-lg {
     flex-direction: column;
   }
