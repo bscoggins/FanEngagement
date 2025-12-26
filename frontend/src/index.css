@@ -577,14 +577,39 @@ body.theme-dark {
     display: none !important;
   }
 }
+@media (max-width: 480px) {
+  .hide-sm-down {
+    display: none !important;
+  }
+}
 
 @media (max-width: var(--bp-md)) {
   .hide-md-down {
     display: none !important;
   }
 }
+@media (orientation: portrait) and (max-width: var(--bp-lg)) {
+  .hide-md-down {
+    display: none !important;
+  }
+}
+@media (max-width: 768px) {
+  .hide-md-down {
+    display: none !important;
+  }
+}
+@media (orientation: portrait) and (max-width: 1024px) {
+  .hide-md-down {
+    display: none !important;
+  }
+}
 
 @media (max-width: var(--bp-lg)) {
+  .hide-lg-down {
+    display: none !important;
+  }
+}
+@media (max-width: 1024px) {
   .hide-lg-down {
     display: none !important;
   }
@@ -599,12 +624,32 @@ body.theme-dark {
     display: var(--responsive-display, block) !important;
   }
 }
+@media (max-width: 480px) {
+  .show-sm-down {
+    display: var(--responsive-display, block) !important;
+  }
+}
 
 .show-md-down {
   display: none !important;
 }
 
 @media (max-width: var(--bp-md)) {
+  .show-md-down {
+    display: var(--responsive-display, block) !important;
+  }
+}
+@media (orientation: portrait) and (max-width: var(--bp-lg)) {
+  .show-md-down {
+    display: var(--responsive-display, block) !important;
+  }
+}
+@media (max-width: 768px) {
+  .show-md-down {
+    display: var(--responsive-display, block) !important;
+  }
+}
+@media (orientation: portrait) and (max-width: 1024px) {
   .show-md-down {
     display: var(--responsive-display, block) !important;
   }
@@ -619,9 +664,19 @@ body.theme-dark {
     display: var(--responsive-display, block) !important;
   }
 }
+@media (max-width: 1024px) {
+  .show-lg-down {
+    display: var(--responsive-display, block) !important;
+  }
+}
 
 /* ===== Responsive Layout Utilities ===== */
 @media (max-width: var(--bp-sm)) {
+  .stack-sm {
+    flex-direction: column;
+  }
+}
+@media (max-width: 480px) {
   .stack-sm {
     flex-direction: column;
   }
@@ -632,8 +687,18 @@ body.theme-dark {
     flex-direction: column;
   }
 }
+@media (max-width: 768px) {
+  .stack-md {
+    flex-direction: column;
+  }
+}
 
 @media (max-width: var(--bp-lg)) {
+  .stack-lg {
+    flex-direction: column;
+  }
+}
+@media (max-width: 1024px) {
   .stack-lg {
     flex-direction: column;
   }
