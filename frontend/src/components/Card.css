@@ -178,7 +178,7 @@ body.theme-dark .card--bordered {
 /* ===== Responsive Adjustments ===== */
 
 /* Tablet and below */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .card--padding-default {
     padding: var(--spacing-5);
   }

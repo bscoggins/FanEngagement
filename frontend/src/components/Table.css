@@ -322,8 +322,24 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 /* Mobile breakpoint: 768px */
 /* These values align with the design system's responsive breakpoints */
 
+/* ===== Responsive: Tablet Layout ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .table-container {
+    margin-bottom: var(--spacing-5);
+  }
+
+  .table-container--scroll .data-table {
+    min-width: 720px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--spacing-3);
+  }
+}
+
 /* ===== Responsive: Scroll Layout (Default) ===== */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .table-container--scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -352,7 +368,7 @@ body.theme-dark .table-container--sticky-header .data-table thead {
 }
 
 /* ===== Responsive: Card Layout ===== */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .table-container--card {
     overflow: visible;
   }
@@ -457,7 +473,7 @@ body.theme-dark .table-action-button.secondary:hover {
   background-color: var(--color-neutral-600);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.theme-dark .table-container--card .data-table tbody tr {
     background-color: var(--color-surface-elevated);
     border-color: var(--color-border-dark);
