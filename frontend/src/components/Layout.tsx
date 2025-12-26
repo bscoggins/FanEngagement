@@ -176,6 +176,7 @@ export const Layout: React.FC = () => {
           <div className="unified-header-left">
             <button
               className="unified-mobile-menu-button show-md-down"
+              style={{ '--responsive-display': 'inline-flex' } as React.CSSProperties}
               onClick={() => setIsMobileNavOpen(true)}
               aria-label={mobileMenuLabel}
               aria-expanded={isMobileNavOpen}

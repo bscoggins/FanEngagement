@@ -42,7 +42,6 @@ body.theme-dark {
 }
 
 .admin-mobile-menu-button {
-  --responsive-display: inline-flex;
   background: none;
   border: 1px solid transparent;
   color: var(--color-text-inverse);

@@ -144,6 +144,7 @@ export const PlatformAdminLayout: React.FC = () => {
             <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
                 className="admin-mobile-menu-button show-md-down"
+                style={{ '--responsive-display': 'inline-flex' } as React.CSSProperties}
                 onClick={() => setIsMobileNavOpen(true)}
                 aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}

@@ -111,7 +111,6 @@
 }
 
 .unified-mobile-menu-button {
-  --responsive-display: inline-flex;
   background: none;
   border: 1px solid transparent;
   color: var(--color-text-inverse);
@@ -437,7 +436,7 @@ body.theme-dark .unified-sidebar {
   }
 }
 
-@media (max-width: calc(var(--bp-md) - 1px)) {
+@media (max-width: var(--bp-md)) {
   .header {
     flex-direction: column;
     align-items: flex-start;
