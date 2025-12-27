@@ -16,6 +16,7 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
     private readonly HttpClient _client;
     private readonly TestWebApplicationFactory _factory;
     private readonly ITestOutputHelper _output;
+    private const int MaxPasswordLength = 100;
 
     public ValidationTests(TestWebApplicationFactory factory, ITestOutputHelper output)
     {
@@ -73,7 +74,8 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
         new object[] { "testpassword123!", "Missing uppercase" },
         new object[] { "TestPassword!", "Missing number" },
         new object[] { "TestPassword123", "Missing special character" },
-        new object[] { new string('A', 101) + "1!", "Exceeds maximum length" }
+        // Generates a 103-character password (101 letters plus number and special) to exceed the 100-character limit
+        new object[] { new string('A', MaxPasswordLength + 1) + "1!", "Exceeds maximum length" }
     };
 
     [Fact]
@@ -92,6 +94,9 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problemDetails);
+        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
     [Fact]
