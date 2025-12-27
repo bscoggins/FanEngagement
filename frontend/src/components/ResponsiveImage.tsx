@@ -18,6 +18,29 @@ export interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageE
 /**
  * Lightweight responsive image wrapper that adds srcset/sizes support,
  * optional modern format sources, and lazy loading defaults.
+ *
+ * @example
+ * ```tsx
+ * <ResponsiveImage
+ *   src="/images/hero-fallback.jpg"
+ *   alt="Fans celebrating in the stadium"
+ *   sizes="(min-width: 1024px) 800px, 100vw"
+ *   sources={[
+ *     {
+ *       srcSet: "/images/hero-large.webp 2x, /images/hero.webp 1x",
+ *       type: "image/webp",
+ *       media: "(min-width: 1024px)",
+ *       sizes: "(min-width: 1024px) 800px, 100vw",
+ *     },
+ *     {
+ *       srcSet: "/images/hero-large.jpg 2x, /images/hero.jpg 1x",
+ *       type: "image/jpeg",
+ *       media: "(min-width: 1024px)",
+ *       sizes: "(min-width: 1024px) 800px, 100vw",
+ *     },
+ *   ]}
+ * />
+ * ```
  */
 export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   src,
