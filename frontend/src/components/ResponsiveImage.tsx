@@ -37,7 +37,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
     <picture>
       {computedSources.map((source, index) => (
         <source
-          key={source.key ?? `source-${index}`}
+          key={source.key ?? source.srcSet ?? `${source.type ?? 'source'}-${source.media ?? 'all'}`}
           {...source}
         />
       ))}
