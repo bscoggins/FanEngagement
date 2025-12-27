@@ -45,15 +45,16 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
         _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
-    [Fact]
-    public async Task CreateUser_ReturnsBadRequest_WhenPasswordTooShort()
+    [Theory]
+    [MemberData(nameof(InvalidPasswords))]
+    public async Task CreateUser_ReturnsBadRequest_WhenPasswordInvalid(string password, string reason)
     {
         // Arrange
         var request = new CreateUserRequest
         {
             Email = "test@example.com",
             DisplayName = "Test User",
-            Password = "short"
+            Password = password
         };
 
         // Act
@@ -63,18 +64,27 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problemDetails);
-        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
+        _output.WriteLine($"Reason: {reason}; Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
+    public static IEnumerable<object[]> InvalidPasswords => new[]
+    {
+        new object[] { "short", "Too short" },
+        new object[] { "testpassword123!", "Missing uppercase" },
+        new object[] { "TestPassword!", "Missing number" },
+        new object[] { "TestPassword123", "Missing special character" },
+        new object[] { new string('A', 101) + "1!", "Exceeds maximum length" }
+    };
+
     [Fact]
-    public async Task CreateUser_ReturnsBadRequest_WhenPasswordMissingUppercase()
+    public async Task CreateUser_ReturnsBadRequest_WhenDisplayNameMissing()
     {
         // Arrange
         var request = new CreateUserRequest
         {
             Email = "test@example.com",
-            DisplayName = "Test User",
-            Password = "testpassword123!" // Missing uppercase
+            DisplayName = "",
+            Password = "TestPassword123!"
         };
 
         // Act
@@ -82,51 +92,6 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.NotNull(problemDetails);
-        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
-    }
-
-    [Fact]
-    public async Task CreateUser_ReturnsBadRequest_WhenPasswordMissingNumber()
-    {
-        // Arrange
-        var request = new CreateUserRequest
-        {
-            Email = "test@example.com",
-            DisplayName = "Test User",
-            Password = "TestPassword!" // Missing number
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/users", request);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.NotNull(problemDetails);
-        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
-    }
-
-    [Fact]
-    public async Task CreateUser_ReturnsBadRequest_WhenPasswordMissingSpecialCharacter()
-    {
-        // Arrange
-        var request = new CreateUserRequest
-        {
-            Email = "test@example.com",
-            DisplayName = "Test User",
-            Password = "TestPassword123" // Missing special character
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/users", request);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.NotNull(problemDetails);
-        _output.WriteLine($"Problem Details: {System.Text.Json.JsonSerializer.Serialize(problemDetails)}");
     }
 
     [Fact]
