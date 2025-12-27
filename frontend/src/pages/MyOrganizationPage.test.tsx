@@ -118,7 +118,7 @@ describe('MyOrganizationPage', () => {
 
     const logo = await screen.findByAltText('Branded Org logo');
     expect(logo.getAttribute('sizes')).toBe('(max-width: 768px) 30vw, 120px');
-    expect(logo.getAttribute('loading')).toBe('lazy');
+    expect(logo.getAttribute('loading')).toBe('eager');
     expect(logo.getAttribute('srcset')).toContain('1x');
   });
 

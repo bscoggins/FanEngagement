@@ -102,7 +102,7 @@ export const MyOrganizationPage: React.FC = () => {
             <ResponsiveImage
               src={branding.logoUrl}
               alt={`${organization.name} logo`}
-              loading="lazy"
+              loading="eager"
               decoding="async"
               sizes="(max-width: 768px) 30vw, 120px"
               style={{
