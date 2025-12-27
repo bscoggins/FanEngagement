@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useOrgBranding, DEFAULT_PRIMARY_COLOR } from '../hooks/useOrgBranding';
+import { ResponsiveImage } from '../components/ResponsiveImage';
 import { organizationsApi } from '../api/organizationsApi';
 import { shareBalancesApi } from '../api/shareBalancesApi';
 import { proposalsApi } from '../api/proposalsApi';
@@ -98,9 +99,12 @@ export const MyOrganizationPage: React.FC = () => {
           }}
         >
           {branding.logoUrl && (
-            <img
+            <ResponsiveImage
               src={branding.logoUrl}
               alt={`${organization.name} logo`}
+              loading="eager"
+              decoding="async"
+              sizes="(max-width: 768px) 30vw, 120px"
               style={{
                 maxHeight: '60px',
                 maxWidth: '120px',
