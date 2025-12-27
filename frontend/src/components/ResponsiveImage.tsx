@@ -7,7 +7,19 @@ type PictureSource = {
   sizes?: string;
 };
 
-const buildDensitySrcSet = (src: string) => `${src} 1x, ${src} 2x`;
+const buildDensitySrcSet = (src: string) => {
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const url = new URL(src, base);
+    const oneX = new URL(url.toString());
+    const twoX = new URL(url.toString());
+    oneX.searchParams.set('dpr', '1');
+    twoX.searchParams.set('dpr', '2');
+    return `${oneX.toString()} 1x, ${twoX.toString()} 2x`;
+  } catch {
+    return `${src} 1x`;
+  }
+};
 
 const inferImageType = (src: string): PictureSource['type'] => {
   const normalized = src.split('?')[0].toLowerCase();
