@@ -20,18 +20,6 @@ const buildDensitySrcSet = (src: string) => {
   }
 };
 
-const inferImageType = (src: string): PictureSource['type'] => {
-  const normalized = src.split('?')[0].toLowerCase();
-  if (normalized.endsWith('.webp')) return 'image/webp';
-  if (normalized.endsWith('.avif')) return 'image/avif';
-  if (normalized.endsWith('.png')) return 'image/png';
-  if (normalized.endsWith('.jpg') || normalized.endsWith('.jpeg')) return 'image/jpeg';
-  if (normalized.endsWith('.svg')) return 'image/svg+xml';
-  return undefined;
-};
-
-const MODERN_FORMATS: PictureSource['type'][] = ['image/webp', 'image/avif'];
-
 export interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
@@ -52,23 +40,13 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   srcSet,
   ...rest
 }) => {
-  const inferredType = inferImageType(src);
   const resolvedSrcSet = srcSet ?? buildDensitySrcSet(src);
-
-  const buildSources = () => {
-    if (sources) return sources;
-    if (inferredType && MODERN_FORMATS.includes(inferredType)) {
-      return [{ srcSet: resolvedSrcSet, type: inferredType }];
-    }
-    return [];
-  };
-
-  const computedSources = buildSources();
+  const computedSources = sources ?? [];
 
   return (
     <picture>
       {computedSources.map((source, index) => (
-        <source key={index} {...source} />
+        <source key={`${source.type ?? 'source'}-${index}`} {...source} />
       ))}
       <img
         src={src}
