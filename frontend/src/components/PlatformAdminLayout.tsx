@@ -12,8 +12,11 @@ import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import { Tooltip } from './Tooltip';
 import { isMacPlatform } from '../utils/platformUtils';
 import { PageTransition } from './PageTransition';
+import { type ResponsiveDisplayStyle } from '../types/styles';
 import './PlatformAdminLayout.css';
 import '../pages/AdminPage.css';
+
+const mobileMenuDisplay: ResponsiveDisplayStyle = { '--responsive-display': 'inline-flex' };
 
 export const PlatformAdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();
@@ -143,7 +146,8 @@ export const PlatformAdminLayout: React.FC = () => {
           <div className="admin-header-left">
             <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
-                className="admin-mobile-menu-button"
+                className="admin-mobile-menu-button show-md-down"
+                style={mobileMenuDisplay}
                 onClick={() => setIsMobileNavOpen(true)}
                 aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}
@@ -174,8 +178,8 @@ export const PlatformAdminLayout: React.FC = () => {
           </div>
         </header>
         
-        <div className="admin-container">
-          <aside className="admin-sidebar" role="navigation" aria-label="Platform admin navigation">
+        <div className="admin-container stack-md">
+          <aside className="admin-sidebar hide-md-down" role="navigation" aria-label="Platform admin navigation">
             <nav className="admin-nav">
               {/* Global navigation items */}
               {globalNavItems.map(item => (

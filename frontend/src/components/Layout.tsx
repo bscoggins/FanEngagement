@@ -9,7 +9,10 @@ import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { PageTransition } from './PageTransition';
+import { type ResponsiveDisplayStyle } from '../types/styles';
 import './Layout.css';
+
+const mobileMenuDisplay: ResponsiveDisplayStyle = { '--responsive-display': 'inline-flex' };
 
 export const Layout: React.FC = () => {
   const { isAuthenticated, logout, isAdmin } = useAuth();
@@ -175,7 +178,8 @@ export const Layout: React.FC = () => {
         <header className="unified-header" role="banner">
           <div className="unified-header-left">
             <button
-              className="unified-mobile-menu-button"
+              className="unified-mobile-menu-button show-md-down"
+              style={mobileMenuDisplay}
               onClick={() => setIsMobileNavOpen(true)}
               aria-label={mobileMenuLabel}
               aria-expanded={isMobileNavOpen}
@@ -219,8 +223,8 @@ export const Layout: React.FC = () => {
           </div>
         </header>
         
-        <div className="unified-container">
-          <aside className="unified-sidebar" data-testid="unified-sidebar" role="navigation" aria-label="User navigation">
+        <div className="unified-container stack-md">
+          <aside className="unified-sidebar hide-md-down" data-testid="unified-sidebar" role="navigation" aria-label="User navigation">
             <nav className="unified-nav">
               {/* User navigation items */}
               {userNavItems.map(item => (

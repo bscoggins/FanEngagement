@@ -802,12 +802,6 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   background-color: var(--color-background);
 }
 
-.admin-dashboard-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--spacing-4);
-}
-
 .admin-dashboard-stat-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
@@ -819,9 +813,8 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   gap: var(--spacing-2);
 }
 
-@media (min-width: 768px) and (max-width: 1024px) {
-  .admin-card-grid,
-  .admin-dashboard-stats-grid {
+@media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) {
+  .admin-card-grid {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--spacing-5);
   }
@@ -859,19 +852,6 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   color: var(--color-text-secondary);
 }
 
-.admin-dashboard-quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--spacing-4);
-}
-
-.admin-dashboard-panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-4);
-  margin-top: var(--spacing-6);
-}
-
 .admin-dashboard-list {
   list-style: none;
   padding: 0;
@@ -895,7 +875,7 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
   padding-bottom: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: var(--bp-md)) {
   .admin-page-header,
   .admin-section-header {
     align-items: flex-start;
@@ -904,12 +884,6 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
 
   .admin-card {
     padding: var(--spacing-5);
-  }
-
-  .admin-card-grid,
-  .admin-dashboard-panels,
-  .admin-dashboard-quick-actions {
-    grid-template-columns: 1fr;
   }
 
   .admin-filter-row {
@@ -932,6 +906,7 @@ body.theme-dark .admin-table-action-outline.btn--outline:hover:not(:disabled) {
     font-size: var(--font-size-base);
   }
 }
+
 
 body.theme-dark .admin-info-grid {
   background-color: rgba(255, 255, 255, 0.02);

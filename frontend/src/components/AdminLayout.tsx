@@ -10,8 +10,11 @@ import { MobileNav, type MobileNavItem } from './MobileNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { Tooltip } from './Tooltip';
 import { PageTransition } from './PageTransition';
+import { type ResponsiveDisplayStyle } from '../types/styles';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
+
+const mobileMenuDisplay: ResponsiveDisplayStyle = { '--responsive-display': 'inline-flex' };
 
 export const AdminLayout: React.FC = () => {
   const { logout, isAdmin } = useAuth();
@@ -226,7 +229,8 @@ export const AdminLayout: React.FC = () => {
           <div className="admin-header-left">
             <Tooltip content={mobileMenuLabel} placement="bottom">
               <button
-                className="admin-mobile-menu-button"
+                className="admin-mobile-menu-button show-md-down"
+                style={mobileMenuDisplay}
                 onClick={() => setIsMobileNavOpen(true)}
                 aria-label={mobileMenuLabel}
                 aria-expanded={isMobileNavOpen}
@@ -270,8 +274,8 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
         
-        <div className="admin-container">
-          <aside className="admin-sidebar" role="navigation" aria-label="Admin navigation">
+        <div className="admin-container stack-md">
+          <aside className="admin-sidebar hide-md-down" role="navigation" aria-label="Admin navigation">
             <nav className="admin-nav">
               {/* Global navigation items */}
               {globalNavItems.map(item => (

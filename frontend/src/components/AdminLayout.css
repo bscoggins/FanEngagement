@@ -42,7 +42,6 @@ body.theme-dark {
 }
 
 .admin-mobile-menu-button {
-  display: none; /* Hidden on desktop, shown on mobile */
   background: none;
   border: 1px solid transparent;
   color: var(--color-text-inverse);
@@ -301,25 +300,13 @@ body.theme-dark .admin-nav-link:hover {
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
-  .admin-mobile-menu-button {
-    display: flex; /* Show hamburger menu on mobile */
-  }
-
+@media (max-width: var(--bp-md)) {
   .admin-header h1 {
     font-size: var(--font-size-xl);
   }
 
   .admin-header {
     padding: var(--spacing-4);
-  }
-
-  .admin-container {
-    flex-direction: column;
-  }
-
-  .admin-sidebar {
-    display: none; /* Hide sidebar on mobile, use drawer instead */
   }
 
   .admin-main {
@@ -404,7 +391,7 @@ body.theme-dark .admin-nav-link:hover {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .keyboard-help-toast {
     bottom: var(--spacing-4);
     right: var(--spacing-4);
