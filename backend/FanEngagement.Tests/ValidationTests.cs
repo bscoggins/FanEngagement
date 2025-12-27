@@ -74,7 +74,7 @@ public class ValidationTests : IClassFixture<TestWebApplicationFactory>
         new object[] { "testpassword123!", "Missing uppercase" },
         new object[] { "TestPassword!", "Missing number" },
         new object[] { "TestPassword123", "Missing special character" },
-        // Generates a 103-character password (101 letters plus number and special) to exceed the 100-character limit
+        // Generates a 103-character password (101 'A' characters plus "1!" equals 103 total characters) to exceed the 100-character limit
         new object[] { new string('A', MaxPasswordLength + 1) + "1!", "Exceeds maximum length" }
     };
 
