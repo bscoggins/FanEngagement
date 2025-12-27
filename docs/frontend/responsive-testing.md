@@ -15,7 +15,7 @@ Use this checklist before merging responsive changes and during release validati
   - `--bp-md` 768px (tablets / narrow landscape)
   - `--bp-lg` 1024px (small laptop / large tablet)
   - `--bp-xl` 1280px (desktop baseline)
-- Prefer the existing helpers (`show-*-down`, `hide-*-down`, `stack-*`, `responsive-grid`) before adding bespoke media queries.
+- Prefer the existing helpers (`show-*-down`, `hide-*-down`, `stack-*`, `responsive-grid`) before adding custom media queries.
 
 ---
 
@@ -63,7 +63,7 @@ Prefer real hardware; fall back to emulators/Browser DevTools when devices are u
 
 ### Tables and data grids
 - [ ] Horizontal scroll appears without clipping columns; pinned columns remain visible.
-- [ ] Numeric and status columns stay readable at `--bp-sm` (consider hiding non-critical columns via responsive utilities).
+- [ ] Numeric and status columns stay readable at `--bp-sm` (consider hiding non-critical columns via `hide-sm-down` or similar helpers).
 - [ ] Row actions stay reachable via touch and keyboard; overflow menus remain within the viewport.
 
 ### Modals and overlays
@@ -83,7 +83,7 @@ Prefer real hardware; fall back to emulators/Browser DevTools when devices are u
 ### Browser DevTools (fastest for breakpoints/emulation)
 - Open responsive mode, set the device presets above, and verify both portrait and landscape.
 - Toggle throttling to catch layout flashes during slow loads.
-- Use the “Show rulers”/“Layout shift” overlays to spot overflow and CLS issues.
+- Use the “Show rulers”/“Layout shift” overlays to spot overflow and Cumulative Layout Shift (CLS) issues.
 
 ### BrowserStack or similar device cloud
 - Use for cross-browser/device coverage (Safari, Chrome, Firefox) when hardware is unavailable.
