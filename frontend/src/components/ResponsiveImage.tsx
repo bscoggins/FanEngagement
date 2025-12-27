@@ -11,6 +11,7 @@ export interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageE
   src: string;
   alt: string;
   sources?: PictureSource[];
+  defaultDescriptor?: string;
 }
 
 /**
@@ -25,15 +26,16 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   sizes,
   sources,
   srcSet,
+  defaultDescriptor = '1x',
   ...rest
 }) => {
-  const resolvedSrcSet = srcSet ?? `${src} 1x`;
+  const resolvedSrcSet = srcSet ?? `${src} ${defaultDescriptor}`;
   const computedSources = sources ?? [];
 
   return (
     <picture>
       {computedSources.map((source, index) => (
-        <source key={`source-${index}`} {...source} />
+        <source key={source.srcSet ?? source.media ?? source.type ?? `source-${index}`} {...source} />
       ))}
       <img
         src={src}
