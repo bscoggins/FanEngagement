@@ -8,6 +8,7 @@ import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Toggle } from '../components/Toggle';
 import { useAuth } from '../auth/AuthContext';
+import { ResponsiveImage } from '../components/ResponsiveImage';
 
 const adminInfoTextStyle: React.CSSProperties = {
   marginTop: '0.5rem',
@@ -347,14 +348,20 @@ export const AdminOrganizationEditPage: React.FC = () => {
                 label="Logo URL"
                 value={formData.logoUrl}
                 onChange={handleChange}
-                placeholder="https://example.com/logo.png"
+                placeholder="https://example.com/logo.webp"
               />
+              <div style={adminInfoTextStyle}>
+                Use WebP or AVIF logos when available for faster, crisper rendering across devices.
+              </div>
               {formData.logoUrl && (
                 <div style={{ marginTop: '0.75rem' }}>
                   <div style={{ ...adminInfoTextStyle, marginBottom: '0.5rem' }}>Preview:</div>
-                  <img 
+                  <ResponsiveImage 
                     src={formData.logoUrl} 
                     alt="Organization logo preview" 
+                    loading="lazy"
+                    decoding="async"
+                    sizes="(max-width: 768px) 60vw, 200px"
                     style={{ 
                       maxWidth: '200px', 
                       maxHeight: '100px',
