@@ -7,19 +7,6 @@ type PictureSource = {
   sizes?: string;
 };
 
-const buildDensitySrcSet = (src: string) => {
-  try {
-    const url = new URL(src);
-    const oneX = new URL(url);
-    const twoX = new URL(url);
-    oneX.searchParams.set('dpr', '1');
-    twoX.searchParams.set('dpr', '2');
-    return `${oneX.toString()} 1x, ${twoX.toString()} 2x`;
-  } catch {
-    return `${src} 1x`;
-  }
-};
-
 export interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
@@ -40,13 +27,16 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   srcSet,
   ...rest
 }) => {
-  const resolvedSrcSet = srcSet ?? buildDensitySrcSet(src);
+  const resolvedSrcSet = srcSet ?? `${src} 1x`;
   const computedSources = sources ?? [];
 
   return (
     <picture>
       {computedSources.map((source, index) => (
-        <source key={`${source.type ?? 'source'}-${index}`} {...source} />
+        <source
+          key={[source.type, source.media, source.srcSet].filter(Boolean).join('-') || `source-${index}`}
+          {...source}
+        />
       ))}
       <img
         src={src}

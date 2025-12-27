@@ -97,7 +97,7 @@ describe('AdminOrganizationEditPage', () => {
     const preview = await screen.findByAltText(/logo preview/i);
     expect(preview.getAttribute('loading')).toBe('lazy');
     expect(preview.getAttribute('sizes')).toBe('(max-width: 768px) 60vw, 200px');
-    expect(preview.getAttribute('srcset')).toContain('2x');
+    expect(preview.getAttribute('srcset')).toContain('logo.png 1x');
   });
 
   it('successfully updates organization', async () => {
