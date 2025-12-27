@@ -86,6 +86,20 @@ describe('AdminOrganizationEditPage', () => {
     expect(descriptionInput.value).toBe('Test description');
   });
 
+  it('shows responsive, lazy-loaded logo preview', async () => {
+    vi.mocked(organizationsApi.getById).mockResolvedValueOnce({
+      ...mockOrganization,
+      logoUrl: 'https://cdn.example.com/logo.png',
+    });
+
+    renderPage();
+
+    const preview = await screen.findByAltText(/logo preview/i);
+    expect(preview.getAttribute('loading')).toBe('lazy');
+    expect(preview.getAttribute('sizes')).toBe('(max-width: 768px) 60vw, 200px');
+    expect(preview.getAttribute('srcset')).toContain('logo.png 1x');
+  });
+
   it('successfully updates organization', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
     vi.mocked(organizationsApi.update).mockResolvedValueOnce({

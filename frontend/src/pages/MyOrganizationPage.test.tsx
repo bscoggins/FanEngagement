@@ -101,6 +101,27 @@ describe('MyOrganizationPage', () => {
     expect(screen.getByText('Test Proposal')).toBeInTheDocument();
   });
 
+  it('renders responsive logo with expected attributes', async () => {
+    const mockOrg = {
+      id: 'org-1',
+      name: 'Branded Org',
+      description: 'A test organization',
+      logoUrl: 'https://cdn.example.com/logo.webp',
+      createdAt: '2024-01-01T00:00:00Z',
+    };
+
+    vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrg);
+    vi.mocked(shareBalancesApi.getBalances).mockResolvedValue([]);
+    vi.mocked(proposalsApi.getByOrganization).mockResolvedValue([]);
+
+    renderWithAuth('org-1', 'user-1');
+
+    const logo = await screen.findByAltText('Branded Org logo');
+    expect(logo.getAttribute('sizes')).toBe('(max-width: 768px) 30vw, 120px');
+    expect(logo.getAttribute('loading')).toBe('eager');
+    expect(logo.getAttribute('srcset')).toContain('1x');
+  });
+
   it('displays message when user has no share balances', async () => {
     const mockOrg = {
       id: 'org-1',
