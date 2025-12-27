@@ -5,6 +5,7 @@ type PictureSource = {
   type?: string;
   media?: string;
   sizes?: string;
+  key?: string;
 };
 
 export interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -36,7 +37,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
     <picture>
       {computedSources.map((source, index) => (
         <source
-          key={`${source.srcSet ?? 'source'}-${source.type ?? 'any'}-${source.media ?? 'all'}-${index}`}
+          key={source.key ?? `source-${index}`}
           {...source}
         />
       ))}
