@@ -10,8 +10,8 @@ type PictureSource = {
 const buildDensitySrcSet = (src: string) => {
   try {
     const url = new URL(src);
-    const oneX = new URL(url.toString());
-    const twoX = new URL(url.toString());
+    const oneX = new URL(url);
+    const twoX = new URL(url);
     oneX.searchParams.set('dpr', '1');
     twoX.searchParams.set('dpr', '2');
     return `${oneX.toString()} 1x, ${twoX.toString()} 2x`;
@@ -29,6 +29,8 @@ const inferImageType = (src: string): PictureSource['type'] => {
   if (normalized.endsWith('.svg')) return 'image/svg+xml';
   return undefined;
 };
+
+const MODERN_FORMATS: PictureSource['type'][] = ['image/webp', 'image/avif'];
 
 export interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -55,7 +57,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
 
   const buildSources = () => {
     if (sources) return sources;
-    if (inferredType && (inferredType === 'image/webp' || inferredType === 'image/avif')) {
+    if (inferredType && MODERN_FORMATS.includes(inferredType)) {
       return [{ srcSet: resolvedSrcSet, type: inferredType }];
     }
     return [];
