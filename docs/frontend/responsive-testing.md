@@ -23,14 +23,14 @@ Use this checklist before merging responsive changes and during release validati
 
 Prefer real hardware; fall back to emulators/Browser DevTools when devices are unavailable. Verify both orientations on mobile and tablets unless stated otherwise.
 
-Device | Resolution target | Orientation | Notes
---- | --- | --- | ---
-iPhone SE | 375×667 | Portrait & landscape | Baseline small-screen check; watch nav density and form controls.
-iPhone 14 Pro | 390×844 | Portrait & landscape | Modern notch device; confirm safe area padding.
-iPad (10"+) | 768×1024 | Portrait & landscape | Validate split layouts, grids, and multi-column sections.
-Android phone (Pixel 7 class) | ~360×800 | Portrait & landscape | Check scrollbar width and Android font scaling.
-Android tablet | ~800×1280 | Portrait & landscape | Ensure responsive grids collapse gracefully.
-Desktop | ≥1280px | Landscape | Validate full nav shell and expanded tables/cards.
+| Device | Resolution target (CSS px) | Orientation | Notes |
+| --- | --- | --- | --- |
+| iPhone SE | 375×667 | Portrait & landscape | Baseline small-screen check; watch nav density and form controls. |
+| iPhone 14 Pro | 390×844 | Portrait & landscape | Modern notch device; confirm safe area padding. |
+| iPad (10"+) | 768×1024 | Portrait & landscape | Validate split layouts, grids, and multi-column sections. |
+| Android phone (Pixel 7 class) | 412×915 | Portrait & landscape | Check scrollbar width and Android font scaling. |
+| Android tablet | ~800×1280 | Portrait & landscape | Ensure responsive grids collapse gracefully. |
+| Desktop | ≥1280px | Landscape | Validate full nav shell and expanded tables/cards. |
 
 ---
 
