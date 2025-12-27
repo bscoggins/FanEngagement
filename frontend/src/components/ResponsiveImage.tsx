@@ -9,8 +9,7 @@ type PictureSource = {
 
 const buildDensitySrcSet = (src: string) => {
   try {
-    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
-    const url = new URL(src, base);
+    const url = new URL(src);
     const oneX = new URL(url.toString());
     const twoX = new URL(url.toString());
     oneX.searchParams.set('dpr', '1');
@@ -52,11 +51,17 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   ...rest
 }) => {
   const inferredType = inferImageType(src);
-  const computedSources =
-    sources ??
-    (inferredType && (inferredType === 'image/webp' || inferredType === 'image/avif')
-      ? [{ srcSet: srcSet ?? buildDensitySrcSet(src), type: inferredType }]
-      : []);
+  const resolvedSrcSet = srcSet ?? buildDensitySrcSet(src);
+
+  const buildSources = () => {
+    if (sources) return sources;
+    if (inferredType && (inferredType === 'image/webp' || inferredType === 'image/avif')) {
+      return [{ srcSet: resolvedSrcSet, type: inferredType }];
+    }
+    return [];
+  };
+
+  const computedSources = buildSources();
 
   return (
     <picture>
@@ -69,7 +74,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         loading={loading}
         decoding={decoding}
         sizes={sizes}
-        srcSet={srcSet ?? buildDensitySrcSet(src)}
+        srcSet={resolvedSrcSet}
         {...rest}
       />
     </picture>
