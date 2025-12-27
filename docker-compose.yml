@@ -53,8 +53,8 @@ services:
       - api
   solana-adapter:
     build:
-      context: ./adapters/solana
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: adapters/solana/Dockerfile
     container_name: solana-adapter
     ports:
       - "3001:3001"
