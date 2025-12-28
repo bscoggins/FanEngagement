@@ -80,6 +80,29 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
     }
 
     [Fact]
+    public async Task CreateOrganization_WithPolygonWithoutConfig_ReturnsBadRequest()
+    {
+        // Arrange
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        var request = new CreateOrganizationRequest
+        {
+            Name = $"Polygon Org {Guid.NewGuid()}",
+            BlockchainType = BlockchainType.Polygon,
+            EnableBlockchainFeature = true
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/organizations", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("blockchainConfig", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task UpdateOrganization_ChangeBlockchainType_Succeeds()
     {
         // Arrange
@@ -102,7 +125,7 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
             Name = organization!.Name,
             Description = organization.Description,
             BlockchainType = BlockchainType.Polygon,
-            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3002\"}"
+            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3002\",\"network\":\"amoy\",\"apiKey\":\"test-api-key\"}"
         };
         var updateResponse = await _client.PutAsJsonAsync($"/organizations/{organization.Id}", updateRequest);
 
@@ -112,6 +135,39 @@ public class OrganizationBlockchainConfigurationTests : IClassFixture<TestWebApp
         Assert.NotNull(updatedOrg);
         Assert.Equal(BlockchainType.Polygon, updatedOrg!.BlockchainType);
         Assert.Equal(updateRequest.BlockchainConfig, updatedOrg.BlockchainConfig);
+    }
+
+    [Fact]
+    public async Task UpdateOrganization_ToPolygonWithoutConfig_ReturnsBadRequest()
+    {
+        // Arrange
+        var (_, adminToken) = await TestAuthenticationHelper.CreateAuthenticatedAdminAsync(_factory);
+        _client.AddAuthorizationHeader(adminToken);
+
+        var createRequest = new CreateOrganizationRequest
+        {
+            Name = $"Test Org {Guid.NewGuid()}",
+            Description = "Test Organization",
+            BlockchainType = BlockchainType.None
+        };
+        var createResponse = await _client.PostAsJsonAsync("/organizations", createRequest);
+        var organization = await createResponse.Content.ReadFromJsonAsync<Organization>();
+        Assert.NotNull(organization);
+
+        var updateRequest = new UpdateOrganizationRequest
+        {
+            Name = organization!.Name,
+            Description = organization.Description,
+            BlockchainType = BlockchainType.Polygon
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/organizations/{organization.Id}", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("blockchainConfig", body, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
