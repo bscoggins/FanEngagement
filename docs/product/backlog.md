@@ -54,6 +54,7 @@ This section is a catalog of active / potential epics. Detailed stories live in 
 | E-006   | T3    | Security Documentation Update and Enhancements | Proposed | Now      | TBD   | Update outdated auth docs; verify test coverage; optional security enhancements |
 | E-007   | T5    | Blockchain Adapter Platform — Dockerized API for Multi-Chain Support | Proposed | Next | TBD | Modular multi-chain architecture with isolated Docker containers for Solana, Polygon, and future blockchains |
 | E-008   | T1/T2 | Frontend User Experience & Navigation Overhaul | Proposed | Next | TBD | Comprehensive UI/UX improvement: navigation redesign, design system, accessibility, micro-interactions, responsive polish |
+| E-009   | T5    | Polygon Blockchain Implementation (Solana Parity) | Proposed | Next | TBD | End-to-end Polygon path mirroring Solana adapter patterns for governance transparency |
 
 **Status values (for the PO agent to use):**
 
@@ -3359,6 +3360,106 @@ E-008-39 to E-008-43 (Responsive foundation)
 - **Performance**: LCP <2s, CLS <0.1, FID <100ms maintained or improved
 - **User Satisfaction**: Post-deployment NPS score increases by 15+ points
 - **Developer Velocity**: Component reuse increases; new feature development time decreases
+
+---
+
+### E-009 – Polygon Blockchain Implementation (Theme: T5, Status: Proposed)
+
+#### Motivation
+
+Deliver Polygon (EVM-compatible) blockchain support with the same behaviors already defined for the Solana adapter so organizations can choose Polygon for governance transparency without introducing new architecture.
+
+#### Target users / roles
+
+- OrgAdmin enabling Polygon for their organization
+- PlatformAdmin operating and monitoring blockchain adapters
+- Members who want verifiable, on-chain governance artifacts
+
+#### Success signals
+
+- Polygon-enabled organizations can mint shares, record proposal lifecycle events, and commit vote/results hashes with parity to Solana.
+- Adapter health, metrics, and webhook events are visible alongside Solana equivalents.
+- No regressions to existing blockchain-type selection or governance flows.
+
+#### Backlog grooming recommendations
+
+- Sequence work adapter-first (E-009-01/02), then governance wiring (E-009-03), then frontend UX (E-009-04), followed by test/observability hardening (E-009-05/06).
+- Reuse Solana fixtures and resilience policies to minimize duplicate effort; prefer shared test utilities.
+- Validate environment variables and devnet access before starting implementation to reduce rework.
+
+#### Stories
+
+##### Story E-009-01 — Backend adapter client & factory parity for Polygon
+
+**Status:** Proposed  
+**Priority:** Next  
+
+###### Acceptance Criteria
+
+- [ ] `PolygonAdapterClient` implements the shared adapter contract used by `IBlockchainAdapterFactory`, matching Solana behaviors for auth, retries, timeouts, and error handling.
+- [ ] Selecting `BlockchainType=Polygon` routes all blockchain operations through the factory without touching Solana-specific code paths.
+- [ ] Validation covers required Polygon config (adapter URL, network, API key) and rejects invalid combinations that could leak cross-chain logic.
+- [ ] Contract/integration tests cover happy-path and failure modes with mocked/stubbed Polygon adapter responses mirroring Solana coverage.
+
+##### Story E-009-02 — Polygon adapter service operations (container) at feature parity
+
+**Status:** Proposed  
+**Priority:** Next  
+
+###### Acceptance Criteria
+
+- [ ] Adapter exposes the same endpoints as Solana (`/v1/adapter/*`, `/health`, `/metrics`) with ERC-20 oriented implementations for organization bootstrap, share type mint creation, share issuance, proposal lifecycle commitments, and vote/result commitments.
+- [ ] API key enforcement and secret handling mirror Solana; structured error payloads remain compatible with backend client expectations.
+- [ ] Local development profile runs Polygon adapter via Docker Compose with documented env vars (RPC URL, PRIVATE_KEY, API_KEY) and default devnet values.
+- [ ] Unit/integration tests cover each endpoint, including gas estimation, nonce handling, and idempotent retries for failed submissions.
+
+##### Story E-009-03 — Governance event wiring to Polygon operations
+
+**Status:** Proposed  
+**Priority:** Next  
+
+###### Acceptance Criteria
+
+- [ ] Organization creation, share type creation, share issuance, proposal open/close/finalize, and vote/result commitments call Polygon adapter paths when `BlockchainType=Polygon`, with no behavior change for other types.
+- [ ] Failure handling mirrors Solana path (retry, timeout, circuit breaker) and surfaces user-facing ProblemDetails consistent with existing governance flows.
+- [ ] Domain/application layer emits explorer transaction references for Polygon responses to support frontend deep links.
+- [ ] Automated tests verify dual-chain behavior (None/Solana/Polygon) without duplicating Solana-specific fixtures.
+
+##### Story E-009-04 — Frontend admin settings and explorer UX for Polygon
+
+**Status:** Proposed  
+**Priority:** Next  
+
+###### Acceptance Criteria
+
+- [ ] Organization settings UI lists Polygon with the same immutability rules as Solana and surfaces validation for missing Polygon config fields.
+- [ ] Proposal and share type detail views render “View on PolygonScan” (or configured explorer) links when Polygon transaction hashes are present; links hidden when absent.
+- [ ] Admin health/observability surfaces Polygon adapter status (health checks, metrics, webhook errors) adjacent to existing Solana views (e.g., AdminWebhookEventsPage).
+- [ ] Playwright/Cypress coverage includes a Polygon-enabled org fixture validating UI states and link formatting.
+
+##### Story E-009-05 — Integration, contract, and E2E test coverage for Polygon
+
+**Status:** Proposed  
+**Priority:** Next  
+
+###### Acceptance Criteria
+
+- [ ] Backend contract tests validate adapter OpenAPI compatibility across Solana and Polygon using shared fixtures/stubs.
+- [ ] E2E harness (docker compose profile + scripts/run-e2e.sh) optionally starts Polygon adapter and seeds a Polygon-enabled org for cross-stack verification.
+- [ ] Recording/replay strategy documented for Polygon RPC interactions to keep CI deterministic; tests avoid live mainnet reliance.
+- [ ] Coverage includes negative cases: invalid API key, insufficient gas, RPC timeout, and adapter unreachable scenarios.
+
+##### Story E-009-06 — Observability, runbooks, and operational guardrails for Polygon
+
+**Status:** Proposed  
+**Priority:** Next  
+
+###### Acceptance Criteria
+
+- [ ] Adapter emits health/metrics compatible with existing dashboards; alerts defined for error rate, pending transaction backlog, and RPC latency.
+- [ ] Webhook events include Polygon-specific identifiers (chain id, tx hash, adapter instance) and render correctly in Admin Webhook Events UI.
+- [ ] Runbook documents common failure modes (nonce conflicts, gas price spikes, RPC rate limits) with recovery steps and escalation paths.
+- [ ] Logs redact private keys and API keys; sampling aligned with Solana adapter practices.
 
 ---
 
