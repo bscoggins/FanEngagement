@@ -40,9 +40,7 @@ docker compose up --build
 - Backend API: http://localhost:8080 (Docker) or http://localhost:5049 (dev script)
 - Swagger UI: http://localhost:8080/swagger or http://localhost:5049/swagger
 
-**Default Admin Account:**
-- Email: `admin@example.com`
-- Password: `Admin123!`
+**Default Admin Account:** See [Authentication & Test Accounts](#authentication--test-accounts) for credentials available in development.
 
 ## Documentation
 

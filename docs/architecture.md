@@ -927,12 +927,35 @@ FanEngagement uses JSON Web Tokens (JWT) for stateless authentication across all
 - **Password Hashing**: `backend/FanEngagement.Infrastructure/Services/AuthService.cs` (lines 58-115)
 
 **Authentication Flow:**
-1. User submits credentials via `POST /users/login` endpoint
-2. `AuthService` validates credentials against database (PBKDF2-SHA256 hashed passwords)
-3. If valid, generates JWT token with user claims
-4. Client includes token in `Authorization: Bearer {token}` header for subsequent requests
-5. ASP.NET Core JWT middleware validates token on each request
-6. Authorization policies enforce access control based on token claims
+1. User submits credentials via `POST /auth/login`
+2. If MFA is enabled for the account, the API returns `MfaRequired = true` and the client completes `POST /auth/mfa/validate` with the one-time code before receiving a token
+3. `AuthService` validates credentials (and optional MFA code) against the database (PBKDF2-SHA256 hashed passwords)
+4. On success, the API issues a JWT token with user claims in the response body
+5. Clients include `Authorization: Bearer {token}` on subsequent requests
+6. ASP.NET Core JWT middleware validates the token on every request, and authorization policies enforce access control
+
+**Auth Endpoints:**
+
+| Endpoint | Method | Body | Purpose |
+|----------|--------|------|---------|
+| `/auth/login` | POST | `{ "email": string, "password": string }` | Primary login endpoint; returns JWT on success or sets `MfaRequired` to indicate the MFA challenge step |
+| `/auth/mfa/validate` | POST | `{ "userId": string, "code": string }` | Completes MFA challenge and returns `LoginResponse` with JWT |
+
+**Example (login + optional MFA):**
+
+```bash
+curl -X POST http://localhost:5049/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"admin@example.com","password":"Admin123!"}'
+```
+
+If the response includes `"mfaRequired": true`, complete the challenge:
+
+```bash
+curl -X POST http://localhost:5049/auth/mfa/validate \\
+  -H "Content-Type: application/json" \\
+  -d '{"userId":"<user-id-from-login-response>","code":"123456"}'
+```
 
 ### Token Configuration
 
@@ -1397,7 +1420,7 @@ If a JWT token or signing key is compromised, follow these steps:
 
 3. **Recommended Improvements**:
    - **Option A**: Use HttpOnly secure cookies for token storage
-     - Set token in `Set-Cookie` header from `/users/login` endpoint
+     - Set token in `Set-Cookie` header from `/auth/login` endpoint
      - Browser automatically sends cookie with each request
      - Requires CSRF token protection
    

@@ -19,8 +19,9 @@ New to FanEngagement? Start here:
 
 ### Development & Testing
 
-- **[Development Guide](development.md)** - Local setup, Docker workflows, and development scripts
+- **[Development Guide](development.md)** - Local setup, Docker profiles, and test command reference
 - **[Demo Seed Data](demo-seed-data.md)** - Seeded accounts, organizations, and test scenarios
+- **[Testing Login Flow](guides/testing-login-flow.md)** - End-to-end auth walkthrough with MFA notes
 
 ## 🎨 Frontend Documentation
 
@@ -117,6 +118,11 @@ Located in [`blockchain/`](blockchain/) (excluded from this consolidation):
 - See `blockchain/README.md` for the complete index
 - **Governance application (Solana)** — purpose, lifecycle, and on-chain commitments for organizations, proposals, and vote results: [blockchain/solana/governance-program.md](blockchain/solana/governance-program.md)
 
+## 📜 API & Contracts
+
+- **[Backend API (Swagger UI)](../README.md#api-documentation)** - Interactive API docs and key endpoints
+- **[Architecture Overview](architecture.md#jwt-security-model)** - Auth model, login endpoints, and security considerations
+
 ## 📦 Product Documentation
 
 Located in [`product/`](product/) (excluded from this consolidation):
@@ -191,4 +197,3 @@ docs/
 ├── product/             # Product requirements (excluded)
 └── technical/           # Technical documentation
 ```
-
