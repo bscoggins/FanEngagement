@@ -1,4 +1,4 @@
-# [Dev] Governance event wiring to Polygon operations
+# [Dev] E-009-003: Governance event wiring to Polygon operations
 
 **Summary:** Route governance events (org/share/proposal/vote) to Polygon adapter when `BlockchainType=Polygon`, matching Solana behavior without regressions.
 

@@ -1,4 +1,4 @@
-# [Dev] Polygon adapter service operations (container) at feature parity
+# [Dev] E-009-002: Polygon adapter service operations (container) at feature parity
 
 **Summary:** Implement Polygon adapter container endpoints with ERC-20 semantics matching the Solana adapter contract, including health and metrics.
 

@@ -1,4 +1,4 @@
-# [Dev] Frontend admin settings and explorer UX for Polygon
+# [Dev] E-009-004: Frontend admin settings and explorer UX for Polygon
 
 **Summary:** Extend frontend to surface Polygon as a blockchain option with explorer links and health visibility, mirroring Solana UX patterns.
 

@@ -1,4 +1,4 @@
-# [Dev] Polygon observability, alerts, and runbooks
+# [Dev] E-009-006: Polygon observability, alerts, and runbooks
 
 **Summary:** Extend observability and operational guardrails for Polygon adapter, matching Solana practices for metrics, alerts, webhooks, and runbooks.
 

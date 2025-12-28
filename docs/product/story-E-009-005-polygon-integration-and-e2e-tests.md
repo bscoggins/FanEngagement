@@ -1,4 +1,4 @@
-# [Dev] Integration, contract, and E2E coverage for Polygon
+# [Dev] E-009-005: Integration, contract, and E2E coverage for Polygon
 
 **Summary:** Add cross-stack tests and harness updates to verify Polygon adapter compatibility with the shared blockchain contract and governance flows.
 
