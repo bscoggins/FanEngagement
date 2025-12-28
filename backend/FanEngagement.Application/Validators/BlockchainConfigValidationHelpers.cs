@@ -5,13 +5,19 @@ namespace FanEngagement.Application.Validators;
 
 internal static class BlockchainConfigValidationHelpers
 {
-    public static IReadOnlyList<string> ValidatePolygonConfig(string? config)
+    public static IReadOnlyList<string> ValidatePolygonConfig(string? config) =>
+        ValidateConfig(config, "Polygon");
+
+    public static IReadOnlyList<string> ValidateSolanaConfig(string? config) =>
+        ValidateConfig(config, "Solana");
+
+    private static IReadOnlyList<string> ValidateConfig(string? config, string chainName)
     {
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(config))
         {
-            errors.Add("Polygon blockchain requires BlockchainConfig with adapterUrl, network, and apiKey.");
+            errors.Add($"{chainName} blockchain requires BlockchainConfig with adapterUrl, network, and apiKey.");
             return errors;
         }
 
@@ -22,70 +28,27 @@ internal static class BlockchainConfigValidationHelpers
 
             if (!TryGetNonEmptyString(root, "adapterUrl", out var adapterUrl))
             {
-                errors.Add("Polygon blockchain requires adapterUrl.");
+                errors.Add($"{chainName} blockchain requires adapterUrl.");
             }
             else if (!Uri.TryCreate(adapterUrl, UriKind.Absolute, out var uri) ||
                      (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             {
-                errors.Add("Polygon adapterUrl must be an absolute http/https URL.");
+                errors.Add($"{chainName} adapterUrl must be an absolute http/https URL.");
             }
 
             if (!TryGetNonEmptyString(root, "network", out _))
             {
-                errors.Add("Polygon blockchain requires network.");
+                errors.Add($"{chainName} blockchain requires network.");
             }
 
             if (!TryGetNonEmptyString(root, "apiKey", out _))
             {
-                errors.Add("Polygon blockchain requires apiKey.");
+                errors.Add($"{chainName} blockchain requires apiKey.");
             }
         }
         catch (JsonException)
         {
-            errors.Add("Polygon blockchain config must be valid JSON with adapterUrl, network, and apiKey.");
-        }
-
-        return errors;
-    }
-
-    public static IReadOnlyList<string> ValidateSolanaConfig(string? config)
-    {
-        var errors = new List<string>();
-
-        if (string.IsNullOrWhiteSpace(config))
-        {
-            errors.Add("Solana blockchain requires BlockchainConfig with adapterUrl, network, and apiKey.");
-            return errors;
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(config);
-            var root = doc.RootElement;
-
-            if (!TryGetNonEmptyString(root, "adapterUrl", out var adapterUrl))
-            {
-                errors.Add("Solana blockchain requires adapterUrl.");
-            }
-            else if (!Uri.TryCreate(adapterUrl, UriKind.Absolute, out var uri) ||
-                     (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-            {
-                errors.Add("Solana adapterUrl must be an absolute http/https URL.");
-            }
-
-            if (!TryGetNonEmptyString(root, "network", out _))
-            {
-                errors.Add("Solana blockchain requires network.");
-            }
-
-            if (!TryGetNonEmptyString(root, "apiKey", out _))
-            {
-                errors.Add("Solana blockchain requires apiKey.");
-            }
-        }
-        catch (JsonException)
-        {
-            errors.Add("Solana blockchain config must be valid JSON with adapterUrl, network, and apiKey.");
+            errors.Add($"{chainName} blockchain config must be valid JSON with adapterUrl, network, and apiKey.");
         }
 
         return errors;

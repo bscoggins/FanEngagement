@@ -233,9 +233,11 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Created, optionResponse.StatusCode);
         var option = await optionResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
         Assert.NotNull(option);
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "No" });
+        var secondOptionResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "No" });
+        Assert.Equal(HttpStatusCode.Created, secondOptionResponse.StatusCode);
 
-        await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        var openResponse = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
+        Assert.Equal(HttpStatusCode.OK, openResponse.StatusCode);
 
         _client.AddAuthorizationHeader(userToken);
 
