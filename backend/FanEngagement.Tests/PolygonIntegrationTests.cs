@@ -141,8 +141,15 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         var proposal = await response.Content.ReadFromJsonAsync<ProposalDto>();
         Assert.NotNull(proposal);
 
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option A" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option B" });
+        var optionAResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option A" });
+        Assert.Equal(HttpStatusCode.Created, optionAResponse.StatusCode);
+        var optionA = await optionAResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+        Assert.NotNull(optionA);
+
+        var optionBResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option B" });
+        Assert.Equal(HttpStatusCode.Created, optionBResponse.StatusCode);
+        var optionB = await optionBResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+        Assert.NotNull(optionB);
 
         var openResponse = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
         if (openResponse.StatusCode != HttpStatusCode.OK)

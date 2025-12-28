@@ -59,7 +59,7 @@ public class BlockchainAdapterFactoryTests : IClassFixture<TestWebApplicationFac
             Id = Guid.NewGuid(),
             Name = "Test Org",
             BlockchainType = BlockchainType.Solana,
-            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001\"}",
+            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001\",\"network\":\"localnet\",\"apiKey\":\"test-api-key\"}",
             CreatedAt = DateTimeOffset.UtcNow
         };
         dbContext.Organizations.Add(organization);

@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 
 namespace FanEngagement.Application.Validators;
@@ -10,7 +11,7 @@ internal static class BlockchainConfigValidationHelpers
 
         if (string.IsNullOrWhiteSpace(config))
         {
-            errors.Add("Polygon blockchain requires blockchainConfig with adapterUrl, network, and apiKey.");
+            errors.Add("Polygon blockchain requires BlockchainConfig with adapterUrl, network, and apiKey.");
             return errors;
         }
 
@@ -41,7 +42,50 @@ internal static class BlockchainConfigValidationHelpers
         }
         catch (JsonException)
         {
-            errors.Add("Blockchain config must be valid JSON with adapterUrl, network, and apiKey for Polygon.");
+            errors.Add("Polygon blockchain config must be valid JSON with adapterUrl, network, and apiKey.");
+        }
+
+        return errors;
+    }
+
+    public static IReadOnlyList<string> ValidateSolanaConfig(string? config)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(config))
+        {
+            errors.Add("Solana blockchain requires BlockchainConfig with adapterUrl, network, and apiKey.");
+            return errors;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(config);
+            var root = doc.RootElement;
+
+            if (!TryGetNonEmptyString(root, "adapterUrl", out var adapterUrl))
+            {
+                errors.Add("Solana blockchain requires adapterUrl.");
+            }
+            else if (!Uri.TryCreate(adapterUrl, UriKind.Absolute, out var uri) ||
+                     (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                errors.Add("Solana adapterUrl must be an absolute http/https URL.");
+            }
+
+            if (!TryGetNonEmptyString(root, "network", out _))
+            {
+                errors.Add("Solana blockchain requires network.");
+            }
+
+            if (!TryGetNonEmptyString(root, "apiKey", out _))
+            {
+                errors.Add("Solana blockchain requires apiKey.");
+            }
+        }
+        catch (JsonException)
+        {
+            errors.Add("Solana blockchain config must be valid JSON with adapterUrl, network, and apiKey.");
         }
 
         return errors;

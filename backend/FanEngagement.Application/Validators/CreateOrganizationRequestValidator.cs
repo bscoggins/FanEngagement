@@ -46,6 +46,13 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
                         context.AddFailure("BlockchainConfig", error);
                     }
                 }
+                else if (request.BlockchainType == BlockchainType.Solana)
+                {
+                    foreach (var error in BlockchainConfigValidationHelpers.ValidateSolanaConfig(request.BlockchainConfig))
+                    {
+                        context.AddFailure("BlockchainConfig", error);
+                    }
+                }
             });
     }
 
