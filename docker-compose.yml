@@ -93,7 +93,7 @@ services:
       POLYGON_RPC_URL: https://rpc-amoy.polygon.technology
       POLYGON_CONFIRMATIONS: 6
       POLYGON_TX_TIMEOUT: 120000
-      POLYGON_PRIVATE_KEY: ${POLYGON_PRIVATE_KEY:-auto-generate}
+      POLYGON_PRIVATE_KEY: ${POLYGON_PRIVATE_KEY:-}
       API_KEY: ${API_KEY:-dev-api-key-change-in-production}
       REQUIRE_AUTH: "true"
       RETRY_MAX_ATTEMPTS: 4

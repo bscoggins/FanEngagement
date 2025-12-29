@@ -35,7 +35,12 @@ export const createShareTypeSchema = z.object({
   name: z.string().min(1).max(100),
   symbol: z.string().min(1).max(20),
   decimals: z.number().int().min(0).max(18).default(18),
-  maxSupply: z.union([z.number().positive(), z.string()]).optional(),
+  maxSupply: z
+    .union([
+      z.number().int().positive(),
+      z.string().regex(/^[1-9][0-9]*$/u, 'maxSupply must be a positive non-zero integer'),
+    ])
+    .optional(),
   metadata: z
     .object({
       description: z.string().max(500).optional(),
@@ -51,7 +56,10 @@ export const recordShareIssuanceSchema = z.object({
   issuanceId: uuidSchema,
   shareTypeId: z.union([uuidSchema, ethereumAddressSchema]),
   userId: uuidSchema,
-  quantity: z.union([z.string(), z.number()]),
+  quantity: z.union([
+    z.string().regex(/^[1-9][0-9]*$/u, 'Quantity must be a positive integer string'),
+    z.number().int().positive(),
+  ]),
   recipientAddress: ethereumAddressSchema.optional(),
   metadata: z
     .object({
@@ -87,9 +95,14 @@ export const recordVoteSchema = z.object({
   organizationId: uuidSchema,
   userId: uuidSchema,
   optionId: z.string().uuid(),
-  votingPower: z.union([z.string(), z.number()]),
-  voterAddress: ethereumAddressSchema.optional(),
-  timestamp: z.string().datetime().optional(),
+  votingPower: z.union([
+    z.number().int().nonnegative(),
+    z
+      .string()
+      .regex(/^(?:0|[1-9][0-9]*)$/u, 'votingPower must be a valid non-negative integer string'),
+  ]),
+  voterAddress: ethereumAddressSchema,
+  timestamp: z.string().datetime(),
 });
 
 export type RecordVoteRequest = z.infer<typeof recordVoteSchema>;

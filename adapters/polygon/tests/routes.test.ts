@@ -1,9 +1,10 @@
-import { afterAll, beforeAll, describe, expect, jest, test } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, describe, expect, jest, test } from '@jest/globals';
 import express from 'express';
 import { AddressInfo } from 'net';
 
 let server: any;
 let baseUrl: string;
+let polygonService: any;
 
 describe('Polygon adapter routes', () => {
   beforeAll(async () => {
@@ -16,7 +17,7 @@ describe('Polygon adapter routes', () => {
     const { createRoutes } = await import('../src/routes.js');
     const { authMiddleware, loggingMiddleware, errorMiddleware } = await import('../src/middleware.js');
 
-    const polygonService: any = {
+    polygonService = {
       createOrganization: jest.fn(async () => ({
         transactionHash: '0xorg',
         contractAddress: '0x0000000000000000000000000000000000000001',
@@ -61,6 +62,7 @@ describe('Polygon adapter routes', () => {
         walletAddress: '0x0000000000000000000000000000000000000005',
         walletBalance: '1.0 MATIC',
       })),
+      getWalletAddress: jest.fn(() => '0x0000000000000000000000000000000000000006'),
     };
 
     const app = express();
@@ -73,6 +75,10 @@ describe('Polygon adapter routes', () => {
     server = app.listen(0);
     const address = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${address.port}`;
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   afterAll(() => {
@@ -118,6 +124,48 @@ describe('Polygon adapter routes', () => {
     expect(payload.mintAddress).toBe('0x0000000000000000000000000000000000000002');
     expect(payload.status).toBe('confirmed');
     expect(payload.timestamp).toBeDefined();
+    expect(payload.gasUsed).toBeDefined();
+    expect(polygonService.createShareType).toHaveBeenCalledWith(
+      '123e4567-e89b-12d3-a456-426614174000',
+      '550e8400-e29b-41d4-a716-446655440000',
+      'Gold',
+      'GLD',
+      18,
+      undefined,
+      expect.objectContaining({ description: 'Voting token', votingWeight: 1 })
+    );
+  });
+
+  test('propagates share issuance parameters and returns recipient address', async () => {
+    const response = await fetch(`${baseUrl}/v1/adapter/share-issuances`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        issuanceId: '123e4567-e89b-12d3-a456-426614174999',
+        shareTypeId: '0x0000000000000000000000000000000000000007',
+        userId: '550e8400-e29b-41d4-a716-446655440000',
+        quantity: '10',
+        recipientAddress: '0x0000000000000000000000000000000000000008',
+        metadata: { reason: 'bonus' },
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(polygonService.recordShareIssuance).toHaveBeenCalledWith(
+      '123e4567-e89b-12d3-a456-426614174999',
+      '0x0000000000000000000000000000000000000007',
+      '550e8400-e29b-41d4-a716-446655440000',
+      '10',
+      '0x0000000000000000000000000000000000000008',
+      undefined,
+      expect.objectContaining({ reason: 'bonus' })
+    );
+
+    const payload = (await response.json()) as any;
+    expect(payload.recipientAddress).toBe('0x0000000000000000000000000000000000000003');
   });
 
   test('exposes health and metrics without authentication', async () => {

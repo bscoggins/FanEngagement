@@ -35,12 +35,10 @@ export function loadWallet(): Wallet {
   } else if (config.polygon.privateKey && !isPlaceholderKey(config.polygon.privateKey)) {
     logger.info('Loading private key from environment variable');
     privateKey = config.polygon.privateKey;
-  } else if (config.server.nodeEnv === 'development') {
-    const generated = Wallet.createRandom();
-    logger.warn('No Polygon private key provided; generated ephemeral development wallet');
-    return generated;
   } else {
-    throw new Error('No private key provided. Set POLYGON_PRIVATE_KEY or POLYGON_PRIVATE_KEY_PATH');
+    throw new Error(
+      'No usable Polygon private key provided. Set POLYGON_PRIVATE_KEY or POLYGON_PRIVATE_KEY_PATH with a funded test key; placeholder values are not auto-generated.'
+    );
   }
 
   // Ensure the private key has 0x prefix

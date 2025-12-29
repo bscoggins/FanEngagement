@@ -64,6 +64,10 @@ export class PolygonService {
     }
   }
 
+  getWalletAddress(): string {
+    return this.wallet.address;
+  }
+
   /**
    * Create organization by deploying a simple registry contract
    * In production, this would deploy a more sophisticated governance contract
@@ -218,20 +222,27 @@ export class PolygonService {
 
       // In production, this would call the actual ERC-20 mint function
       // For MVP, we'll record the issuance in a transaction
+      const resolvedTokenAddress =
+        tokenAddress ?? (shareTypeId.startsWith('0x') ? shareTypeId : undefined);
+      const targetRecipient = recipientAddress || this.wallet.address;
+
+      if (!recipientAddress) {
+        logger.warn('No recipientAddress provided; using service wallet for issuance proof');
+      }
+
       const issuanceData = JSON.stringify({
         issuanceId,
         shareTypeId,
         userId,
         quantity,
-        recipientAddress: recipientAddress || this.wallet.address,
-        tokenAddress: tokenAddress || shareTypeId,
+        recipientAddress: targetRecipient,
+        tokenAddress: resolvedTokenAddress ?? shareTypeId,
         metadata,
       });
 
-      const targetRecipient = recipientAddress || this.wallet.address;
       const tx = await this.wallet.sendTransaction({
         to: targetRecipient,
-        value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'), // Send tiny amount as proof of issuance
+        value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'),
         data: ethers.hexlify(toUtf8Bytes(`ISSUANCE:${issuanceData}`)),
       });
 
