@@ -176,9 +176,8 @@ RETRY_MAX_ATTEMPTS=4
 RETRY_BASE_DELAY_MS=1000
 ```
 
-> **Tip:** When `NODE_ENV=development`, the adapter will generate an ephemeral wallet if
-> `POLYGON_PRIVATE_KEY` is not provided. This keeps local containers running without sharing
-> a funded key, but you must supply a real testnet key to submit live transactions.
+> **Important:** The adapter does **not** auto-generate wallets. Provide a funded testnet key via
+> `POLYGON_PRIVATE_KEY` (or `POLYGON_PRIVATE_KEY_PATH`) even in development to avoid startup failure.
 
 ### 3.3 Build and Run
 

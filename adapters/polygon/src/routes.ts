@@ -26,7 +26,8 @@ export function createRoutes(polygonService: PolygonService): Router {
         polygonService.createOrganization(
           data.organizationId,
           data.name,
-          data.description
+          data.description,
+          data.metadata
         ),
       buildResponse: (result) => ({
         transactionId: result.transactionHash,
@@ -89,8 +90,8 @@ export function createRoutes(polygonService: PolygonService): Router {
         timestamp: new Date().toISOString(),
       }),
       onError: handleError,
-     })
-   );
+    })
+  );
 
   // POST /v1/adapter/proposals
   router.post(

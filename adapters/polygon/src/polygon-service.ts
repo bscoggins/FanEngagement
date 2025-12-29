@@ -75,7 +75,8 @@ export class PolygonService {
   async createOrganization(
     organizationId: string,
     name: string,
-    _description?: string
+    description?: string,
+    metadata?: { logoUrl?: string; colors?: { primary?: string; secondary?: string } }
   ): Promise<{ transactionHash: string; contractAddress: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'create_organization';
@@ -86,10 +87,12 @@ export class PolygonService {
       // For MVP, we'll just send a transaction with the org data in the transaction data
       // In production, deploy an actual organization registry contract using CREATE2
       // for deterministic deployment based on organizationId
+      const orgData = JSON.stringify({ organizationId, name, description, metadata });
+
       const tx = await this.wallet.sendTransaction({
         to: this.wallet.address, // Send to self as placeholder
         value: 0,
-        data: ethers.hexlify(toUtf8Bytes(`ORG:${organizationId}:${name}`)),
+        data: ethers.hexlify(toUtf8Bytes(`ORG:${orgData}`)),
       });
 
       const receipt = await this.waitForTransaction(tx, operation);
@@ -454,9 +457,11 @@ export class PolygonService {
         // Fallback: record in transaction data
         const resultsData = JSON.stringify({
           proposalId,
+          organizationId,
           resultsHash,
           winningOptionId,
           totalVotesCast,
+          metadata,
         });
 
         tx = await this.wallet.sendTransaction({
