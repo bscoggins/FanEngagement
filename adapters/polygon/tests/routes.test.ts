@@ -168,6 +168,104 @@ describe('Polygon adapter routes', () => {
     expect(payload.recipientAddress).toBe('0x0000000000000000000000000000000000000003');
   });
 
+  test('propagates proposal creation parameters', async () => {
+    const response = await fetch(`${baseUrl}/v1/adapter/proposals`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        proposalId: '550e8400-e29b-41d4-a716-446655440001',
+        organizationId: '550e8400-e29b-41d4-a716-446655440002',
+        title: 'Upgrade',
+        contentHash: 'a'.repeat(64),
+        startAt: new Date().toISOString(),
+        endAt: new Date(Date.now() + 1000).toISOString(),
+        eligibleVotingPower: 100,
+        createdByUserId: '550e8400-e29b-41d4-a716-446655440003',
+        proposalTextHash: 'b'.repeat(64),
+        expectationsHash: 'c'.repeat(64),
+        votingOptionsHash: 'd'.repeat(64),
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(polygonService.createProposal).toHaveBeenCalled();
+    const args = polygonService.createProposal.mock.calls[0];
+    expect(args[0]).toBe('550e8400-e29b-41d4-a716-446655440001');
+    expect(args[1]).toBe('550e8400-e29b-41d4-a716-446655440002');
+    expect(args[2]).toBe('Upgrade');
+    expect(args[3]).toBe('a'.repeat(64));
+    expect(args[6]).toMatchObject({
+      eligibleVotingPower: 100,
+      createdByUserId: '550e8400-e29b-41d4-a716-446655440003',
+      proposalTextHash: 'b'.repeat(64),
+      expectationsHash: 'c'.repeat(64),
+      votingOptionsHash: 'd'.repeat(64),
+    });
+  });
+
+  test('propagates vote recording parameters with stringified votingPower', async () => {
+    const response = await fetch(`${baseUrl}/v1/adapter/votes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        voteId: '550e8400-e29b-41d4-a716-446655440004',
+        proposalId: '550e8400-e29b-41d4-a716-446655440001',
+        organizationId: '550e8400-e29b-41d4-a716-446655440002',
+        userId: '550e8400-e29b-41d4-a716-446655440005',
+        optionId: '550e8400-e29b-41d4-a716-446655440006',
+        votingPower: 5,
+        voterAddress: '0x0000000000000000000000000000000000000009',
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(polygonService.recordVote).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440004',
+      '550e8400-e29b-41d4-a716-446655440001',
+      '550e8400-e29b-41d4-a716-446655440002',
+      '550e8400-e29b-41d4-a716-446655440005',
+      '550e8400-e29b-41d4-a716-446655440006',
+      '5',
+      expect.objectContaining({ voterAddress: '0x0000000000000000000000000000000000000009' })
+    );
+  });
+
+  test('propagates proposal results parameters including metadata', async () => {
+    const response = await fetch(`${baseUrl}/v1/adapter/proposal-results`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        proposalId: '550e8400-e29b-41d4-a716-446655440001',
+        organizationId: '550e8400-e29b-41d4-a716-446655440002',
+        resultsHash: 'e'.repeat(64),
+        winningOptionId: '550e8400-e29b-41d4-a716-446655440006',
+        totalVotesCast: 10,
+        quorumMet: true,
+        closedAt: new Date().toISOString(),
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(polygonService.commitProposalResults).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440001',
+      '550e8400-e29b-41d4-a716-446655440002',
+      'e'.repeat(64),
+      '550e8400-e29b-41d4-a716-446655440006',
+      10,
+      expect.objectContaining({ quorumMet: true })
+    );
+  });
+
   test('exposes health and metrics without authentication', async () => {
     const health = await fetch(`${baseUrl}/health`);
     expect(health.status).toBe(200);

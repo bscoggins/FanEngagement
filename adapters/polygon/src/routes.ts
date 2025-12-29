@@ -77,7 +77,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.issuanceId,
           data.shareTypeId,
           data.userId,
-          data.quantity,
+          String(data.quantity),
           data.recipientAddress,
           undefined,
           data.metadata
@@ -137,7 +137,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.organizationId,
           data.userId,
           data.optionId,
-          data.votingPower,
+          String(data.votingPower),
           {
             voterAddress: data.voterAddress,
             castAt: data.timestamp ? new Date(data.timestamp) : undefined,

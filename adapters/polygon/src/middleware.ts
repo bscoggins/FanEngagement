@@ -64,23 +64,23 @@ export function errorMiddleware(
   if (error instanceof AdapterError || error instanceof ZodError) {
     handleError(error, req, res);
     return;
-  } else {
-    logger.error('Unhandled error in middleware', {
-      error: error.message,
-      stack: error.stack,
-      path: req.path,
-    });
-
-    if (res.headersSent) {
-      return next(error);
-    }
-
-    res.status(500).json({
-      type: 'https://fanengagement.io/errors/internal-error',
-      title: 'Internal Server Error',
-      status: 500,
-      detail: error.message,
-      instance: req.path,
-    });
   }
+
+  logger.error('Unhandled error in middleware', {
+    error: error.message,
+    stack: error.stack,
+    path: req.path,
+  });
+
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  res.status(500).json({
+    type: 'https://fanengagement.io/errors/internal-error',
+    title: 'Internal Server Error',
+    status: 500,
+    detail: error.message,
+    instance: req.path,
+  });
 }
