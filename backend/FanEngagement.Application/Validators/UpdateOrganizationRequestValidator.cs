@@ -34,6 +34,8 @@ public class UpdateOrganizationRequestValidator : AbstractValidator<UpdateOrgani
             .Must(BeValidJson).WithMessage("Blockchain config must be valid JSON.")
             .MaximumLength(5000).WithMessage("Blockchain config must not exceed 5000 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.BlockchainConfig));
+        
+        this.AddBlockchainConfigValidation(x => x.BlockchainType, x => x.BlockchainConfig);
     }
 
     private bool BeValidJson(string? json)

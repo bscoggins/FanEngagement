@@ -32,7 +32,7 @@ public class OrganizationBlockchainCreationTests : IClassFixture<TestWebApplicat
             Name = $"Solana Org {Guid.NewGuid()}",
             Description = "Organization with Solana integration",
             BlockchainType = BlockchainType.Solana,
-            BlockchainConfig = "{\"network\": \"localnet\"}",
+            BlockchainConfig = "{\"adapterUrl\":\"http://localhost:3001/v1/adapter/\",\"network\":\"localnet\",\"apiKey\":\"test-api-key\"}",
             EnableBlockchainFeature = true,
             InitialAdminUserId = adminUserId
         };

@@ -34,31 +34,31 @@ internal sealed class TestBlockchainAdapterHandler : HttpMessageHandler
         {
             var p when p.EndsWith("/organizations") => JsonSerializer.Serialize(new
             {
-                transactionId = Guid.NewGuid().ToString(),
-                accountAddress = $"OrgAcct-{Guid.NewGuid():N}"
+                transactionId = $"{_adapterName}-tx-{Guid.NewGuid():N}",
+                accountAddress = $"{_adapterName}-OrgAcct-{Guid.NewGuid():N}"
             }),
             var p when p.EndsWith("/share-types") => JsonSerializer.Serialize(new
             {
-                transactionId = Guid.NewGuid().ToString(),
-                mintAddress = $"Mint-{Guid.NewGuid():N}"
+                transactionId = $"{_adapterName}-tx-{Guid.NewGuid():N}",
+                mintAddress = $"{_adapterName}-Mint-{Guid.NewGuid():N}"
             }),
             var p when p.EndsWith("/share-issuances") => JsonSerializer.Serialize(new
             {
-                transactionId = Guid.NewGuid().ToString(),
-                recipientAddress = $"Wallet-{Guid.NewGuid():N}"
+                transactionId = $"{_adapterName}-tx-{Guid.NewGuid():N}",
+                recipientAddress = $"{_adapterName}-Wallet-{Guid.NewGuid():N}"
             }),
             var p when p.EndsWith("/proposals") => JsonSerializer.Serialize(new
             {
-                transactionId = Guid.NewGuid().ToString(),
-                proposalAddress = $"Proposal-{Guid.NewGuid():N}"
+                transactionId = $"{_adapterName}-tx-{Guid.NewGuid():N}",
+                proposalAddress = $"{_adapterName}-Proposal-{Guid.NewGuid():N}"
             }),
             var p when p.EndsWith("/votes") => JsonSerializer.Serialize(new
             {
-                transactionId = Guid.NewGuid().ToString()
+                transactionId = $"{_adapterName}-tx-{Guid.NewGuid():N}"
             }),
             var p when p.EndsWith("/proposal-results") => JsonSerializer.Serialize(new
             {
-                transactionId = Guid.NewGuid().ToString()
+                transactionId = $"{_adapterName}-tx-{Guid.NewGuid():N}"
             }),
             _ => "{}"
         };
