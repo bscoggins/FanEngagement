@@ -71,16 +71,18 @@ export function createRoutes(polygonService: PolygonService): Router {
     '/v1/adapter/share-issuances',
     createPostHandler({
       schema: recordShareIssuanceSchema,
-      execute: (data) =>
-        polygonService.recordShareIssuance(
+      execute: (data) => {
+        const tokenAddress = data.shareTypeId.startsWith('0x') ? data.shareTypeId : undefined;
+        return polygonService.recordShareIssuance(
           data.issuanceId,
           data.shareTypeId,
           data.userId,
           data.quantity,
           data.recipientAddress,
-          data.shareTypeId,
+          tokenAddress,
           data.metadata
-        ),
+        );
+      },
       buildResponse: (result, data) => ({
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
