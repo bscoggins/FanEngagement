@@ -147,8 +147,15 @@ public class SolanaIntegrationTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(proposal);
         
         // 3. Add Options (At least 2 required)
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option A" });
-        await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option B" });
+        var optionAResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option A" });
+        Assert.Equal(HttpStatusCode.Created, optionAResponse.StatusCode);
+        var optionA = await optionAResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+        Assert.NotNull(optionA);
+
+        var optionBResponse = await _client.PostAsJsonAsync($"/proposals/{proposal.Id}/options", new AddProposalOptionRequest { Text = "Option B" });
+        Assert.Equal(HttpStatusCode.Created, optionBResponse.StatusCode);
+        var optionB = await optionBResponse.Content.ReadFromJsonAsync<ProposalOptionDto>();
+        Assert.NotNull(optionB);
 
         // 4. Open Proposal (This triggers blockchain registration)
         var openResponse = await _client.PostAsync($"/proposals/{proposal.Id}/open", null);
