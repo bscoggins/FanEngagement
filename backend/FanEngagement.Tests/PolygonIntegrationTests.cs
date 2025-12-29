@@ -174,7 +174,7 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         var orgRequest = new CreateOrganizationRequest
         {
             Name = $"Polygon Vote Org {Guid.NewGuid()}",
-            Description = "Integration test organization for polygon voting",
+            Description = "Integration test organization for Polygon voting",
             BlockchainType = BlockchainType.Polygon,
             BlockchainConfig = GetBlockchainConfig(),
             EnableBlockchainFeature = true,
