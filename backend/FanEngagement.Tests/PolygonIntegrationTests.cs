@@ -197,7 +197,7 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         {
             Name = "Polygon Voting Shares",
             Symbol = "PVOTE",
-            Description = "Shares for polygon voting",
+            Description = "Shares for Polygon voting",
             VotingWeight = 1.0m,
             TokenDecimals = 0
         };
