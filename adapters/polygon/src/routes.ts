@@ -86,7 +86,7 @@ export function createRoutes(polygonService: PolygonService): Router {
       buildResponse: (result, data) => ({
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
-        recipientAddress: result.recipientAddress || data.recipientAddress,
+        recipientAddress: result.recipientAddress ?? data.recipientAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
