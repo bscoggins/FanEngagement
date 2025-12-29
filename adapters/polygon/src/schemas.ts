@@ -10,8 +10,8 @@ const sha256HexSchema = z
 // Create Organization Request
 export const createOrganizationSchema = z.object({
   organizationId: uuidSchema,
-  name: z.string().min(1).max(200),
-  description: z.string().max(1000).optional(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
   network: z.enum(['mumbai', 'amoy', 'polygon']).optional(),
   metadata: z
     .object({
@@ -33,7 +33,7 @@ export const createShareTypeSchema = z.object({
   shareTypeId: uuidSchema,
   organizationId: uuidSchema,
   name: z.string().min(1).max(100),
-  symbol: z.string().min(1).max(20),
+  symbol: z.string().min(1).max(10),
   decimals: z.number().int().min(0).max(18).default(18),
   maxSupply: z
     .union([
@@ -82,7 +82,7 @@ export const createProposalSchema = z.object({
   contentHash: sha256HexSchema,
   startAt: z.string().datetime(),
   endAt: z.string().datetime(),
-  eligibleVotingPower: z.number().nonnegative().optional(),
+  eligibleVotingPower: z.number().nonnegative(),
   createdByUserId: uuidSchema.optional(),
   proposalTextHash: sha256HexSchema.optional(),
   expectationsHash: sha256HexSchema.optional(),
@@ -99,13 +99,13 @@ export const recordVoteSchema = z.object({
   userId: uuidSchema,
   optionId: z.string().uuid(),
   votingPower: z.union([
-    z.number().int().nonnegative(),
+    z.number().int().positive(),
     z
       .string()
-      .regex(/^(?:0|[1-9][0-9]*)$/u, 'votingPower must be a valid non-negative integer string'),
-  ]).describe('Voting power expressed as a non-negative integer (string or number). Fractions are not accepted.'),
-  voterAddress: ethereumAddressSchema,
-  timestamp: z.string().datetime(),
+      .regex(/^[1-9][0-9]*$/u, 'votingPower must be a positive, non-zero integer string'),
+  ]).describe('Voting power expressed as a positive, non-zero integer (string or number). Fractions are not accepted.'),
+  voterAddress: ethereumAddressSchema.optional(),
+  timestamp: z.string().datetime().optional(),
 });
 
 export type RecordVoteRequest = z.infer<typeof recordVoteSchema>;
@@ -117,7 +117,7 @@ export const commitProposalResultsSchema = z.object({
   resultsHash: sha256HexSchema,
   winningOptionId: z.string().uuid().optional(),
   totalVotesCast: z.number().int().min(0),
-  quorumMet: z.boolean().optional(),
+  quorumMet: z.boolean(),
   closedAt: z.string().datetime(),
 });
 
