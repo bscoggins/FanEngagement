@@ -93,6 +93,7 @@ services:
       POLYGON_RPC_URL: https://rpc-amoy.polygon.technology
       POLYGON_CONFIRMATIONS: 6
       POLYGON_TX_TIMEOUT: 120000
+      # Provide a funded testnet key via environment or .env file; empty defaults will cause startup failure.
       POLYGON_PRIVATE_KEY: ${POLYGON_PRIVATE_KEY:-}
       API_KEY: ${API_KEY:-dev-api-key-change-in-production}
       REQUIRE_AUTH: "true"

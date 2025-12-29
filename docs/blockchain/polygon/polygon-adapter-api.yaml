@@ -21,8 +21,16 @@ info:
     
     ## Security
     
-    All endpoints except `/health` and `/metrics` require API key authentication
+    All endpoints except `/health` and `/metrics` (aliases to `/v1/adapter/health` and `/v1/adapter/metrics`) require API key authentication
     via the `X-Adapter-API-Key` header.
+
+    ## Field naming parity
+    Responses use the universal adapter contract field names:
+    - `transactionId` (formerly `transactionHash`)
+    - `accountAddress` (formerly `contractAddress`)
+    - `mintAddress` (formerly `tokenAddress`)
+
+    Request validation matches the implementation: vote requests require `organizationId`, `voterAddress`, and `timestamp`; proposal results include `organizationId` and require `closedAt`.
     
     ## Rate Limits
     
@@ -542,6 +550,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthStatus'
 
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Root health check
+      description: |
+        Same as `/v1/adapter/health` for compatibility with infrastructure health probes.
+      operationId: getHealthRoot
+      security: []
+      responses:
+        '200':
+          description: Adapter is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Adapter is unhealthy (cannot connect to Polygon RPC or critical component failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
   /v1/adapter/metrics:
     get:
       tags:
@@ -566,6 +597,23 @@ paths:
         - `polygon_gas_estimate_units{operation}`: Gas estimation by operation type
         
       operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /metrics:
+    get:
+      tags:
+        - Health
+      summary: Root metrics
+      description: |
+        Same as `/v1/adapter/metrics` for compatibility with infrastructure scraping.
+      operationId: getMetricsRoot
       security: []
       responses:
         '200':

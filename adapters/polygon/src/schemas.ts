@@ -40,7 +40,10 @@ export const createShareTypeSchema = z.object({
       z.number().int().positive(),
       z.string().regex(/^[1-9][0-9]*$/u, 'maxSupply must be a positive non-zero integer'),
     ])
-    .optional(),
+    .optional()
+    .describe(
+      'Maximum supply for this share type. Must be a positive, non-zero integer when provided. If omitted, supply is unlimited.'
+    ),
   metadata: z
     .object({
       description: z.string().max(500).optional(),
@@ -100,7 +103,7 @@ export const recordVoteSchema = z.object({
     z
       .string()
       .regex(/^(?:0|[1-9][0-9]*)$/u, 'votingPower must be a valid non-negative integer string'),
-  ]),
+  ]).describe('Voting power expressed as a non-negative integer (string or number). Fractions are not accepted.'),
   voterAddress: ethereumAddressSchema,
   timestamp: z.string().datetime(),
 });
@@ -115,7 +118,7 @@ export const commitProposalResultsSchema = z.object({
   winningOptionId: z.string().uuid().optional(),
   totalVotesCast: z.number().int().min(0),
   quorumMet: z.boolean().optional(),
-  closedAt: z.string().datetime().optional(),
+  closedAt: z.string().datetime(),
 });
 
 export type CommitProposalResultsRequest = z.infer<typeof commitProposalResultsSchema>;

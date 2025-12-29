@@ -16,7 +16,7 @@ export function loadWallet(): Wallet {
       return true;
     }
     const normalized = key.trim().toLowerCase();
-    const placeholders = new Set(['dev-key-change-in-production', 'auto-generate', 'generate']);
+    const placeholders = new Set(['dev-key-change-in-production']);
     return placeholders.has(normalized);
   };
 

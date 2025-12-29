@@ -6,13 +6,9 @@ import { AdapterError, AuthenticationError, handleError } from './errors.js';
 import { ZodError } from 'zod';
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  const publicPaths = new Set(['/health', '/metrics', '/v1/adapter/health', '/v1/adapter/metrics']);
   // Skip auth for health and metrics endpoints
-  if (
-    req.path === '/v1/adapter/health' ||
-    req.path === '/v1/adapter/metrics' ||
-    req.path === '/health' ||
-    req.path === '/metrics'
-  ) {
+  if (publicPaths.has(req.path)) {
     return next();
   }
 
