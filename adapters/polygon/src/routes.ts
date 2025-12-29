@@ -78,7 +78,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.userId,
           data.quantity,
           data.recipientAddress,
-          undefined,
+          data.shareTypeId,
           data.metadata
         ),
       buildResponse: (result, data) => ({

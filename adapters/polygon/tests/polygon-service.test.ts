@@ -1,4 +1,4 @@
-import { describe, expect, jest, test } from '@jest/globals';
+import { afterAll, describe, expect, jest, test } from '@jest/globals';
 import { Wallet } from 'ethers';
 import { PolygonService } from '../src/polygon-service.js';
 import { config } from '../src/config.js';
