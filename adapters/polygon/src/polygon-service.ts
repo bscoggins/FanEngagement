@@ -124,7 +124,9 @@ export class PolygonService {
     organizationId: string,
     name: string,
     symbol: string,
-    decimals: number = 18
+    decimals: number = 18,
+    maxSupply?: number | string,
+    metadata?: { description?: string; votingWeight?: number }
   ): Promise<{ transactionHash: string; tokenAddress: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'create_share_type';
@@ -148,6 +150,8 @@ export class PolygonService {
         name,
         symbol,
         decimals,
+        maxSupply,
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
@@ -195,9 +199,10 @@ export class PolygonService {
     shareTypeId: string,
     userId: string,
     quantity: string,
-    recipientAddress: string,
-    tokenAddress: string
-  ): Promise<{ transactionHash: string; gasUsed: string }> {
+    recipientAddress?: string,
+    tokenAddress?: string,
+    metadata?: { reason?: string; issuedBy?: string }
+  ): Promise<{ transactionHash: string; gasUsed: string; recipientAddress: string }> {
     const startTime = Date.now();
     const operation = 'record_share_issuance';
 
@@ -218,12 +223,14 @@ export class PolygonService {
         shareTypeId,
         userId,
         quantity,
-        recipientAddress,
-        tokenAddress,
+        recipientAddress: recipientAddress || this.wallet.address,
+        tokenAddress: tokenAddress || shareTypeId,
+        metadata,
       });
 
+      const targetRecipient = recipientAddress || this.wallet.address;
       const tx = await this.wallet.sendTransaction({
-        to: recipientAddress,
+        to: targetRecipient,
         value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'), // Send tiny amount as proof of issuance
         data: ethers.hexlify(toUtf8Bytes(`ISSUANCE:${issuanceData}`)),
       });
@@ -241,11 +248,13 @@ export class PolygonService {
         issuanceId,
         transactionHash: receipt.hash,
         gasUsed: receipt.gasUsed.toString(),
+        recipientAddress: targetRecipient,
       });
 
       return {
         transactionHash: receipt.hash,
         gasUsed: receipt.gasUsed.toString(),
+        recipientAddress: targetRecipient,
       };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'error' });
@@ -263,7 +272,14 @@ export class PolygonService {
     title: string,
     contentHash: string,
     startAt: Date,
-    endAt: Date
+    endAt: Date,
+    metadata?: {
+      eligibleVotingPower?: number;
+      createdByUserId?: string;
+      proposalTextHash?: string;
+      expectationsHash?: string;
+      votingOptionsHash?: string;
+    }
   ): Promise<{ transactionHash: string; proposalAddress: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'create_proposal';
@@ -283,6 +299,7 @@ export class PolygonService {
         contentHash,
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
@@ -327,9 +344,11 @@ export class PolygonService {
   async recordVote(
     voteId: string,
     proposalId: string,
+    organizationId: string,
     userId: string,
     optionId: string,
-    votingPower: string
+    votingPower: string,
+    metadata?: { voterAddress?: string; castAt?: Date }
   ): Promise<{ transactionHash: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'record_vote';
@@ -346,9 +365,11 @@ export class PolygonService {
       const voteData = JSON.stringify({
         voteId,
         proposalId,
+        organizationId,
         userId,
         optionId,
         votingPower,
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
@@ -388,9 +409,11 @@ export class PolygonService {
    */
   async commitProposalResults(
     proposalId: string,
+    organizationId: string,
     resultsHash: string,
     winningOptionId: string,
-    totalVotesCast: number
+    totalVotesCast: number,
+    metadata?: { quorumMet?: boolean; closedAt?: Date }
   ): Promise<{ transactionHash: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'commit_proposal_results';
@@ -398,9 +421,11 @@ export class PolygonService {
     try {
       logger.info('Committing proposal results on Polygon', {
         proposalId,
+        organizationId,
         resultsHash,
         winningOptionId,
         totalVotesCast,
+        metadata,
       });
 
       let tx: TransactionResponse;

@@ -11,6 +11,14 @@ export function loadWallet(): Wallet {
 
   let privateKey: string;
 
+  const isPlaceholderKey = (key?: string): boolean => {
+    if (!key) {
+      return true;
+    }
+    const normalized = key.trim().toLowerCase();
+    return normalized === 'dev-key-change-in-production' || normalized === 'auto-generate' || normalized === 'generate';
+  };
+
   // Try loading from path first
   if (config.polygon.privateKeyPath) {
     logger.info('Loading private key from file', { path: config.polygon.privateKeyPath });
@@ -23,9 +31,13 @@ export function loadWallet(): Wallet {
         }`
       );
     }
-  } else if (config.polygon.privateKey) {
+  } else if (config.polygon.privateKey && !isPlaceholderKey(config.polygon.privateKey)) {
     logger.info('Loading private key from environment variable');
     privateKey = config.polygon.privateKey;
+  } else if (config.server.nodeEnv === 'development') {
+    const generated = Wallet.createRandom();
+    logger.warn('No Polygon private key provided; generated ephemeral development wallet');
+    return generated;
   } else {
     throw new Error('No private key provided. Set POLYGON_PRIVATE_KEY or POLYGON_PRIVATE_KEY_PATH');
   }

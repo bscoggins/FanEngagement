@@ -2,11 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import { timingSafeEqual } from 'crypto';
 import { config } from './config.js';
 import { logger } from './logger.js';
-import { AuthenticationError } from './errors.js';
+import { AdapterError, AuthenticationError, handleError } from './errors.js';
+import { ZodError } from 'zod';
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   // Skip auth for health and metrics endpoints
-  if (req.path === '/v1/adapter/health' || req.path === '/v1/adapter/metrics') {
+  if (
+    req.path === '/v1/adapter/health' ||
+    req.path === '/v1/adapter/metrics' ||
+    req.path === '/health' ||
+    req.path === '/metrics'
+  ) {
     return next();
   }
 
@@ -55,6 +61,10 @@ export function errorMiddleware(
   res: Response,
   next: NextFunction
 ): void {
+  if (error instanceof AdapterError || error instanceof ZodError) {
+    return handleError(error, req, res);
+  }
+
   logger.error('Unhandled error in middleware', {
     error: error.message,
     stack: error.stack,

@@ -176,6 +176,10 @@ RETRY_MAX_ATTEMPTS=4
 RETRY_BASE_DELAY_MS=1000
 ```
 
+> **Tip:** When `NODE_ENV=development`, the adapter will generate an ephemeral wallet if
+> `POLYGON_PRIVATE_KEY` is not provided. This keeps local containers running without sharing
+> a funded key, but you must supply a real testnet key to submit live transactions.
+
 ### 3.3 Build and Run
 
 ```bash
@@ -193,7 +197,7 @@ npm start
 
 ```bash
 # Health check
-curl http://localhost:3002/v1/adapter/health
+curl http://localhost:3002/health
 
 # Expected response:
 {
