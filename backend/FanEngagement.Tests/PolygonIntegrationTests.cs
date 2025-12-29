@@ -134,7 +134,7 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         if (response.StatusCode != HttpStatusCode.Created)
         {
             var error = await response.Content.ReadAsStringAsync();
-            _output.WriteLine($"Failed to create polygon proposal: {error}");
+            _output.WriteLine($"Failed to create Polygon proposal: {error}");
         }
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -155,7 +155,7 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         if (openResponse.StatusCode != HttpStatusCode.OK)
         {
             var error = await openResponse.Content.ReadAsStringAsync();
-            _output.WriteLine($"Failed to open polygon proposal: {error}");
+            _output.WriteLine($"Failed to open Polygon proposal: {error}");
         }
         Assert.Equal(HttpStatusCode.OK, openResponse.StatusCode);
 
@@ -254,7 +254,7 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
         if (voteResponse.StatusCode != HttpStatusCode.Created)
         {
             var error = await voteResponse.Content.ReadAsStringAsync();
-            _output.WriteLine($"Failed to cast polygon vote: {error}");
+            _output.WriteLine($"Failed to cast Polygon vote: {error}");
         }
         Assert.Equal(HttpStatusCode.Created, voteResponse.StatusCode);
 

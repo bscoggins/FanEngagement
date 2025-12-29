@@ -1,5 +1,4 @@
 using FanEngagement.Application.Organizations;
-using FanEngagement.Domain.Enums;
 using FluentValidation;
 using System.Text.Json;
 
@@ -35,25 +34,8 @@ public class CreateOrganizationRequestValidator : AbstractValidator<CreateOrgani
             .Must(BeValidJson).WithMessage("Blockchain config must be valid JSON.")
             .MaximumLength(5000).WithMessage("Blockchain config must not exceed 5000 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.BlockchainConfig));
-
-        RuleFor(x => x)
-            .Custom((request, context) =>
-            {
-                if (request.BlockchainType == BlockchainType.Polygon)
-                {
-                    foreach (var error in BlockchainConfigValidationHelpers.ValidatePolygonConfig(request.BlockchainConfig))
-                    {
-                        context.AddFailure("BlockchainConfig", error);
-                    }
-                }
-                else if (request.BlockchainType == BlockchainType.Solana)
-                {
-                    foreach (var error in BlockchainConfigValidationHelpers.ValidateSolanaConfig(request.BlockchainConfig))
-                    {
-                        context.AddFailure("BlockchainConfig", error);
-                    }
-                }
-            });
+        
+        this.AddBlockchainConfigValidation(x => x.BlockchainType, x => x.BlockchainConfig);
     }
 
     private bool BeValidJson(string? json)
