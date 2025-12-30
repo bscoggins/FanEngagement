@@ -25,23 +25,18 @@ vi.mock('../api/organizationsApi', () => ({
 describe('AdminOrganizationProposalsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock localStorage for auth
-    Storage.prototype.getItem = vi.fn((key) => {
-      if (key === 'authToken') {
-        return 'test-token';
-      }
-      if (key === 'authUser') {
-        return JSON.stringify({ 
-          userId: 'user-1',
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          role: 'Admin',
+    localStorage.clear();
+    
+    // Set up authenticated state
+    localStorage.setItem('authToken', 'test-token');
+    localStorage.setItem('authUser', JSON.stringify({ 
+      userId: 'user-1',
+      email: 'admin@test.com',
+      displayName: 'Admin User',
+      role: 'Admin',
       mfaRequired: false,
-          token: 'test-token'
-        });
-      }
-      return null;
-    });
+      token: 'test-token'
+    }));
   });
 
   const mockOrganization: Organization = {

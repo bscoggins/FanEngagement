@@ -181,7 +181,7 @@ public class AdminActionAuditTests : IClassFixture<TestWebApplicationFactory>
             PageSize = 10
         };
 
-        PagedResult<AuditEventDto> auditEvents = null;
+        PagedResult<AuditEventDto> auditEvents = null!;
         // Retry for up to 5 seconds
         for (int i = 0; i < 25; i++)
         {

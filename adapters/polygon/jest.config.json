@@ -16,6 +16,7 @@
   "testMatch": [
     "**/tests/**/*.test.ts"
   ],
+  "setupFiles": ["./tests/setup.ts"],
   "collectCoverageFrom": [
     "src/**/*.ts",
     "!src/index.ts"
