@@ -5,12 +5,8 @@ using Xunit;
 
 namespace FanEngagement.Tests;
 
-public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicationFactory>
+public class BlockchainTransactionMetadataTests
 {
-    public BlockchainTransactionMetadataTests(TestWebApplicationFactory _)
-    {
-    }
-
     [Fact]
     public async Task PolygonAdapter_IncludesChainAndExplorerMetadata()
     {
