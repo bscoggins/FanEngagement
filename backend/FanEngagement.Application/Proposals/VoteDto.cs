@@ -9,4 +9,6 @@ public class VoteDto
     public decimal VotingPower { get; set; }
     public DateTimeOffset CastAt { get; set; }
     public string? BlockchainTransactionId { get; set; }
+    public string? BlockchainChainId { get; set; }
+    public string? BlockchainExplorerUrl { get; set; }
 }

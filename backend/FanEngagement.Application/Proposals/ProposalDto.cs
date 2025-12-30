@@ -15,6 +15,8 @@ public class ProposalDto
     public Guid CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public string? BlockchainTransactionId { get; set; }
+    public string? BlockchainChainId { get; set; }
+    public string? BlockchainExplorerUrl { get; set; }
     
     // Governance result fields (populated when closed/finalized)
     public Guid? WinningOptionId { get; set; }

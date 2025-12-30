@@ -14,4 +14,6 @@ public class ShareIssuanceDto
     public string? IssuedByUserDisplayName { get; set; }
     public string? Reason { get; set; }
     public string? BlockchainTransactionId { get; set; }
+    public string? BlockchainChainId { get; set; }
+    public string? BlockchainExplorerUrl { get; set; }
 }

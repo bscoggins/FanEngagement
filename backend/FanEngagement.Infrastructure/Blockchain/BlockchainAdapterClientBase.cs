@@ -94,7 +94,12 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<OrganizationResponse>(cancellationToken);
-            return new CreateOrganizationResult(result?.TransactionId ?? string.Empty, result?.AccountAddress ?? string.Empty);
+            var transactionId = result?.TransactionId ?? string.Empty;
+            return new CreateOrganizationResult(
+                transactionId,
+                result?.AccountAddress ?? string.Empty,
+                GetChainId(),
+                BuildExplorerUrl(transactionId));
         }
         catch (HttpRequestException ex)
         {
@@ -129,7 +134,12 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<ShareTypeResponse>(cancellationToken);
-            return new CreateShareTypeResult(result?.TransactionId ?? string.Empty, result?.MintAddress ?? string.Empty);
+            var transactionId = result?.TransactionId ?? string.Empty;
+            return new CreateShareTypeResult(
+                transactionId,
+                result?.MintAddress ?? string.Empty,
+                GetChainId(),
+                BuildExplorerUrl(transactionId));
         }
         catch (HttpRequestException ex)
         {
@@ -163,7 +173,12 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<ShareIssuanceResponse>(cancellationToken);
-            return new RecordShareIssuanceResult(result?.TransactionId ?? string.Empty, result?.RecipientAddress ?? string.Empty);
+            var transactionId = result?.TransactionId ?? string.Empty;
+            return new RecordShareIssuanceResult(
+                transactionId,
+                result?.RecipientAddress ?? string.Empty,
+                GetChainId(),
+                BuildExplorerUrl(transactionId));
         }
         catch (HttpRequestException ex)
         {
@@ -198,7 +213,12 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<ProposalResponse>(cancellationToken);
-            return new CreateProposalResult(result?.TransactionId ?? string.Empty, result?.ProposalAddress ?? string.Empty);
+            var transactionId = result?.TransactionId ?? string.Empty;
+            return new CreateProposalResult(
+                transactionId,
+                result?.ProposalAddress ?? string.Empty,
+                GetChainId(),
+                BuildExplorerUrl(transactionId));
         }
         catch (HttpRequestException ex)
         {
@@ -230,7 +250,11 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(cancellationToken);
-            return new BlockchainTransactionResult(result?.TransactionId ?? string.Empty);
+            var transactionId = result?.TransactionId ?? string.Empty;
+            return new BlockchainTransactionResult(
+                transactionId,
+                GetChainId(),
+                BuildExplorerUrl(transactionId));
         }
         catch (HttpRequestException ex)
         {
@@ -261,7 +285,11 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(cancellationToken);
-            return new BlockchainTransactionResult(result?.TransactionId ?? string.Empty);
+            var transactionId = result?.TransactionId ?? string.Empty;
+            return new BlockchainTransactionResult(
+                transactionId,
+                GetChainId(),
+                BuildExplorerUrl(transactionId));
         }
         catch (HttpRequestException ex)
         {
@@ -416,6 +444,48 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
         }
 
         return metadata.Count > 0 ? metadata : null;
+    }
+
+    private string? GetChainId()
+    {
+        var network = TryGetBlockchainConfig()?.Network?.ToLowerInvariant();
+
+        if (string.Equals(BlockchainName, "Polygon", StringComparison.OrdinalIgnoreCase))
+        {
+            return network switch
+            {
+                "amoy" => "80002",
+                "mumbai" => "80001",
+                "mainnet" => "137",
+                "polygon" => "137",
+                _ => null
+            };
+        }
+
+        // For non-Polygon chains (e.g., Solana), return the provided network identifier when available.
+        return network;
+    }
+
+    private string? BuildExplorerUrl(string? transactionId)
+    {
+        if (string.IsNullOrWhiteSpace(transactionId))
+        {
+            return null;
+        }
+
+        var network = TryGetBlockchainConfig()?.Network?.ToLowerInvariant();
+
+        if (string.Equals(BlockchainName, "Polygon", StringComparison.OrdinalIgnoreCase))
+        {
+            return network switch
+            {
+                "amoy" => $"https://amoy.polygonscan.com/tx/{transactionId}",
+                "mumbai" => $"https://mumbai.polygonscan.com/tx/{transactionId}",
+                _ => $"https://polygonscan.com/tx/{transactionId}"
+            };
+        }
+
+        return null;
     }
 
     private sealed class UtcDateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>
