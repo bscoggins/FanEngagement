@@ -135,6 +135,7 @@ export const LoginPage: React.FC = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
         <Input
           id="password"
@@ -143,6 +144,7 @@ export const LoginPage: React.FC = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
         />
         {error && (
           <div
