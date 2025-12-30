@@ -16,8 +16,7 @@ export function loadWallet(): Wallet {
       return true;
     }
     const normalized = key.trim().toLowerCase();
-    const placeholders = new Set(['dev-key-change-in-production']);
-    return placeholders.has(normalized);
+    return normalized === 'dev-key-change-in-production';
   };
 
   // Try loading from path first

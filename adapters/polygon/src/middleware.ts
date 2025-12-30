@@ -57,6 +57,7 @@ export function errorMiddleware(
   res: Response,
   next: NextFunction
 ): void {
+  // Defensive guard for errors bubbling past route-level handlers (non-POST endpoints or middleware)
   if (error instanceof AdapterError || error instanceof ZodError) {
     handleError(error, req, res);
     return;

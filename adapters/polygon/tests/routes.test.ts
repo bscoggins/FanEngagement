@@ -270,6 +270,40 @@ describe('Polygon adapter routes', () => {
     );
   });
 
+  test('accepts vote payload with timestamp explicitly null', async () => {
+    const response = await fetch(`${baseUrl}/v1/adapter/votes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        voteId: '550e8400-e29b-41d4-a716-446655440009',
+        proposalId: '550e8400-e29b-41d4-a716-446655440001',
+        organizationId: '550e8400-e29b-41d4-a716-446655440002',
+        userId: '550e8400-e29b-41d4-a716-446655440010',
+        optionId: '550e8400-e29b-41d4-a716-446655440006',
+        votingPower: '4',
+        voterAddress: '0x0000000000000000000000000000000000000009',
+        timestamp: null,
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(polygonService.recordVote).toHaveBeenCalledWith(
+      '550e8400-e29b-41d4-a716-446655440009',
+      '550e8400-e29b-41d4-a716-446655440001',
+      '550e8400-e29b-41d4-a716-446655440002',
+      '550e8400-e29b-41d4-a716-446655440010',
+      '550e8400-e29b-41d4-a716-446655440006',
+      '4',
+      expect.objectContaining({
+        voterAddress: '0x0000000000000000000000000000000000000009',
+        castAt: undefined,
+      })
+    );
+  });
+
   test('propagates proposal results parameters including metadata', async () => {
     const response = await fetch(`${baseUrl}/v1/adapter/proposal-results`, {
       method: 'POST',

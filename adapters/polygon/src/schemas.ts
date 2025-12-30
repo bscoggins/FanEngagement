@@ -105,7 +105,7 @@ export const recordVoteSchema = z.object({
       .regex(/^[1-9][0-9]*$/u, 'votingPower must be a positive, non-zero integer string'),
   ]).describe('Voting power expressed as a positive, non-zero integer (string or number). Fractions are not accepted.'),
   voterAddress: ethereumAddressSchema.optional(),
-  timestamp: z.string().datetime().optional(),
+  timestamp: z.string().datetime().nullable().optional(),
 });
 
 export type RecordVoteRequest = z.infer<typeof recordVoteSchema>;
