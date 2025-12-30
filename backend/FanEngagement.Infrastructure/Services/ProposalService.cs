@@ -293,6 +293,9 @@ public class ProposalService(
             && await featureFlagService.IsEnabledAsync(proposal.OrganizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
 
         var oldStatus = proposal.Status;
+        string? blockchainTransactionId = null;
+        string? blockchainChainId = null;
+        string? blockchainExplorerUrl = null;
 
         // Use domain service for validation
         var governanceService = new ProposalGovernanceService();
@@ -309,7 +312,6 @@ public class ProposalService(
 
         var isInMemoryProvider = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
         var transaction = isInMemoryProvider ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        string? blockchainTransactionId = null;
 
         try
         {
@@ -352,6 +354,8 @@ public class ProposalService(
                 proposal.BlockchainProposalAddress = onChainResult.ProposalAddress;
                 proposal.LatestContentHash = contentHash;
                 blockchainTransactionId = onChainResult.TransactionId;
+                blockchainChainId = onChainResult.ChainId;
+                blockchainExplorerUrl = onChainResult.ExplorerUrl;
 
                 logger.LogInformation(
                     "Proposal {ProposalId} recorded on {Blockchain} with transaction {TransactionId}",
@@ -428,7 +432,7 @@ public class ProposalService(
         // Enqueue outbound event
         await EnqueueProposalEventAsync(proposal, "ProposalOpened", cancellationToken);
 
-        return MapToDto(proposal, blockchainTransactionId);
+        return MapToDto(proposal, blockchainTransactionId, blockchainChainId, blockchainExplorerUrl);
     }
 
     public async Task<ProposalDto?> CloseAsync(Guid proposalId, CancellationToken cancellationToken = default)
@@ -453,6 +457,9 @@ public class ProposalService(
             && await featureFlagService.IsEnabledAsync(proposal.OrganizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
 
         var oldStatus = proposal.Status;
+        string? blockchainTransactionId = null;
+        string? blockchainChainId = null;
+        string? blockchainExplorerUrl = null;
 
         // Use domain service for validation
         var governanceService = new ProposalGovernanceService();
@@ -498,6 +505,9 @@ public class ProposalService(
                     cancellationToken);
 
                 proposal.LatestResultsHash = resultsHash;
+                blockchainTransactionId = onChainResult.TransactionId;
+                blockchainChainId = onChainResult.ChainId;
+                blockchainExplorerUrl = onChainResult.ExplorerUrl;
 
                 logger.LogInformation(
                     "Proposal results for {ProposalId} recorded on {Blockchain} with transaction {TransactionId}",
@@ -579,7 +589,7 @@ public class ProposalService(
         // Enqueue outbound event
         await EnqueueProposalEventAsync(proposal, "ProposalClosed", cancellationToken);
 
-        return MapToDto(proposal);
+        return MapToDto(proposal, blockchainTransactionId, blockchainChainId, blockchainExplorerUrl);
     }
 
     public async Task<ProposalDto?> FinalizeAsync(Guid proposalId, CancellationToken cancellationToken = default)
@@ -884,6 +894,8 @@ public class ProposalService(
         var blockchainEnabled = organizationDetails.BlockchainType != BlockchainType.None
             && await featureFlagService.IsEnabledAsync(proposal.OrganizationId, OrganizationFeature.BlockchainIntegration, cancellationToken);
         string? voteTransactionId = null;
+        string? voteChainId = null;
+        string? voteExplorerUrl = null;
 
         try
         {
@@ -904,6 +916,8 @@ public class ProposalService(
                         vote.CastAt),
                     cancellationToken);
                 voteTransactionId = onChainResult.TransactionId;
+                voteChainId = onChainResult.ChainId;
+                voteExplorerUrl = onChainResult.ExplorerUrl;
                 vote.BlockchainTransactionId = voteTransactionId;
 
                 logger.LogInformation(
@@ -992,7 +1006,9 @@ public class ProposalService(
             UserId = vote.UserId,
             VotingPower = vote.VotingPower,
             CastAt = vote.CastAt,
-            BlockchainTransactionId = voteTransactionId
+            BlockchainTransactionId = voteTransactionId,
+            BlockchainChainId = voteChainId,
+            BlockchainExplorerUrl = voteExplorerUrl
         };
     }
 
@@ -1082,7 +1098,11 @@ public class ProposalService(
         await outboundEventService.EnqueueEventAsync(proposal.OrganizationId, eventType, payloadJson, cancellationToken);
     }
 
-    private static ProposalDto MapToDto(Proposal proposal, string? blockchainTransactionId = null)
+    private static ProposalDto MapToDto(
+        Proposal proposal,
+        string? blockchainTransactionId = null,
+        string? blockchainChainId = null,
+        string? blockchainExplorerUrl = null)
     {
         return new ProposalDto
         {
@@ -1101,7 +1121,9 @@ public class ProposalService(
             TotalVotesCast = proposal.TotalVotesCast,
             ClosedAt = proposal.ClosedAt,
             EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot,
-            BlockchainTransactionId = blockchainTransactionId
+            BlockchainTransactionId = blockchainTransactionId,
+            BlockchainChainId = blockchainChainId,
+            BlockchainExplorerUrl = blockchainExplorerUrl
         };
     }
 

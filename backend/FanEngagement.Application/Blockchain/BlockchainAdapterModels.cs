@@ -8,7 +8,7 @@ public record CreateOrganizationCommand(
 
 public record OrganizationBrandingMetadata(string? LogoUrl, string? PrimaryColor, string? SecondaryColor);
 
-public record CreateOrganizationResult(string TransactionId, string AccountAddress);
+public record CreateOrganizationResult(string TransactionId, string AccountAddress, string? ChainId = null, string? ExplorerUrl = null);
 
 public record CreateShareTypeCommand(
     Guid ShareTypeId,
@@ -20,7 +20,7 @@ public record CreateShareTypeCommand(
     decimal? MaxSupply,
     string? Description);
 
-public record CreateShareTypeResult(string TransactionId, string MintAddress);
+public record CreateShareTypeResult(string TransactionId, string MintAddress, string? ChainId = null, string? ExplorerUrl = null);
 
 /// <summary>
 /// Records a share issuance on the blockchain.
@@ -36,7 +36,7 @@ public record RecordShareIssuanceCommand(
     Guid? IssuedByUserId,
     string? Reason);
 
-public record RecordShareIssuanceResult(string TransactionId, string RecipientAddress);
+public record RecordShareIssuanceResult(string TransactionId, string RecipientAddress, string? ChainId = null, string? ExplorerUrl = null);
 
 public record CreateProposalCommand(
     Guid ProposalId,
@@ -51,7 +51,7 @@ public record CreateProposalCommand(
     string? ExpectationsHash,
     string? VotingOptionsHash);
 
-public record CreateProposalResult(string TransactionId, string ProposalAddress);
+public record CreateProposalResult(string TransactionId, string ProposalAddress, string? ChainId = null, string? ExplorerUrl = null);
 
 public record RecordVoteCommand(
     Guid VoteId,
@@ -72,4 +72,4 @@ public record CommitProposalResultsCommand(
     bool QuorumMet,
     DateTimeOffset ClosedAt);
 
-public record BlockchainTransactionResult(string TransactionId);
+public record BlockchainTransactionResult(string TransactionId, string? ChainId = null, string? ExplorerUrl = null);
