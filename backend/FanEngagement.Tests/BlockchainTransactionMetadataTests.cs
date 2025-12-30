@@ -7,17 +7,14 @@ namespace FanEngagement.Tests;
 
 public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public BlockchainTransactionMetadataTests(TestWebApplicationFactory factory)
+    public BlockchainTransactionMetadataTests(TestWebApplicationFactory _)
     {
-        _httpClientFactory = factory.Services.GetRequiredService<IHttpClientFactory>();
     }
 
     [Fact]
     public async Task PolygonAdapter_IncludesChainAndExplorerMetadata()
     {
-        var adapter = new PolygonAdapterClient(_httpClientFactory, BuildConfig("amoy"));
+        var adapter = new PolygonAdapterClient(CreateTestHttpClientFactory("Polygon"), BuildConfig("amoy"));
 
         var result = await adapter.RecordVoteAsync(CreateVoteCommand(), CancellationToken.None);
 
@@ -31,7 +28,7 @@ public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicati
     [Fact]
     public async Task SolanaAdapter_ReturnsNetworkIdentifierWithoutExplorer()
     {
-        var adapter = new SolanaAdapterClient(_httpClientFactory, BuildConfig("devnet"));
+        var adapter = new SolanaAdapterClient(CreateTestHttpClientFactory("Solana"), BuildConfig("devnet"));
 
         var result = await adapter.RecordVoteAsync(CreateVoteCommand(), CancellationToken.None);
 
@@ -67,4 +64,28 @@ public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicati
 
     private static string BuildConfig(string network) =>
         $"{{\"adapterUrl\":\"http://localhost/\",\"network\":\"{network}\",\"apiKey\":\"test-api-key\"}}";
+
+    private static IHttpClientFactory CreateTestHttpClientFactory(string adapterName)
+    {
+        var handler = new TestBlockchainAdapterHandler(adapterName);
+        var client = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("http://localhost/")
+        };
+        client.DefaultRequestHeaders.Add("X-Adapter-API-Key", "test-api-key");
+
+        return new SingleClientFactory(client);
+    }
+
+    private sealed class SingleClientFactory : IHttpClientFactory
+    {
+        private readonly HttpClient _client;
+
+        public SingleClientFactory(HttpClient client)
+        {
+            _client = client;
+        }
+
+        public HttpClient CreateClient(string name) => _client;
+    }
 }

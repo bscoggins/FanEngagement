@@ -161,10 +161,11 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
 
         var openedProposal = await openResponse.Content.ReadFromJsonAsync<ProposalDto>();
         Assert.NotNull(openedProposal);
-        Assert.Contains("Polygon", openedProposal.BlockchainTransactionId ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrWhiteSpace(openedProposal.BlockchainTransactionId));
+        Assert.Contains("Polygon", openedProposal.BlockchainTransactionId, StringComparison.OrdinalIgnoreCase);
         Assert.Equal("80002", openedProposal.BlockchainChainId);
         Assert.Contains("polygonscan.com", openedProposal.BlockchainExplorerUrl ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(openedProposal.BlockchainTransactionId ?? string.Empty, openedProposal.BlockchainExplorerUrl ?? string.Empty);
+        Assert.Contains(openedProposal.BlockchainTransactionId, openedProposal.BlockchainExplorerUrl ?? string.Empty);
     }
 
     [Fact]
@@ -263,9 +264,10 @@ public class PolygonIntegrationTests : IClassFixture<TestWebApplicationFactory>
 
         var vote = await voteResponse.Content.ReadFromJsonAsync<VoteDto>();
         Assert.NotNull(vote);
-        Assert.Contains("Polygon", vote.BlockchainTransactionId ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrWhiteSpace(vote.BlockchainTransactionId));
+        Assert.Contains("Polygon", vote.BlockchainTransactionId, StringComparison.OrdinalIgnoreCase);
         Assert.Equal("80002", vote.BlockchainChainId);
-        Assert.Contains(vote.BlockchainTransactionId ?? string.Empty, vote.BlockchainExplorerUrl ?? string.Empty);
         Assert.Contains("polygonscan.com", vote.BlockchainExplorerUrl ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(vote.BlockchainTransactionId, vote.BlockchainExplorerUrl ?? string.Empty);
     }
 }
