@@ -462,7 +462,7 @@ public abstract class BlockchainAdapterClientBase : IBlockchainAdapter
             };
         }
 
-        // For other chains, return the network identifier when available.
+        // For non-Polygon chains (e.g., Solana), return the provided network identifier when available.
         return network;
     }
 

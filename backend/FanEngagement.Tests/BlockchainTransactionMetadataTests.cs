@@ -17,8 +17,7 @@ public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicati
     [Fact]
     public async Task PolygonAdapter_IncludesChainAndExplorerMetadata()
     {
-        var blockchainConfig = "{\"adapterUrl\":\"http://localhost/\",\"network\":\"amoy\",\"apiKey\":\"test-api-key\"}";
-        var adapter = new PolygonAdapterClient(_httpClientFactory, blockchainConfig);
+        var adapter = new PolygonAdapterClient(_httpClientFactory, BuildConfig("amoy"));
 
         var result = await adapter.RecordVoteAsync(CreateVoteCommand(), CancellationToken.None);
 
@@ -32,8 +31,7 @@ public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicati
     [Fact]
     public async Task SolanaAdapter_ReturnsNetworkIdentifierWithoutExplorer()
     {
-        var blockchainConfig = "{\"adapterUrl\":\"http://localhost/\",\"network\":\"devnet\",\"apiKey\":\"test-api-key\"}";
-        var adapter = new SolanaAdapterClient(_httpClientFactory, blockchainConfig);
+        var adapter = new SolanaAdapterClient(_httpClientFactory, BuildConfig("devnet"));
 
         var result = await adapter.RecordVoteAsync(CreateVoteCommand(), CancellationToken.None);
 
@@ -66,4 +64,7 @@ public class BlockchainTransactionMetadataTests : IClassFixture<TestWebApplicati
             "TestVoter",
             DateTimeOffset.UtcNow);
     }
+
+    private static string BuildConfig(string network) =>
+        $"{{\"adapterUrl\":\"http://localhost/\",\"network\":\"{network}\",\"apiKey\":\"test-api-key\"}}";
 }
