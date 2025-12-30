@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { proposalsApi } from '../api/proposalsApi';
+import { organizationsApi } from '../api/organizationsApi';
 import { ProposalStatusBadge } from '../components/ProposalStatusBadge';
 import { ProposalTimingInfo } from '../components/ProposalTimingInfo';
 import { QuorumInfo } from '../components/QuorumInfo';
@@ -13,12 +14,15 @@ import type {
   UpdateProposalRequest,
   AddProposalOptionRequest,
   ProposalResults,
+  Organization,
 } from '../types/api';
+import { buildExplorerLinks } from '../utils/blockchainExplorer';
 
 export const AdminProposalDetailPage: React.FC = () => {
   const { orgId, proposalId } = useParams<{ orgId: string; proposalId: string }>();
-  
+
   const [proposal, setProposal] = useState<ProposalDetails | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [results, setResults] = useState<ProposalResults | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +40,21 @@ export const AdminProposalDetailPage: React.FC = () => {
     description: '',
   });
   const [isAddingOption, setIsAddingOption] = useState(false);
+
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      if (!orgId) return;
+      try {
+        const orgData = await organizationsApi.getById(orgId);
+        setOrganization(orgData);
+      } catch (err) {
+        console.error('Failed to fetch organization for proposal:', err);
+        setError((prev) => prev ?? 'Failed to load organization details.');
+      }
+    };
+
+    fetchOrganization();
+  }, [orgId]);
 
   useEffect(() => {
     const fetchProposal = async () => {
@@ -265,6 +284,14 @@ export const AdminProposalDetailPage: React.FC = () => {
   const canFinalize = proposal && proposal.status === 'Closed';
   const canDeleteOptions = proposal && proposal.status === 'Draft'; // Only Draft proposals can have options deleted
   const showResults = proposal && (proposal.status === 'Open' || proposal.status === 'Closed' || proposal.status === 'Finalized');
+  const explorerLinks = proposal
+    ? buildExplorerLinks({
+        blockchainType: organization?.blockchainType,
+        blockchainConfig: organization?.blockchainConfig,
+        transactionId: proposal.latestResultsHash || proposal.latestContentHash,
+        address: proposal.blockchainProposalAddress,
+      })
+    : { explorerName: undefined, transactionUrl: undefined, addressUrl: undefined, networkLabel: undefined };
 
   if (isLoading) {
     return (
@@ -409,6 +436,39 @@ export const AdminProposalDetailPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {(explorerLinks.addressUrl || explorerLinks.transactionUrl) && (
+            <div style={{ marginTop: 'var(--spacing-4)' }}>
+              <span className="admin-info-grid-label">On-Chain Record</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+                {explorerLinks.addressUrl && (
+                  <a
+                    href={explorerLinks.addressUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-link"
+                    data-testid="proposal-explorer-link"
+                  >
+                    View on {explorerLinks.explorerName}
+                  </a>
+                )}
+                {explorerLinks.transactionUrl && explorerLinks.transactionUrl !== explorerLinks.addressUrl && (
+                  <a
+                    href={explorerLinks.transactionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-link"
+                    data-testid="proposal-tx-link"
+                  >
+                    View transaction
+                  </a>
+                )}
+                {explorerLinks.networkLabel && (
+                  <span className="admin-secondary-text">Network: {explorerLinks.networkLabel}</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {proposal.description && (
             <div>

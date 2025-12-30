@@ -109,6 +109,28 @@ describe('AdminOrganizationShareTypesPage', () => {
     expect(screen.getByText('PS')).toBeInTheDocument();
   });
 
+  it('shows explorer link when share type has on-chain address', async () => {
+    vi.mocked(organizationsApi.getById).mockResolvedValueOnce({
+      ...mockOrganization,
+      blockchainType: 'Polygon',
+      blockchainConfig: '{"adapterUrl":"https://adapter.example","network":"amoy","apiKey":"key"}',
+    });
+    vi.mocked(shareTypesApi.getByOrganization).mockResolvedValueOnce([
+      {
+        ...mockShareTypes[0],
+        blockchainMintAddress: '0xabc123',
+      },
+    ]);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('share-type-explorer-link')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('share-type-explorer-link')).toHaveAttribute('href', 'https://amoy.polygonscan.com/address/0xabc123');
+  });
+
   it('shows create form when button is clicked', async () => {
     vi.mocked(organizationsApi.getById).mockResolvedValueOnce(mockOrganization);
     vi.mocked(shareTypesApi.getByOrganization).mockResolvedValueOnce(mockShareTypes);
@@ -313,7 +335,7 @@ describe('AdminOrganizationShareTypesPage', () => {
     expect(screen.getByText('Create New Share Type')).toBeInTheDocument();
     
     // Cancel
-    const closeButton = screen.getByRole('button', { name: 'Close form' });
+    const closeButton = screen.getAllByRole('button', { name: 'Close form' })[0];
     fireEvent.click(closeButton);
     
     expect(screen.queryByText('Create New Share Type')).not.toBeInTheDocument();

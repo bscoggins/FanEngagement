@@ -12,6 +12,9 @@ import './AdminPage.css';
 import type { BlockchainRecordDto, Organization, PagedResult, BlockchainVerificationDto } from '../types/api';
 import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import { useScrollHint } from '../hooks/useScrollHint';
+import { buildExplorerLinks } from '../utils/blockchainExplorer';
+
+const TRANSACTION_TABLE_COLUMN_COUNT = 8;
 
 export const PlatformAdminBlockchainPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -177,6 +180,7 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
                 <tr>
                   <th>Timestamp</th>
                   <th>Organization</th>
+                  <th>Blockchain</th>
                   <th>Type</th>
                   <th>Entity</th>
                   <th>Transaction / Address</th>
@@ -185,100 +189,129 @@ export const PlatformAdminBlockchainPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {records.items.map((record) => (
-                  <React.Fragment key={record.entityId}>
-                    <tr>
-                      <td>{formatDate(record.timestamp)}</td>
-                      <td>{record.organizationName}</td>
-                      <td>
-                        <span className={`badge badge-${record.entityType.toLowerCase()}`}>
-                          {record.entityType}
-                        </span>
-                      </td>
-                      <td>{record.entityName}</td>
-                      <td className="font-monospace small">
-                        {record.transactionId ? (
-                          <Tooltip content="Transaction ID">
-                            <div>
-                              TX: <a 
-                                    href={`https://explorer.solana.com/tx/${record.transactionId}?cluster=devnet`} 
-                                    target="_blank" 
+                {records.items.map((record) => {
+                  const org = organizations.find((o) => o.id === record.organizationId);
+                  const explorer = buildExplorerLinks({
+                    blockchainType: org?.blockchainType,
+                    blockchainConfig: org?.blockchainConfig,
+                    transactionId: record.transactionId,
+                    address: record.onChainAddress,
+                  });
+
+                  return (
+                    <React.Fragment key={record.entityId}>
+                      <tr>
+                        <td>{formatDate(record.timestamp)}</td>
+                        <td>{record.organizationName}</td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span>{org?.blockchainType ?? 'Unknown'}</span>
+                            {explorer.networkLabel && (
+                              <span className="admin-secondary-text">Network: {explorer.networkLabel}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`badge badge-${record.entityType.toLowerCase()}`}>
+                            {record.entityType}
+                          </span>
+                        </td>
+                        <td>{record.entityName}</td>
+                        <td className="font-monospace small">
+                          {record.transactionId ? (
+                            <Tooltip content="Transaction ID">
+                              <div>
+                                TX:{' '}
+                                {explorer.transactionUrl ? (
+                                  <a
+                                    href={explorer.transactionUrl}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-decoration-none"
                                   >
                                     {record.transactionId}
                                   </a>
-                            </div>
-                          </Tooltip>
-                        ) : null}
-                        {record.onChainAddress ? (
-                          <Tooltip content="On-Chain Address">
-                            <div>
-                              Addr: <a 
-                                      href={`https://explorer.solana.com/address/${record.onChainAddress}?cluster=devnet`} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-decoration-none"
-                                    >
-                                      {record.onChainAddress}
-                                    </a>
-                            </div>
-                          </Tooltip>
-                        ) : null}
-                      </td>
-                      <td>{record.status}</td>
-                      <td>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleVerify(record)}
-                          disabled={verifyingId === record.entityId}
-                        >
-                          {verifyingId === record.entityId 
-                            ? 'Verifying...' 
-                            : verificationResults[record.entityId] 
-                              ? 'Close' 
-                              : 'Verify'}
-                        </Button>
-                      </td>
-                    </tr>
-                    {verificationResults[record.entityId] && (
-                      <tr className="verification-row">
-                        <td colSpan={7}>
-                          <div className="verification-details p-3 bg-light rounded">
-                            <h6>Verification Result</h6>
-                            <div className="d-flex gap-4">
+                                ) : (
+                                  record.transactionId
+                                )}
+                              </div>
+                            </Tooltip>
+                          ) : null}
+                          {record.onChainAddress ? (
+                            <Tooltip content="On-Chain Address">
                               <div>
-                                <strong>Status: </strong>
-                                <span className={verificationResults[record.entityId].isVerified ? 'text-success' : 'text-danger'}>
-                                  {verificationResults[record.entityId].isVerified ? 'Verified' : 'Failed'}
-                                </span>
+                                Addr:{' '}
+                                {explorer.addressUrl ? (
+                                  <a
+                                    href={explorer.addressUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-decoration-none"
+                                  >
+                                    {record.onChainAddress}
+                                  </a>
+                                ) : (
+                                  record.onChainAddress
+                                )}
                               </div>
-                              <div>
-                                <strong>Message: </strong>
-                                {verificationResults[record.entityId].message}
-                              </div>
-                            </div>
-                            <div className="row mt-2">
-                              <div className="col-md-6">
-                                <strong>Database Value:</strong>
-                                <pre className="bg-white p-2 border rounded mt-1">
-                                  {JSON.stringify(verificationResults[record.entityId].databaseValue, null, 2)}
-                                </pre>
-                              </div>
-                              <div className="col-md-6">
-                                <strong>Blockchain Value:</strong>
-                                <pre className="bg-white p-2 border rounded mt-1" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                  {JSON.stringify(verificationResults[record.entityId].blockchainValue, null, 2)}
-                                </pre>
-                              </div>
-                            </div>
-                          </div>
+                            </Tooltip>
+                          ) : null}
+                          {!record.transactionId && !record.onChainAddress && <span className="admin-secondary-text">N/A</span>}
+                        </td>
+                        <td>{record.status}</td>
+                        <td>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleVerify(record)}
+                            disabled={verifyingId === record.entityId}
+                          >
+                            {verifyingId === record.entityId 
+                              ? 'Verifying...' 
+                              : verificationResults[record.entityId] 
+                                ? 'Close' 
+                                : 'Verify'}
+                          </Button>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
+                      {verificationResults[record.entityId] && (
+                        <tr className="verification-row">
+                          <td colSpan={TRANSACTION_TABLE_COLUMN_COUNT}>
+                            <div className="verification-details p-3 bg-light rounded">
+                              <h6>Verification Result</h6>
+                              <div className="d-flex gap-4">
+                                <div>
+                                  <strong>Status: </strong>
+                                  <span className={verificationResults[record.entityId].isVerified ? 'text-success' : 'text-danger'}>
+                                    {verificationResults[record.entityId].isVerified ? 'Verified' : 'Failed'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <strong>Message: </strong>
+                                  {verificationResults[record.entityId].message}
+                                </div>
+                              </div>
+                              <div className="row mt-2">
+                                <div className="col-md-6">
+                                  <strong>Database Value:</strong>
+                                  <pre className="bg-white p-2 border rounded mt-1">
+                                    {JSON.stringify(verificationResults[record.entityId].databaseValue, null, 2)}
+                                  </pre>
+                                </div>
+                                <div className="col-md-6">
+                                  <strong>Blockchain Value:</strong>
+                                  <pre className="bg-white p-2 border rounded mt-1" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                    {JSON.stringify(verificationResults[record.entityId].blockchainValue, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

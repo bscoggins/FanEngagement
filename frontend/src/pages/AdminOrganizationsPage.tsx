@@ -18,6 +18,7 @@ import { useTableData } from '../hooks/useTableData';
 import { Skeleton, SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import type { Organization, CreateOrganizationRequest, User, BlockchainType } from '../types/api';
 import './AdminPage.css';
+import { validateBlockchainConfig } from '../utils/blockchainExplorer';
 
 const PAGE_SIZE = 10;
 const DEFAULT_BLOCKCHAIN_TYPE: BlockchainType = 'None';
@@ -135,8 +136,11 @@ export const AdminOrganizationsPage: React.FC = () => {
     if (!createFormData.initialAdminUserId) {
       validationErrors.initialAdmin = 'Select an initial organization admin';
     }
-    if (createFormData.blockchainType !== DEFAULT_BLOCKCHAIN_TYPE && !createFormData.blockchainConfig?.trim()) {
-      validationErrors.blockchainConfig = 'Provide blockchain configuration or choose "None"';
+    if (createFormData.blockchainType !== DEFAULT_BLOCKCHAIN_TYPE) {
+      const configErrors = validateBlockchainConfig(createFormData.blockchainType ?? DEFAULT_BLOCKCHAIN_TYPE, createFormData.blockchainConfig);
+      if (configErrors.length > 0) {
+        validationErrors.blockchainConfig = configErrors.join(' ');
+      }
     }
 
     if (Object.keys(validationErrors).length > 0) {

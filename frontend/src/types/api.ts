@@ -191,6 +191,7 @@ export interface ShareType {
   maxSupply?: number;
   isTransferable: boolean;
   createdAt: string;
+  blockchainMintAddress?: string;
 }
 
 export interface CreateShareTypeRequest {
@@ -230,6 +231,9 @@ export interface Proposal {
   totalVotesCast?: number;
   closedAt?: string;
   eligibleVotingPowerSnapshot?: number;
+  blockchainProposalAddress?: string;
+  latestContentHash?: string;
+  latestResultsHash?: string;
 }
 
 export interface ProposalOption {
@@ -257,6 +261,9 @@ export interface ProposalDetails {
   totalVotesCast?: number;
   closedAt?: string;
   eligibleVotingPowerSnapshot?: number;
+  blockchainProposalAddress?: string;
+  latestContentHash?: string;
+  latestResultsHash?: string;
 }
 
 export interface CreateProposalRequest {

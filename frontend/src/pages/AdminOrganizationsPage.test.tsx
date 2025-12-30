@@ -382,5 +382,29 @@ describe('AdminOrganizationsPage', () => {
       expect(nameInput).toBeDisabled();
       expect(screen.getByLabelText(/description/i)).toBeDisabled();
     });
+
+    it('validates polygon blockchain config fields', async () => {
+      vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
+
+      const user = userEvent.setup();
+      renderAdminOrganizationsPage();
+
+      await waitFor(() => {
+        expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+      });
+
+      const createButton = screen.getByRole('button', { name: /create organization/i });
+      await user.click(createButton);
+
+      await user.type(screen.getByLabelText(/name/i), 'Polygon Org');
+      await user.selectOptions(screen.getByLabelText(/initial organization admin/i), 'user-1');
+      await user.selectOptions(screen.getByLabelText(/blockchain network/i), 'Polygon');
+
+      const submitButton = screen.getByRole('button', { name: /^create organization$/i });
+      await user.click(submitButton);
+
+      const errorSummary = await screen.findByTestId('form-error-summary');
+      expect(errorSummary.textContent).toMatch(/requires adapterurl, network, and apikey/i);
+    });
   });
 });
