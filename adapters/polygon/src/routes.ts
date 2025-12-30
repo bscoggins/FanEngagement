@@ -140,7 +140,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           String(data.votingPower),
           {
             voterAddress: data.voterAddress,
-            castAt: new Date(data.timestamp),
+            castAt: data.timestamp ? new Date(data.timestamp) : undefined,
           }
         ),
       buildResponse: (result) => ({

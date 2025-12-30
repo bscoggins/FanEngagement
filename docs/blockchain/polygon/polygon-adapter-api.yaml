@@ -30,7 +30,7 @@ info:
     - `accountAddress` (formerly `contractAddress`)
     - `mintAddress` (formerly `tokenAddress`)
 
-    Request validation matches the implementation: vote requests require `organizationId`, `voterAddress`, and `timestamp`; proposal results include `organizationId` and require `closedAt`.
+    Request validation matches the implementation: vote requests require `organizationId` in addition to the core vote fields (`voteId`, `proposalId`, `userId`, `optionId`, `votingPower`); `voterAddress` and `timestamp` are optional metadata; proposal results include `organizationId` and require `closedAt`.
     
     ## Rate Limits
     
