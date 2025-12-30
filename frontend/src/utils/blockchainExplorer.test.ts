@@ -65,9 +65,10 @@ describe('blockchainExplorer', () => {
       expect(errors).toContain('Polygon apiKey appears invalid; expected at least 16 characters.');
     });
 
-    it('rejects empty apiKey after trim', () => {
+    it('rejects empty apiKey after trim without adding length error', () => {
       const errors = validateBlockchainConfig('Polygon', '{"adapterUrl":"https://adapter","network":"amoy","apiKey":"   "}');
       expect(errors).toContain('Polygon blockchain requires apiKey.');
+      expect(errors).not.toContain('Polygon apiKey appears invalid; expected at least 16 characters.');
     });
 
     it('rejects network with only whitespace', () => {
