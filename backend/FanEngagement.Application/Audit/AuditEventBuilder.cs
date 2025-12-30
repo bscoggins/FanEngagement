@@ -27,7 +27,7 @@ public class AuditEventBuilder
     /// </summary>
     public AuditEventBuilder WithActor(Guid userId, string displayName)
     {
-        _event.ActorUserId = userId;
+        _event.ActorUserId = userId == Guid.Empty ? null : userId;
         _event.ActorDisplayName = displayName;
         return this;
     }

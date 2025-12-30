@@ -99,6 +99,10 @@ export const Layout: React.FC = () => {
 
   // Helper to check if a nav item is active
   const isNavItemActive = useCallback((path: string) => {
+    // Special case for /me to avoid matching /me/activity, /me/organizations etc.
+    if (path === '/me') {
+      return location.pathname === path;
+    }
     return location.pathname === path || location.pathname.startsWith(path + '/');
   }, [location.pathname]);
 
