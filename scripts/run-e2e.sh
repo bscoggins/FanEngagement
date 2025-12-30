@@ -32,7 +32,11 @@ else
 fi
 
 echo "Starting database, API, and frontend via Docker Compose (rebuilding to pick up latest frontend/UI changes)..."
-"${COMPOSE_CMD[@]}" "${POLYGON_PROFILE_ARGS[@]}" up -d --build db api frontend ${ENABLE_POLYGON_ADAPTER:+polygon-adapter}
+SERVICES=(db api frontend)
+if [[ "$ENABLE_POLYGON_ADAPTER" == "true" ]]; then
+  SERVICES+=(polygon-adapter)
+fi
+"${COMPOSE_CMD[@]}" "${POLYGON_PROFILE_ARGS[@]}" up -d --build "${SERVICES[@]}"
 
 cleanup() {
   echo "Stopping Compose services..."

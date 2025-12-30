@@ -4,6 +4,7 @@ import {
   JsonRpcProvider,
   Contract,
   TransactionReceipt,
+  TransactionReceiptParams,
   TransactionResponse,
   parseUnits,
   formatUnits,
@@ -778,27 +779,40 @@ export class PolygonService {
   }
 
   private createFixtureReceipt(operation: string): TransactionReceipt {
-    const hash = keccak256(toUtf8Bytes(`${operation}:${Date.now()}:${Math.random()}`));
-    const gasUsed = BigInt(65_000);
     const blockNumber = this.fixtureBlockNumber++;
+    const hash = keccak256(toUtf8Bytes(`${operation}:${blockNumber}`));
+    const gasUsed = BigInt(65_000);
+    const gasPrice = parseUnits('1', 'gwei');
+
+    const params: TransactionReceiptParams = {
+      to: this.wallet.address,
+      from: this.wallet.address,
+      contractAddress: this.wallet.address,
+      hash,
+      index: 0,
+      blockHash: hash,
+      blockNumber,
+      logsBloom: '0x',
+      logs: [],
+      gasUsed,
+      cumulativeGasUsed: gasUsed,
+      gasPrice,
+      blobGasUsed: null,
+      blobGasPrice: null,
+      effectiveGasPrice: gasPrice,
+      type: 0,
+      status: 1,
+      root: null,
+    };
+
+    const provider = this.provider ?? new JsonRpcProvider('http://localhost:0');
+    const receipt = new TransactionReceipt(params, provider);
+
+    Object.defineProperty(receipt, 'confirmations', { value: async () => 1, writable: false });
 
     this.fixtureTransactions.set(hash, { blockNumber, gasUsed: gasUsed.toString() });
 
-    return {
-      hash,
-      blockHash: hash,
-      blockNumber,
-      gasUsed,
-      status: 1,
-      logsBloom: '0x',
-      logs: [],
-      type: 0,
-      cumulativeGasUsed: gasUsed,
-      from: this.wallet.address,
-      to: this.wallet.address,
-      confirmations: 1,
-      contractAddress: this.wallet.address,
-    } as unknown as TransactionReceipt;
+    return receipt;
   }
 
   /**

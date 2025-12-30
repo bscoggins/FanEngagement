@@ -106,6 +106,8 @@ test.describe.serial('Polygon governance flows (fixture-backed)', () => {
       page.getByRole('button', { name: 'Cast Vote' }).click(),
     ]);
 
-    await expect(page.getByText(/vote/i)).toBeVisible();
+    await expect(page.getByTestId('vote-success-message')).toHaveText(
+      /Your vote has been cast successfully!/i,
+    );
   });
 });

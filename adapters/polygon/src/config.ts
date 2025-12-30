@@ -102,6 +102,11 @@ export function validateConfig(): void {
     errors.push('Either POLYGON_PRIVATE_KEY or POLYGON_PRIVATE_KEY_PATH must be provided');
   }
 
+  // Prevent fixture mode in production to avoid disabling real blockchain interactions
+  if (config.server.nodeEnv === 'production' && config.fixtures.useFixtures) {
+    errors.push('POLYGON_RPC_FIXTURE cannot be enabled when NODE_ENV is "production"');
+  }
+
   // Validate auth config
   if (config.auth.requireAuth && !config.auth.apiKey) {
     errors.push('API_KEY is required when REQUIRE_AUTH is true');

@@ -122,7 +122,7 @@ public class DevDataSeedingService : IDevDataSeedingService
         var erika = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "erika@cityfc.support", cancellationToken);
         var frank = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "frank@cityfc.support", cancellationToken);
         var polygonAdapterUrl = Environment.GetEnvironmentVariable("POLYGON_ADAPTER_BASE_URL") ?? "http://polygon-adapter:3002/v1/adapter/";
-        var polygonApiKey = Environment.GetEnvironmentVariable("POLYGON_ADAPTER_API_KEY") ?? "dev-api-key-change-me";
+        var polygonApiKey = Environment.GetEnvironmentVariable("POLYGON_ADAPTER_API_KEY") ?? "REQUIRED-SET-IN-PRODUCTION";
 
         if (techOrg == null || greenOrg == null || cityFcOrg == null ||
             alice == null || bob == null || carlos == null || dana == null || erika == null || frank == null)
@@ -180,7 +180,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                     Feature = OrganizationFeature.BlockchainIntegration,
                     IsEnabled = true,
                     EnabledAt = DateTimeOffset.UtcNow,
-                    EnabledByUserId = alice?.Id
+                    EnabledByUserId = alice!.Id
                 });
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -265,7 +265,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                     Id = Guid.NewGuid(),
                     UserId = alice.Id,
                     BlockchainType = BlockchainType.Polygon,
-                    Address = "0x0000000000000000000000000000000000000A11",
+                    Address = "0x0000000000000000000000000000000000000A11", // Intentional non-checksummed dev fixture address for Alice's Polygon demo wallet ("A11" suffix).
                     Label = "Polygon Demo Wallet",
                     IsPrimary = true,
                     CreatedAt = DateTimeOffset.UtcNow
