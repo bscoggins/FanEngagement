@@ -246,6 +246,7 @@ app.post('/v1/adapter/wallets', async (req, res) => {
 app.post('/v1/adapter/*', async (req, res) => {
     const apiKey = req.headers['x-adapter-api-key'];
     if (process.env.API_KEY && apiKey !== process.env.API_KEY) {
+        logger.warn(`Auth failed. Received: '${apiKey}', Expected: '${process.env.API_KEY}'`);
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
