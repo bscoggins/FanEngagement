@@ -342,14 +342,17 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
             </thead>
             <tbody>
               {shareTypes.map((shareType) => {
-                const explorer = organization?.blockchainType && organization.blockchainType !== 'None' && shareType.blockchainMintAddress
+                const hasOnChainAddress =
+                  Boolean(shareType.blockchainMintAddress) &&
+                  Boolean(organization?.blockchainType && organization.blockchainType !== 'None');
+
+                const explorer = hasOnChainAddress
                   ? buildExplorerLinks({
-                      blockchainType: organization.blockchainType,
-                      blockchainConfig: organization.blockchainConfig,
-                      address: shareType.blockchainMintAddress,
+                      blockchainType: organization!.blockchainType!,
+                      blockchainConfig: organization!.blockchainConfig,
+                      address: shareType.blockchainMintAddress!,
                     })
                   : null;
-                const hasOnChainAddress = Boolean(shareType.blockchainMintAddress && organization?.blockchainType && organization.blockchainType !== 'None');
 
                 return (
                   <tr key={shareType.id} data-testid="share-type-row">

@@ -117,7 +117,7 @@ export const validateBlockchainConfig = (
   }
 
   if (!blockchainConfig?.trim()) {
-    return [`${blockchainType} blockchain requires adapterUrl, network, and apiKey in blockchainConfig.`];
+    return [`${blockchainType} blockchain requires adapterUrl, network, and apiKey.`];
   }
 
   try {
@@ -138,8 +138,7 @@ export const validateBlockchainConfig = (
         const isLocalhost =
           host === 'localhost' ||
           host === '127.0.0.1' ||
-          host === '::1' ||
-          host === '[::1]';
+          host === '::1';
 
         if (parsedUrl.protocol !== 'https:' && !isLocalhost) {
           errors.push(`${blockchainType} adapterUrl must use https (http is only allowed for localhost).`);
@@ -149,7 +148,7 @@ export const validateBlockchainConfig = (
       }
     }
 
-    if (!network || typeof network !== 'string') {
+    if (!network || typeof network !== 'string' || !network.trim()) {
       errors.push(`${blockchainType} blockchain requires network.`);
     }
 

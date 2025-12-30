@@ -289,12 +289,18 @@ export const AdminProposalDetailPage: React.FC = () => {
   const canDeleteOptions = proposal && proposal.status === 'Draft'; // Only Draft proposals can have options deleted
   const showResults = proposal && (proposal.status === 'Open' || proposal.status === 'Closed' || proposal.status === 'Finalized');
   const explorerLinks = proposal
-    ? buildExplorerLinks({
-        blockchainType: organization?.blockchainType,
-        blockchainConfig: organization?.blockchainConfig,
-        transactionId: proposal.latestResultsHash || proposal.latestContentHash,
-        address: proposal.blockchainProposalAddress,
-      })
+    ? (() => {
+        const candidateTxId = proposal.latestResultsHash || proposal.latestContentHash;
+        const transactionId =
+          candidateTxId && candidateTxId !== proposal.blockchainProposalAddress ? candidateTxId : undefined;
+
+        return buildExplorerLinks({
+          blockchainType: organization?.blockchainType,
+          blockchainConfig: organization?.blockchainConfig,
+          transactionId,
+          address: proposal.blockchainProposalAddress,
+        });
+      })()
     : { explorerName: undefined, transactionUrl: undefined, addressUrl: undefined, networkLabel: undefined };
 
   if (isLoading) {
