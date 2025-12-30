@@ -32,9 +32,9 @@ services:
       Jwt__SigningKey: ${JWT_SIGNING_KEY:-dev-signing-key-change-in-production}
       # Blockchain Adapter Configuration
       BlockchainAdapters__Solana__BaseUrl: http://solana-adapter:3001/v1/adapter/
-      BlockchainAdapters__Solana__ApiKey: ${API_KEY:-dev-api-key-change-in-production}
+      BlockchainAdapters__Solana__ApiKey: ${API_KEY:-dev-api-key-change-me}
       BlockchainAdapters__Polygon__BaseUrl: http://polygon-adapter:3002/v1/adapter/
-      BlockchainAdapters__Polygon__ApiKey: ${API_KEY:-dev-api-key-change-in-production}
+      BlockchainAdapters__Polygon__ApiKey: ${API_KEY:-dev-api-key-change-me}
     ports:
       - "8080:8080"
     depends_on:
@@ -68,7 +68,7 @@ services:
       SOLANA_CONFIRM_TIMEOUT: 30000
       SOLANA_PRIVATE_KEY: ${SOLANA_PRIVATE_KEY}
       SOLANA_PROGRAM_ID: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
-      API_KEY: ${API_KEY:-dev-api-key-change-in-production}
+      API_KEY: ${API_KEY:-dev-api-key-change-me}
       REQUIRE_AUTH: "true"
       RETRY_MAX_ATTEMPTS: 4
       RETRY_BASE_DELAY_MS: 1000
@@ -95,7 +95,7 @@ services:
       POLYGON_TX_TIMEOUT: 120000
       # Provide a funded testnet key via environment or .env file; empty defaults will cause startup failure.
       POLYGON_PRIVATE_KEY: ${POLYGON_PRIVATE_KEY:-}
-      API_KEY: ${API_KEY:-dev-api-key-change-in-production}
+      API_KEY: ${API_KEY:-dev-api-key-change-me}
       REQUIRE_AUTH: "true"
       RETRY_MAX_ATTEMPTS: 4
       RETRY_BASE_DELAY_MS: 1000

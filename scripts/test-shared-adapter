@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# test-shared-adapter: Run Shared adapter library unit tests
+#
+# Usage:
+#   ./scripts/test-shared-adapter           # Run all tests
+#   ./scripts/test-shared-adapter --watch   # Run in watch mode
+#
+# This script runs the Shared adapter library test suite using Jest.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR/adapters/shared"
+
+WATCH=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --watch|-w)
+      WATCH="--watch"
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo ""
+      echo "Usage: ./scripts/test-shared-adapter [--watch]"
+      exit 1
+      ;;
+  esac
+done
+
+echo "=== Running Shared Adapter Library Tests ==="
+echo ""
+
+# Ensure dependencies are installed
+if [[ ! -d "node_modules" ]]; then
+  echo "Installing dependencies..."
+  npm ci
+  echo ""
+fi
+
+echo "Running tests..."
+# shellcheck disable=SC2086
+npm test -- $WATCH

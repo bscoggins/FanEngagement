@@ -16,15 +16,23 @@ cd "$ROOT_DIR"
 
 RUN_BACKEND=true
 RUN_FRONTEND=true
+RUN_ADAPTERS=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --backend-only)
       RUN_FRONTEND=false
+      RUN_ADAPTERS=false
       shift
       ;;
     --frontend-only)
       RUN_BACKEND=false
+      RUN_ADAPTERS=false
+      shift
+      ;;
+    --adapters-only)
+      RUN_BACKEND=false
+      RUN_FRONTEND=false
       shift
       ;;
     -h|--help)
@@ -34,10 +42,11 @@ Usage: ./scripts/run-tests.sh [options]
 Options:
   --backend-only    Run only the backend unit tests
   --frontend-only   Run only the frontend unit tests
+  --adapters-only   Run only the adapter unit tests
   -h, --help        Show this help message
 
-This script simply orchestrates the existing test-backend and
-test-frontend helpers. For additional flags (watch mode, filters, etc.)
+This script simply orchestrates the existing test-backend, test-frontend,
+and adapter test helpers. For additional flags (watch mode, filters, etc.)
 run those scripts directly.
 EOF
       exit 0
@@ -62,8 +71,18 @@ if [[ "$RUN_FRONTEND" == true ]]; then
   echo ""
 fi
 
-if [[ "$RUN_BACKEND" == false && "$RUN_FRONTEND" == false ]]; then
-  echo "No test suites selected. Use --backend-only or --frontend-only if needed." >&2
+if [[ "$RUN_ADAPTERS" == true ]]; then
+  echo "=== Adapter unit tests ==="
+  ./scripts/test-solana-adapter
+  echo ""
+  ./scripts/test-polygon-adapter
+  echo ""
+  ./scripts/test-shared-adapter
+  echo ""
+fi
+
+if [[ "$RUN_BACKEND" == false && "$RUN_FRONTEND" == false && "$RUN_ADAPTERS" == false ]]; then
+  echo "No test suites selected. Use --backend-only, --frontend-only, or --adapters-only if needed." >&2
   exit 1
 fi
 

@@ -397,6 +397,9 @@ const PasswordChangeForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="admin-form" data-testid="password-change-form">
+      {/* Hidden username field for accessibility/password managers */}
+      <input type="text" name="username" autoComplete="username" style={{ display: 'none' }} />
+
       {error && (
         <div className="admin-alert admin-alert-error" data-testid="password-error" style={{ marginBottom: '1rem' }}>
           {error}
@@ -415,6 +418,7 @@ const PasswordChangeForm: React.FC = () => {
           disabled={isSubmitting}
           className="admin-input"
           data-testid="current-password-input"
+          autoComplete="current-password"
         />
       </div>
 
@@ -432,6 +436,7 @@ const PasswordChangeForm: React.FC = () => {
           data-testid="new-password-input"
           disabled={isSubmitting}
           className="admin-input"
+          autoComplete="new-password"
         />
       </div>
 
@@ -448,6 +453,7 @@ const PasswordChangeForm: React.FC = () => {
           minLength={8}
           className="admin-input"
           data-testid="confirm-password-input"
+          autoComplete="new-password"
         />
       </div>
 

@@ -74,7 +74,7 @@ public class BlockchainController(
                 EntityName = p.Title,
                 TransactionId = null, // We store Proposal Address
                 OnChainAddress = p.BlockchainProposalAddress,
-                Timestamp = p.StartAt ?? DateTimeOffset.UtcNow, // Approximate
+                Timestamp = p.CreatedAt,
                 Status = "Recorded"
             }));
         }
