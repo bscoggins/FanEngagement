@@ -81,8 +81,8 @@ describe('Polygon adapter routes', () => {
     jest.clearAllMocks();
   });
 
-  afterAll(() => {
-    server?.close();
+  afterAll(async () => {
+    await new Promise<void>((resolve) => server?.close(resolve));
   });
 
   test('requires API key for write endpoints', async () => {

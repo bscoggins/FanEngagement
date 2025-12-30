@@ -60,8 +60,8 @@ export const recordShareIssuanceSchema = z.object({
   shareTypeId: z.union([uuidSchema, ethereumAddressSchema]),
   userId: uuidSchema,
   quantity: z.union([
-    z.string().regex(/^[1-9][0-9]*$/u, 'Quantity must be a positive integer string'),
-    z.number().int().positive(),
+    z.string().regex(/^(0|[1-9][0-9]*)$/u, 'Quantity must be a non-negative integer string'),
+    z.number().int().nonnegative(),
   ]),
   recipientAddress: ethereumAddressSchema.optional(),
   metadata: z
