@@ -404,7 +404,7 @@ describe('AdminOrganizationsPage', () => {
       await user.click(submitButton);
 
       const errorSummary = await screen.findByTestId('form-error-summary');
-      expect(errorSummary.textContent).toMatch(/requires adapterurl, network, and apikey/i);
+      expect(errorSummary.textContent).toMatch(/adapterurl must use https \(http is only allowed for localhost\)/i);
     });
   });
 });
