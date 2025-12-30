@@ -64,6 +64,10 @@ export class PolygonService {
     }
   }
 
+  getWalletAddress(): string {
+    return this.wallet.address;
+  }
+
   /**
    * Create organization by deploying a simple registry contract
    * In production, this would deploy a more sophisticated governance contract
@@ -71,7 +75,8 @@ export class PolygonService {
   async createOrganization(
     organizationId: string,
     name: string,
-    _description?: string
+    description?: string,
+    metadata?: { logoUrl?: string; colors?: { primary?: string; secondary?: string } }
   ): Promise<{ transactionHash: string; contractAddress: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'create_organization';
@@ -82,10 +87,12 @@ export class PolygonService {
       // For MVP, we'll just send a transaction with the org data in the transaction data
       // In production, deploy an actual organization registry contract using CREATE2
       // for deterministic deployment based on organizationId
+      const orgData = JSON.stringify({ organizationId, name, description, metadata });
+
       const tx = await this.wallet.sendTransaction({
         to: this.wallet.address, // Send to self as placeholder
         value: 0,
-        data: ethers.hexlify(toUtf8Bytes(`ORG:${organizationId}:${name}`)),
+        data: ethers.hexlify(toUtf8Bytes(`ORG:${orgData}`)),
       });
 
       const receipt = await this.waitForTransaction(tx, operation);
@@ -124,7 +131,9 @@ export class PolygonService {
     organizationId: string,
     name: string,
     symbol: string,
-    decimals: number = 18
+    decimals: number = 18,
+    maxSupply?: number | string,
+    metadata?: { description?: string; votingWeight?: number }
   ): Promise<{ transactionHash: string; tokenAddress: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'create_share_type';
@@ -148,6 +157,8 @@ export class PolygonService {
         name,
         symbol,
         decimals,
+        maxSupply,
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
@@ -195,9 +206,10 @@ export class PolygonService {
     shareTypeId: string,
     userId: string,
     quantity: string,
-    recipientAddress: string,
-    tokenAddress: string
-  ): Promise<{ transactionHash: string; gasUsed: string }> {
+    recipientAddress?: string,
+    tokenAddress?: string,
+    metadata?: { reason?: string; issuedBy?: string }
+  ): Promise<{ transactionHash: string; gasUsed: string; recipientAddress: string }> {
     const startTime = Date.now();
     const operation = 'record_share_issuance';
 
@@ -213,18 +225,27 @@ export class PolygonService {
 
       // In production, this would call the actual ERC-20 mint function
       // For MVP, we'll record the issuance in a transaction
+      const resolvedTokenAddress =
+        tokenAddress ?? (shareTypeId.startsWith('0x') ? shareTypeId : undefined);
+      const targetRecipient = recipientAddress || this.wallet.address;
+
+      if (!recipientAddress) {
+        logger.warn('No recipientAddress provided; using service wallet for issuance proof');
+      }
+
       const issuanceData = JSON.stringify({
         issuanceId,
         shareTypeId,
         userId,
         quantity,
-        recipientAddress,
-        tokenAddress,
+        recipientAddress: targetRecipient,
+        tokenAddress: resolvedTokenAddress ?? shareTypeId,
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
-        to: recipientAddress,
-        value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'), // Send tiny amount as proof of issuance
+        to: targetRecipient,
+        value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'),
         data: ethers.hexlify(toUtf8Bytes(`ISSUANCE:${issuanceData}`)),
       });
 
@@ -241,11 +262,13 @@ export class PolygonService {
         issuanceId,
         transactionHash: receipt.hash,
         gasUsed: receipt.gasUsed.toString(),
+        recipientAddress: targetRecipient,
       });
 
       return {
         transactionHash: receipt.hash,
         gasUsed: receipt.gasUsed.toString(),
+        recipientAddress: targetRecipient,
       };
     } catch (error) {
       transactionsTotal.inc({ operation, status: 'error' });
@@ -263,7 +286,14 @@ export class PolygonService {
     title: string,
     contentHash: string,
     startAt: Date,
-    endAt: Date
+    endAt: Date,
+    metadata?: {
+      eligibleVotingPower?: number;
+      createdByUserId?: string;
+      proposalTextHash?: string;
+      expectationsHash?: string;
+      votingOptionsHash?: string;
+    }
   ): Promise<{ transactionHash: string; proposalAddress: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'create_proposal';
@@ -283,6 +313,7 @@ export class PolygonService {
         contentHash,
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
@@ -327,9 +358,11 @@ export class PolygonService {
   async recordVote(
     voteId: string,
     proposalId: string,
+    organizationId: string,
     userId: string,
     optionId: string,
-    votingPower: string
+    votingPower: string,
+    metadata?: { voterAddress?: string; castAt?: Date }
   ): Promise<{ transactionHash: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'record_vote';
@@ -346,9 +379,11 @@ export class PolygonService {
       const voteData = JSON.stringify({
         voteId,
         proposalId,
+        organizationId,
         userId,
         optionId,
         votingPower,
+        metadata,
       });
 
       const tx = await this.wallet.sendTransaction({
@@ -388,9 +423,11 @@ export class PolygonService {
    */
   async commitProposalResults(
     proposalId: string,
+    organizationId: string,
     resultsHash: string,
     winningOptionId: string,
-    totalVotesCast: number
+    totalVotesCast: number,
+    metadata?: { quorumMet?: boolean; closedAt?: Date }
   ): Promise<{ transactionHash: string; gasUsed: string }> {
     const startTime = Date.now();
     const operation = 'commit_proposal_results';
@@ -398,9 +435,11 @@ export class PolygonService {
     try {
       logger.info('Committing proposal results on Polygon', {
         proposalId,
+        organizationId,
         resultsHash,
         winningOptionId,
         totalVotesCast,
+        metadata,
       });
 
       let tx: TransactionResponse;
@@ -418,9 +457,11 @@ export class PolygonService {
         // Fallback: record in transaction data
         const resultsData = JSON.stringify({
           proposalId,
+          organizationId,
           resultsHash,
           winningOptionId,
           totalVotesCast,
+          metadata,
         });
 
         tx = await this.wallet.sendTransaction({

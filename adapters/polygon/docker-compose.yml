@@ -19,7 +19,7 @@ services:
       # IMPORTANT: You must provide a valid Polygon private key.
       # Generate one with: openssl rand -hex 32
       # Or use an existing wallet's private key (without 0x prefix)
-      - POLYGON_PRIVATE_KEY=${POLYGON_PRIVATE_KEY}
+      - POLYGON_PRIVATE_KEY=${POLYGON_PRIVATE_KEY:-}
       - API_KEY=${API_KEY:-dev-api-key-change-in-production}
       - REQUIRE_AUTH=true
       - RETRY_MAX_ATTEMPTS=4

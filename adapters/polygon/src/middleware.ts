@@ -2,11 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { timingSafeEqual } from 'crypto';
 import { config } from './config.js';
 import { logger } from './logger.js';
-import { AuthenticationError } from './errors.js';
+import { AdapterError, AuthenticationError, handleError } from './errors.js';
+import { ZodError } from 'zod';
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  const publicPaths = new Set(['/health', '/metrics', '/v1/adapter/health', '/v1/adapter/metrics']);
   // Skip auth for health and metrics endpoints
-  if (req.path === '/v1/adapter/health' || req.path === '/v1/adapter/metrics') {
+  if (publicPaths.has(req.path)) {
     return next();
   }
 
@@ -55,6 +57,12 @@ export function errorMiddleware(
   res: Response,
   next: NextFunction
 ): void {
+  // Defensive guard for errors bubbling past route-level handlers (non-POST endpoints or middleware)
+  if (error instanceof AdapterError || error instanceof ZodError) {
+    handleError(error, req, res);
+    return;
+  }
+
   logger.error('Unhandled error in middleware', {
     error: error.message,
     stack: error.stack,

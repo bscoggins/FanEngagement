@@ -176,6 +176,9 @@ RETRY_MAX_ATTEMPTS=4
 RETRY_BASE_DELAY_MS=1000
 ```
 
+> **Important:** The adapter does **not** auto-generate wallets. Provide a funded testnet key via
+> `POLYGON_PRIVATE_KEY` (or `POLYGON_PRIVATE_KEY_PATH`) even in development to avoid startup failure. Compose will start the container with an empty value if unset, and the adapter will fail fast with a clear error message.
+
 ### 3.3 Build and Run
 
 ```bash
@@ -193,7 +196,7 @@ npm start
 
 ```bash
 # Health check
-curl http://localhost:3002/v1/adapter/health
+curl http://localhost:3002/health
 
 # Expected response:
 {

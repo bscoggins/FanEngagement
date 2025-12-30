@@ -26,11 +26,12 @@ export function createRoutes(polygonService: PolygonService): Router {
         polygonService.createOrganization(
           data.organizationId,
           data.name,
-          data.description
+          data.description,
+          data.metadata
         ),
       buildResponse: (result) => ({
-        transactionHash: result.transactionHash,
-        contractAddress: result.contractAddress,
+        transactionId: result.transactionHash,
+        accountAddress: result.contractAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         network: config.polygon.network,
@@ -51,11 +52,13 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.organizationId,
           data.name,
           data.symbol,
-          data.decimals
+          data.decimals,
+          data.maxSupply,
+          data.metadata
         ),
       buildResponse: (result) => ({
-        transactionHash: result.transactionHash,
-        tokenAddress: result.tokenAddress,
+        transactionId: result.transactionHash,
+        mintAddress: result.tokenAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
@@ -74,14 +77,15 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.issuanceId,
           data.shareTypeId,
           data.userId,
-          data.quantity,
+          String(data.quantity),
           data.recipientAddress,
-          data.tokenAddress
+          undefined,
+          data.metadata
         ),
-      buildResponse: (result, data) => ({
-        transactionHash: result.transactionHash,
+      buildResponse: (result) => ({
+        transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
-        recipientAddress: data.recipientAddress,
+        recipientAddress: result.recipientAddress,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
       }),
@@ -101,10 +105,17 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.title,
           data.contentHash,
           new Date(data.startAt),
-          new Date(data.endAt)
+          new Date(data.endAt),
+          {
+            eligibleVotingPower: data.eligibleVotingPower,
+            createdByUserId: data.createdByUserId,
+            proposalTextHash: data.proposalTextHash,
+            expectationsHash: data.expectationsHash,
+            votingOptionsHash: data.votingOptionsHash,
+          }
         ),
       buildResponse: (result) => ({
-        transactionHash: result.transactionHash,
+        transactionId: result.transactionHash,
         proposalAddress: result.proposalAddress,
         gasUsed: result.gasUsed,
         status: 'confirmed',
@@ -123,12 +134,17 @@ export function createRoutes(polygonService: PolygonService): Router {
         polygonService.recordVote(
           data.voteId,
           data.proposalId,
+          data.organizationId,
           data.userId,
           data.optionId,
-          data.votingPower
+          String(data.votingPower),
+          {
+            voterAddress: data.voterAddress,
+            castAt: data.timestamp ? new Date(data.timestamp) : undefined,
+          }
         ),
       buildResponse: (result) => ({
-        transactionHash: result.transactionHash,
+        transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
@@ -145,12 +161,17 @@ export function createRoutes(polygonService: PolygonService): Router {
       execute: (data) =>
         polygonService.commitProposalResults(
           data.proposalId,
+          data.organizationId,
           data.resultsHash,
           data.winningOptionId || '',
-          data.totalVotesCast
+          data.totalVotesCast,
+          {
+            quorumMet: data.quorumMet,
+            closedAt: data.closedAt ? new Date(data.closedAt) : undefined,
+          }
         ),
       buildResponse: (result) => ({
-        transactionHash: result.transactionHash,
+        transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
@@ -179,7 +200,7 @@ export function createRoutes(polygonService: PolygonService): Router {
       }
 
       res.status(200).json({
-        transactionHash: result.transactionId,
+        transactionId: result.transactionId,
         status: result.status,
         confirmations: result.confirmations,
         blockNumber: result.blockNumber,
@@ -192,8 +213,7 @@ export function createRoutes(polygonService: PolygonService): Router {
     }
   });
 
-  // GET /v1/adapter/health
-  router.get('/v1/adapter/health', async (_req: Request, res: Response) => {
+  const healthHandler = async (_req: Request, res: Response) => {
     try {
       const health = await polygonService.checkHealth();
 
@@ -223,10 +243,14 @@ export function createRoutes(polygonService: PolygonService): Router {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
-  });
+  };
 
-  // GET /v1/adapter/metrics
-  router.get('/v1/adapter/metrics', async (req: Request, res: Response) => {
+  // GET /v1/adapter/health
+  router.get('/v1/adapter/health', healthHandler);
+  // GET /health
+  router.get('/health', healthHandler);
+
+  const metricsHandler = async (req: Request, res: Response) => {
     try {
       res.set('Content-Type', getMetricsRegistry().contentType);
       const metrics = await getMetricsRegistry().metrics();
@@ -234,7 +258,12 @@ export function createRoutes(polygonService: PolygonService): Router {
     } catch (error) {
       handleError(error, req, res);
     }
-  });
+  };
+
+  // GET /v1/adapter/metrics
+  router.get('/v1/adapter/metrics', metricsHandler);
+  // GET /metrics
+  router.get('/metrics', metricsHandler);
 
   return router;
 }
