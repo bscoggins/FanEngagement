@@ -63,6 +63,8 @@ public class ShareIssuanceService(
         // In-memory database doesn't support transactions but automatically handles atomicity
         var isInMemory = dbContext.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
         var transaction = isInMemory ? null : await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        string? blockchainChainId = null;
+        string? blockchainExplorerUrl = null;
         
         try
         {
@@ -142,6 +144,8 @@ public class ShareIssuanceService(
                         cancellationToken);
 
                     issuance.BlockchainTransactionId = onChainResult.TransactionId;
+                    blockchainChainId = onChainResult.ChainId;
+                    blockchainExplorerUrl = onChainResult.ExplorerUrl;
                     await dbContext.SaveChangesAsync(cancellationToken);
 
                     logger.LogInformation(
@@ -217,7 +221,9 @@ public class ShareIssuanceService(
                 IssuedByUserId = issuance.IssuedByUserId,
                 IssuedByUserDisplayName = actorDisplayName,
                 Reason = issuance.Reason,
-                BlockchainTransactionId = issuance.BlockchainTransactionId
+                BlockchainTransactionId = issuance.BlockchainTransactionId,
+                BlockchainChainId = blockchainChainId,
+                BlockchainExplorerUrl = blockchainExplorerUrl
             };
         }
         catch
