@@ -153,8 +153,13 @@ export const validateBlockchainConfig = (
       errors.push(`${blockchainType} blockchain requires network.`);
     }
 
-    if (!apiKey || typeof apiKey !== 'string') {
+    if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim()) {
       errors.push(`${blockchainType} blockchain requires apiKey.`);
+    } else {
+      const trimmedApiKey = apiKey.trim();
+      if (trimmedApiKey.length < 16) {
+        errors.push(`${blockchainType} apiKey appears invalid; expected at least 16 characters.`);
+      }
     }
 
     return errors;

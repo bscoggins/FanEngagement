@@ -119,7 +119,7 @@ describe('AdminProposalDetailPage', () => {
     });
   });
 
-  it('renders polygon explorer link when blockchain data exists', async () => {
+  it('renders Polygon explorer link when blockchain data exists', async () => {
     vi.mocked(proposalsApi.getById).mockResolvedValueOnce({
       ...mockProposal,
       blockchainProposalAddress: '0xabc123',

@@ -383,7 +383,7 @@ describe('AdminOrganizationsPage', () => {
       expect(screen.getByLabelText(/description/i)).toBeDisabled();
     });
 
-    it('validates polygon blockchain config fields', async () => {
+    it('validates Polygon blockchain config fields', async () => {
       vi.mocked(organizationsApi.getAll).mockResolvedValueOnce(mockOrganizations);
 
       const user = userEvent.setup();

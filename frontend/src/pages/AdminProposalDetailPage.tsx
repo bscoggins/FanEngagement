@@ -49,7 +49,11 @@ export const AdminProposalDetailPage: React.FC = () => {
         setOrganization(orgData);
       } catch (err) {
         console.error('Failed to fetch organization for proposal:', err);
-        setError((prev) => prev ?? 'Failed to load organization details.');
+        setError((prev) =>
+          prev
+            ? `${prev} Additional details: Failed to load organization details.`
+            : 'Failed to load organization details.'
+        );
       }
     };
 

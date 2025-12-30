@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { outboundEventsApi } from '../api/outboundEventsApi';
 import type { OutboundEventsFilter } from '../api/outboundEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
@@ -218,9 +218,9 @@ export const AdminWebhookEventsPage: React.FC = () => {
                 )}
               </div>
             </div>
-            <a href="/platform-admin/blockchain" className="admin-button admin-button-outline">
+            <Link to="/platform-admin/blockchain" className="admin-button admin-button-outline">
               View Adapter Metrics
-            </a>
+            </Link>
           </div>
           <div className="admin-meta-text" style={{ marginTop: 'var(--spacing-2)' }}>
             Webhook retries and adapter health are tracked for {organization.blockchainType}. Use metrics to check {organization.blockchainType} availability.
