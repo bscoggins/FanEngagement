@@ -30,7 +30,7 @@ interface ToastContextValue {
 }
 
 const DEFAULT_DURATION = 5000;
-const DEFAULT_POSITION: ToastPosition = 'top-right';
+const DEFAULT_POSITION: ToastPosition = 'bottom-right';
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 

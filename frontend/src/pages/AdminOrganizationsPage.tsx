@@ -22,6 +22,19 @@ import { validateBlockchainConfig } from '../utils/blockchainExplorer';
 
 const PAGE_SIZE = 10;
 const DEFAULT_BLOCKCHAIN_TYPE: BlockchainType = 'None';
+const SOLANA_NETWORKS = ['devnet', 'testnet', 'mainnet-beta'];
+const POLYGON_NETWORKS = ['amoy', 'mainnet'];
+
+const SOLANA_DEFAULTS = {
+  adapterUrl: 'http://solana-adapter:3001/v1/adapter/',
+  apiKey: 'dev-api-key-change-me'
+};
+
+const POLYGON_DEFAULTS = {
+  adapterUrl: 'http://polygon-adapter:3002/v1/adapter/',
+  apiKey: 'dev-api-key-change-me'
+};
+
 const initialCreateFormState: CreateOrganizationRequest = {
   name: '',
   description: '',
@@ -404,7 +417,16 @@ export const AdminOrganizationsPage: React.FC = () => {
                 <select
                   id="blockchainType"
                   value={createFormData.blockchainType}
-                  onChange={(e) => setCreateFormData({ ...createFormData, blockchainType: e.target.value as BlockchainType })}
+                  onChange={(e) => {
+                    const type = e.target.value as BlockchainType;
+                    let config = '';
+                    if (type === 'Solana') {
+                      config = JSON.stringify({ ...SOLANA_DEFAULTS, network: 'devnet' });
+                    } else if (type === 'Polygon') {
+                      config = JSON.stringify({ ...POLYGON_DEFAULTS, network: 'amoy' });
+                    }
+                    setCreateFormData({ ...createFormData, blockchainType: type, blockchainConfig: config });
+                  }}
                   className="form-control admin-input"
                   disabled={isCreating}
                 >
@@ -415,19 +437,74 @@ export const AdminOrganizationsPage: React.FC = () => {
               </div>
               
               {createFormData.blockchainType !== DEFAULT_BLOCKCHAIN_TYPE ? (
-                <div>
-                  <label htmlFor="blockchainConfig" className="form-field__label admin-form-label">
-                    Configuration (JSON)
-                  </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
+                  <Select
+                    id="blockchainNetwork"
+                    label="Network"
+                    value={(() => {
+                      try {
+                        return JSON.parse(createFormData.blockchainConfig || '{}').network || '';
+                      } catch { return ''; }
+                    })()}
+                    onChange={(e) => {
+                      const network = e.target.value;
+                      const currentConfig = JSON.parse(createFormData.blockchainConfig || '{}');
+                      setCreateFormData({ 
+                        ...createFormData, 
+                        blockchainConfig: JSON.stringify({ ...currentConfig, network }) 
+                      });
+                    }}
+                    disabled={isCreating}
+                    error={formErrors.blockchainConfig}
+                  >
+                    {createFormData.blockchainType === 'Solana' && SOLANA_NETWORKS.map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                    {createFormData.blockchainType === 'Polygon' && POLYGON_NETWORKS.map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </Select>
+
                   <Input
-                    id="blockchainConfig"
-                    type="text"
-                    value={createFormData.blockchainConfig || ''}
-                    onChange={(e) => setCreateFormData({ ...createFormData, blockchainConfig: e.target.value })}
+                    id="adapterUrl"
+                    label="Adapter URL"
+                    type="url"
+                    value={(() => {
+                      try {
+                        return JSON.parse(createFormData.blockchainConfig || '{}').adapterUrl || '';
+                      } catch { return ''; }
+                    })()}
+                    onChange={(e) => {
+                      const adapterUrl = e.target.value;
+                      const currentConfig = JSON.parse(createFormData.blockchainConfig || '{}');
+                      setCreateFormData({ 
+                        ...createFormData, 
+                        blockchainConfig: JSON.stringify({ ...currentConfig, adapterUrl }) 
+                      });
+                    }}
                     disabled={isCreating}
                     className="admin-input"
-                    placeholder='{"network": "devnet"}'
-                    error={formErrors.blockchainConfig}
+                  />
+
+                  <Input
+                    id="apiKey"
+                    label="API Key"
+                    type="password"
+                    value={(() => {
+                      try {
+                        return JSON.parse(createFormData.blockchainConfig || '{}').apiKey || '';
+                      } catch { return ''; }
+                    })()}
+                    onChange={(e) => {
+                      const apiKey = e.target.value;
+                      const currentConfig = JSON.parse(createFormData.blockchainConfig || '{}');
+                      setCreateFormData({ 
+                        ...createFormData, 
+                        blockchainConfig: JSON.stringify({ ...currentConfig, apiKey }) 
+                      });
+                    }}
+                    disabled={isCreating}
+                    className="admin-input"
                   />
                 </div>
               ) : (
