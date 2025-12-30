@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../src/app';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 
 // Mock @solana/web3.js
 jest.mock('@solana/web3.js', () => {
