@@ -126,7 +126,7 @@ public class AuditQueryApiTests : IClassFixture<TestWebApplicationFactory>
         var dateFrom = now.ToString("O") + " ";
         var dateTo = midPoint.AddHours(-6).ToString("O") + " ";
 
-        var response = await client.GetAsync($"/organizations/{org.Id}/audit-events?dateFrom={Uri.EscapeDataString(dateFrom)}&dateTo={Uri.EscapeDataString(dateTo)}&page=1&pageSize=10");
+        var response = await client.GetAsync($"/organizations/{org.Id}/audit-events?resourceType=Proposal&dateFrom={Uri.EscapeDataString(dateFrom)}&dateTo={Uri.EscapeDataString(dateTo)}&page=1&pageSize=10");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var result = await response.Content.ReadFromJsonAsync<PagedResult<AuditEventDto>>();

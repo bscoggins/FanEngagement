@@ -29,7 +29,7 @@ test.describe.serial('Polygon governance flows (fixture-backed)', () => {
     await waitForVisible(page.getByRole('heading', { name: /Share Issuance/i }));
 
     await page.getByRole('button', { name: 'Issue Shares' }).click();
-    await page.getByLabel('Member').selectOption({ label: /Alice Johnson/ });
+    await page.getByLabel('Member').selectOption({ label: 'Alice Johnson' });
     await page.getByLabel('Share Type').selectOption({ index: 0 });
     await page.getByLabel('Quantity').fill('5');
     await page.getByLabel('Reason').fill('Polygon fixture grant');
