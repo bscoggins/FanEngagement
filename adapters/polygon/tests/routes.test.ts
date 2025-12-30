@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, jest, test } from '@jest/globals';
 import express from 'express';
 import { AddressInfo } from 'net';
+import { RpcError, TransactionError } from '../src/errors.js';
 
 let server: any;
 let baseUrl: string;
@@ -13,6 +14,10 @@ describe('Polygon adapter routes', () => {
     process.env.POLYGON_PRIVATE_KEY = '0x' + '1'.repeat(64);
     process.env.POLYGON_RPC_URL = 'http://localhost:8545';
     process.env.POLYGON_NETWORK = 'amoy';
+
+    const { config } = await import('../src/config.js');
+    config.auth.apiKey = 'test-key';
+    config.auth.requireAuth = true;
 
     const { createRoutes } = await import('../src/routes.js');
     const { authMiddleware, loggingMiddleware, errorMiddleware } = await import('../src/middleware.js');
@@ -96,6 +101,24 @@ describe('Polygon adapter routes', () => {
     });
 
     expect(response.status).toBe(401);
+  });
+
+  test('rejects invalid API key', async () => {
+    const response = await fetch(`${baseUrl}/v1/adapter/organizations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'wrong-key',
+      },
+      body: JSON.stringify({
+        organizationId: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Test Org',
+      }),
+    });
+
+    expect(response.status).toBe(401);
+    const payload = (await response.json()) as any;
+    expect(payload.type).toContain('authentication-error');
   });
 
   test('returns contract-compatible payloads', async () => {
@@ -331,6 +354,81 @@ describe('Polygon adapter routes', () => {
       10,
       expect.objectContaining({ quorumMet: true })
     );
+  });
+
+  test('returns transaction error when gas estimation fails', async () => {
+    (polygonService.createShareType as jest.Mock).mockImplementationOnce(() => {
+      throw new TransactionError('Gas estimation or execution error');
+    });
+
+    const response = await fetch(`${baseUrl}/v1/adapter/share-types`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        shareTypeId: '123e4567-e89b-12d3-a456-426614174000',
+        organizationId: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Gold',
+        symbol: 'GLD',
+        decimals: 18,
+      }),
+    });
+
+    expect(response.status).toBe(500);
+    const payload = (await response.json()) as any;
+    expect(payload.type).toContain('transaction-error');
+  });
+
+  test('returns rpc error when network times out', async () => {
+    (polygonService.recordVote as jest.Mock).mockImplementationOnce(() => {
+      throw new RpcError('RPC timeout or network error');
+    });
+
+    const response = await fetch(`${baseUrl}/v1/adapter/votes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        voteId: '550e8400-e29b-41d4-a716-446655440004',
+        proposalId: '550e8400-e29b-41d4-a716-446655440001',
+        organizationId: '550e8400-e29b-41d4-a716-446655440002',
+        userId: '550e8400-e29b-41d4-a716-446655440005',
+        optionId: '550e8400-e29b-41d4-a716-446655440006',
+        votingPower: 5,
+        voterAddress: '0x0000000000000000000000000000000000000009',
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    expect(response.status).toBe(503);
+    const payload = (await response.json()) as any;
+    expect(payload.type).toContain('rpc-error');
+  });
+
+  test('returns internal error when adapter is unreachable', async () => {
+    (polygonService.createOrganization as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('adapter unreachable');
+    });
+
+    const response = await fetch(`${baseUrl}/v1/adapter/organizations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-adapter-api-key': 'test-key',
+      },
+      body: JSON.stringify({
+        organizationId: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Test Org',
+      }),
+    });
+
+    expect(response.status).toBe(500);
+    const payload = (await response.json()) as any;
+    expect(payload.type).toContain('internal-error');
   });
 
   test('exposes health and metrics without authentication', async () => {

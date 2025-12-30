@@ -35,20 +35,32 @@ const GOVERNANCE_ABI = [
 // Constants
 const PROOF_OF_ISSUANCE_AMOUNT = '0.0001'; // MATIC sent as proof of issuance
 
+type FixtureTransaction = { blockNumber: number; gasUsed: string };
+
 export class PolygonService {
-  private provider: JsonRpcProvider;
+  private provider?: JsonRpcProvider;
   private wallet: Wallet;
   private governanceContract?: Contract;
+  private readonly useFixtures: boolean;
+  private readonly fixtureTransactions = new Map<string, FixtureTransaction>();
+  private fixtureBlockNumber = 100_000;
 
   constructor(wallet: Wallet) {
-    this.provider = new JsonRpcProvider(config.polygon.rpcUrl);
-    this.wallet = wallet.connect(this.provider);
+    this.useFixtures = config.fixtures.useFixtures;
+
+    if (!this.useFixtures) {
+      this.provider = new JsonRpcProvider(config.polygon.rpcUrl);
+      this.wallet = wallet.connect(this.provider);
+    } else {
+      this.wallet = wallet;
+    }
 
     logger.info('PolygonService initialized', {
       network: config.polygon.network,
       rpcUrl: config.polygon.rpcUrl,
       walletAddress: this.wallet.address,
       confirmations: config.polygon.confirmations,
+      fixtureMode: this.useFixtures,
     });
 
     // Initialize governance contract if address is provided
@@ -83,6 +95,17 @@ export class PolygonService {
 
     try {
       logger.info('Creating organization on Polygon', { organizationId, name });
+
+      if (this.useFixtures) {
+        const receipt = this.createFixtureReceipt(operation);
+        transactionsTotal.inc({ operation, status: 'success' });
+        transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+        return {
+          transactionHash: receipt.hash,
+          contractAddress: this.wallet.address,
+          gasUsed: receipt.gasUsed.toString(),
+        };
+      }
 
       // For MVP, we'll just send a transaction with the org data in the transaction data
       // In production, deploy an actual organization registry contract using CREATE2
@@ -161,13 +184,18 @@ export class PolygonService {
         metadata,
       });
 
-      const tx = await this.wallet.sendTransaction({
-        to: this.wallet.address,
-        value: 0,
-        data: ethers.hexlify(toUtf8Bytes(`TOKEN:${tokenData}`)),
-      });
+      let receipt: TransactionReceipt;
+      if (this.useFixtures) {
+        receipt = this.createFixtureReceipt(operation);
+      } else {
+        const tx = await this.wallet.sendTransaction({
+          to: this.wallet.address,
+          value: 0,
+          data: ethers.hexlify(toUtf8Bytes(`TOKEN:${tokenData}`)),
+        });
 
-      const receipt = await this.waitForTransaction(tx, operation);
+        receipt = await this.waitForTransaction(tx, operation);
+      }
 
       // Generate deterministic token address from shareTypeId
       const tokenAddress = this.deriveTokenAddress(shareTypeId);
@@ -243,13 +271,18 @@ export class PolygonService {
         metadata,
       });
 
-      const tx = await this.wallet.sendTransaction({
-        to: targetRecipient,
-        value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'),
-        data: ethers.hexlify(toUtf8Bytes(`ISSUANCE:${issuanceData}`)),
-      });
+      let receipt: TransactionReceipt;
+      if (this.useFixtures) {
+        receipt = this.createFixtureReceipt(operation);
+      } else {
+        const tx = await this.wallet.sendTransaction({
+          to: targetRecipient,
+          value: parseUnits(PROOF_OF_ISSUANCE_AMOUNT, 'ether'),
+          data: ethers.hexlify(toUtf8Bytes(`ISSUANCE:${issuanceData}`)),
+        });
 
-      const receipt = await this.waitForTransaction(tx, operation);
+        receipt = await this.waitForTransaction(tx, operation);
+      }
 
       transactionsTotal.inc({ operation, status: 'success' });
       transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
@@ -316,13 +349,18 @@ export class PolygonService {
         metadata,
       });
 
-      const tx = await this.wallet.sendTransaction({
-        to: this.wallet.address,
-        value: 0,
-        data: ethers.hexlify(toUtf8Bytes(`PROPOSAL:${proposalData}`)),
-      });
+      let receipt: TransactionReceipt;
+      if (this.useFixtures) {
+        receipt = this.createFixtureReceipt(operation);
+      } else {
+        const tx = await this.wallet.sendTransaction({
+          to: this.wallet.address,
+          value: 0,
+          data: ethers.hexlify(toUtf8Bytes(`PROPOSAL:${proposalData}`)),
+        });
 
-      const receipt = await this.waitForTransaction(tx, operation);
+        receipt = await this.waitForTransaction(tx, operation);
+      }
 
       const proposalAddress = this.deriveProposalAddress(proposalId);
 
@@ -386,13 +424,18 @@ export class PolygonService {
         metadata,
       });
 
-      const tx = await this.wallet.sendTransaction({
-        to: this.wallet.address,
-        value: 0,
-        data: ethers.hexlify(toUtf8Bytes(`VOTE:${voteData}`)),
-      });
+      let receipt: TransactionReceipt;
+      if (this.useFixtures) {
+        receipt = this.createFixtureReceipt(operation);
+      } else {
+        const tx = await this.wallet.sendTransaction({
+          to: this.wallet.address,
+          value: 0,
+          data: ethers.hexlify(toUtf8Bytes(`VOTE:${voteData}`)),
+        });
 
-      const receipt = await this.waitForTransaction(tx, operation);
+        receipt = await this.waitForTransaction(tx, operation);
+      }
 
       transactionsTotal.inc({ operation, status: 'success' });
       transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
@@ -443,6 +486,14 @@ export class PolygonService {
       });
 
       let tx: TransactionResponse;
+
+      if (this.useFixtures) {
+        const receipt = this.createFixtureReceipt(operation);
+        return {
+          transactionHash: receipt.hash,
+          gasUsed: receipt.gasUsed.toString(),
+        };
+      }
 
       // Use governance contract if available
       if (this.governanceContract) {
@@ -511,11 +562,23 @@ export class PolygonService {
     const startTime = Date.now();
 
     try {
+      if (this.useFixtures) {
+        const fixtureTx = this.fixtureTransactions.get(txHash);
+        return {
+          transactionId: txHash,
+          status: fixtureTx ? 'confirmed' : 'pending',
+          confirmations: fixtureTx ? 6 : 0,
+          blockNumber: fixtureTx?.blockNumber,
+          timestamp: fixtureTx ? Math.floor(Date.now() / 1000) : undefined,
+          gasUsed: fixtureTx?.gasUsed,
+        };
+      }
+
       logger.debug('Getting transaction status', { txHash });
 
       rpcRequestsTotal.inc({ method: 'getTransaction', status: 'pending' });
 
-      const receipt = await this.provider.getTransactionReceipt(txHash);
+      const receipt = await this.provider!.getTransactionReceipt(txHash);
 
       rpcLatency.observe({ method: 'getTransaction' }, (Date.now() - startTime) / 1000);
       rpcRequestsTotal.inc({ method: 'getTransaction', status: 'success' });
@@ -528,10 +591,10 @@ export class PolygonService {
         };
       }
 
-      const currentBlock = await this.provider.getBlockNumber();
+      const currentBlock = await this.provider!.getBlockNumber();
       const confirmations = currentBlock - receipt.blockNumber + 1;
 
-      const block = await this.provider.getBlock(receipt.blockNumber);
+      const block = await this.provider!.getBlock(receipt.blockNumber);
 
       return {
         transactionId: txHash,
@@ -561,17 +624,28 @@ export class PolygonService {
     walletBalance?: string;
   }> {
     try {
+      if (this.useFixtures) {
+        return {
+          status: 'healthy',
+          network: config.polygon.network,
+          rpcStatus: 'fixture',
+          lastBlockNumber: this.fixtureBlockNumber,
+          walletAddress: this.wallet.address,
+          walletBalance: '1.0 MATIC',
+        };
+      }
+
       const startTime = Date.now();
 
       // Check RPC connectivity
-      const blockNumber = await this.provider.getBlockNumber();
+      const blockNumber = await this.provider!.getBlockNumber();
       lastBlockNumber.set(blockNumber);
 
       // Check wallet balance
-      const balance = await this.provider.getBalance(this.wallet.address);
+      const balance = await this.provider!.getBalance(this.wallet.address);
 
       // Get current gas price
-      const feeData = await this.provider.getFeeData();
+      const feeData = await this.provider!.getFeeData();
       if (feeData.gasPrice) {
         const gasPriceInGwei = Number(formatUnits(feeData.gasPrice, 'gwei'));
         gasPriceGwei.set(gasPriceInGwei);
@@ -614,6 +688,10 @@ export class PolygonService {
     tx: TransactionResponse,
     operation: string
   ): Promise<TransactionReceipt> {
+    if (this.useFixtures) {
+      return this.createFixtureReceipt(operation);
+    }
+
     logger.debug('Waiting for transaction confirmation', {
       hash: tx.hash,
       operation,
@@ -697,6 +775,30 @@ export class PolygonService {
     }
     // Re-throw as generic RpcError if no specific pattern matches
     throw new RpcError('Blockchain operation failed', serialized.message);
+  }
+
+  private createFixtureReceipt(operation: string): TransactionReceipt {
+    const hash = keccak256(toUtf8Bytes(`${operation}:${Date.now()}:${Math.random()}`));
+    const gasUsed = BigInt(65_000);
+    const blockNumber = this.fixtureBlockNumber++;
+
+    this.fixtureTransactions.set(hash, { blockNumber, gasUsed: gasUsed.toString() });
+
+    return {
+      hash,
+      blockHash: hash,
+      blockNumber,
+      gasUsed,
+      status: 1,
+      logsBloom: '0x',
+      logs: [],
+      type: 0,
+      cumulativeGasUsed: gasUsed,
+      from: this.wallet.address,
+      to: this.wallet.address,
+      confirmations: 1,
+      contractAddress: this.wallet.address,
+    } as unknown as TransactionReceipt;
   }
 
   /**

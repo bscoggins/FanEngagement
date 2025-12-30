@@ -62,6 +62,18 @@ The Polygon adapter implements the FanEngagement blockchain adapter API specific
 - Polygon wallet with private key
 - Test MATIC (for Mumbai testnet): https://faucet.polygon.technology/
 
+### Fixture / Replay Mode (CI-friendly)
+
+For deterministic CI runs without live RPC access, enable fixture replay mode:
+
+```bash
+export POLYGON_RPC_FIXTURE=true
+export POLYGON_PRIVATE_KEY=dev-key-change-in-production
+```
+
+When `POLYGON_RPC_FIXTURE` is `true`, the adapter skips external RPC calls and returns
+recorded fixture receipts for all endpoints while still enforcing authentication.
+
 ## Installation
 
 ### Local Development

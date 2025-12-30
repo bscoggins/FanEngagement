@@ -8,6 +8,10 @@ export interface Config {
     nodeEnv: string;
     logLevel: string;
   };
+  fixtures: {
+    useFixtures: boolean;
+    fixturePath?: string;
+  };
   polygon: {
     network: string;
     rpcUrl: string;
@@ -39,6 +43,10 @@ export const config: Config = {
     port: parseInt(process.env.PORT || '3002', 10),
     nodeEnv: process.env.NODE_ENV || 'production',
     logLevel: process.env.LOG_LEVEL || 'info',
+  },
+  fixtures: {
+    useFixtures: process.env.POLYGON_RPC_FIXTURE === 'true' || process.env.POLYGON_RPC_FIXTURE === '1',
+    fixturePath: process.env.POLYGON_RPC_FIXTURE_PATH,
   },
   polygon: {
     network: process.env.POLYGON_NETWORK || 'amoy',
@@ -90,7 +98,7 @@ export function validateConfig(): void {
     errors.push('POLYGON_CONFIRMATIONS must be non-negative');
   }
 
-  if (!config.polygon.privateKey && !config.polygon.privateKeyPath) {
+  if (!config.fixtures.useFixtures && !config.polygon.privateKey && !config.polygon.privateKeyPath) {
     errors.push('Either POLYGON_PRIVATE_KEY or POLYGON_PRIVATE_KEY_PATH must be provided');
   }
 

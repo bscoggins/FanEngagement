@@ -83,12 +83,15 @@ services:
       context: .
       dockerfile: adapters/polygon/Dockerfile
     container_name: polygon-adapter
+    profiles: ["polygon"]
     ports:
       - "3002:3002"
     environment:
       NODE_ENV: development
       PORT: 3002
       LOG_LEVEL: debug
+      POLYGON_RPC_FIXTURE: ${POLYGON_RPC_FIXTURE:-true}
+      POLYGON_RPC_FIXTURE_PATH: ${POLYGON_RPC_FIXTURE_PATH:-}
       POLYGON_NETWORK: amoy
       POLYGON_RPC_URL: https://rpc-amoy.polygon.technology
       POLYGON_CONFIRMATIONS: 6
