@@ -3,7 +3,8 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AdminProposalDetailPage } from './AdminProposalDetailPage';
 import { proposalsApi } from '../api/proposalsApi';
-import type { ProposalDetails, ProposalResults } from '../types/api';
+import { organizationsApi } from '../api/organizationsApi';
+import type { ProposalDetails, ProposalResults, Organization } from '../types/api';
 
 // Mock the APIs
 vi.mock('../api/proposalsApi', () => ({
@@ -14,6 +15,12 @@ vi.mock('../api/proposalsApi', () => ({
     addOption: vi.fn(),
     deleteOption: vi.fn(),
     getResults: vi.fn(),
+  },
+}));
+
+vi.mock('../api/organizationsApi', () => ({
+  organizationsApi: {
+    getById: vi.fn(),
   },
 }));
 
@@ -29,6 +36,14 @@ describe('AdminProposalDetailPage', () => {
   afterEach(() => {
     window.confirm = originalConfirm;
   });
+
+  const mockOrganization: Organization = {
+    id: 'org-1',
+    name: 'Test Org',
+    createdAt: '2024-01-01T00:00:00Z',
+    blockchainType: 'Polygon',
+    blockchainConfig: '{"adapterUrl":"https://adapter.example","network":"amoy","apiKey":"key"}',
+  };
 
   const mockProposal: ProposalDetails = {
     id: 'proposal-1',
@@ -82,6 +97,7 @@ describe('AdminProposalDetailPage', () => {
   };
 
   const renderPage = (orgId = 'org-1', proposalId = 'proposal-1') => {
+    vi.mocked(organizationsApi.getById).mockResolvedValue(mockOrganization);
     return render(
       <MemoryRouter initialEntries={[`/admin/organizations/${orgId}/proposals/${proposalId}`]}>
         <Routes>
@@ -101,6 +117,21 @@ describe('AdminProposalDetailPage', () => {
       expect(screen.getByText('Test description')).toBeInTheDocument();
       expect(screen.getByText('Open')).toBeInTheDocument();
     });
+  });
+
+  it('renders Polygon explorer link when blockchain data exists', async () => {
+    vi.mocked(proposalsApi.getById).mockResolvedValueOnce({
+      ...mockProposal,
+      blockchainProposalAddress: '0xabc123',
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('proposal-explorer-link')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('proposal-explorer-link')).toHaveAttribute('href', 'https://amoy.polygonscan.com/address/0xabc123');
   });
 
   it('displays loading state initially', () => {

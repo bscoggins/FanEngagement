@@ -13,6 +13,7 @@ import './AdminPage.css';
 import type { ShareType, Organization, CreateShareTypeRequest, UpdateShareTypeRequest } from '../types/api';
 import { SkeletonTable, SkeletonTextLines } from '../components/Skeleton';
 import { useScrollHint } from '../hooks/useScrollHint';
+import { buildExplorerLinks } from '../utils/blockchainExplorer';
 
 export const AdminOrganizationShareTypesPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -97,7 +98,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
     setError(null);
   };
 
-  const handleCancel = () => {
+  const handleCloseForm = () => {
     setShowForm(false);
     setEditingId(null);
     setFormData({
@@ -206,7 +207,7 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
           <Button
             type="button"
             variant={showForm ? 'ghost' : 'primary'}
-            onClick={showForm ? handleCancel : handleCreateNew}
+            onClick={showForm ? handleCloseForm : handleCreateNew}
           >
             {showForm ? 'Close form' : 'Create Share Type'}
           </Button>
@@ -308,9 +309,12 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
+            <div style={{ display: 'flex', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
               <Button type="submit" variant="primary" isLoading={isSaving} disabled={isSaving}>
                 {isSaving ? 'Saving...' : editingId ? 'Update Share Type' : 'Create Share Type'}
+              </Button>
+              <Button type="button" variant="ghost" onClick={handleCloseForm} disabled={isSaving}>
+                Close form
               </Button>
             </div>
           </form>
@@ -332,47 +336,81 @@ export const AdminOrganizationShareTypesPage: React.FC = () => {
                 <th>Voting Weight</th>
                 <th>Max Supply</th>
                 <th style={{ textAlign: 'center' }}>Transferable</th>
+                <th>On-Chain</th>
                 <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {shareTypes.map((shareType) => (
-                <tr key={shareType.id} data-testid="share-type-row">
-                  <td>
-                    <span data-testid="share-type-name">{shareType.name}</span>
-                  </td>
-                  <td style={{ fontWeight: 500 }}>{shareType.symbol}</td>
-                  <td>{shareType.votingWeight}</td>
-                  <td>
-                    {shareType.maxSupply !== null && shareType.maxSupply !== undefined ? shareType.maxSupply : <em style={{ color: 'var(--color-text-tertiary)' }}>Unlimited</em>}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <span className={`admin-pill ${shareType.isTransferable ? 'admin-pill-success' : 'admin-pill-danger'}`}>
-                      {shareType.isTransferable ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <div className="admin-table-actions">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="primary"
-                        onClick={() => handleEdit(shareType)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {shareTypes.map((shareType) => {
+                const hasOnChainAddress =
+                  Boolean(shareType.blockchainMintAddress) &&
+                  Boolean(organization?.blockchainType && organization.blockchainType !== 'None');
+
+                const explorer = hasOnChainAddress
+                  ? buildExplorerLinks({
+                      blockchainType: organization!.blockchainType!,
+                      blockchainConfig: organization!.blockchainConfig,
+                      address: shareType.blockchainMintAddress!,
+                    })
+                  : null;
+
+                return (
+                  <tr key={shareType.id} data-testid="share-type-row">
+                    <td>
+                      <span data-testid="share-type-name">{shareType.name}</span>
+                    </td>
+                    <td style={{ fontWeight: 500 }}>{shareType.symbol}</td>
+                    <td>{shareType.votingWeight}</td>
+                    <td>
+                      {shareType.maxSupply !== null && shareType.maxSupply !== undefined ? shareType.maxSupply : <em style={{ color: 'var(--color-text-tertiary)' }}>Unlimited</em>}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`admin-pill ${shareType.isTransferable ? 'admin-pill-success' : 'admin-pill-danger'}`}>
+                        {shareType.isTransferable ? 'Yes' : 'No'}
+                      </span>
+                    </td>
+                    <td>
+                      {explorer?.addressUrl ? (
+                        <a
+                          href={explorer.addressUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="admin-link"
+                          data-testid="share-type-explorer-link"
+                        >
+                          View on {explorer.explorerName}
+                        </a>
+                      ) : hasOnChainAddress ? (
+                        <span className="admin-secondary-text">{shareType.blockchainMintAddress}</span>
+                      ) : (
+                        <span className="admin-secondary-text">Off-chain</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div className="admin-table-actions">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="primary"
+                          onClick={() => handleEdit(shareType)}
+                        >
+                          Edit
+                        </Button>
+                        {editingId === shareType.id && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleCloseForm}
+                          >
+                            Cancel Edit
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

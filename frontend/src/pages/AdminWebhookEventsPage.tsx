@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { outboundEventsApi } from '../api/outboundEventsApi';
 import type { OutboundEventsFilter } from '../api/outboundEventsApi';
 import { organizationsApi } from '../api/organizationsApi';
@@ -13,6 +13,7 @@ import { Tooltip } from '../components/Tooltip';
 import './AdminPage.css';
 import type { OutboundEvent, OutboundEventDetails, OutboundEventStatus, Organization } from '../types/api';
 import { useScrollHint } from '../hooks/useScrollHint';
+import { buildExplorerLinks } from '../utils/blockchainExplorer';
 
 const getStatusBadgeClass = (status: OutboundEventStatus): string => {
   switch (status) {
@@ -152,6 +153,13 @@ export const AdminWebhookEventsPage: React.FC = () => {
     return Array.from(typeSet).sort();
   }, [events]);
 
+  const explorer = organization
+    ? buildExplorerLinks({
+        blockchainType: organization.blockchainType,
+        blockchainConfig: organization.blockchainConfig,
+      })
+    : { explorerName: undefined, networkLabel: undefined, transactionUrl: undefined, addressUrl: undefined };
+
   if (isLoading && !organization) {
     return (
       <div className="admin-page" role="status" aria-live="polite">
@@ -194,6 +202,31 @@ export const AdminWebhookEventsPage: React.FC = () => {
           {events.length} event{events.length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      {organization.blockchainType && organization.blockchainType !== 'None' && (
+        <Card padding="compact" style={{ marginBottom: 'var(--spacing-4)' }}>
+          <div className="admin-section-header" style={{ alignItems: 'flex-start' }}>
+            <div>
+              <div className="admin-secondary-text">Blockchain Adapter</div>
+              <div style={{ display: 'flex', gap: 'var(--spacing-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className="admin-pill admin-pill-success">{organization.blockchainType}</span>
+                {explorer.networkLabel && (
+                  <span className="admin-secondary-text">Network: {explorer.networkLabel}</span>
+                )}
+                {explorer.explorerName && (
+                  <span className="admin-secondary-text">Explorer: {explorer.explorerName}</span>
+                )}
+              </div>
+            </div>
+            <Link to="/platform-admin/blockchain" className="admin-button admin-button-outline">
+              View Adapter Metrics
+            </Link>
+          </div>
+          <div className="admin-meta-text" style={{ marginTop: 'var(--spacing-2)' }}>
+            Webhook retries and adapter health are tracked for {organization.blockchainType}. Use metrics to check {organization.blockchainType} availability.
+          </div>
+        </Card>
+      )}
 
       {error && (
         <div className="admin-alert admin-alert-error" style={{ marginBottom: 'var(--spacing-4)' }}>

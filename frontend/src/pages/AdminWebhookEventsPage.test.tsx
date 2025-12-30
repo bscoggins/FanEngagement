@@ -301,4 +301,39 @@ describe('AdminWebhookEventsPage', () => {
     
     expect(screen.getByText('3 events')).toBeInTheDocument();
   });
+
+  it('shows blockchain adapter panel when organization has blockchain type', async () => {
+    vi.mocked(organizationsApi.getById).mockResolvedValueOnce({
+      ...mockOrganization,
+      blockchainType: 'Polygon',
+      blockchainConfig: '{"network":"amoy","adapterUrl":"https://adapter","apiKey":"key"}',
+    });
+    vi.mocked(outboundEventsApi.getAll).mockResolvedValueOnce(mockEvents);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Blockchain Adapter')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Polygon')).toBeInTheDocument();
+    expect(screen.getByText(/Network: amoy/)).toBeInTheDocument();
+    expect(screen.getByText('View Adapter Metrics')).toBeInTheDocument();
+  });
+
+  it('hides blockchain adapter panel when blockchain type is None', async () => {
+    vi.mocked(organizationsApi.getById).mockResolvedValueOnce({
+      ...mockOrganization,
+      blockchainType: 'None',
+    });
+    vi.mocked(outboundEventsApi.getAll).mockResolvedValueOnce(mockEvents);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Blockchain Adapter')).not.toBeInTheDocument();
+  });
 });
