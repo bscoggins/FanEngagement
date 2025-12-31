@@ -1,7 +1,19 @@
 import winston from 'winston';
 import { config } from './config.js';
 
-const SECRET_KEYS = ['api-key', 'apikey', 'api_key', 'authorization', 'privatekey', 'private_key', 'token'];
+const SECRET_KEYS = [
+  'api-key',
+  'apikey',
+  'api_key',
+  'authorization',
+  'privatekey',
+  'private_key',
+  'token',
+  'password',
+  'credential',
+  'secret',
+  'key',
+];
 
 const sanitizeInPlace = (value: any): any => {
   if (Array.isArray(value)) {

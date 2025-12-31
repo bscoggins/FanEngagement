@@ -9,7 +9,11 @@ const DEFAULT_CHAIN_IDS: Record<string, number> = {
 };
 
 const resolveChainId = (network: string): number => {
-  return DEFAULT_CHAIN_IDS[network] ?? DEFAULT_CHAIN_IDS.amoy;
+  const chainId = DEFAULT_CHAIN_IDS[network];
+  if (!chainId) {
+    throw new Error(`Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, mumbai, or amoy.`);
+  }
+  return chainId;
 };
 
 export interface Config {
