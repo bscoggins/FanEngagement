@@ -5,7 +5,7 @@ import { loadWallet, validateWallet } from './wallet.js';
 import { PolygonService } from './polygon-service.js';
 import { createRoutes } from './routes.js';
 import { authMiddleware, loggingMiddleware, errorMiddleware } from './middleware.js';
-import { healthStatus } from './metrics.js';
+import { blockchainAdapterHealth } from './metrics.js';
 
 async function main() {
   try {
@@ -64,13 +64,13 @@ async function main() {
         rpcUrl: config.polygon.rpcUrl,
         confirmations: config.polygon.confirmations,
       });
-      healthStatus.set(1);
+      blockchainAdapterHealth.set({ chain_id: config.polygon.chainId.toString() }, 1);
     });
 
     // Graceful shutdown
     const shutdown = async (signal: string) => {
       logger.info(`Received ${signal}, shutting down gracefully...`);
-      healthStatus.set(0);
+      blockchainAdapterHealth.set({ chain_id: config.polygon.chainId.toString() }, 0);
 
       server.close(() => {
         logger.info('Server closed');

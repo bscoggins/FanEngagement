@@ -14,14 +14,16 @@ import {
 import { config } from './config.js';
 import { logger } from './logger.js';
 import {
-  transactionsTotal,
-  transactionDuration,
-  rpcErrorsTotal,
-  rpcRequestsTotal,
-  rpcLatency,
-  lastBlockNumber,
-  gasUsedTotal,
-  gasPriceGwei,
+  blockchainTransactionsTotal,
+  blockchainTransactionDuration,
+  blockchainRpcErrorsTotal,
+  blockchainRpcRequestsTotal,
+  blockchainRpcLatencySeconds,
+  blockchainLastBlockNumber,
+  blockchainGasUsedTotal,
+  blockchainGasPriceGwei,
+  blockchainPendingTransactions,
+  blockchainAdapterHealth,
 } from './metrics.js';
 import { RpcError, TransactionError } from './errors.js';
 import { serializeError } from '../../shared/errors.js';
@@ -45,6 +47,7 @@ export class PolygonService {
   private readonly useFixtures: boolean;
   private readonly fixtureTransactions = new Map<string, FixtureTransaction>();
   private fixtureBlockNumber = 100_000;
+  private chainId = config.polygon.chainId.toString();
 
   constructor(wallet: Wallet) {
     this.useFixtures = config.fixtures.useFixtures;
@@ -99,8 +102,8 @@ export class PolygonService {
 
       if (this.useFixtures) {
         const receipt = this.createFixtureReceipt(operation);
-        transactionsTotal.inc({ operation, status: 'success' });
-        transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+        blockchainTransactionsTotal.inc({ operation, status: 'success' });
+        blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
         return {
           transactionHash: receipt.hash,
           contractAddress: this.wallet.address,
@@ -121,11 +124,11 @@ export class PolygonService {
 
       const receipt = await this.waitForTransaction(tx, operation);
 
-      transactionsTotal.inc({ operation, status: 'success' });
-      transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+      blockchainTransactionsTotal.inc({ operation, status: 'success' });
+      blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
 
       if (receipt.gasUsed) {
-        gasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
+        blockchainGasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
       }
 
       logger.info('Organization created successfully', {
@@ -141,7 +144,7 @@ export class PolygonService {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error) {
-      transactionsTotal.inc({ operation, status: 'error' });
+      blockchainTransactionsTotal.inc({ operation, status: 'error' });
       this.handleBlockchainError(error, operation);
       throw error;
     }
@@ -201,11 +204,11 @@ export class PolygonService {
       // Generate deterministic token address from shareTypeId
       const tokenAddress = this.deriveTokenAddress(shareTypeId);
 
-      transactionsTotal.inc({ operation, status: 'success' });
-      transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+      blockchainTransactionsTotal.inc({ operation, status: 'success' });
+      blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
 
       if (receipt.gasUsed) {
-        gasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
+        blockchainGasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
       }
 
       logger.info('ShareType token created successfully', {
@@ -221,7 +224,7 @@ export class PolygonService {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error) {
-      transactionsTotal.inc({ operation, status: 'error' });
+      blockchainTransactionsTotal.inc({ operation, status: 'error' });
       this.handleBlockchainError(error, operation);
       throw error;
     }
@@ -285,11 +288,11 @@ export class PolygonService {
         receipt = await this.waitForTransaction(tx, operation);
       }
 
-      transactionsTotal.inc({ operation, status: 'success' });
-      transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+      blockchainTransactionsTotal.inc({ operation, status: 'success' });
+      blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
 
       if (receipt.gasUsed) {
-        gasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
+        blockchainGasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
       }
 
       logger.info('Share issuance recorded successfully', {
@@ -305,7 +308,7 @@ export class PolygonService {
         recipientAddress: targetRecipient,
       };
     } catch (error) {
-      transactionsTotal.inc({ operation, status: 'error' });
+      blockchainTransactionsTotal.inc({ operation, status: 'error' });
       this.handleBlockchainError(error, operation);
       throw error;
     }
@@ -365,11 +368,11 @@ export class PolygonService {
 
       const proposalAddress = this.deriveProposalAddress(proposalId);
 
-      transactionsTotal.inc({ operation, status: 'success' });
-      transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+      blockchainTransactionsTotal.inc({ operation, status: 'success' });
+      blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
 
       if (receipt.gasUsed) {
-        gasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
+        blockchainGasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
       }
 
       logger.info('Proposal created successfully', {
@@ -385,7 +388,7 @@ export class PolygonService {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error) {
-      transactionsTotal.inc({ operation, status: 'error' });
+      blockchainTransactionsTotal.inc({ operation, status: 'error' });
       this.handleBlockchainError(error, operation);
       throw error;
     }
@@ -438,11 +441,11 @@ export class PolygonService {
         receipt = await this.waitForTransaction(tx, operation);
       }
 
-      transactionsTotal.inc({ operation, status: 'success' });
-      transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+      blockchainTransactionsTotal.inc({ operation, status: 'success' });
+      blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
 
       if (receipt.gasUsed) {
-        gasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
+        blockchainGasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
       }
 
       logger.info('Vote recorded successfully', {
@@ -456,7 +459,7 @@ export class PolygonService {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error) {
-      transactionsTotal.inc({ operation, status: 'error' });
+      blockchainTransactionsTotal.inc({ operation, status: 'error' });
       this.handleBlockchainError(error, operation);
       throw error;
     }
@@ -525,11 +528,11 @@ export class PolygonService {
 
       const receipt = await this.waitForTransaction(tx, operation);
 
-      transactionsTotal.inc({ operation, status: 'success' });
-      transactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
+      blockchainTransactionsTotal.inc({ operation, status: 'success' });
+      blockchainTransactionDuration.observe({ operation }, (Date.now() - startTime) / 1000);
 
       if (receipt.gasUsed) {
-        gasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
+        blockchainGasUsedTotal.inc({ operation }, Number(receipt.gasUsed));
       }
 
       logger.info('Proposal results committed successfully', {
@@ -543,7 +546,7 @@ export class PolygonService {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error) {
-      transactionsTotal.inc({ operation, status: 'error' });
+      blockchainTransactionsTotal.inc({ operation, status: 'error' });
       this.handleBlockchainError(error, operation);
       throw error;
     }
@@ -577,12 +580,15 @@ export class PolygonService {
 
       logger.debug('Getting transaction status', { txHash });
 
-      rpcRequestsTotal.inc({ method: 'getTransaction', status: 'pending' });
+      blockchainRpcRequestsTotal.inc({ method: 'getTransaction', status: 'pending' });
 
       const receipt = await this.provider!.getTransactionReceipt(txHash);
 
-      rpcLatency.observe({ method: 'getTransaction' }, (Date.now() - startTime) / 1000);
-      rpcRequestsTotal.inc({ method: 'getTransaction', status: 'success' });
+      blockchainRpcLatencySeconds.observe(
+        { method: 'getTransaction' },
+        (Date.now() - startTime) / 1000
+      );
+      blockchainRpcRequestsTotal.inc({ method: 'getTransaction', status: 'success' });
 
       if (!receipt) {
         return {
@@ -606,8 +612,8 @@ export class PolygonService {
         gasUsed: receipt.gasUsed.toString(),
       };
     } catch (error) {
-      rpcErrorsTotal.inc({ error_type: 'get_transaction' });
-      rpcRequestsTotal.inc({ method: 'getTransaction', status: 'error' });
+      blockchainRpcErrorsTotal.inc({ error_type: 'get_transaction' });
+      blockchainRpcRequestsTotal.inc({ method: 'getTransaction', status: 'error' });
       this.handleBlockchainError(error, 'get_transaction_status');
       throw error;
     }
@@ -623,9 +629,18 @@ export class PolygonService {
     lastBlockNumber?: number;
     walletAddress: string;
     walletBalance?: string;
+    chainId?: number;
+    pendingTransactions?: number;
+    rpcLatencyMs?: number;
   }> {
     try {
       if (this.useFixtures) {
+        blockchainAdapterHealth.set({ chain_id: this.chainId }, 1);
+        blockchainLastBlockNumber.set({ chain_id: this.chainId }, this.fixtureBlockNumber);
+        blockchainPendingTransactions.set(
+          { wallet_address: this.wallet.address, chain_id: this.chainId },
+          0
+        );
         return {
           status: 'healthy',
           network: config.polygon.network,
@@ -633,31 +648,56 @@ export class PolygonService {
           lastBlockNumber: this.fixtureBlockNumber,
           walletAddress: this.wallet.address,
           walletBalance: '1.0 MATIC',
+          chainId: Number(this.chainId),
+          pendingTransactions: 0,
+          rpcLatencyMs: 0,
         };
       }
 
       const startTime = Date.now();
 
-      // Check RPC connectivity
-      const blockNumber = await this.provider!.getBlockNumber();
-      lastBlockNumber.set(blockNumber);
+      // Check RPC connectivity and capture metadata
+      const [networkInfo, blockNumber] = await Promise.all([
+        this.provider!.getNetwork(),
+        this.provider!.getBlockNumber(),
+      ]);
+
+      this.chainId = networkInfo.chainId.toString();
+      blockchainLastBlockNumber.set({ chain_id: this.chainId }, blockNumber);
 
       // Check wallet balance
       const balance = await this.provider!.getBalance(this.wallet.address);
+
+      // Pending transaction backlog (wallet level)
+      const [pendingNonce, confirmedNonce] = await Promise.all([
+        this.provider!.getTransactionCount(this.wallet.address, 'pending'),
+        this.provider!.getTransactionCount(this.wallet.address, 'latest'),
+      ]);
+      const pendingCount = Math.max(pendingNonce - confirmedNonce, 0);
+      blockchainPendingTransactions.set(
+        { wallet_address: this.wallet.address, chain_id: this.chainId },
+        pendingCount
+      );
 
       // Get current gas price
       const feeData = await this.provider!.getFeeData();
       if (feeData.gasPrice) {
         const gasPriceInGwei = Number(formatUnits(feeData.gasPrice, 'gwei'));
-        gasPriceGwei.set(gasPriceInGwei);
+        blockchainGasPriceGwei.set({ chain_id: this.chainId }, gasPriceInGwei);
       }
 
       const latency = Date.now() - startTime;
+
+      blockchainAdapterHealth.set({ chain_id: this.chainId }, 1);
+      blockchainRpcLatencySeconds.observe({ method: 'health_check' }, latency / 1000);
+      blockchainRpcRequestsTotal.inc({ method: 'health_check', status: 'success' });
 
       logger.debug('Health check completed', {
         blockNumber,
         balance: formatUnits(balance, 'ether'),
         latency,
+        chainId: this.chainId,
+        pendingCount,
       });
 
       return {
@@ -667,10 +707,16 @@ export class PolygonService {
         lastBlockNumber: blockNumber,
         walletAddress: this.wallet.address,
         walletBalance: formatUnits(balance, 'ether') + ' MATIC',
+        chainId: Number(this.chainId),
+        pendingTransactions: pendingCount,
+        rpcLatencyMs: latency,
       };
     } catch (error) {
+      blockchainAdapterHealth.set({ chain_id: this.chainId }, 0);
+      blockchainRpcRequestsTotal.inc({ method: 'health_check', status: 'error' });
       logger.error('Health check failed', {
         error: serializeError(error),
+        chainId: this.chainId,
       });
 
       return {
@@ -678,6 +724,7 @@ export class PolygonService {
         network: config.polygon.network,
         rpcStatus: 'error',
         walletAddress: this.wallet.address,
+        chainId: Number(this.chainId),
       };
     }
   }
@@ -755,7 +802,7 @@ export class PolygonService {
       error: serialized,
     });
 
-    rpcErrorsTotal.inc({ error_type: operation });
+    blockchainRpcErrorsTotal.inc({ error_type: operation });
 
     const message = serialized.message.toLowerCase();
 

@@ -6,6 +6,7 @@ import { RpcError, TransactionError } from '../src/errors.js';
 let server: any;
 let baseUrl: string;
 let polygonService: any;
+let runtimeConfig: any;
 
 describe('Polygon adapter routes', () => {
   beforeAll(async () => {
@@ -14,8 +15,10 @@ describe('Polygon adapter routes', () => {
     process.env.POLYGON_PRIVATE_KEY = '0x' + '1'.repeat(64);
     process.env.POLYGON_RPC_URL = 'http://localhost:8545';
     process.env.POLYGON_NETWORK = 'amoy';
+    process.env.ADAPTER_INSTANCE = 'test-polygon-instance';
 
     const { config } = await import('../src/config.js');
+    runtimeConfig = config;
     config.auth.apiKey = 'test-key';
     config.auth.requireAuth = true;
 
@@ -148,6 +151,9 @@ describe('Polygon adapter routes', () => {
     expect(payload.status).toBe('confirmed');
     expect(payload.timestamp).toBeDefined();
     expect(payload.gasUsed).toBeDefined();
+    expect(payload.adapter).toBe('polygon');
+    expect(payload.adapterInstance).toBe(runtimeConfig.server.instanceId);
+    expect(payload.chainId).toBe(runtimeConfig.polygon.chainId);
     expect(polygonService.createShareType).toHaveBeenCalledWith(
       '123e4567-e89b-12d3-a456-426614174000',
       '550e8400-e29b-41d4-a716-446655440000',
@@ -436,9 +442,16 @@ describe('Polygon adapter routes', () => {
     expect(health.status).toBe(200);
     const healthPayload = (await health.json()) as any;
     expect(healthPayload.status).toBe('healthy');
+    expect(healthPayload.chainId).toBe(runtimeConfig.polygon.chainId);
+    expect(healthPayload.adapterInstance).toBe(runtimeConfig.server.instanceId);
 
     const metrics = await fetch(`${baseUrl}/metrics`);
     expect(metrics.status).toBe(200);
     expect(metrics.headers.get('content-type')).toContain('text/plain');
+    const metricsBody = await metrics.text();
+    expect(metricsBody).toContain('blockchain_adapter_health');
+    expect(metricsBody).toContain('adapter="polygon"');
+    expect(metricsBody).toContain(`instance="${runtimeConfig.server.instanceId}"`);
+    expect(metricsBody).toContain(`chain_id="${runtimeConfig.polygon.chainId}"`);
   });
 });

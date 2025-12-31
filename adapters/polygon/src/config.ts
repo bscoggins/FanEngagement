@@ -7,6 +7,7 @@ export interface Config {
     port: number;
     nodeEnv: string;
     logLevel: string;
+    instanceId: string;
   };
   fixtures: {
     useFixtures: boolean;
@@ -17,6 +18,7 @@ export interface Config {
     rpcUrl: string;
     confirmations: number;
     txTimeout: number; // Reserved for future use: transaction timeout in milliseconds
+    chainId: number;
     privateKey?: string;
     privateKeyPath?: string;
     governanceContractAddress?: string;
@@ -43,6 +45,7 @@ export const config: Config = {
     port: parseInt(process.env.PORT || '3002', 10),
     nodeEnv: process.env.NODE_ENV || 'production',
     logLevel: process.env.LOG_LEVEL || 'info',
+    instanceId: process.env.ADAPTER_INSTANCE || process.env.HOSTNAME || 'polygon-adapter',
   },
   fixtures: {
     useFixtures: process.env.POLYGON_RPC_FIXTURE === 'true' || process.env.POLYGON_RPC_FIXTURE === '1',
@@ -53,6 +56,15 @@ export const config: Config = {
     rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology',
     confirmations: parseInt(process.env.POLYGON_CONFIRMATIONS || '6', 10),
     txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
+    chainId: parseInt(
+      process.env.POLYGON_CHAIN_ID ||
+        (process.env.POLYGON_NETWORK === 'polygon'
+          ? '137'
+          : process.env.POLYGON_NETWORK === 'mumbai'
+          ? '80001'
+          : '80002'),
+      10
+    ),
     privateKey: process.env.POLYGON_PRIVATE_KEY,
     privateKeyPath: process.env.POLYGON_PRIVATE_KEY_PATH,
     governanceContractAddress: process.env.GOVERNANCE_CONTRACT_ADDRESS,
@@ -92,6 +104,10 @@ export function validateConfig(): void {
 
   if (!config.polygon.network || !['mumbai', 'amoy', 'polygon'].includes(config.polygon.network)) {
     errors.push('POLYGON_NETWORK must be one of: mumbai (deprecated), amoy, polygon');
+  }
+
+  if (!config.polygon.chainId || Number.isNaN(config.polygon.chainId) || config.polygon.chainId <= 0) {
+    errors.push('POLYGON_CHAIN_ID must be a positive integer');
   }
 
   if (config.polygon.confirmations < 0) {

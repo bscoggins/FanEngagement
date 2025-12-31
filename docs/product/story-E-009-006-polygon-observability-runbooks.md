@@ -11,11 +11,11 @@
 - Redact private keys/API keys in logs; align sampling with Solana adapter.
 
 ## Acceptance Criteria
-- [ ] Metrics/health endpoints expose Polygon-specific labels and are scraped by existing monitoring stack.
-- [ ] Alert definitions created/updated for Polygon adapter failure modes.
-- [ ] Admin Webhook Events and related dashboards display Polygon metadata without UI regressions.
-- [ ] Runbook added under docs with troubleshooting and escalation paths for Polygon incidents.
-- [ ] Logging verified to omit secrets and follow structured format.
+- [x] Metrics/health endpoints expose Polygon-specific labels and are scraped by existing monitoring stack.
+- [x] Alert definitions created/updated for Polygon adapter failure modes.
+- [x] Admin Webhook Events and related dashboards display Polygon metadata without UI regressions.
+- [x] Runbook added under docs with troubleshooting and escalation paths for Polygon incidents.
+- [x] Logging verified to omit secrets and follow structured format.
 
 ## Constraints & Guardrails
 - Reuse existing observability stack and patterns; no new monitoring vendors.
@@ -35,8 +35,8 @@
 - deployment/ops/monitoring configs (if present)
 
 ## Completion Checklist
-- [ ] Summary of all file changes
-- [ ] Build & test commands shared
-- [ ] Risks or migrations noted
-- [ ] Architecture + authorization adherence confirmed
-- [ ] Additional reviewer notes provided
+- [x] Summary of all file changes
+- [x] Build & test commands shared
+- [x] Risks or migrations noted
+- [x] Architecture + authorization adherence confirmed
+- [x] Additional reviewer notes provided
