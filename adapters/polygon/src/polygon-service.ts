@@ -48,7 +48,7 @@ export class PolygonService {
   private readonly fixtureTransactions = new Map<string, FixtureTransaction>();
   private fixtureBlockNumber = 100_000;
   private chainId = config.polygon.chainId.toString();
-  private readonly nonceCacheTtlMs = 30000;
+  private readonly nonceCacheTtlMs = config.polygon.pendingNonceCacheMs;
   private lastPendingCount = 0;
   private lastNonceCheckMs = 0;
 

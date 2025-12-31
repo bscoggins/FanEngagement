@@ -35,6 +35,7 @@ export interface Config {
     rpcUrl: string;
     confirmations: number;
     txTimeout: number; // Reserved for future use: transaction timeout in milliseconds
+    pendingNonceCacheMs: number;
     chainId: number;
     privateKey?: string;
     privateKeyPath?: string;
@@ -73,6 +74,7 @@ export const config: Config = {
     rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology',
     confirmations: parseInt(process.env.POLYGON_CONFIRMATIONS || '6', 10),
     txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
+    pendingNonceCacheMs: parseInt(process.env.PENDING_NONCE_CACHE_MS || '30000', 10),
     chainId: parseInt(
       process.env.POLYGON_CHAIN_ID ||
         resolveChainId(process.env.POLYGON_NETWORK || 'amoy').toString(),
@@ -125,6 +127,10 @@ export function validateConfig(): void {
 
   if (config.polygon.confirmations < 0) {
     errors.push('POLYGON_CONFIRMATIONS must be non-negative');
+  }
+
+  if (config.polygon.pendingNonceCacheMs < 0) {
+    errors.push('PENDING_NONCE_CACHE_MS must be non-negative');
   }
 
   if (!config.fixtures.useFixtures && !config.polygon.privateKey && !config.polygon.privateKeyPath) {

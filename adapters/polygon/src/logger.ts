@@ -15,6 +15,21 @@ const SECRET_KEYS = [
   'key',
 ];
 
+const containsSecret = (value: any): boolean => {
+  if (Array.isArray(value)) {
+    return value.some(containsSecret);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value).some(([key, val]) => {
+      const lower = key.toLowerCase();
+      return SECRET_KEYS.some(secretKey => lower.includes(secretKey)) || containsSecret(val);
+    });
+  }
+
+  return false;
+};
+
 const sanitizeLogDataInPlace = (value: any): any => {
   if (Array.isArray(value)) {
     value.forEach((entry, index) => {
@@ -38,6 +53,9 @@ const sanitizeLogDataInPlace = (value: any): any => {
 };
 
 const redactSecrets = winston.format((info) => {
+  if (!containsSecret(info)) {
+    return info;
+  }
   const deepClone: any = structuredClone(info);
   for (const symbol of Object.getOwnPropertySymbols(info)) {
     deepClone[symbol] = (info as any)[symbol];

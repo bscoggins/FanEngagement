@@ -21,7 +21,19 @@
 - **Immediate Actions:**
   1. Check health: `curl -s $POD/v1/adapter/health` (verify `pendingTransactions`).
   2. Inspect recent tx: `eth_getTransactionCount` (pending vs latest) and last tx hashes.
-  3. If backlog > 0, issue a replacement/speed-up tx with higher fee (same nonce) or cancel tx to self with 0 value.
+  3. If backlog > 0, issue a replacement/speed-up tx with higher fee (same nonce) or cancel tx to self with 0 value. Example with ethers:
+     ```ts
+     const nonce = await provider.getTransactionCount(wallet.address, 'pending');
+     const fee = await provider.getFeeData();
+     const replace = await wallet.sendTransaction({
+       to: wallet.address,
+       value: 0,
+       nonce,
+       maxFeePerGas: fee.maxFeePerGas ? fee.maxFeePerGas * 2n : fee.gasPrice! * 2n,
+       maxPriorityFeePerGas: fee.maxPriorityFeePerGas ? fee.maxPriorityFeePerGas * 2n : undefined,
+     });
+     await replace.wait(1);
+     ```
   4. Confirm new tx mined; backlog gauge should return to 0.
   5. If multiple replicas racing nonces, scale down to 1 replica temporarily, drain queue, then scale back up.
 - **Preventative:** Keep `RETRY_MAX_ATTEMPTS` modest, ensure only one signer key per adapter instance.
