@@ -16,37 +16,49 @@ const SECRET_KEYS = [
 ];
 
 const containsSecret = (value: any): boolean => {
-  if (Array.isArray(value)) {
-    return value.some(containsSecret);
+  if (!value || typeof value !== 'object') {
+    return false;
   }
 
-  if (value && typeof value === 'object') {
-    return Object.entries(value).some(([key, val]) => {
-      const lower = key.toLowerCase();
-      return SECRET_KEYS.some(secretKey => lower.includes(secretKey)) || containsSecret(val);
-    });
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (containsSecret(entry)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  for (const [key, val] of Object.entries(value)) {
+    const lower = key.toLowerCase();
+    if (SECRET_KEYS.some(secretKey => lower.includes(secretKey))) {
+      return true;
+    }
+    if (val && typeof val === 'object' && containsSecret(val)) {
+      return true;
+    }
   }
 
   return false;
 };
 
-const sanitizeLogDataInPlace = (value: any): any => {
+const sanitizeLogData = (value: any): any => {
   if (Array.isArray(value)) {
-    value.forEach((entry, index) => {
-      value[index] = sanitizeLogDataInPlace(entry);
-    });
-    return value;
+    return value.map(entry => sanitizeLogData(entry));
   }
 
   if (value && typeof value === 'object') {
-    Object.entries(value).forEach(([key, val]) => {
+    const sanitized: Record<string | symbol, any> = {};
+    for (const [key, val] of Object.entries(value)) {
       const lower = key.toLowerCase();
-      if (SECRET_KEYS.some(secretKey => lower.includes(secretKey))) {
-        value[key] = '[REDACTED]';
-      } else {
-        value[key] = sanitizeLogDataInPlace(val);
-      }
-    });
+      sanitized[key] = SECRET_KEYS.some(secretKey => lower.includes(secretKey))
+        ? '[REDACTED]'
+        : sanitizeLogData(val);
+    }
+    for (const symbol of Object.getOwnPropertySymbols(value)) {
+      sanitized[symbol] = (value as any)[symbol];
+    }
+    return sanitized;
   }
 
   return value;
@@ -56,11 +68,7 @@ const redactSecrets = winston.format((info) => {
   if (!containsSecret(info)) {
     return info;
   }
-  const deepClone: any = structuredClone(info);
-  for (const symbol of Object.getOwnPropertySymbols(info)) {
-    deepClone[symbol] = (info as any)[symbol];
-  }
-  return sanitizeLogDataInPlace(deepClone);
+  return sanitizeLogData(info);
 });
 
 const logFormat = winston.format.combine(
@@ -69,6 +77,8 @@ const logFormat = winston.format.combine(
   winston.format.errors({ stack: true }),
   winston.format.json()
 );
+
+export const redactLogInfoForTest = (info: any) => redactSecrets().transform?.(info);
 
 export const logger = winston.createLogger({
   level: config.server.logLevel,

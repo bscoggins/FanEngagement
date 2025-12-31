@@ -48,9 +48,7 @@ export class PolygonService {
   private readonly fixtureTransactions = new Map<string, FixtureTransaction>();
   private fixtureBlockNumber = 100_000;
   private chainId = config.polygon.chainId.toString();
-  private readonly nonceCacheTtlMs = config.polygon.pendingNonceCacheMs;
   private lastPendingCount = 0;
-  private lastNonceCheckMs = 0;
 
   constructor(wallet: Wallet) {
     this.useFixtures = config.fixtures.useFixtures;
@@ -81,15 +79,15 @@ export class PolygonService {
         address: config.polygon.governanceContractAddress,
       });
     }
-  }
+    }
 
-  getWalletAddress(): string {
-    return this.wallet.address;
-  }
+    getWalletAddress(): string {
+      return this.wallet.address;
+    }
 
-  getChainId(): number {
-    return Number(this.chainId);
-  }
+    getChainId(): number {
+      return Number(this.chainId);
+    }
 
   /**
    * Create organization by deploying a simple registry contract
@@ -669,19 +667,19 @@ export class PolygonService {
         this.provider!.getBlockNumber(),
       ]);
 
-      this.chainId = networkInfo.chainId.toString();
+      if (networkInfo.chainId.toString() !== this.chainId) {
+        logger.warn('Configured chainId differs from RPC network', {
+          configured: this.chainId,
+          rpcChainId: networkInfo.chainId.toString(),
+        });
+      }
       blockchainLastBlockNumber.set({ chain_id: this.chainId }, blockNumber);
 
       // Check wallet balance
       const balance = await this.provider!.getBalance(this.wallet.address);
 
       // Pending transaction backlog (wallet level)
-      let pendingCount = this.lastPendingCount;
-      const now = Date.now();
-      if (now - this.lastNonceCheckMs > this.nonceCacheTtlMs) {
-        this.lastNonceCheckMs = now;
-        pendingCount = await this.refreshPendingCount();
-      }
+      const pendingCount = await this.refreshPendingCount();
       blockchainPendingTransactions.set(
         { wallet_address: this.wallet.address, chain_id: this.chainId },
         pendingCount

@@ -9,12 +9,13 @@ const DEFAULT_CHAIN_IDS: Record<string, number> = {
   amoy: 80002,
 };
 
-const resolveChainId = (network: string): number => {
+export const resolveChainId = (network: string): number => {
   const chainId = DEFAULT_CHAIN_IDS[network];
   if (!chainId) {
-    throw new Error(
-      `Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, amoy, or legacy mumbai (deprecated).`
+    console.warn(
+      `Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, amoy, or legacy mumbai (deprecated). Defaulting to 'polygon' (${DEFAULT_CHAIN_IDS.polygon}).`
     );
+    return DEFAULT_CHAIN_IDS.polygon;
   }
   return chainId;
 };
@@ -74,7 +75,7 @@ export const config: Config = {
     rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology',
     confirmations: parseInt(process.env.POLYGON_CONFIRMATIONS || '6', 10),
     txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
-    pendingNonceCacheMs: parseInt(process.env.PENDING_NONCE_CACHE_MS || '30000', 10),
+    pendingNonceCacheMs: parseInt(process.env.PENDING_NONCE_CACHE_MS || '10000', 10),
     chainId: parseInt(
       process.env.POLYGON_CHAIN_ID ||
         resolveChainId(process.env.POLYGON_NETWORK || 'amoy').toString(),

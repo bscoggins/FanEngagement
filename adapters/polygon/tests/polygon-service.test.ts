@@ -52,4 +52,27 @@ describe('PolygonService reliability', () => {
       (service as any).handleBlockchainError(new Error('network timeout'), 'op')
     ).toThrow(RpcError);
   });
+
+  test('health keeps configured chainId and refreshes pending count on each call', async () => {
+    const wallet = Wallet.createRandom();
+    const service = new PolygonService(new Wallet(wallet.privateKey));
+
+    const providerMock = {
+      getNetwork: async () => ({ chainId: 80002 }),
+      getBlockNumber: async () => 123,
+      getBalance: async () => BigInt(0),
+      getFeeData: async () => ({ gasPrice: BigInt(0) }),
+    } as unknown as import('ethers').JsonRpcProvider;
+    (service as any).provider = providerMock;
+
+    const refreshSpy = jest
+      .spyOn(service as any, 'refreshPendingCount')
+      .mockResolvedValue(2);
+
+    const result = await service.checkHealth();
+
+    expect(refreshSpy).toHaveBeenCalled();
+    expect((service as any).chainId).toBe(config.polygon.chainId.toString());
+    expect(result.chainId).toBe(config.polygon.chainId);
+  });
 });

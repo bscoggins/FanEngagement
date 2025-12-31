@@ -29,8 +29,8 @@
        to: wallet.address,
        value: 0,
        nonce,
-       maxFeePerGas: fee.maxFeePerGas ? fee.maxFeePerGas * 2n : fee.gasPrice! * 2n,
-       maxPriorityFeePerGas: fee.maxPriorityFeePerGas ? fee.maxPriorityFeePerGas * 2n : undefined,
+        maxFeePerGas: fee.maxFeePerGas ? fee.maxFeePerGas * 2n : (fee.gasPrice ?? 0n) * 2n,
+        maxPriorityFeePerGas: fee.maxPriorityFeePerGas ? fee.maxPriorityFeePerGas * 2n : undefined,
      });
      await replace.wait(1);
      ```

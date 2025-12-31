@@ -14,7 +14,7 @@ COPY adapters/polygon/package*.json ./
 ENV NODE_ENV=development \
     NPM_CONFIG_CACHE=/tmp/.npm
 RUN npm install --include=dev --no-audit --progress=false || (cat /tmp/.npm/_logs/* || true; exit 1)
-RUN test -x node_modules/.bin/tsc || (ls -la node_modules/.bin || true && cat /tmp/.npm/_logs/* || true && exit 1)
+RUN test -x node_modules/.bin/tsc || (ls -la node_modules/.bin 2>/dev/null || true; cat /tmp/.npm/_logs/* 2>/dev/null || true; exit 1)
 
 # Copy source code
 COPY adapters/polygon/tsconfig.json ./
