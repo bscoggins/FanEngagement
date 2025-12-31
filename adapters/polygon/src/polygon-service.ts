@@ -87,6 +87,10 @@ export class PolygonService {
     return this.wallet.address;
   }
 
+  getChainId(): number {
+    return Number(this.chainId);
+  }
+
   /**
    * Create organization by deploying a simple registry contract
    * In production, this would deploy a more sophisticated governance contract
@@ -676,9 +680,7 @@ export class PolygonService {
       const now = Date.now();
       if (now - this.lastNonceCheckMs > this.nonceCacheTtlMs) {
         this.lastNonceCheckMs = now;
-        this.refreshPendingCount().catch(() => {
-          /* background refresh errors are logged in refreshPendingCount */
-        });
+        pendingCount = await this.refreshPendingCount();
       }
       blockchainPendingTransactions.set(
         { wallet_address: this.wallet.address, chain_id: this.chainId },
@@ -735,7 +737,7 @@ export class PolygonService {
     }
   }
 
-  private async refreshPendingCount(): Promise<void> {
+  private async refreshPendingCount(): Promise<number> {
     try {
       if (this.useFixtures) {
         this.lastPendingCount = 0;
@@ -743,7 +745,7 @@ export class PolygonService {
           { wallet_address: this.wallet.address, chain_id: this.chainId },
           0
         );
-        return;
+        return this.lastPendingCount;
       }
 
       const [pendingNonce, confirmedNonce] = await Promise.all([
@@ -756,11 +758,13 @@ export class PolygonService {
         { wallet_address: this.wallet.address, chain_id: this.chainId },
         pendingCount
       );
+      return pendingCount;
     } catch (error) {
       logger.warn('Unable to refresh pending transaction backlog', {
         error: serializeError(error),
         chainId: this.chainId,
       });
+      return this.lastPendingCount;
     }
   }
 

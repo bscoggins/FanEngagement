@@ -38,11 +38,11 @@ const sanitizeLogDataInPlace = (value: any): any => {
 };
 
 const redactSecrets = winston.format((info) => {
-  const clone: any = { ...info };
+  const deepClone: any = structuredClone(info);
   for (const symbol of Object.getOwnPropertySymbols(info)) {
-    clone[symbol] = (info as any)[symbol];
+    deepClone[symbol] = (info as any)[symbol];
   }
-  return sanitizeLogDataInPlace(clone);
+  return sanitizeLogDataInPlace(deepClone);
 });
 
 const logFormat = winston.format.combine(

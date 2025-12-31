@@ -12,7 +12,9 @@ const DEFAULT_CHAIN_IDS: Record<string, number> = {
 const resolveChainId = (network: string): number => {
   const chainId = DEFAULT_CHAIN_IDS[network];
   if (!chainId) {
-    throw new Error(`Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, mumbai, or amoy.`);
+    throw new Error(
+      `Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, amoy, or legacy mumbai (deprecated).`
+    );
   }
   return chainId;
 };

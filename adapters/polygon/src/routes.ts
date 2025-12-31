@@ -15,12 +15,12 @@ import { createPostHandler } from '../../shared/http.js';
 
 export function createRoutes(polygonService: PolygonService): Router {
   const router = Router();
-  const baseMetadata = {
+  const baseMetadata = () => ({
     adapter: 'polygon',
     network: config.polygon.network,
-    chainId: config.polygon.chainId,
+    chainId: polygonService.getChainId(),
     adapterInstance: config.server.instanceId,
-  };
+  });
 
   // POST /v1/adapter/organizations
   router.post(
@@ -35,7 +35,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.metadata
         ),
       buildResponse: (result) => ({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         accountAddress: result.contractAddress,
         gasUsed: result.gasUsed,
@@ -63,7 +63,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.metadata
         ),
       buildResponse: (result) => ({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         mintAddress: result.tokenAddress,
         gasUsed: result.gasUsed,
@@ -90,7 +90,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.metadata
         ),
       buildResponse: (result) => ({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         recipientAddress: result.recipientAddress,
@@ -123,7 +123,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           }
         ),
       buildResponse: (result) => ({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         proposalAddress: result.proposalAddress,
         gasUsed: result.gasUsed,
@@ -153,7 +153,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           }
         ),
       buildResponse: (result) => ({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
@@ -181,7 +181,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           }
         ),
       buildResponse: (result) => ({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
@@ -211,7 +211,7 @@ export function createRoutes(polygonService: PolygonService): Router {
       }
 
       res.status(200).json({
-        ...baseMetadata,
+        ...baseMetadata(),
         transactionId: result.transactionId,
         status: result.status,
         confirmations: result.confirmations,
@@ -238,7 +238,7 @@ export function createRoutes(polygonService: PolygonService): Router {
       const statusCode = health.status === 'healthy' ? 200 : 503;
 
       res.status(statusCode).json({
-        ...baseMetadata,
+        ...baseMetadata(),
         status: health.status,
         blockchain: 'polygon',
         network: health.network,
@@ -258,6 +258,7 @@ export function createRoutes(polygonService: PolygonService): Router {
         0
       );
       res.status(503).json({
+        ...baseMetadata(),
         status: 'unhealthy',
         blockchain: 'polygon',
         network: config.polygon.network,

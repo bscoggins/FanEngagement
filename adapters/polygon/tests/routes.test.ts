@@ -71,6 +71,7 @@ describe('Polygon adapter routes', () => {
         walletBalance: '1.0 MATIC',
       })),
       getWalletAddress: jest.fn(() => '0x0000000000000000000000000000000000000006'),
+      getChainId: jest.fn(() => runtimeConfig.polygon.chainId),
     };
 
     const app = express();
