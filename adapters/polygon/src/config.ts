@@ -2,6 +2,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const DEFAULT_CHAIN_IDS: Record<string, number> = {
+  polygon: 137,
+  mumbai: 80001,
+  amoy: 80002,
+};
+
+const resolveChainId = (network: string): number => {
+  return DEFAULT_CHAIN_IDS[network] ?? DEFAULT_CHAIN_IDS.amoy;
+};
+
 export interface Config {
   server: {
     port: number;
@@ -58,11 +68,7 @@ export const config: Config = {
     txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
     chainId: parseInt(
       process.env.POLYGON_CHAIN_ID ||
-        (process.env.POLYGON_NETWORK === 'polygon'
-          ? '137'
-          : process.env.POLYGON_NETWORK === 'mumbai'
-          ? '80001'
-          : '80002'),
+        resolveChainId(process.env.POLYGON_NETWORK || 'amoy').toString(),
       10
     ),
     privateKey: process.env.POLYGON_PRIVATE_KEY,

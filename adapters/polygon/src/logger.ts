@@ -25,7 +25,13 @@ const sanitizeInPlace = (value: any): any => {
   return value;
 };
 
-const redactSecrets = winston.format((info) => sanitizeInPlace(info));
+const redactSecrets = winston.format((info) => {
+  const clone: any = { ...info };
+  for (const symbol of Object.getOwnPropertySymbols(info)) {
+    clone[symbol] = (info as any)[symbol];
+  }
+  return sanitizeInPlace(clone);
+});
 
 const logFormat = winston.format.combine(
   redactSecrets(),
