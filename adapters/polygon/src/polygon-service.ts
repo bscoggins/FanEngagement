@@ -79,15 +79,15 @@ export class PolygonService {
         address: config.polygon.governanceContractAddress,
       });
     }
-    }
+  }
 
-    getWalletAddress(): string {
-      return this.wallet.address;
-    }
+  getWalletAddress(): string {
+    return this.wallet.address;
+  }
 
-    getChainId(): number {
-      return Number(this.chainId);
-    }
+  getChainId(): number {
+    return Number(this.chainId);
+  }
 
   /**
    * Create organization by deploying a simple registry contract
