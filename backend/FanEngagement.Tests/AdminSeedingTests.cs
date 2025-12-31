@@ -32,7 +32,7 @@ public class AdminSeedingTests : IClassFixture<TestWebApplicationFactory>, IAsyn
         
         // Delete organizations (cascades to memberships, shareTypes, shareIssuances, shareBalances, proposals, proposalOptions, votes, webhookEndpoints, outboundEvents)
         var orgs = await dbContext.Organizations
-            .Where(o => o.Name == "Tech Innovators" || o.Name == "Green Energy United" || o.Name == "City FC Supporters Trust" || o.Name == "Performance Test Org")
+            .Where(o => o.Name == "Tech Innovators" || o.Name == "Green Energy United" || o.Name == "City FC Supporters Trust" || o.Name == "Performance Test Org" || o.Name == "Polygon Demo Org")
             .ToListAsync();
         dbContext.Organizations.RemoveRange(orgs);
         

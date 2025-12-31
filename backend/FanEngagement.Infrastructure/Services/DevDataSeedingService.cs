@@ -113,6 +113,7 @@ public class DevDataSeedingService : IDevDataSeedingService
         var techOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Tech Innovators", cancellationToken);
         var greenOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Green Energy United", cancellationToken);
         var cityFcOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "City FC Supporters Trust", cancellationToken);
+        var polygonOrg = await _dbContext.Organizations.FirstOrDefaultAsync(o => o.Name == "Polygon Demo Org", cancellationToken);
 
         var alice = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "alice@example.com", cancellationToken);
         var bob = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "bob@abefroman.net", cancellationToken);
@@ -120,6 +121,8 @@ public class DevDataSeedingService : IDevDataSeedingService
         var dana = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "dana@sample.io", cancellationToken);
         var erika = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "erika@cityfc.support", cancellationToken);
         var frank = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == "frank@cityfc.support", cancellationToken);
+        var polygonAdapterUrl = Environment.GetEnvironmentVariable("POLYGON_ADAPTER_BASE_URL") ?? "http://polygon-adapter:3002/v1/adapter/";
+        var polygonApiKey = Environment.GetEnvironmentVariable("POLYGON_ADAPTER_API_KEY") ?? "REQUIRED-SET-IN-PRODUCTION";
 
         if (techOrg == null || greenOrg == null || cityFcOrg == null ||
             alice == null || bob == null || carlos == null || dana == null || erika == null || frank == null)
@@ -128,13 +131,73 @@ public class DevDataSeedingService : IDevDataSeedingService
             return result;
         }
 
+        // ========== SEED POLYGON ADAPTER DEMO ORG ==========
+        if (polygonOrg == null)
+        {
+            polygonOrg = new Organization
+            {
+                Id = Guid.NewGuid(),
+                Name = "Polygon Demo Org",
+                Description = "Seeded organization for Polygon adapter fixtures",
+                CreatedAt = DateTimeOffset.UtcNow,
+                BlockchainType = BlockchainType.Polygon,
+                BlockchainAccountAddress = "0xPolygonSeedOrg",
+                BlockchainConfig = JsonSerializer.Serialize(new
+                {
+                    network = "amoy",
+                    adapterUrl = polygonAdapterUrl,
+                    apiKey = polygonApiKey
+                })
+            };
+            _dbContext.Organizations.Add(polygonOrg);
+            result.OrganizationsCreated++;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            // Always update config to ensure environment variable changes are picked up
+            if (polygonOrg.BlockchainType == BlockchainType.None)
+            {
+                polygonOrg.BlockchainType = BlockchainType.Polygon;
+                polygonOrg.BlockchainAccountAddress ??= "0xPolygonSeedOrg";
+            }
+            
+            polygonOrg.BlockchainConfig = JsonSerializer.Serialize(new
+            {
+                network = "amoy",
+                adapterUrl = polygonAdapterUrl,
+                apiKey = polygonApiKey
+            });
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        if (polygonOrg != null)
+        {
+            var polygonFeatureEnabled = await _dbContext.OrganizationFeatureFlags
+                .AnyAsync(f => f.OrganizationId == polygonOrg.Id && f.Feature == OrganizationFeature.BlockchainIntegration, cancellationToken);
+
+            if (!polygonFeatureEnabled)
+            {
+                _dbContext.OrganizationFeatureFlags.Add(new OrganizationFeatureFlag
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = polygonOrg.Id,
+                    Feature = OrganizationFeature.BlockchainIntegration,
+                    IsEnabled = true,
+                    EnabledAt = DateTimeOffset.UtcNow,
+                    EnabledByUserId = alice!.Id
+                });
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         // ========== SEED MEMBERSHIPS ==========
         // Tech Innovators: alice (OrgAdmin), bob (Member)
         // Green Energy United: carlos (OrgAdmin), erika (OrgAdmin), alice (Member), dana (Member)
         // City FC Supporters Trust: erika (OrgAdmin), dana (Member), frank (Member)
         var membershipSpecs = new[]
         {
-            (OrgId: techOrg.Id, UserId: alice.Id, Role: OrganizationRole.OrgAdmin),
+            (OrgId: techOrg.Id, UserId: alice!.Id, Role: OrganizationRole.OrgAdmin),
             (OrgId: techOrg.Id, UserId: bob.Id, Role: OrganizationRole.Member),
             (OrgId: greenOrg.Id, UserId: carlos.Id, Role: OrganizationRole.OrgAdmin),
             (OrgId: greenOrg.Id, UserId: erika.Id, Role: OrganizationRole.OrgAdmin),
@@ -145,7 +208,11 @@ public class DevDataSeedingService : IDevDataSeedingService
             (OrgId: cityFcOrg.Id, UserId: frank.Id, Role: OrganizationRole.Member)
         };
 
-        var allOrgIds = new[] { techOrg.Id, greenOrg.Id, cityFcOrg.Id };
+        var allOrgIds = new List<Guid> { techOrg.Id, greenOrg.Id, cityFcOrg.Id };
+        if (polygonOrg != null)
+        {
+            allOrgIds.Add(polygonOrg.Id);
+        }
         var allUserIds = new[] { alice.Id, bob.Id, carlos.Id, dana.Id, erika.Id, frank.Id };
         var existingMemberships = await _dbContext.OrganizationMemberships
             .Where(m => allOrgIds.Contains(m.OrganizationId) && allUserIds.Contains(m.UserId))
@@ -174,6 +241,42 @@ public class DevDataSeedingService : IDevDataSeedingService
         {
             _dbContext.OrganizationMemberships.AddRange(membershipsToAdd);
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        if (polygonOrg != null)
+        {
+            var polygonAdminMembership = await _dbContext.OrganizationMemberships
+                .FirstOrDefaultAsync(m => m.OrganizationId == polygonOrg.Id && m.UserId == alice.Id, cancellationToken);
+            if (polygonAdminMembership == null)
+            {
+                _dbContext.OrganizationMemberships.Add(new OrganizationMembership
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = polygonOrg.Id,
+                    UserId = alice.Id,
+                    Role = OrganizationRole.OrgAdmin,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                result.MembershipsCreated++;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            var existingWallet = await _dbContext.UserWalletAddresses
+                .FirstOrDefaultAsync(w => w.UserId == alice.Id && w.BlockchainType == BlockchainType.Polygon, cancellationToken);
+            if (existingWallet == null)
+            {
+                _dbContext.UserWalletAddresses.Add(new UserWalletAddress
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = alice.Id,
+                    BlockchainType = BlockchainType.Polygon,
+                    Address = "0x0000000000000000000000000000000000000A11", // Intentional non-checksummed dev fixture address for Alice's Polygon demo wallet ("A11" suffix).
+                    Label = "Polygon Demo Wallet",
+                    IsPrimary = true,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
 
         // ========== SEED SHARE TYPES ==========
@@ -221,6 +324,32 @@ public class DevDataSeedingService : IDevDataSeedingService
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        if (polygonOrg != null)
+        {
+            var polygonShareType = await _dbContext.ShareTypes
+                .FirstOrDefaultAsync(st => st.OrganizationId == polygonOrg.Id && st.Symbol == "POLY", cancellationToken);
+            if (polygonShareType == null)
+            {
+                polygonShareType = new ShareType
+                {
+                    Id = Guid.NewGuid(),
+                    OrganizationId = polygonOrg.Id,
+                    Name = "Polygon Voting Share",
+                    Symbol = "POLY",
+                    Description = "Seeded Polygon voting share",
+                    VotingWeight = 1.0m,
+                    MaxSupply = null,
+                    IsTransferable = true,
+                    TokenDecimals = 18,
+                    BlockchainMintAddress = "0x1234567890123456789012345678901234567890",
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+                _dbContext.ShareTypes.Add(polygonShareType);
+                result.ShareTypesCreated++;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         // ========== FETCH SHARE TYPES FROM DB ==========
         var techStdShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "STDV", cancellationToken);
         var techPrmShare = await _dbContext.ShareTypes.FirstOrDefaultAsync(st => st.OrganizationId == techOrg.Id && st.Symbol == "PRMV", cancellationToken);
@@ -236,24 +365,34 @@ public class DevDataSeedingService : IDevDataSeedingService
         }
 
         // ========== SEED SHARE ISSUANCES ==========
-        var issuanceSpecs = new[]
+        var issuanceSpecs = new List<(Guid ShareTypeId, Guid UserId, decimal Quantity)>
         {
             // Tech Innovators
-            (ShareTypeId: techStdShare.Id, UserId: alice.Id, Quantity: 100m),
-            (ShareTypeId: techStdShare.Id, UserId: bob.Id, Quantity: 50m),
-            (ShareTypeId: techPrmShare.Id, UserId: alice.Id, Quantity: 20m),
+            (techStdShare.Id, alice.Id, 100m),
+            (techStdShare.Id, bob.Id, 50m),
+            (techPrmShare.Id, alice.Id, 20m),
             // Green Energy United
-            (ShareTypeId: greenStdShare.Id, UserId: carlos.Id, Quantity: 150m),
-            (ShareTypeId: greenStdShare.Id, UserId: erika.Id, Quantity: 100m),
-            (ShareTypeId: greenStdShare.Id, UserId: alice.Id, Quantity: 50m),
-            (ShareTypeId: greenStdShare.Id, UserId: dana.Id, Quantity: 75m),
-            (ShareTypeId: greenPrmShare.Id, UserId: carlos.Id, Quantity: 30m),
+            (greenStdShare.Id, carlos.Id, 150m),
+            (greenStdShare.Id, erika.Id, 100m),
+            (greenStdShare.Id, alice.Id, 50m),
+            (greenStdShare.Id, dana.Id, 75m),
+            (greenPrmShare.Id, carlos.Id, 30m),
             // City FC Supporters Trust
-            (ShareTypeId: cityFcStdShare.Id, UserId: erika.Id, Quantity: 200m),
-            (ShareTypeId: cityFcStdShare.Id, UserId: dana.Id, Quantity: 100m),
-            (ShareTypeId: cityFcStdShare.Id, UserId: frank.Id, Quantity: 80m),
-            (ShareTypeId: cityFcPrmShare.Id, UserId: erika.Id, Quantity: 25m)
+            (cityFcStdShare.Id, erika.Id, 200m),
+            (cityFcStdShare.Id, dana.Id, 100m),
+            (cityFcStdShare.Id, frank.Id, 80m),
+            (cityFcPrmShare.Id, erika.Id, 25m)
         };
+
+        if (polygonOrg != null)
+        {
+            var polygonShareType = await _dbContext.ShareTypes
+                .FirstOrDefaultAsync(st => st.OrganizationId == polygonOrg.Id && st.Symbol == "POLY", cancellationToken);
+            if (polygonShareType != null)
+            {
+                issuanceSpecs.Add((polygonShareType.Id, alice.Id, 50m));
+            }
+        }
 
         var shareTypeIds = issuanceSpecs.Select(s => s.ShareTypeId).Distinct().ToList();
         var issuanceUserIds = issuanceSpecs.Select(s => s.UserId).Distinct().ToList();
