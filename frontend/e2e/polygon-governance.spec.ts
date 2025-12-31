@@ -29,8 +29,8 @@ test.describe.serial('Polygon governance flows (fixture-backed)', () => {
     await waitForVisible(page.getByRole('heading', { name: /Share Issuance/i }));
 
     await page.getByRole('button', { name: 'Issue Shares' }).click();
-    await page.getByLabel('Member').selectOption({ label: 'Alice Johnson' });
-    await page.getByLabel('Share Type').selectOption({ index: 0 });
+    await page.getByRole('combobox', { name: /Member/i }).selectOption({ label: 'Alice Johnson (alice@example.com)' });
+    await page.getByRole('combobox', { name: /Share Type/i }).selectOption({ index: 1 });
     await page.getByLabel('Quantity').fill('5');
     await page.getByLabel('Reason').fill('Polygon fixture grant');
 
@@ -80,6 +80,7 @@ test.describe.serial('Polygon governance flows (fixture-backed)', () => {
     await addOption('Approve');
     await addOption('Reject');
 
+    page.once('dialog', (dialog) => dialog.accept());
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes(`/proposals/${proposalId}/open`) && resp.request().method() === 'POST',
@@ -91,7 +92,7 @@ test.describe.serial('Polygon governance flows (fixture-backed)', () => {
   });
 
   test('member casts polygon vote', async ({ page }) => {
-    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD, /\/me\/home/);
+    await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     await page.goto(`/me/proposals/${proposalId}`);
     await waitForVisible(page.getByText('Open', { exact: true }));
     await page.waitForFunction(

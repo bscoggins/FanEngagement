@@ -153,10 +153,15 @@ public class DevDataSeedingService : IDevDataSeedingService
             result.OrganizationsCreated++;
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
-        else if (polygonOrg.BlockchainType == BlockchainType.None)
+        else
         {
-            polygonOrg.BlockchainType = BlockchainType.Polygon;
-            polygonOrg.BlockchainAccountAddress ??= "0xPolygonSeedOrg";
+            // Always update config to ensure environment variable changes are picked up
+            if (polygonOrg.BlockchainType == BlockchainType.None)
+            {
+                polygonOrg.BlockchainType = BlockchainType.Polygon;
+                polygonOrg.BlockchainAccountAddress ??= "0xPolygonSeedOrg";
+            }
+            
             polygonOrg.BlockchainConfig = JsonSerializer.Serialize(new
             {
                 network = "amoy",
@@ -336,7 +341,7 @@ public class DevDataSeedingService : IDevDataSeedingService
                     MaxSupply = null,
                     IsTransferable = true,
                     TokenDecimals = 18,
-                    BlockchainMintAddress = "0xPolygonMintSeed",
+                    BlockchainMintAddress = "0x1234567890123456789012345678901234567890",
                     CreatedAt = DateTimeOffset.UtcNow
                 };
                 _dbContext.ShareTypes.Add(polygonShareType);

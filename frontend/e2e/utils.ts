@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Helper to wait for an element to be visible with an extended timeout so we tolerate
@@ -28,7 +28,7 @@ export const loginThroughUi = async (
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Log In' }).click();
-  await page.waitForURL(destinationPattern);
+  await expect(page).toHaveURL(destinationPattern);
   await page.waitForLoadState('networkidle');
 };
 

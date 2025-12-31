@@ -35,6 +35,9 @@ services:
       BlockchainAdapters__Solana__ApiKey: ${API_KEY:-dev-api-key-change-me}
       BlockchainAdapters__Polygon__BaseUrl: http://polygon-adapter:3002/v1/adapter/
       BlockchainAdapters__Polygon__ApiKey: ${API_KEY:-dev-api-key-change-me}
+      # Seeding configuration
+      POLYGON_ADAPTER_BASE_URL: http://polygon-adapter:3002/v1/adapter/
+      POLYGON_ADAPTER_API_KEY: ${API_KEY:-dev-api-key-change-me}
     ports:
       - "8080:8080"
     depends_on:
