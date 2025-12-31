@@ -672,18 +672,18 @@ export class PolygonService {
       const balance = await this.provider!.getBalance(this.wallet.address);
 
       // Pending transaction backlog (wallet level)
-    let pendingCount = this.lastPendingCount;
-    const now = Date.now();
-    if (now - this.lastNonceCheckMs > this.nonceCacheTtlMs) {
-      this.lastNonceCheckMs = now;
-      this.refreshPendingCount().catch(() => {
-        /* background refresh errors are logged in refreshPendingCount */
-      });
-    }
-    blockchainPendingTransactions.set(
-      { wallet_address: this.wallet.address, chain_id: this.chainId },
-      pendingCount
-    );
+      let pendingCount = this.lastPendingCount;
+      const now = Date.now();
+      if (now - this.lastNonceCheckMs > this.nonceCacheTtlMs) {
+        this.lastNonceCheckMs = now;
+        this.refreshPendingCount().catch(() => {
+          /* background refresh errors are logged in refreshPendingCount */
+        });
+      }
+      blockchainPendingTransactions.set(
+        { wallet_address: this.wallet.address, chain_id: this.chainId },
+        pendingCount
+      );
 
       // Get current gas price
       const feeData = await this.provider!.getFeeData();
