@@ -11,7 +11,10 @@ COPY adapters/shared ./adapters/shared
 # Copy package files for the Polygon adapter and install dependencies
 WORKDIR /workspace/adapters/polygon
 COPY adapters/polygon/package*.json ./
-RUN npm install
+ENV NODE_ENV=development \
+    NPM_CONFIG_CACHE=/tmp/.npm
+RUN npm install --include=dev --no-audit --progress=false || (cat /tmp/.npm/_logs/* || true; exit 1)
+RUN test -x node_modules/.bin/tsc || (ls -la node_modules/.bin || true && cat /tmp/.npm/_logs/* || true && exit 1)
 
 # Copy source code
 COPY adapters/polygon/tsconfig.json ./
@@ -38,7 +41,7 @@ COPY adapters/shared ./adapters/shared
 # Prepare adapter workspace and install production dependencies
 WORKDIR /app/adapters/polygon
 COPY adapters/polygon/package*.json ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev --no-audit --progress=false
 
 # Copy built application from builder stage
 COPY --from=builder /workspace/adapters/polygon/dist ./dist

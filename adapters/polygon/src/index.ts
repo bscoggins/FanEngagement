@@ -88,7 +88,7 @@ async function main() {
     process.on('SIGINT', () => shutdown('SIGINT'));
   } catch (error) {
     logger.error('Failed to start Polygon Adapter Service', { error });
-    healthStatus.set(0);
+    blockchainAdapterHealth.set({ chain_id: config.polygon.chainId.toString() }, 0);
     process.exit(1);
   }
 }
