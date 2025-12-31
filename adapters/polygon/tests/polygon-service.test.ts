@@ -75,4 +75,23 @@ describe('PolygonService reliability', () => {
     expect((service as any).chainId).toBe(config.polygon.chainId.toString());
     expect(result.chainId).toBe(config.polygon.chainId);
   });
+
+  test('refreshPendingCount uses cache within TTL', async () => {
+    const wallet = Wallet.createRandom();
+    const service = new PolygonService(new Wallet(wallet.privateKey));
+    const getTransactionCount = jest
+      .fn<(address: string, blockTag?: string) => Promise<number>>()
+      .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(3);
+    (service as any).provider = {
+      getTransactionCount,
+    } as any;
+
+    const first = await (service as any).refreshPendingCount(); // uses RPC
+    const second = await (service as any).refreshPendingCount(); // returns cache
+
+    expect(first).toBe(2);
+    expect(second).toBe(2);
+    expect(getTransactionCount).toHaveBeenCalledTimes(2);
+  });
 });

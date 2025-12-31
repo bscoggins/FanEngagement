@@ -48,7 +48,9 @@ export class PolygonService {
   private readonly fixtureTransactions = new Map<string, FixtureTransaction>();
   private fixtureBlockNumber = 100_000;
   private chainId = config.polygon.chainId.toString();
+  private readonly nonceCacheTtlMs = config.polygon.pendingNonceCacheMs;
   private lastPendingCount = 0;
+  private lastNonceCheckMs = 0;
 
   constructor(wallet: Wallet) {
     this.useFixtures = config.fixtures.useFixtures;
@@ -746,12 +748,18 @@ export class PolygonService {
         return this.lastPendingCount;
       }
 
+      const now = Date.now();
+      if (this.lastNonceCheckMs && now - this.lastNonceCheckMs < this.nonceCacheTtlMs) {
+        return this.lastPendingCount;
+      }
+
       const [pendingNonce, confirmedNonce] = await Promise.all([
         this.provider!.getTransactionCount(this.wallet.address, 'pending'),
         this.provider!.getTransactionCount(this.wallet.address, 'latest'),
       ]);
       const pendingCount = Math.max(pendingNonce - confirmedNonce, 0);
       this.lastPendingCount = pendingCount;
+      this.lastNonceCheckMs = now;
       blockchainPendingTransactions.set(
         { wallet_address: this.wallet.address, chain_id: this.chainId },
         pendingCount
