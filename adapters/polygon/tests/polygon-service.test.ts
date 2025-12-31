@@ -76,22 +76,33 @@ describe('PolygonService reliability', () => {
     expect(result.chainId).toBe(config.polygon.chainId);
   });
 
-  test('refreshPendingCount uses cache within TTL', async () => {
+  test('refreshPendingCount respects cache TTL boundary', async () => {
     const wallet = Wallet.createRandom();
     const service = new PolygonService(new Wallet(wallet.privateKey));
+    jest.useFakeTimers();
     const getTransactionCount = jest
       .fn<(address: string, blockTag?: string) => Promise<number>>()
+      // first refresh: pending=5, latest=3 => backlog 2
       .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(3)
+      // second refresh after TTL: pending=4, latest=3 => backlog 1
+      .mockResolvedValueOnce(4)
       .mockResolvedValueOnce(3);
-    (service as any).provider = {
-      getTransactionCount,
-    } as any;
+    (service as any).provider = { getTransactionCount } as any;
 
-    const first = await (service as any).refreshPendingCount(); // uses RPC
-    const second = await (service as any).refreshPendingCount(); // returns cache
+    try {
+      const first = await (service as any).refreshPendingCount(); // cache miss
+      jest.advanceTimersByTime(config.polygon.pendingNonceCacheMs - 1);
+      const cached = await (service as any).refreshPendingCount(); // cache hit
+      jest.advanceTimersByTime(2);
+      const refreshed = await (service as any).refreshPendingCount(); // cache miss after TTL
 
-    expect(first).toBe(2);
-    expect(second).toBe(2);
-    expect(getTransactionCount).toHaveBeenCalledTimes(2);
+      expect(first).toBe(2);
+      expect(cached).toBe(2);
+      expect(refreshed).toBe(1);
+      expect(getTransactionCount).toHaveBeenCalledTimes(4);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

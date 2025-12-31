@@ -682,10 +682,6 @@ export class PolygonService {
 
       // Pending transaction backlog (wallet level)
       const pendingCount = await this.refreshPendingCount();
-      blockchainPendingTransactions.set(
-        { wallet_address: this.wallet.address, chain_id: this.chainId },
-        pendingCount
-      );
 
       // Get current gas price
       const feeData = await this.provider!.getFeeData();
