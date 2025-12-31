@@ -20,7 +20,11 @@ export function loadWallet(): Wallet {
   };
 
   // Allow fixture mode to use an ephemeral wallet without external secrets
-  if (config.fixtures.useFixtures && !config.polygon.privateKey && !config.polygon.privateKeyPath) {
+  if (
+    config.fixtures.useFixtures &&
+    (!config.polygon.privateKey || isPlaceholderKey(config.polygon.privateKey)) &&
+    !config.polygon.privateKeyPath
+  ) {
     logger.warn('POLYGON_RPC_FIXTURE enabled - generating ephemeral wallet for deterministic CI runs');
     const randomWallet = Wallet.createRandom();
     return new Wallet(randomWallet.privateKey);
