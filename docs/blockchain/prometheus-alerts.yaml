@@ -235,7 +235,8 @@ groups:
     rules:
       - alert: PolygonHighErrorRate
         expr: |
-          (
+          rate(blockchain_transactions_total{adapter="polygon"}[5m]) > 0
+          and (
             rate(blockchain_transactions_total{adapter="polygon", status="failed"}[5m])
             /
             rate(blockchain_transactions_total{adapter="polygon"}[5m])

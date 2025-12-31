@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Mumbai is deprecated; keep mapping for legacy environments while defaulting to Amoy
 const DEFAULT_CHAIN_IDS: Record<string, number> = {
   polygon: 137,
   mumbai: 80001,

@@ -15,10 +15,10 @@ const SECRET_KEYS = [
   'key',
 ];
 
-const sanitizeInPlace = (value: any): any => {
+const sanitizeLogDataInPlace = (value: any): any => {
   if (Array.isArray(value)) {
     value.forEach((entry, index) => {
-      value[index] = sanitizeInPlace(entry);
+      value[index] = sanitizeLogDataInPlace(entry);
     });
     return value;
   }
@@ -29,7 +29,7 @@ const sanitizeInPlace = (value: any): any => {
       if (SECRET_KEYS.some(secretKey => lower.includes(secretKey))) {
         value[key] = '[REDACTED]';
       } else {
-        value[key] = sanitizeInPlace(val);
+        value[key] = sanitizeLogDataInPlace(val);
       }
     });
   }
@@ -42,7 +42,7 @@ const redactSecrets = winston.format((info) => {
   for (const symbol of Object.getOwnPropertySymbols(info)) {
     clone[symbol] = (info as any)[symbol];
   }
-  return sanitizeInPlace(clone);
+  return sanitizeLogDataInPlace(clone);
 });
 
 const logFormat = winston.format.combine(

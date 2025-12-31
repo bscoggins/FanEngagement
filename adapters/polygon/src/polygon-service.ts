@@ -672,21 +672,18 @@ export class PolygonService {
       const balance = await this.provider!.getBalance(this.wallet.address);
 
       // Pending transaction backlog (wallet level)
-      let pendingCount = this.lastPendingCount;
-      const now = Date.now();
-      if (now - this.lastNonceCheckMs > this.nonceCacheTtlMs) {
-        const [pendingNonce, confirmedNonce] = await Promise.all([
-          this.provider!.getTransactionCount(this.wallet.address, 'pending'),
-          this.provider!.getTransactionCount(this.wallet.address, 'latest'),
-        ]);
-        pendingCount = Math.max(pendingNonce - confirmedNonce, 0);
-        this.lastPendingCount = pendingCount;
-        this.lastNonceCheckMs = now;
-      }
-      blockchainPendingTransactions.set(
-        { wallet_address: this.wallet.address, chain_id: this.chainId },
-        pendingCount
-      );
+    let pendingCount = this.lastPendingCount;
+    const now = Date.now();
+    if (now - this.lastNonceCheckMs > this.nonceCacheTtlMs) {
+      this.lastNonceCheckMs = now;
+      this.refreshPendingCount().catch(() => {
+        /* background refresh errors are logged in refreshPendingCount */
+      });
+    }
+    blockchainPendingTransactions.set(
+      { wallet_address: this.wallet.address, chain_id: this.chainId },
+      pendingCount
+    );
 
       // Get current gas price
       const feeData = await this.provider!.getFeeData();
@@ -735,6 +732,35 @@ export class PolygonService {
         walletAddress: this.wallet.address,
         chainId: Number(this.chainId),
       };
+    }
+  }
+
+  private async refreshPendingCount(): Promise<void> {
+    try {
+      if (this.useFixtures) {
+        this.lastPendingCount = 0;
+        blockchainPendingTransactions.set(
+          { wallet_address: this.wallet.address, chain_id: this.chainId },
+          0
+        );
+        return;
+      }
+
+      const [pendingNonce, confirmedNonce] = await Promise.all([
+        this.provider!.getTransactionCount(this.wallet.address, 'pending'),
+        this.provider!.getTransactionCount(this.wallet.address, 'latest'),
+      ]);
+      const pendingCount = Math.max(pendingNonce - confirmedNonce, 0);
+      this.lastPendingCount = pendingCount;
+      blockchainPendingTransactions.set(
+        { wallet_address: this.wallet.address, chain_id: this.chainId },
+        pendingCount
+      );
+    } catch (error) {
+      logger.warn('Unable to refresh pending transaction backlog', {
+        error: serializeError(error),
+        chainId: this.chainId,
+      });
     }
   }
 
