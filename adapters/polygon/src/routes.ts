@@ -10,12 +10,17 @@ import {
 } from './schemas.js';
 import { handleError } from './errors.js';
 import { getMetricsRegistry } from './metrics.js';
-import { healthStatus } from './metrics.js';
 import { config } from './config.js';
 import { createPostHandler } from '../../shared/http.js';
 
 export function createRoutes(polygonService: PolygonService): Router {
   const router = Router();
+  const baseMetadata = () => ({
+    adapter: 'polygon',
+    network: config.polygon.network,
+    chainId: polygonService.getChainId(),
+    adapterInstance: config.server.instanceId,
+  });
 
   // POST /v1/adapter/organizations
   router.post(
@@ -30,6 +35,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.metadata
         ),
       buildResponse: (result) => ({
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         accountAddress: result.contractAddress,
         gasUsed: result.gasUsed,
@@ -57,6 +63,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.metadata
         ),
       buildResponse: (result) => ({
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         mintAddress: result.tokenAddress,
         gasUsed: result.gasUsed,
@@ -83,6 +90,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           data.metadata
         ),
       buildResponse: (result) => ({
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         recipientAddress: result.recipientAddress,
@@ -115,6 +123,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           }
         ),
       buildResponse: (result) => ({
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         proposalAddress: result.proposalAddress,
         gasUsed: result.gasUsed,
@@ -144,6 +153,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           }
         ),
       buildResponse: (result) => ({
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
@@ -171,6 +181,7 @@ export function createRoutes(polygonService: PolygonService): Router {
           }
         ),
       buildResponse: (result) => ({
+        ...baseMetadata(),
         transactionId: result.transactionHash,
         gasUsed: result.gasUsed,
         status: 'confirmed',
@@ -200,6 +211,7 @@ export function createRoutes(polygonService: PolygonService): Router {
       }
 
       res.status(200).json({
+        ...baseMetadata(),
         transactionId: result.transactionId,
         status: result.status,
         confirmations: result.confirmations,
@@ -217,12 +229,10 @@ export function createRoutes(polygonService: PolygonService): Router {
     try {
       const health = await polygonService.checkHealth();
 
-      // Update health metrics
-      healthStatus.set(health.status === 'healthy' ? 1 : 0);
-
       const statusCode = health.status === 'healthy' ? 200 : 503;
 
       res.status(statusCode).json({
+        ...baseMetadata(),
         status: health.status,
         blockchain: 'polygon',
         network: health.network,
@@ -230,15 +240,21 @@ export function createRoutes(polygonService: PolygonService): Router {
         lastBlockNumber: health.lastBlockNumber,
         walletAddress: health.walletAddress,
         walletBalance: health.walletBalance,
+        chainId: health.chainId ?? config.polygon.chainId,
+        adapterInstance: config.server.instanceId,
+        pendingTransactions: health.pendingTransactions,
+        rpcLatencyMs: health.rpcLatencyMs,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      healthStatus.set(0);
       res.status(503).json({
+        ...baseMetadata(),
         status: 'unhealthy',
         blockchain: 'polygon',
         network: config.polygon.network,
         rpcStatus: 'error',
+        adapterInstance: config.server.instanceId,
+        chainId: config.polygon.chainId,
         timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : 'Unknown error',
       });

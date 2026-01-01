@@ -52,4 +52,57 @@ describe('PolygonService reliability', () => {
       (service as any).handleBlockchainError(new Error('network timeout'), 'op')
     ).toThrow(RpcError);
   });
+
+  test('health keeps configured chainId and refreshes pending count on each call', async () => {
+    const wallet = Wallet.createRandom();
+    const service = new PolygonService(new Wallet(wallet.privateKey));
+
+    const providerMock = {
+      getNetwork: async () => ({ chainId: 80002 }),
+      getBlockNumber: async () => 123,
+      getBalance: async () => BigInt(0),
+      getFeeData: async () => ({ gasPrice: BigInt(0) }),
+    } as unknown as import('ethers').JsonRpcProvider;
+    (service as any).provider = providerMock;
+
+    const refreshSpy = jest
+      .spyOn(service as any, 'refreshPendingCount')
+      .mockResolvedValue(2);
+
+    const result = await service.checkHealth();
+
+    expect(refreshSpy).toHaveBeenCalled();
+    expect((service as any).chainId).toBe(config.polygon.chainId.toString());
+    expect(result.chainId).toBe(config.polygon.chainId);
+  });
+
+  test('refreshPendingCount respects cache TTL boundary', async () => {
+    const wallet = Wallet.createRandom();
+    const service = new PolygonService(new Wallet(wallet.privateKey));
+    jest.useFakeTimers();
+    const getTransactionCount = jest
+      .fn<(address: string, blockTag?: string) => Promise<number>>()
+      // first refresh: pending=5, latest=3 => backlog 2
+      .mockResolvedValueOnce(5)
+      .mockResolvedValueOnce(3)
+      // second refresh after TTL: pending=4, latest=3 => backlog 1
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(3);
+    (service as any).provider = { getTransactionCount } as any;
+
+    try {
+      const first = await (service as any).refreshPendingCount(); // cache miss
+      jest.advanceTimersByTime(config.polygon.pendingNonceCacheMs - 1);
+      const cached = await (service as any).refreshPendingCount(); // cache hit
+      jest.advanceTimersByTime(2);
+      const refreshed = await (service as any).refreshPendingCount(); // cache miss after TTL
+
+      expect(first).toBe(2);
+      expect(cached).toBe(2);
+      expect(refreshed).toBe(1);
+      expect(getTransactionCount).toHaveBeenCalledTimes(4);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

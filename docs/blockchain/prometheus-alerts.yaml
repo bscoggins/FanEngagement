@@ -230,6 +230,76 @@ groups:
             4. Ensure HPA is configured correctly
           runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/adapter-operations.md#6-scaling-strategy"
 
+  - name: polygon_adapter_specific
+    interval: 30s
+    rules:
+      - alert: PolygonHighErrorRate
+        expr: |
+          rate(blockchain_transactions_total{adapter="polygon"}[5m]) > 0
+          and (
+            rate(blockchain_transactions_total{adapter="polygon", status="failed"}[5m])
+            /
+            rate(blockchain_transactions_total{adapter="polygon"}[5m])
+          ) > 0.03
+        for: 5m
+        labels:
+          severity: critical
+          component: polygon-adapter
+          adapter: polygon
+        annotations:
+          summary: "Polygon adapter transaction errors exceed 3%"
+          description: |
+            Failed Polygon transactions are above 3% over the last 5 minutes (current: {{ $value | humanizePercentage }}).
+
+            **Next steps:**
+            1. Check adapter health endpoint for RPC status and pendingTransactions
+            2. Inspect logs for rpc-error or transaction-error
+            3. Validate gas settings and wallet balance
+            4. Follow runbook for remediation
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/polygon-runbook.md#2-common-failures--recovery"
+
+      - alert: PolygonPendingTxBacklog
+        expr: blockchain_pending_transactions{adapter="polygon"} > 3
+        for: 10m
+        labels:
+          severity: warning
+          component: polygon-adapter
+          adapter: polygon
+        annotations:
+          summary: "Polygon pending transaction backlog detected"
+          description: |
+            Pending Polygon wallet backlog is {{ $value }} transactions.
+
+            **Next steps:**
+            1. Verify nonce gap vs latest on-chain nonce
+            2. Speed up or cancel stuck tx with higher gas
+            3. Ensure only one signer instance is active for the key
+            4. Refer to nonce backlog runbook
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/polygon-runbook.md#21-nonce-conflicts--pending-backlog"
+
+      - alert: PolygonRPCLatencyHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            rate(blockchain_rpc_latency_seconds_bucket{adapter="polygon"}[5m])
+          ) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          component: polygon-adapter
+          adapter: polygon
+        annotations:
+          summary: "Polygon RPC latency elevated (P95 > 1.5s)"
+          description: |
+            RPC latency to Polygon is elevated (p95 > 1.5s). Potential rate limits or provider degradation.
+
+            **Next steps:**
+            1. Check provider status and adapter logs for rpc-error
+            2. Throttle non-critical writes and consider RPC failover
+            3. Confirm health endpoint recovers after mitigation
+            4. Monitor that p95 latency returns below the 1.5s adapter SLO.
+          runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/polygon-runbook.md#23-rpc-rate-limits--latency"
+
   - name: blockchain_adapters_info
     interval: 30s
     rules:
