@@ -23,8 +23,8 @@
   2. Inspect recent tx: `eth_getTransactionCount` (pending vs latest) and last tx hashes.
   3. If backlog > 0, issue a replacement/speed-up tx with higher fee (same nonce) or cancel tx to self with 0 value. Example with ethers:
      ```ts
-     const nonce = await provider.getTransactionCount(wallet.address, 'pending');
-     const fee = await provider.getFeeData();
+      const nonce = await provider.getTransactionCount(wallet.address, 'pending');
+      const fee = await provider.getFeeData();
       const replace = await wallet.sendTransaction({
         to: wallet.address,
         value: 0,

@@ -297,7 +297,7 @@ groups:
             1. Check provider status and adapter logs for rpc-error
             2. Throttle non-critical writes and consider RPC failover
             3. Confirm health endpoint recovers after mitigation
-            4. Threshold set to keep p95 latency under the 1.5s adapter SLO.
+            4. Monitor that p95 latency returns below the 1.5s adapter SLO.
           runbook_url: "https://github.com/bscoggins/FanEngagement/blob/main/docs/blockchain/polygon-runbook.md#23-rpc-rate-limits--latency"
 
   - name: blockchain_adapters_info

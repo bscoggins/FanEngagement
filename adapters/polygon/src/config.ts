@@ -9,13 +9,13 @@ const DEFAULT_CHAIN_IDS: Record<string, number> = {
   amoy: 80002,
 };
 
-export const resolveChainId = (network: string): number => {
+export const resolveChainId = (network: string): number | undefined => {
   const chainId = DEFAULT_CHAIN_IDS[network];
   if (!chainId) {
     console.warn(
-      `Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, amoy, or legacy mumbai (deprecated). Defaulting to 'polygon' (${DEFAULT_CHAIN_IDS.polygon}).`
+      `Unsupported POLYGON_NETWORK value '${network}'. Expected polygon, amoy, or legacy mumbai (deprecated). Set POLYGON_CHAIN_ID explicitly when using a custom network.`
     );
-    return DEFAULT_CHAIN_IDS.polygon;
+    return undefined;
   }
   return chainId;
 };
@@ -70,22 +70,25 @@ export const config: Config = {
     useFixtures: process.env.POLYGON_RPC_FIXTURE === 'true' || process.env.POLYGON_RPC_FIXTURE === '1',
     fixturePath: process.env.POLYGON_RPC_FIXTURE_PATH,
   },
-  polygon: {
-    network: process.env.POLYGON_NETWORK || 'amoy',
-    rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology',
-    confirmations: parseInt(process.env.POLYGON_CONFIRMATIONS || '6', 10),
-    txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
-    pendingNonceCacheMs: parseInt(process.env.PENDING_NONCE_CACHE_MS || '10000', 10),
-    chainId: parseInt(
-      process.env.POLYGON_CHAIN_ID ||
-        resolveChainId(process.env.POLYGON_NETWORK || 'amoy').toString(),
-      10
-    ),
-    privateKey: process.env.POLYGON_PRIVATE_KEY,
-    privateKeyPath: process.env.POLYGON_PRIVATE_KEY_PATH,
-    governanceContractAddress: process.env.GOVERNANCE_CONTRACT_ADDRESS,
-    blockExplorerUrl: process.env.BLOCK_EXPLORER_URL,
-  },
+  polygon: (() => {
+    const network = process.env.POLYGON_NETWORK || 'amoy';
+    const resolvedNetworkChainId = resolveChainId(network);
+    return {
+      network,
+      rpcUrl: process.env.POLYGON_RPC_URL || 'https://rpc-amoy.polygon.technology',
+      confirmations: parseInt(process.env.POLYGON_CONFIRMATIONS || '6', 10),
+      txTimeout: parseInt(process.env.POLYGON_TX_TIMEOUT || '120000', 10),
+      pendingNonceCacheMs: parseInt(process.env.PENDING_NONCE_CACHE_MS || '10000', 10),
+      chainId: parseInt(
+        process.env.POLYGON_CHAIN_ID ?? (resolvedNetworkChainId ? resolvedNetworkChainId.toString() : ''),
+        10
+      ),
+      privateKey: process.env.POLYGON_PRIVATE_KEY,
+      privateKeyPath: process.env.POLYGON_PRIVATE_KEY_PATH,
+      governanceContractAddress: process.env.GOVERNANCE_CONTRACT_ADDRESS,
+      blockExplorerUrl: process.env.BLOCK_EXPLORER_URL,
+    };
+  })(),
   auth: {
     apiKey: process.env.API_KEY || '',
     requireAuth: process.env.REQUIRE_AUTH !== 'false',
