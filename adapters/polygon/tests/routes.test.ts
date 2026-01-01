@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, jest, test } from '@j
 import express from 'express';
 import { AddressInfo } from 'net';
 import { RpcError, TransactionError } from '../src/errors.js';
+import { blockchainAdapterHealth } from '../src/metrics.js';
 
 let server: any;
 let baseUrl: string;
@@ -62,14 +63,20 @@ describe('Polygon adapter routes', () => {
         gasUsed: '1234',
         timestamp: 1710000000,
       })),
-      checkHealth: jest.fn(async () => ({
-        status: 'healthy',
-        network: 'amoy',
-        rpcStatus: 'connected',
-        lastBlockNumber: 100,
-        walletAddress: '0x0000000000000000000000000000000000000005',
-        walletBalance: '1.0 MATIC',
-      })),
+      checkHealth: jest.fn(async () => {
+        blockchainAdapterHealth.set({ chain_id: String(runtimeConfig.polygon.chainId) }, 1);
+        return {
+          status: 'healthy',
+          network: 'amoy',
+          rpcStatus: 'connected',
+          lastBlockNumber: 100,
+          walletAddress: '0x0000000000000000000000000000000000000005',
+          walletBalance: '1.0 MATIC',
+          chainId: runtimeConfig.polygon.chainId,
+          pendingTransactions: 0,
+          rpcLatencyMs: 1,
+        };
+      }),
       getWalletAddress: jest.fn(() => '0x0000000000000000000000000000000000000006'),
       getChainId: jest.fn(() => runtimeConfig.polygon.chainId),
     };
@@ -91,7 +98,13 @@ describe('Polygon adapter routes', () => {
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => server?.close(resolve));
+    await new Promise<void>((resolve) => {
+      if (server) {
+        server.close(resolve);
+      } else {
+        resolve();
+      }
+    });
   });
 
   test('requires API key for write endpoints', async () => {

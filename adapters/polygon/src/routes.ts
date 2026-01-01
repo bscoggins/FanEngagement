@@ -9,7 +9,7 @@ import {
   commitProposalResultsSchema,
 } from './schemas.js';
 import { handleError } from './errors.js';
-import { getMetricsRegistry, blockchainAdapterHealth } from './metrics.js';
+import { getMetricsRegistry } from './metrics.js';
 import { config } from './config.js';
 import { createPostHandler } from '../../shared/http.js';
 
@@ -229,12 +229,6 @@ export function createRoutes(polygonService: PolygonService): Router {
     try {
       const health = await polygonService.checkHealth();
 
-      // Update health metrics
-      blockchainAdapterHealth.set(
-        { chain_id: String(health.chainId ?? config.polygon.chainId) },
-        health.status === 'healthy' ? 1 : 0
-      );
-
       const statusCode = health.status === 'healthy' ? 200 : 503;
 
       res.status(statusCode).json({
@@ -253,10 +247,6 @@ export function createRoutes(polygonService: PolygonService): Router {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      blockchainAdapterHealth.set(
-        { chain_id: config.polygon.chainId.toString() },
-        0
-      );
       res.status(503).json({
         ...baseMetadata(),
         status: 'unhealthy',
