@@ -25,13 +25,13 @@
      ```ts
      const nonce = await provider.getTransactionCount(wallet.address, 'pending');
      const fee = await provider.getFeeData();
-     const replace = await wallet.sendTransaction({
-       to: wallet.address,
-      value: 0,
-      nonce,
-      maxFeePerGas: fee.maxFeePerGas ? fee.maxFeePerGas * 2n : (fee.gasPrice ?? 0n) * 2n,
-      maxPriorityFeePerGas: fee.maxPriorityFeePerGas ? fee.maxPriorityFeePerGas * 2n : undefined,
-     });
+      const replace = await wallet.sendTransaction({
+        to: wallet.address,
+        value: 0,
+        nonce,
+        maxFeePerGas: fee.maxFeePerGas ? fee.maxFeePerGas * 2n : (fee.gasPrice ?? 0n) * 2n,
+        maxPriorityFeePerGas: fee.maxPriorityFeePerGas ? fee.maxPriorityFeePerGas * 2n : undefined,
+      });
      await replace.wait(1);
      ```
   4. Confirm new tx mined; backlog gauge should return to 0.
