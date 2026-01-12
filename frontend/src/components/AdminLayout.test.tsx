@@ -72,7 +72,7 @@ describe('AdminLayout', () => {
 
   it('renders admin header with title', async () => {
     renderAdminLayout();
-    expect(await screen.findByText('FanEngagement Admin')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'FanEngagement' })).toBeInTheDocument();
   });
 
   it('displays logout button', async () => {
@@ -80,16 +80,37 @@ describe('AdminLayout', () => {
     expect(await screen.findByRole('button', { name: /logout/i })).toBeInTheDocument();
   });
 
-  it('displays sidebar navigation links for platform admin', async () => {
+  it('displays horizontal navigation dropdowns for platform admin', async () => {
+    const user = userEvent.setup();
     renderAdminLayout();
     
+    // Platform admin should see Platform, Management, and Account dropdowns
     await waitFor(() => {
-      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
-      expect(screen.getByTestId('admin-nav-platformMyAccount')).toBeInTheDocument();
-      expect(screen.queryByTestId('admin-nav-adminMyAccount')).not.toBeInTheDocument();
-      expect(screen.getByText('Users')).toBeInTheDocument();
-      expect(screen.getByText('Organizations')).toBeInTheDocument();
-      expect(screen.getByText('Dev Tools')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-platform')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-management')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
+    });
+    
+    // Open Management dropdown to verify links
+    await user.click(screen.getByTestId('nav-dropdown-management'));
+    await waitFor(() => {
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-manageUsers')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-manageOrganizations')).toBeInTheDocument();
+    });
+    
+    // Open Platform dropdown to verify Dev Tools
+    await user.click(screen.getByTestId('nav-dropdown-platform'));
+    await waitFor(() => {
+      expect(screen.getByTestId('nav-devTools')).toBeInTheDocument();
+    });
+    
+    // Open Account dropdown to verify platform My Account
+    await user.click(screen.getByTestId('nav-dropdown-account'));
+    await waitFor(() => {
+      expect(screen.getByTestId('nav-platformMyAccount')).toBeInTheDocument();
+      // OrgAdmin my account should NOT be present for Platform Admin
+      expect(screen.queryByTestId('nav-adminMyAccount')).not.toBeInTheDocument();
     });
   });
 
@@ -109,14 +130,16 @@ describe('AdminLayout', () => {
     renderAdminLayout('/admin');
     const user = userEvent.setup();
     
+    // Open Management dropdown first
     await waitFor(() => {
-      expect(screen.getByText('Users')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-management')).toBeInTheDocument();
     });
+    await user.click(screen.getByTestId('nav-dropdown-management'));
     
-    const usersLink = screen.getByText('Users').closest('a');
+    // Find and click Users link
+    const usersLink = await screen.findByTestId('nav-manageUsers');
     expect(usersLink).toHaveAttribute('href', '/admin/users');
-    
-    await user.click(usersLink!);
+    await user.click(usersLink);
     
     await waitFor(() => {
       expect(screen.getByText('Users Content')).toBeInTheDocument();
@@ -127,14 +150,16 @@ describe('AdminLayout', () => {
     renderAdminLayout('/admin');
     const user = userEvent.setup();
 
+    // Open Account dropdown first
     await waitFor(() => {
-      expect(screen.getByTestId('admin-nav-platformMyAccount')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
     });
+    await user.click(screen.getByTestId('nav-dropdown-account'));
 
-    const myAccountLink = screen.getByTestId('admin-nav-platformMyAccount');
+    const myAccountLink = await screen.findByTestId('nav-platformMyAccount');
     expect(myAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
 
-    await user.click(myAccountLink!);
+    await user.click(myAccountLink);
 
     await waitFor(() => {
       expect(screen.getByText('Platform My Account Content')).toBeInTheDocument();
@@ -142,31 +167,57 @@ describe('AdminLayout', () => {
   });
 
   it('has correct navigation link hrefs for platform admin', async () => {
+    const user = userEvent.setup();
     renderAdminLayout();
     
+    // Open Management dropdown
     await waitFor(() => {
-      const dashboardLink = screen.getByTestId('admin-nav-adminDashboard');
-      const platformMyAccountLink = screen.getByTestId('admin-nav-platformMyAccount');
-      const usersLink = screen.getByTestId('admin-nav-manageUsers');
-      const orgsLink = screen.getByTestId('admin-nav-manageOrganizations');
-      const devToolsLink = screen.getByTestId('admin-nav-devTools');
+      expect(screen.getByTestId('nav-dropdown-management')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('nav-dropdown-management'));
+    
+    await waitFor(() => {
+      const dashboardLink = screen.getByTestId('nav-adminDashboard');
+      const usersLink = screen.getByTestId('nav-manageUsers');
+      const orgsLink = screen.getByTestId('nav-manageOrganizations');
       
       expect(dashboardLink).toHaveAttribute('href', '/admin/dashboard');
-      expect(platformMyAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
       expect(usersLink).toHaveAttribute('href', '/admin/users');
       expect(orgsLink).toHaveAttribute('href', '/admin/organizations');
+    });
+    
+    // Open Platform dropdown for Dev Tools
+    await user.click(screen.getByTestId('nav-dropdown-platform'));
+    await waitFor(() => {
+      const devToolsLink = screen.getByTestId('nav-devTools');
       expect(devToolsLink).toHaveAttribute('href', '/admin/dev-tools');
+    });
+    
+    // Open Account dropdown for My Account
+    await user.click(screen.getByTestId('nav-dropdown-account'));
+    await waitFor(() => {
+      const platformMyAccountLink = screen.getByTestId('nav-platformMyAccount');
+      expect(platformMyAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
     });
   });
 
   it('renders a single My Account link for platform admin in admin layout', async () => {
+    const user = userEvent.setup();
     renderAdminLayout();
 
+    // Open Account dropdown
     await waitFor(() => {
-      expect(screen.queryByTestId('admin-nav-adminMyAccount')).not.toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
+    });
+    await user.click(screen.getByTestId('nav-dropdown-account'));
+
+    await waitFor(() => {
+      // Should NOT have org admin my account
+      expect(screen.queryByTestId('nav-adminMyAccount')).not.toBeInTheDocument();
+      // Should have exactly one My Account link (platform version)
       const myAccountLinks = screen.getAllByText('My Account');
       expect(myAccountLinks).toHaveLength(1);
-      expect(screen.getByTestId('admin-nav-platformMyAccount')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-platformMyAccount')).toBeInTheDocument();
     });
   });
 
@@ -201,6 +252,7 @@ describe('AdminLayout', () => {
 
   describe('OrgAdmin navigation', () => {
     it('displays only admin dashboard for org admin without active org', async () => {
+      const user = userEvent.setup();
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -220,15 +272,19 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // OrgAdmin with one Management item gets a direct link instead of dropdown
       await waitFor(() => {
-        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
-        expect(screen.getByTestId('admin-nav-adminMyAccount')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
       });
       
-      // Should NOT see platform admin items
-      expect(screen.queryByText('Users')).not.toBeInTheDocument();
-      expect(screen.queryByText('Organizations')).not.toBeInTheDocument();
-      expect(screen.queryByText('Dev Tools')).not.toBeInTheDocument();
+      // Open Account dropdown to verify correct My Account version
+      await user.click(screen.getByTestId('nav-dropdown-account'));
+      await waitFor(() => {
+        expect(screen.getByTestId('nav-adminMyAccount')).toBeInTheDocument();
+      });
+      
+      // Should NOT see platform admin items (no Platform dropdown)
+      expect(screen.queryByTestId('nav-dropdown-platform')).not.toBeInTheDocument();
     });
 
     it('displays org-scoped items when org is active', async () => {
@@ -256,17 +312,23 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Should see Organization dropdown when org is active
       await waitFor(() => {
-        // Should see org-scoped navigation items (uses new labels)
-        expect(screen.getByText('Memberships')).toBeInTheDocument();
-        expect(screen.getByText('Share Types')).toBeInTheDocument();
-        expect(screen.getByText('Proposals')).toBeInTheDocument();
-        expect(screen.getByText('Webhook Events')).toBeInTheDocument();
-        expect(screen.getByText('Overview')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
       
-      // Should see org admin dashboard
-      expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+      // Open Organization dropdown to verify org-scoped items
+      await user.click(screen.getByTestId('nav-dropdown-organization'));
+      await waitFor(() => {
+        expect(screen.getByTestId('nav-orgOverview')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-manageMemberships')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-manageShareTypes')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-manageProposals')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-webhookEvents')).toBeInTheDocument();
+      });
+      
+      // Should see org admin dashboard (direct link for single Management item)
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
       
       // Should see org switcher with org name in header
       const orgDropdown = screen.getByTestId('admin-header-org-selector');
@@ -349,6 +411,7 @@ describe('AdminLayout', () => {
     });
 
     it('shows org admin nav items when admin org is selected', async () => {
+      const user = userEvent.setup();
       const mixedRoleMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -380,18 +443,24 @@ describe('AdminLayout', () => {
         mockMemberships: mixedRoleMemberships,
       });
 
+      // Should see Organization dropdown when org is active
       await waitFor(() => {
-        // Should see org admin nav items for admin org
-        expect(screen.getByTestId('org-nav-orgOverview')).toBeInTheDocument();
-        expect(screen.getByTestId('org-nav-manageMemberships')).toBeInTheDocument();
-        expect(screen.getByTestId('org-nav-manageShareTypes')).toBeInTheDocument();
-        expect(screen.getByTestId('org-nav-manageProposals')).toBeInTheDocument();
-        expect(screen.getByTestId('org-nav-webhookEvents')).toBeInTheDocument();
-        
-        // Should show "Org Admin" badge in header
-        expect(screen.getByTestId('org-admin-badge')).toBeInTheDocument();
-        expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
+      
+      // Open Organization dropdown to verify org admin nav items
+      await user.click(screen.getByTestId('nav-dropdown-organization'));
+      await waitFor(() => {
+        expect(screen.getByTestId('nav-orgOverview')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-manageMemberships')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-manageShareTypes')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-manageProposals')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-webhookEvents')).toBeInTheDocument();
+      });
+        
+      // Should show "Org Admin" badge in header
+      expect(screen.getByTestId('org-admin-badge')).toBeInTheDocument();
+      expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
     });
 
     it('hides org admin nav items when member-only org is selected', async () => {
@@ -427,15 +496,15 @@ describe('AdminLayout', () => {
       });
 
       await waitFor(() => {
-        // Should NOT see org admin nav items
-        expect(screen.queryByTestId('org-nav-orgOverview')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('org-nav-manageMemberships')).not.toBeInTheDocument();
+        // Should NOT see org admin nav items (Organization dropdown should not exist for Member role)
+        // User is OrgAdmin in another org so they can access admin layout,
+        // but the active org is member-only, so no Organization dropdown should show
+        expect(screen.queryByTestId('nav-dropdown-organization')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-orgOverview')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-manageMemberships')).not.toBeInTheDocument();
         
         // Should NOT show "Org Admin" badge in header (member role doesn't get badge)
         expect(screen.queryByTestId('org-admin-badge')).not.toBeInTheDocument();
-        
-        // Should show link to view organization as member
-        expect(screen.getByText('View organization →')).toBeInTheDocument();
       });
     });
 
@@ -546,8 +615,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Overview')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Ctrl+1 keypress
@@ -588,8 +658,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Memberships')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Ctrl+2 keypress
@@ -630,8 +701,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Overview')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Ctrl+1 keypress
@@ -655,8 +727,9 @@ describe('AdminLayout', () => {
         role: 'Admin',
       });
 
+      // For PlatformAdmin without active org, Management dropdown exists with adminDashboard
       await waitFor(() => {
-        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-management')).toBeInTheDocument();
       });
 
       const event = new KeyboardEvent('keydown', { 
@@ -672,7 +745,8 @@ describe('AdminLayout', () => {
       expect(screen.queryByText('Keyboard Shortcuts')).not.toBeInTheDocument();
     });
 
-    it('displays keyboard shortcut hints on org nav items', async () => {
+    it('displays navigation items inside Organization dropdown', async () => {
+      const user = userEvent.setup();
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -695,15 +769,18 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear and open it
       await waitFor(() => {
-        const overviewLink = screen.getByTestId('org-nav-orgOverview');
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId('nav-dropdown-organization'));
+
+      await waitFor(() => {
+        const overviewLink = screen.getByTestId('nav-orgOverview');
         expect(overviewLink).toBeInTheDocument();
-        expect(overviewLink).not.toHaveTextContent(/Ctrl1|⌘1/);
-        expect(overviewLink).toHaveAttribute('aria-label', expect.stringMatching(/Shortcut (Ctrl|Cmd)\+1/));
         
-        const membershipsLink = screen.getByTestId('org-nav-manageMemberships');
-        expect(membershipsLink).not.toHaveTextContent(/Ctrl2|⌘2/);
-        expect(membershipsLink).toHaveAttribute('aria-label', expect.stringMatching(/Shortcut (Ctrl|Cmd)\+2/));
+        const membershipsLink = screen.getByTestId('nav-manageMemberships');
+        expect(membershipsLink).toBeInTheDocument();
       });
     });
 
@@ -737,8 +814,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Overview')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Cmd+1 keypress on Mac
@@ -784,8 +862,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Ctrl+Alt+1 keypress (should be ignored)
@@ -827,8 +906,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Ctrl+Shift+1 keypress (should be ignored)
@@ -870,8 +950,9 @@ describe('AdminLayout', () => {
         mockMemberships,
       });
 
+      // Wait for Organization dropdown to appear (items are inside dropdown now)
       await waitFor(() => {
-        expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-organization')).toBeInTheDocument();
       });
 
       // Simulate Ctrl+Alt+Shift+1 keypress (should be ignored)

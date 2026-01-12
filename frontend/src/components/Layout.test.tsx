@@ -97,6 +97,7 @@ describe('Layout', () => {
 
   describe('Navigation visibility for regular members', () => {
     it('shows only My Account and My Organizations for a regular member', async () => {
+      const user = userEvent.setup();
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -110,18 +111,24 @@ describe('Layout', () => {
 
       renderLayout({ isAuthenticated: true, role: 'User', email: 'alice@example.com' }, mockMemberships);
 
-      // Wait for permissions to load
+      // Wait for horizontal nav to appear
       await waitFor(() => {
-        expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+        expect(screen.getByTestId('horizontal-nav')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Should see sidebar with My Account and My Organizations
-      expect(screen.getByTestId('unified-sidebar')).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /my account/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /my organizations/i })).toBeInTheDocument();
+      // Account dropdown should exist - click to reveal links
+      const accountDropdown = screen.getByTestId('nav-dropdown-account');
+      expect(accountDropdown).toBeInTheDocument();
+      await user.click(accountDropdown);
+      
+      // Now check for My Account and My Organizations links inside dropdown (role="menuitem")
+      await waitFor(() => {
+        expect(screen.getByTestId('nav-myAccount')).toBeInTheDocument();
+      });
+      expect(screen.getByTestId('nav-myOrganizations')).toBeInTheDocument();
 
-      // Should NOT see Admin section (only regular members)
-      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+      // Should NOT see Management dropdown (only regular members)
+      expect(screen.queryByTestId('nav-dropdown-management')).not.toBeInTheDocument();
 
       // Should see logout button (user email no longer displayed in header)
       expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
@@ -165,14 +172,17 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
-      // Should see Administration section and Admin Dashboard link (because user is OrgAdmin)
+      // OrgAdmin only has 1 Management item (Admin Dashboard), so it renders as a direct link, not a dropdown
       await waitFor(() => {
-        expect(screen.getByText('Administration')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /admin dashboard/i })).toBeInTheDocument();
+        const adminDashboardLink = screen.getByTestId('nav-adminDashboard');
+        expect(adminDashboardLink).toBeInTheDocument();
+        expect(adminDashboardLink).toHaveAttribute('href', '/admin/dashboard');
       });
 
       // Should NOT see Users link (only GlobalAdmins can see that)
-      expect(screen.queryByRole('link', { name: /^users$/i })).not.toBeInTheDocument();
+      expect(screen.queryByTestId('nav-manageUsers')).not.toBeInTheDocument();
+      // Should NOT see Management dropdown (only 1 item = direct link)
+      expect(screen.queryByTestId('nav-dropdown-management')).not.toBeInTheDocument();
     });
 
     it('does NOT show Users link even if user is OrgAdmin', async () => {
@@ -199,6 +209,7 @@ describe('Layout', () => {
     });
 
     it('shows only the admin-scoped My Account link for OrgAdmin users', async () => {
+      const user = userEvent.setup();
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -216,16 +227,24 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
+      // Open the Account dropdown to find the My Account link
       await waitFor(() => {
-        const adminMyAccountLink = screen.getByTestId('admin-nav-adminMyAccount');
+        expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
+      });
+      
+      await user.click(screen.getByTestId('nav-dropdown-account'));
+      
+      await waitFor(() => {
+        const adminMyAccountLink = screen.getByTestId('nav-adminMyAccount');
         expect(adminMyAccountLink).toHaveAttribute('href', '/admin/my-account');
-        expect(screen.queryByTestId('admin-nav-platformMyAccount')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('nav-platformMyAccount')).not.toBeInTheDocument();
       });
     });
   });
 
   describe('Navigation visibility for PlatformAdmin (GlobalAdmin) users', () => {
     it('shows Platform Overview link for PlatformAdmin', async () => {
+      const user = userEvent.setup();
       renderLayout({ isAuthenticated: true, role: 'Admin', email: 'admin@example.com' }, []);
 
       // Wait for permissions to load
@@ -233,18 +252,27 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
-      // Should see Platform Admin badge and Administration section with nav items
+      // Should see Platform Admin badge and horizontal nav
       await waitFor(() => {
         expect(screen.getByTestId('platform-admin-badge')).toBeInTheDocument();
-        expect(screen.getByTestId('nav-myAccount')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /my organizations/i })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /platform overview/i })).toBeInTheDocument();
-        expect(screen.getByTestId('admin-nav-platformMyAccount')).toBeInTheDocument();
-        expect(screen.queryByTestId('admin-nav-adminMyAccount')).not.toBeInTheDocument();
+        expect(screen.getByTestId('horizontal-nav')).toBeInTheDocument();
       });
+
+      // Open Account dropdown to find My Account and My Organizations
+      const accountDropdown = screen.getByTestId('nav-dropdown-account');
+      await user.click(accountDropdown);
+      // Links in dropdowns have role="menuitem", use testId instead
+      expect(screen.getByTestId('nav-myOrganizations')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-platformMyAccount')).toBeInTheDocument();
+      expect(screen.queryByTestId('nav-adminMyAccount')).not.toBeInTheDocument();
+
+      // Open Platform dropdown to find Platform Overview
+      await user.click(screen.getByTestId('nav-dropdown-platform'));
+      expect(screen.getByTestId('nav-platformDashboard')).toBeInTheDocument();
     });
 
-    it('shows Administration section with full admin links for PlatformAdmin', async () => {
+    it('shows Management dropdown with full admin links for PlatformAdmin', async () => {
+      const user = userEvent.setup();
       renderLayout({ isAuthenticated: true, role: 'Admin' }, []);
 
       // Wait for permissions to load
@@ -252,14 +280,21 @@ describe('Layout', () => {
         expect(membershipsApi.getByUserId).toHaveBeenCalled();
       });
 
-      // Administration section should be visible with all global admin links
+      // Should see horizontal nav with Management dropdown
       await waitFor(() => {
-        expect(screen.getByText('Administration')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /platform overview/i })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /admin dashboard/i })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /^users$/i })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /^organizations$/i })).toBeInTheDocument();
+        expect(screen.getByTestId('horizontal-nav')).toBeInTheDocument();
+        expect(screen.getByTestId('nav-dropdown-management')).toBeInTheDocument();
       });
+
+      // Open Management dropdown to verify admin links (use testId - dropdown links have role="menuitem")
+      await user.click(screen.getByTestId('nav-dropdown-management'));
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-manageUsers')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-manageOrganizations')).toBeInTheDocument();
+
+      // Platform dropdown should also be visible
+      await user.click(screen.getByTestId('nav-dropdown-platform'));
+      expect(screen.getByTestId('nav-platformDashboard')).toBeInTheDocument();
     });
 
     it('shows organization dropdown for PlatformAdmin when memberships exist', async () => {
@@ -284,6 +319,7 @@ describe('Layout', () => {
 
   describe('Navigation link destinations', () => {
     it('has correct href attributes for navigation links', async () => {
+      const user = userEvent.setup();
       renderLayout({ isAuthenticated: true, role: 'Admin' }, []);
 
       // Wait for permissions to load
@@ -292,19 +328,26 @@ describe('Layout', () => {
       });
 
       await waitFor(() => {
-        const myAccountLink = screen.getByTestId('nav-myAccount');
-        const myOrgsLink = screen.getByTestId('nav-myOrganizations');
-        const adminDashboardLink = screen.getByTestId('admin-nav-adminDashboard');
-        const platformMyAccountLink = screen.getByTestId('admin-nav-platformMyAccount');
-        const platformOverviewLink = screen.getByTestId('admin-nav-platformDashboard');
-
-        expect(myAccountLink).toHaveAttribute('href', '/me');
-        expect(myOrgsLink).toHaveAttribute('href', '/me/organizations');
-        expect(adminDashboardLink).toHaveAttribute('href', '/admin/dashboard');
-        expect(platformMyAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
-        expect(platformOverviewLink).toHaveAttribute('href', '/platform-admin/dashboard');
-        expect(screen.queryByTestId('admin-nav-adminMyAccount')).not.toBeInTheDocument();
+        expect(screen.getByTestId('horizontal-nav')).toBeInTheDocument();
       });
+
+      // Open Account dropdown to check My Account and My Organizations links
+      await user.click(screen.getByTestId('nav-dropdown-account'));
+      const myOrgsLink = screen.getByTestId('nav-myOrganizations');
+      const platformMyAccountLink = screen.getByTestId('nav-platformMyAccount');
+      expect(myOrgsLink).toHaveAttribute('href', '/me/organizations');
+      expect(platformMyAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
+      expect(screen.queryByTestId('nav-adminMyAccount')).not.toBeInTheDocument();
+
+      // Open Management dropdown to check Admin Dashboard link
+      await user.click(screen.getByTestId('nav-dropdown-management'));
+      const adminDashboardLink = screen.getByTestId('nav-adminDashboard');
+      expect(adminDashboardLink).toHaveAttribute('href', '/admin/dashboard');
+
+      // Open Platform dropdown to check Platform Overview link
+      await user.click(screen.getByTestId('nav-dropdown-platform'));
+      const platformOverviewLink = screen.getByTestId('nav-platformDashboard');
+      expect(platformOverviewLink).toHaveAttribute('href', '/platform-admin/dashboard');
     });
   });
 
@@ -326,12 +369,12 @@ describe('Layout', () => {
     });
   });
 
-  describe('Unified sidebar layout', () => {
-    it('renders sidebar navigation for authenticated users', async () => {
+  describe('Unified layout', () => {
+    it('renders horizontal navigation for authenticated users', async () => {
       renderLayout({ isAuthenticated: true, role: 'User' }, []);
 
       await waitFor(() => {
-        expect(screen.getByTestId('unified-sidebar')).toBeInTheDocument();
+        expect(screen.getByTestId('horizontal-nav')).toBeInTheDocument();
       });
     });
 
@@ -541,11 +584,13 @@ describe('Layout', () => {
         expect(screen.getByTestId('org-admin-badge')).toHaveTextContent('Org Admin');
       }, { timeout: 3000 });
 
-      // Should see Administration section (because user is OrgAdmin in at least one org)
-      expect(screen.getByText('Administration')).toBeInTheDocument();
+      // OrgAdmin only has 1 Management item, so it renders as a direct link (not dropdown)
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
+      expect(screen.queryByTestId('nav-dropdown-management')).not.toBeInTheDocument();
     });
 
     it('maintains consistent navigation structure for users with mixed org admin/member roles', async () => {
+      const user = userEvent.setup();
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -572,23 +617,22 @@ describe('Layout', () => {
         expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Key user navigation items should always be present and in consistent order
-      const homeLink = screen.getByTestId('nav-home');
-      const myAccountLink = screen.getByTestId('nav-myAccount');
-      const myOrgsLink = screen.getByTestId('nav-myOrganizations');
+      // Should see horizontal nav with Account dropdown
+      expect(screen.getByTestId('horizontal-nav')).toBeInTheDocument();
+      
+      // Open Account dropdown to verify user navigation items
+      const accountDropdown = screen.getByTestId('nav-dropdown-account');
+      await user.click(accountDropdown);
+      // Home link exists (resolves to appropriate dashboard based on role)
+      expect(screen.getByTestId('nav-home')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-myOrganizations')).toBeInTheDocument();
 
-      expect(homeLink).toBeInTheDocument();
-      expect(myAccountLink).toBeInTheDocument();
-      expect(myOrgsLink).toBeInTheDocument();
-
-      // Verify the Administration section is visible (user is OrgAdmin in at least one org)
-      expect(screen.getByText('Administration')).toBeInTheDocument();
-
-      // Admin Dashboard should be visible because user is OrgAdmin in one org
-      expect(screen.getByTestId('admin-nav-adminDashboard')).toBeInTheDocument();
+      // OrgAdmin only has 1 Management item, so it's a direct link (not dropdown)
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
+      expect(screen.queryByTestId('nav-dropdown-management')).not.toBeInTheDocument();
     });
 
-    it('hides Administration section when user switches to member-only org', async () => {
+    it('keeps Admin Dashboard link visible even when user switches to member-only org (admin access persists)', async () => {
       const mockMemberships: MembershipWithOrganizationDto[] = [
         {
           id: 'membership-1',
@@ -647,9 +691,9 @@ describe('Layout', () => {
         expect(screen.getByTestId('unified-header-org-selector')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Initially, Administration section should be visible (user is OrgAdmin in Admin Org)
-      expect(screen.getByText('Administration')).toBeInTheDocument();
-      expect(screen.getByTestId('admin-nav-adminDashboard')).toBeInTheDocument();
+      // Initially, Admin Dashboard link should be visible (user is OrgAdmin in Admin Org)
+      // OrgAdmin only has 1 Management item, so it's a direct link
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
 
       // Switch to the member-only org
       const user = userEvent.setup();
@@ -663,18 +707,12 @@ describe('Layout', () => {
         expect(screen.getByTestId('member-org-view')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Administration section should now be hidden (user is only Member in Member Org)
-      await waitFor(() => {
-        expect(screen.queryByText('Administration')).not.toBeInTheDocument();
-      }, { timeout: 3000 });
+      // Admin Dashboard link should STILL be visible because user is OrgAdmin in another org
+      // The navigation shows capabilities based on ANY membership, not just active org
+      expect(screen.getByTestId('nav-adminDashboard')).toBeInTheDocument();
 
-      // Admin Dashboard link should not be visible
-      expect(screen.queryByTestId('admin-nav-adminDashboard')).not.toBeInTheDocument();
-
-      // User navigation items should still be present
-      expect(screen.getByTestId('nav-home')).toBeInTheDocument();
-      expect(screen.getByTestId('nav-myAccount')).toBeInTheDocument();
-      expect(screen.getByTestId('nav-myOrganizations')).toBeInTheDocument();
+      // Account dropdown should still be present
+      expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
     });
   });
 });
