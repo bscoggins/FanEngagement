@@ -1,0 +1,121 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "disabled",
+  "model": "anthropic/claude-opus-4-5",
+  "permission": {
+    "edit": "allow",
+    "bash": "allow"
+  },
+  "instructions": [
+    "docs/architecture.md",
+    "docs/authorization.md",
+    "docs/development.md",
+    "docs/frontend/design-system.md"
+  ],
+  "formatter": {
+    "prettier": {
+      "extensions": [".js", ".ts", ".jsx", ".tsx", ".json", ".css", ".md"]
+    },
+    "dotnet-format": {
+      "command": ["dotnet", "format", "--include", "$FILE", "--verbosity", "quiet"],
+      "extensions": [".cs"]
+    }
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": true
+    }
+  },
+  "agent": {
+    "docs": {
+      "description": "Documentation specialist - maintains READMEs, architecture docs, and code comments",
+      "mode": "subagent",
+      "prompt": "You are a documentation specialist for the FanEngagement project. Focus on maintaining accurate, clear, and comprehensive documentation. Update READMEs, architecture docs, C# XML doc comments, and TypeScript JSDoc. Never modify runtime logic - only documentation and comments."
+    },
+    "test": {
+      "description": "QA specialist - creates and runs xUnit, Vitest, Playwright, and Jest tests",
+      "mode": "subagent",
+      "prompt": "You are a QA and testing specialist for the FanEngagement project. Create and maintain tests using xUnit (backend), Vitest (frontend), Playwright (E2E), and Jest (adapters). Run tests, analyze failures, and identify coverage gaps. Focus on test quality and reliability."
+    },
+    "lint": {
+      "description": "Code style specialist - applies formatting and safe refactors without changing behavior",
+      "mode": "subagent",
+      "prompt": "You are a code style specialist for the FanEngagement project. Apply formatting fixes using ESLint, Prettier, and dotnet format. Perform safe refactors like renaming, removing dead code, and cleanup. Never change runtime behavior - only style and formatting.",
+      "permission": {
+        "bash": {
+          "*": "allow",
+          "git push*": "ask"
+        }
+      }
+    },
+    "frontend": {
+      "description": "Frontend specialist - UI/UX, accessibility, React/Vite implementation",
+      "mode": "subagent",
+      "prompt": "You are a frontend specialist for the FanEngagement project. Focus on React 19 + TypeScript + Vite implementation, UI/UX polish, accessibility (WCAG 2.1 AA), responsive design, and the design token system. Use existing components from frontend/src/components/. Never modify backend code."
+    },
+    "research": {
+      "description": "Architecture research specialist - investigates codebase and produces findings",
+      "mode": "subagent",
+      "prompt": "You are an architecture research specialist for the FanEngagement project. Investigate services, adapters, and infrastructure. Map request flows, trace dependencies, and document findings. Produce written analysis in docs/research/. Do not modify production code.",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    },
+    "security": {
+      "description": "Security auditor - identifies vulnerabilities and security issues",
+      "mode": "subagent",
+      "prompt": "You are a security auditor for the FanEngagement project. Focus on identifying potential security issues including input validation, authentication/authorization flaws, data exposure risks, and dependency vulnerabilities. Analyze code without making changes and report findings.",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    }
+  },
+  "command": {
+    "test-backend": {
+      "description": "Run backend xUnit tests",
+      "template": "Run the backend test suite using `./scripts/test-backend`. Analyze any failures and suggest fixes.\n\nTest output:\n!`./scripts/test-backend`",
+      "agent": "test"
+    },
+    "test-frontend": {
+      "description": "Run frontend Vitest tests",
+      "template": "Run the frontend test suite using `./scripts/test-frontend`. Analyze any failures and suggest fixes.\n\nTest output:\n!`./scripts/test-frontend`",
+      "agent": "test"
+    },
+    "test-all": {
+      "description": "Run all unit tests (backend + frontend)",
+      "template": "Run the complete unit test suite using `./scripts/run-tests.sh`. This runs backend tests first, then frontend tests. Analyze any failures.\n\nTest output:\n!`./scripts/run-tests.sh`",
+      "agent": "test"
+    },
+    "e2e": {
+      "description": "Run Playwright E2E tests",
+      "template": "Run the Playwright end-to-end test suite using `./scripts/run-e2e.sh`. This starts the full Docker Compose stack, resets test data, and runs E2E tests. Analyze any failures.\n\nNote: This requires Docker to be running.\n\nTest output:\n!`./scripts/run-e2e.sh`",
+      "agent": "test"
+    },
+    "build": {
+      "description": "Build all projects",
+      "template": "Build all projects in the repository:\n\n1. Backend (.NET):\n!`dotnet build backend/FanEngagement.sln`\n\n2. Frontend (Vite):\n!`cd frontend && npm run build`\n\nAnalyze any build errors and suggest fixes."
+    },
+    "lint-fix": {
+      "description": "Fix linting issues across the codebase",
+      "template": "Fix linting and formatting issues:\n\n1. Frontend (ESLint + Prettier):\n!`cd frontend && npm run lint -- --fix`\n\n2. Backend (dotnet format):\n!`dotnet format backend/FanEngagement.sln`\n\nReport what was fixed.",
+      "agent": "lint"
+    },
+    "migrate": {
+      "description": "Create a new EF Core migration",
+      "template": "Create a new Entity Framework Core migration.\n\nUsage: /migrate <MigrationName>\n\nRun: `dotnet ef migrations add $ARGUMENTS --project backend/FanEngagement.Infrastructure --startup-project backend/FanEngagement.Api`\n\nAfter creating the migration, review the generated files in backend/FanEngagement.Infrastructure/Persistence/Migrations/"
+    },
+    "dev-up": {
+      "description": "Start the development environment",
+      "template": "Start the development environment using `./scripts/dev-up`.\n\nThis will:\n1. Start PostgreSQL via Docker Compose\n2. Run dotnet watch for hot-reload\n\nPass `--full` to also start the Vite dev server.\n\n!`./scripts/dev-up`"
+    },
+    "review": {
+      "description": "Review current code changes",
+      "template": "Review the current code changes in this repository.\n\nCurrent git status:\n!`git status`\n\nCurrent diff:\n!`git diff`\n\nAnalyze the changes for:\n- Code quality and best practices\n- Potential bugs or edge cases\n- Security considerations\n- Test coverage gaps\n- Documentation needs\n\nProvide constructive feedback without making changes.",
+      "subtask": true
+    }
+  }
+}
