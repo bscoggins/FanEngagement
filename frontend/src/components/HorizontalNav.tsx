@@ -121,32 +121,33 @@ const CategoryDropdown: React.FC<{
 
   // Handle keyboard interaction on the dropdown button
   const handleButtonKeyDown = useCallback((event: React.KeyboardEvent) => {
+    // Only handle keys when dropdown is closed
+    if (isOpen) return;
+
     switch (event.key) {
       case 'ArrowDown':
       case 'Enter':
       case ' ': // Space key
         event.preventDefault();
-        if (!isOpen) {
-          onToggle();
-          // Focus first menu item after the dropdown opens
-          setTimeout(() => {
-            const firstItem = dropdownRef.current?.querySelector<HTMLAnchorElement>('.horizontal-nav-dropdown-link');
-            firstItem?.focus();
-          }, 0);
-        }
+        event.stopPropagation(); // Prevent parent handler from running
+        onToggle();
+        // Focus first menu item after the dropdown opens
+        setTimeout(() => {
+          const firstItem = dropdownRef.current?.querySelector<HTMLAnchorElement>('.horizontal-nav-dropdown-link');
+          firstItem?.focus();
+        }, 0);
         break;
       case 'ArrowUp':
         event.preventDefault();
-        if (!isOpen) {
-          onToggle();
-          // Focus last menu item after the dropdown opens
-          setTimeout(() => {
-            const items = dropdownRef.current?.querySelectorAll<HTMLAnchorElement>('.horizontal-nav-dropdown-link');
-            if (items && items.length > 0) {
-              items[items.length - 1].focus();
-            }
-          }, 0);
-        }
+        event.stopPropagation(); // Prevent parent handler from running
+        onToggle();
+        // Focus last menu item after the dropdown opens
+        setTimeout(() => {
+          const items = dropdownRef.current?.querySelectorAll<HTMLAnchorElement>('.horizontal-nav-dropdown-link');
+          if (items && items.length > 0) {
+            items[items.length - 1].focus();
+          }
+        }, 0);
         break;
     }
   }, [isOpen, onToggle]);
