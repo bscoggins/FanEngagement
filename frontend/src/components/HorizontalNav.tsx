@@ -130,7 +130,7 @@ const CategoryDropdown: React.FC<{
         className={`horizontal-nav-dropdown-trigger ${hasActiveItem ? 'active' : ''} ${isOpen ? 'open' : ''}`}
         onClick={onToggle}
         aria-expanded={isOpen}
-        aria-haspopup="true"
+        aria-haspopup="menu"
         data-testid={`nav-dropdown-${group.category.toLowerCase()}`}
       >
         {group.label}
