@@ -119,6 +119,38 @@ const CategoryDropdown: React.FC<{
     }
   }, [isOpen]);
 
+  // Handle keyboard interaction on the dropdown button
+  const handleButtonKeyDown = useCallback((event: React.KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'Enter':
+      case ' ': // Space key
+        event.preventDefault();
+        if (!isOpen) {
+          onToggle();
+          // Focus first menu item after the dropdown opens
+          setTimeout(() => {
+            const firstItem = dropdownRef.current?.querySelector<HTMLAnchorElement>('.horizontal-nav-dropdown-link');
+            firstItem?.focus();
+          }, 0);
+        }
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        if (!isOpen) {
+          onToggle();
+          // Focus last menu item after the dropdown opens
+          setTimeout(() => {
+            const items = dropdownRef.current?.querySelectorAll<HTMLAnchorElement>('.horizontal-nav-dropdown-link');
+            if (items && items.length > 0) {
+              items[items.length - 1].focus();
+            }
+          }, 0);
+        }
+        break;
+    }
+  }, [isOpen, onToggle]);
+
   return (
     <div 
       className="horizontal-nav-dropdown" 
@@ -129,6 +161,7 @@ const CategoryDropdown: React.FC<{
         ref={buttonRef}
         className={`horizontal-nav-dropdown-trigger ${hasActiveItem ? 'active' : ''} ${isOpen ? 'open' : ''}`}
         onClick={onToggle}
+        onKeyDown={handleButtonKeyDown}
         aria-expanded={isOpen}
         aria-haspopup="menu"
         data-testid={`nav-dropdown-${group.category.toLowerCase()}`}
