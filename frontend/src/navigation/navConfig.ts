@@ -11,6 +11,11 @@ export type NavScope = 'global' | 'org' | 'user';
 export type NavRole = 'PlatformAdmin' | 'OrgAdmin' | 'Member';
 
 /**
+ * Navigation category for horizontal nav grouping
+ */
+export type NavCategory = 'Platform' | 'Management' | 'Organization' | 'Account';
+
+/**
  * Navigation item configuration
  */
 export interface NavItem {
@@ -43,6 +48,11 @@ export interface NavItem {
    * Icon name for visual enhancement (optional)
    */
   icon?: string;
+  /**
+   * Category for horizontal nav grouping (optional).
+   * Items with the same category are grouped into a dropdown.
+   */
+  category?: NavCategory;
 }
 
 /**
@@ -68,6 +78,7 @@ export const navItems: NavItem[] = [
     path: '/me/home', // NOTE: This item's path is dynamically resolved to getDefaultHomeRoute() by getResolvedNavItem()
     scope: 'user',
     order: 1,
+    category: 'Account',
   },
   {
     id: 'myAccount',
@@ -75,6 +86,7 @@ export const navItems: NavItem[] = [
     path: '/me',
     scope: 'user',
     order: 2,
+    category: 'Account',
   },
   {
     id: 'myActivity',
@@ -82,6 +94,7 @@ export const navItems: NavItem[] = [
     path: '/me/activity',
     scope: 'user',
     order: 3,
+    category: 'Account',
   },
   {
     id: 'myOrganizations',
@@ -89,6 +102,7 @@ export const navItems: NavItem[] = [
     path: '/me/organizations',
     scope: 'user',
     order: 4,
+    category: 'Account',
   },
 
   // Platform Admin items - only for GlobalAdmin
@@ -99,6 +113,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 10,
+    category: 'Platform',
   },
   {
     id: 'platformAuditLog',
@@ -107,6 +122,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 11,
+    category: 'Platform',
   },
   {
     id: 'platformBlockchain',
@@ -115,6 +131,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 12,
+    category: 'Platform',
   },
   {
     id: 'platformWallet',
@@ -123,6 +140,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 12.5,
+    category: 'Platform',
   },
   {
     id: 'platformMyAccount',
@@ -131,6 +149,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 13,
+    category: 'Account',
   },
   {
     id: 'adminDashboard',
@@ -139,6 +158,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'global',
     order: 13,
+    category: 'Management',
   },
   {
     id: 'adminMyAccount',
@@ -147,6 +167,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'global',
     order: 17,
+    category: 'Account',
   },
   {
     id: 'manageUsers',
@@ -155,6 +176,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 14,
+    category: 'Management',
   },
   {
     id: 'manageOrganizations',
@@ -163,6 +185,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 15,
+    category: 'Management',
   },
   {
     id: 'devTools',
@@ -171,6 +194,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin'],
     scope: 'global',
     order: 16,
+    category: 'Platform',
   },
 
   // Org Admin items - scoped to current organization
@@ -181,6 +205,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 20,
+    category: 'Organization',
   },
   {
     id: 'manageMemberships',
@@ -189,6 +214,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 21,
+    category: 'Organization',
   },
   {
     id: 'manageShareTypes',
@@ -197,6 +223,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 22,
+    category: 'Organization',
   },
   {
     id: 'manageShareIssuance',
@@ -205,6 +232,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 23,
+    category: 'Organization',
   },
   {
     id: 'manageProposals',
@@ -213,6 +241,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 24,
+    category: 'Organization',
   },
   {
     id: 'webhookEvents',
@@ -221,6 +250,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 25,
+    category: 'Organization',
   },
   {
     id: 'auditLog',
@@ -229,6 +259,7 @@ export const navItems: NavItem[] = [
     roles: ['PlatformAdmin', 'OrgAdmin'],
     scope: 'org',
     order: 26,
+    category: 'Organization',
   },
 ];
 

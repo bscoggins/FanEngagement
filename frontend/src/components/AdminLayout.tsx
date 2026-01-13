@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useMobileOrgSwitcher } from '../hooks/useMobileOrgSwitcher';
@@ -7,9 +7,11 @@ import { useActiveOrganization } from '../contexts/OrgContext';
 import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
+import { HorizontalNav } from './HorizontalNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { Tooltip } from './Tooltip';
 import { PageTransition } from './PageTransition';
+import { Footer } from './Footer';
 import { type ResponsiveDisplayStyle } from '../types/styles';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
@@ -239,7 +241,13 @@ export const AdminLayout: React.FC = () => {
                 <span className="hamburger-icon" aria-hidden="true">☰</span>
               </button>
             </Tooltip>
-            <h1>FanEngagement Admin</h1>
+            <h1>FanEngagement</h1>
+            {/* Horizontal navigation - desktop only */}
+            <HorizontalNav
+              navContext={navContext}
+              isNavItemActive={isNavItemActive}
+              className="hide-md-down"
+            />
           </div>
           <div className="admin-header-right">
             {isGlobalAdmin() && (
@@ -274,64 +282,11 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
         
-        <div className="admin-container stack-md">
-          <aside className="admin-sidebar hide-md-down" role="navigation" aria-label="Admin navigation">
-            <nav className="admin-nav">
-              {/* Global navigation items */}
-              {globalNavItems.map(item => (
-                <Link
-                  key={item.id}
-                  to={item.resolvedPath}
-                  className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                  data-testid={`admin-nav-${item.id}`}
-                  aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              {/* Organization section - show when user is OrgAdmin for active org */}
-              {activeOrg && activeOrgIsAdmin && orgNavItems.length > 0 && (
-                <>
-                  <div className="admin-nav-divider" role="separator" />
-                  <div className="admin-nav-section-label">
-                    Administration
-                  </div>
-                  {orgNavItems.map((item, index) => (
-                    <Link
-                      key={item.id}
-                      to={item.resolvedPath}
-                      className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                      data-testid={`org-nav-${item.id}`}
-                      aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
-                      aria-label={index < 6 ? `${item.label} (Shortcut ${modifierKeyName}+${index + 1})` : undefined}
-                    >
-                      <span className="admin-nav-link-text">{item.label}</span>
-                    </Link>
-                  ))}
-                </>
-              )}
-
-              {/* Message for member-only orgs */}
-              {activeOrg && !activeOrgIsAdmin && (
-                <div className="admin-member-info" role="status">
-                  <p>You are a member of this organization.</p>
-                  <Link
-                    to={`/me/organizations/${activeOrg.id}`}
-                    className="admin-member-link"
-                  >
-                    View organization →
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </aside>
-          <main className="admin-main" id="main-content" role="main" tabIndex={-1}>
-            <PageTransition transitionKey={location.key}>
-              <Outlet />
-            </PageTransition>
-          </main>
-        </div>
+        <main className="admin-main-full" id="main-content" role="main" tabIndex={-1}>
+          <PageTransition transitionKey={location.key}>
+            <Outlet />
+          </PageTransition>
+        </main>
         
         {/* Mobile navigation drawer */}
         <MobileNav
@@ -343,6 +298,8 @@ export const AdminLayout: React.FC = () => {
           activeOrgId={activeOrg?.id}
           onOrgChange={handleMobileOrgChange}
         />
+        
+        <Footer />
       </div>
     </>
   );

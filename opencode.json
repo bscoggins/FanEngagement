@@ -1,7 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "share": "disabled",
-  "model": "anthropic/claude-opus-4-5",
+  "autoupdate": false,
+  "model": "github/claude-opus-4.5",
   "permission": {
     "edit": "allow",
     "bash": "allow"

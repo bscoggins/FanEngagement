@@ -55,8 +55,8 @@ test.describe('Top navigation visibility by role', () => {
   test('Platform Admin does not see organization dropdown in header', async ({ page }) => {
     await loginThroughUi(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     
-    // Wait for page to be fully loaded
-    await waitForVisible(page.getByRole('heading', { name: 'FanEngagement Platform Admin' }));
+    // Wait for page to be fully loaded (Platform Admin lands on Platform Overview page)
+    await waitForVisible(page.getByRole('heading', { name: 'Platform Overview' }));
     
     // Platform admin should not see organization selector in header
     await expect(page.getByTestId('admin-header-org-selector')).not.toBeVisible();
@@ -94,7 +94,7 @@ test.describe('Top navigation visibility by role', () => {
     await expect(page.getByTestId('org-admin-badge')).toHaveText('Org Admin');
   });
 
-  test('OrgAdmin switching to member org hides Administration section and redirects to member view', async ({ page }) => {
+  test('OrgAdmin switching to member org hides Organization dropdown and redirects to member view', async ({ page }) => {
     // alice@example.com is OrgAdmin of "Tech Innovators" and Member of "Green Energy United"
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     
@@ -102,8 +102,8 @@ test.describe('Top navigation visibility by role', () => {
     await expect(page).toHaveURL(/\/admin/);
     await waitForVisible(page.getByRole('heading', { name: 'Admin Dashboard' }));
     
-    // Should see Administration section in sidebar
-    await expect(page.getByText('Administration', { exact: true })).toBeVisible();
+    // Should see Organization dropdown in horizontal nav (replaced the old sidebar Administration section)
+    await waitForVisible(page.getByTestId('nav-dropdown-organization'));
     
     // Switch to Green Energy United (where alice is a Member)
     const dropdownButton = page.getByTestId('admin-header-org-selector-button');
@@ -117,8 +117,8 @@ test.describe('Top navigation visibility by role', () => {
     await page.waitForLoadState('networkidle');
     const memberOrgUrl = await page.url();
     
-    // Administration section should NOT be visible in the unified layout sidebar
-    await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
+    // Organization dropdown should NOT be visible in the unified layout (user is just a Member here)
+    await expect(page.getByTestId('nav-dropdown-organization')).not.toBeVisible();
     
     // Verify we're on the member organization view
     await waitForVisible(page.getByRole('heading', { name: 'Green Energy United' }));
@@ -130,7 +130,7 @@ test.describe('Top navigation visibility by role', () => {
     await page.waitForURL(memberOrgUrl);
     await waitForVisible(page.getByRole('heading', { name: 'Green Energy United' }));
     
-    // Administration section should still NOT be visible (we're viewing Green Energy United as Member)
-    await expect(page.getByText('Administration', { exact: true })).not.toBeVisible();
+    // Organization dropdown should still NOT be visible (we're viewing Green Energy United as Member)
+    await expect(page.getByTestId('nav-dropdown-organization')).not.toBeVisible();
   });
 });

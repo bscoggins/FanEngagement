@@ -389,6 +389,16 @@ body.theme-dark .unified-sidebar {
   overflow-y: auto;
 }
 
+/* Full-width main content for horizontal nav layout */
+.unified-main-full {
+  flex: 1;
+  padding: var(--spacing-8);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+}
+
 /* Responsive design */
 @media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) and (orientation: landscape) {
   .unified-header {
@@ -413,6 +423,10 @@ body.theme-dark .unified-sidebar {
   .unified-main {
     padding: var(--spacing-6);
   }
+
+  .unified-main-full {
+    padding: var(--spacing-6);
+  }
 }
 
 @media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) and (orientation: portrait) {
@@ -432,6 +446,10 @@ body.theme-dark .unified-sidebar {
   }
 
   .unified-main {
+    padding: var(--spacing-5);
+  }
+
+  .unified-main-full {
     padding: var(--spacing-5);
   }
 }
@@ -470,6 +488,10 @@ body.theme-dark .unified-sidebar {
   }
 
   .unified-main {
+    padding: var(--spacing-4);
+  }
+
+  .unified-main-full {
     padding: var(--spacing-4);
   }
 

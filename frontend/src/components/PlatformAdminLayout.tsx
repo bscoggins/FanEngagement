@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useActiveOrganization } from '../contexts/OrgContext';
 import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
+import { HorizontalNav } from './HorizontalNav';
 import { GlobalSearch } from './GlobalSearch';
 import { RecentsDropdown } from './RecentsDropdown';
 import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import { Tooltip } from './Tooltip';
+import { Footer } from './Footer';
 import { isMacPlatform } from '../utils/platformUtils';
 import { PageTransition } from './PageTransition';
 import { type ResponsiveDisplayStyle } from '../types/styles';
@@ -156,9 +158,15 @@ export const PlatformAdminLayout: React.FC = () => {
                 <span className="hamburger-icon" aria-hidden="true">☰</span>
               </button>
             </Tooltip>
-            <h1>FanEngagement Platform Admin</h1>
+            <h1>FanEngagement</h1>
+            {/* Horizontal navigation - desktop only */}
+            <HorizontalNav
+              navContext={navContext}
+              isNavItemActive={isNavItemActive}
+              className="hide-md-down"
+            />
           </div>
-          <div className="admin-header-center">
+          <div className="admin-header-center hide-md-down">
             <div ref={searchInputRef}>
               <GlobalSearch />
             </div>
@@ -178,48 +186,11 @@ export const PlatformAdminLayout: React.FC = () => {
           </div>
         </header>
         
-        <div className="admin-container stack-md">
-          <aside className="admin-sidebar hide-md-down" role="navigation" aria-label="Platform admin navigation">
-            <nav className="admin-nav">
-              {/* Global navigation items */}
-              {globalNavItems.map(item => (
-                <Link
-                  key={item.id}
-                  to={item.resolvedPath}
-                  className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                  aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              {/* Org-scoped navigation items */}
-              {orgNavItems.length > 0 && (
-                <>
-                  <div className="admin-nav-divider" role="separator" />
-                  <div className="admin-nav-section-label">
-                    {activeOrg?.name || 'Organization'}
-                  </div>
-                  {orgNavItems.map(item => (
-                    <Link
-                      key={item.id}
-                      to={item.resolvedPath}
-                      className={`admin-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                      aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </>
-              )}
-            </nav>
-          </aside>
-          <main className="admin-main" id="main-content" role="main" tabIndex={-1}>
-            <PageTransition transitionKey={location.key}>
-              <Outlet />
-            </PageTransition>
-          </main>
-        </div>
+        <main className="admin-main-full" id="main-content" role="main" tabIndex={-1}>
+          <PageTransition transitionKey={location.key}>
+            <Outlet />
+          </PageTransition>
+        </main>
         
         {/* Mobile navigation drawer */}
         <MobileNav
@@ -228,6 +199,8 @@ export const PlatformAdminLayout: React.FC = () => {
           items={mobileNavItems}
           sections={mobileNavSections}
         />
+        
+        <Footer />
       </div>
     </>
   );

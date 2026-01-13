@@ -7,8 +7,10 @@ import { useActiveOrganization } from '../contexts/OrgContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
+import { HorizontalNav } from './HorizontalNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { PageTransition } from './PageTransition';
+import { Footer } from './Footer';
 import { type ResponsiveDisplayStyle } from '../types/styles';
 import './Layout.css';
 
@@ -169,6 +171,7 @@ export const Layout: React.FC = () => {
               <Outlet />
             </PageTransition>
           </main>
+          <Footer />
         </div>
       </>
     );
@@ -194,6 +197,12 @@ export const Layout: React.FC = () => {
             <Link to={homeRoute} className="unified-header-title">
               <h1>FanEngagement</h1>
             </Link>
+            {/* Horizontal navigation - desktop only */}
+            <HorizontalNav
+              navContext={navContext}
+              isNavItemActive={isNavItemActive}
+              className="hide-md-down"
+            />
           </div>
           <div className="unified-header-right">
             {isGlobalAdmin() && (
@@ -227,50 +236,11 @@ export const Layout: React.FC = () => {
           </div>
         </header>
         
-        <div className="unified-container stack-md">
-          <aside className="unified-sidebar hide-md-down" data-testid="unified-sidebar" role="navigation" aria-label="User navigation">
-            <nav className="unified-nav">
-              {/* User navigation items */}
-              {userNavItems.map(item => (
-                <Link
-                  key={item.id}
-                  to={item.resolvedPath}
-                  className={`unified-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                  data-testid={`nav-${item.id}`}
-                  aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
-
-              {/* Admin links section - only show when user can access admin area AND either no org is selected or user is admin of the selected org */}
-              {canAccessAdminArea() && (!activeOrg || activeOrgIsAdmin) && (
-                <>
-                  <div className="unified-nav-divider" role="separator" />
-                  <div className="unified-nav-section-label">
-                    Administration
-                  </div>
-                  {globalNavItems.map(item => (
-                    <Link
-                      key={item.id}
-                      to={item.resolvedPath}
-                      className={`unified-nav-link ${isNavItemActive(item.resolvedPath) ? 'active' : ''}`}
-                      data-testid={`admin-nav-${item.id}`}
-                      aria-current={isNavItemActive(item.resolvedPath) ? 'page' : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </>
-              )}
-            </nav>
-          </aside>
-          <main className="unified-main" id="main-content" role="main" tabIndex={-1}>
-            <PageTransition transitionKey={location.key}>
-              <Outlet />
-            </PageTransition>
-          </main>
-        </div>
+        <main className="unified-main-full" id="main-content" role="main" tabIndex={-1}>
+          <PageTransition transitionKey={location.key}>
+            <Outlet />
+          </PageTransition>
+        </main>
         
         {/* Mobile navigation drawer */}
         <MobileNav
@@ -282,6 +252,8 @@ export const Layout: React.FC = () => {
           activeOrgId={activeOrg?.id}
           onOrgChange={handleMobileOrgChange}
         />
+        
+        <Footer />
       </div>
     </>
   );

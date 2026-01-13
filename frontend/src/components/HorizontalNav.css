@@ -1,0 +1,230 @@
+/* HorizontalNav - Desktop horizontal navigation with dropdowns */
+
+.horizontal-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+/* Hide on mobile - mobile nav drawer handles navigation */
+@media (max-width: var(--bp-md)) {
+  .horizontal-nav {
+    display: none;
+  }
+}
+
+/* ===== Single Link Styles ===== */
+.horizontal-nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  min-height: 2.5rem;
+  color: var(--color-text-inverse);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  transition: var(--transition-interactive);
+  white-space: nowrap;
+}
+
+.horizontal-nav-link:hover {
+  background-color: var(--color-overlay-light);
+  color: var(--color-text-inverse);
+}
+
+.horizontal-nav-link:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.horizontal-nav-link.active {
+  background-color: var(--color-overlay-medium);
+  color: var(--color-text-inverse);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ===== Dropdown Container ===== */
+.horizontal-nav-dropdown {
+  position: relative;
+}
+
+/* ===== Dropdown Trigger Button ===== */
+.horizontal-nav-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  padding: var(--spacing-2) var(--spacing-3);
+  min-height: 2.5rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+  white-space: nowrap;
+}
+
+.horizontal-nav-dropdown-trigger:hover {
+  background-color: var(--color-overlay-light);
+}
+
+.horizontal-nav-dropdown-trigger:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.horizontal-nav-dropdown-trigger.active {
+  background-color: var(--color-overlay-medium);
+  font-weight: var(--font-weight-semibold);
+}
+
+.horizontal-nav-dropdown-trigger.open {
+  background-color: var(--color-overlay-medium);
+}
+
+/* ===== Dropdown Arrow ===== */
+.horizontal-nav-dropdown-arrow {
+  font-size: var(--font-size-2xs);
+  opacity: 0.7;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.horizontal-nav-dropdown-trigger.open .horizontal-nav-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* ===== Dropdown Menu ===== */
+.horizontal-nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  min-width: 200px;
+  max-width: 280px;
+  margin-top: var(--spacing-1);
+  padding: var(--spacing-1) 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: dropdown-fade-in var(--duration-fast) var(--ease-out);
+}
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Dropdown Menu Link ===== */
+.horizontal-nav-dropdown-link {
+  display: block;
+  padding: var(--spacing-2-5) var(--spacing-4);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  transition: background-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out);
+}
+
+.horizontal-nav-dropdown-link:hover {
+  background-color: var(--color-neutral-100);
+  color: var(--color-text-primary);
+}
+
+.horizontal-nav-dropdown-link:focus-visible {
+  outline: none;
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-700);
+}
+
+.horizontal-nav-dropdown-link.active {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-700);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ===== Dark Mode Adjustments ===== */
+
+/* Header nav links and triggers - need light text on dark header */
+body.theme-dark .horizontal-nav-link,
+body.theme-dark .horizontal-nav-dropdown-trigger {
+  color: var(--color-text-primary);
+}
+
+body.theme-dark .horizontal-nav-link:hover,
+body.theme-dark .horizontal-nav-dropdown-trigger:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-overlay-subtle);
+}
+
+body.theme-dark .horizontal-nav-link.active,
+body.theme-dark .horizontal-nav-dropdown-trigger.active,
+body.theme-dark .horizontal-nav-dropdown-trigger.open {
+  color: var(--color-text-primary);
+  background-color: var(--color-overlay-light);
+}
+
+/* Dropdown menu container */
+body.theme-dark .horizontal-nav-dropdown-menu {
+  background-color: var(--color-surface);
+  border-color: var(--color-border-default);
+}
+
+/* Dropdown menu links */
+body.theme-dark .horizontal-nav-dropdown-link {
+  color: var(--color-text-primary);
+}
+
+body.theme-dark .horizontal-nav-dropdown-link:hover {
+  background-color: var(--color-overlay-subtle);
+}
+
+body.theme-dark .horizontal-nav-dropdown-link:focus-visible {
+  background-color: var(--color-primary-alpha-10);
+}
+
+body.theme-dark .horizontal-nav-dropdown-link.active {
+  background-color: var(--color-primary-alpha-10);
+  color: var(--color-primary-400);
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (min-width: calc(var(--bp-md) + 1px)) and (max-width: var(--bp-lg)) {
+  .horizontal-nav {
+    gap: var(--spacing-0-5);
+  }
+
+  .horizontal-nav-link,
+  .horizontal-nav-dropdown-trigger {
+    padding: var(--spacing-2);
+    font-size: var(--font-size-xs);
+  }
+
+  .horizontal-nav-dropdown-menu {
+    min-width: 180px;
+  }
+}
+
+/* ===== Animation - Respect reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .horizontal-nav-link,
+  .horizontal-nav-dropdown-trigger,
+  .horizontal-nav-dropdown-arrow,
+  .horizontal-nav-dropdown-link {
+    transition: none;
+  }
+
+  .horizontal-nav-dropdown-menu {
+    animation: none;
+  }
+}

@@ -65,7 +65,7 @@ describe('PlatformAdminLayout', () => {
 
   it('renders platform admin header with title', async () => {
     renderPlatformAdminLayout();
-    expect(await screen.findByText('FanEngagement Platform Admin')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'FanEngagement' })).toBeInTheDocument();
   });
 
   it('displays logout button', async () => {
@@ -73,13 +73,27 @@ describe('PlatformAdminLayout', () => {
     expect(await screen.findByRole('button', { name: /logout/i })).toBeInTheDocument();
   });
 
-  it('displays sidebar navigation links for platform admin', async () => {
+  it('displays horizontal navigation links for platform admin', async () => {
+    const user = userEvent.setup();
     renderPlatformAdminLayout();
     
+    // Platform admin should see Platform and Account dropdowns
     await waitFor(() => {
-      expect(screen.getByText('Platform Overview')).toBeInTheDocument();
-      expect(screen.getByText('My Account')).toBeInTheDocument();
-      expect(screen.getByText('Audit Log')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-platform')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
+    });
+    
+    // Open Platform dropdown to verify links
+    await user.click(screen.getByTestId('nav-dropdown-platform'));
+    await waitFor(() => {
+      expect(screen.getByTestId('nav-platformDashboard')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-platformAuditLog')).toBeInTheDocument();
+    });
+    
+    // Open Account dropdown to verify My Account
+    await user.click(screen.getByTestId('nav-dropdown-account'));
+    await waitFor(() => {
+      expect(screen.getByTestId('nav-platformMyAccount')).toBeInTheDocument();
     });
   });
 
@@ -92,14 +106,16 @@ describe('PlatformAdminLayout', () => {
     renderPlatformAdminLayout('/platform-admin/dashboard');
     const user = userEvent.setup();
 
+    // Open Account dropdown first
     await waitFor(() => {
-      expect(screen.getByText('My Account')).toBeInTheDocument();
+      expect(screen.getByTestId('nav-dropdown-account')).toBeInTheDocument();
     });
+    await user.click(screen.getByTestId('nav-dropdown-account'));
 
-    const myAccountLink = screen.getByText('My Account').closest('a');
+    // Find and click the My Account link inside the dropdown
+    const myAccountLink = await screen.findByTestId('nav-platformMyAccount');
     expect(myAccountLink).toHaveAttribute('href', '/platform-admin/my-account');
-
-    await user.click(myAccountLink!);
+    await user.click(myAccountLink);
 
     await waitFor(() => {
       expect(screen.getByText('My Account Content')).toBeInTheDocument();

@@ -17,9 +17,9 @@ test.describe('Mobile navigation', () => {
   });
 
   test('hamburger menu opens mobile navigation drawer', async ({ page }) => {
-    // On mobile, desktop sidebar should be hidden
-    const desktopSidebar = page.getByTestId('unified-sidebar');
-    await expect(desktopSidebar).not.toBeVisible();
+    // On mobile, horizontal nav should be hidden (replaced desktop sidebar)
+    const horizontalNav = page.getByTestId('horizontal-nav');
+    await expect(horizontalNav).not.toBeVisible();
     
     // Hamburger menu should be visible
     const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
@@ -226,23 +226,25 @@ test.describe('Mobile navigation on tablet', () => {
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     await page.goto('/me/home');
 
-    const desktopSidebar = page.getByTestId('unified-sidebar');
+    // Horizontal nav is hidden on tablet portrait, hamburger is shown
+    const horizontalNav = page.getByTestId('horizontal-nav');
     const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
 
     await waitForVisible(hamburgerButton);
-    await expect(desktopSidebar).toBeHidden();
+    await expect(horizontalNav).toBeHidden();
   });
 
-  test('tablet landscape keeps desktop sidebar visible', async ({ page }) => {
+  test('tablet landscape keeps desktop horizontal nav visible', async ({ page }) => {
     await page.setViewportSize(TABLET_LANDSCAPE);
     await clearAuthState(page);
     await loginThroughUi(page, MEMBER_EMAIL, MEMBER_PASSWORD);
     await page.goto('/me/home');
 
-    const desktopSidebar = page.getByTestId('unified-sidebar');
+    // Horizontal nav replaced the old sidebar
+    const horizontalNav = page.getByTestId('horizontal-nav');
     const hamburgerButton = page.getByRole('button', { name: /navigation menu/i });
 
-    await waitForVisible(desktopSidebar);
+    await waitForVisible(horizontalNav);
     await expect(hamburgerButton).not.toBeVisible();
   });
 });

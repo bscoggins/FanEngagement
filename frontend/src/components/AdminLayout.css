@@ -299,6 +299,16 @@ body.theme-dark .admin-nav-link:hover {
   overflow-y: auto;
 }
 
+/* Full-width main content for horizontal nav layout */
+.admin-main-full {
+  flex: 1;
+  padding: var(--spacing-8);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+}
+
 /* Responsive design */
 @media (max-width: var(--bp-md)) {
   .admin-header h1 {
@@ -310,6 +320,10 @@ body.theme-dark .admin-nav-link:hover {
   }
 
   .admin-main {
+    padding: var(--spacing-4);
+  }
+
+  .admin-main-full {
     padding: var(--spacing-4);
   }
 
