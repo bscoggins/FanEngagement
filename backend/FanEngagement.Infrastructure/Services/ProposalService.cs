@@ -184,10 +184,12 @@ public class ProposalService(
         }
 
         // Apply search filter if provided (case-insensitive)
+        // Note: PostgreSQL's ILIKE or case-insensitive collation handles case-insensitivity.
+        // We avoid ToLower() on columns to allow potential index usage.
         if (!string.IsNullOrWhiteSpace(search))
         {
             var searchPattern = $"%{search}%";
-            query = query.Where(p => EF.Functions.Like(p.Title.ToLower(), searchPattern.ToLower()));
+            query = query.Where(p => EF.Functions.ILike(p.Title, searchPattern));
         }
 
         // Get total count

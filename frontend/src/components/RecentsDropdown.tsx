@@ -74,6 +74,8 @@ export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className, rou
         if (routeMode === 'platformAdmin') {
           navigate(`/admin/organizations/${item.id}/edit`);
         } else if (routeMode === 'orgAdmin' && item.id) {
+          // Defensive check: item.id should always exist per RecentItem type,
+          // but we verify it here to guard against malformed localStorage data.
           navigate(`/admin/organizations/${item.id}/edit`);
         } else if (item.id) {
           // Member mode - navigate to member org view

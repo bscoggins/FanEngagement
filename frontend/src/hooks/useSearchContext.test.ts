@@ -118,7 +118,8 @@ describe('useSearchContext', () => {
       expect(result.current.resources).toContain('organizations');
       expect(result.current.resources).toContain('proposals');
       
-      // Member search depends on feature flag
+      // Member search depends on MEMBERS_CAN_SEARCH_MEMBERS feature flag (currently false).
+      // This test covers both branches to ensure correct behavior when the flag is toggled.
       if (MEMBERS_CAN_SEARCH_MEMBERS) {
         expect(result.current.resources).toContain('members');
       } else {

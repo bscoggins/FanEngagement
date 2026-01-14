@@ -46,7 +46,9 @@ export function useSearchContext(): SearchContextConfig {
       };
     }
 
-    // No active organization selected - can search own organizations and proposals
+    // No active organization selected - can search own organizations and proposals.
+    // When searching proposals without an active org, GlobalSearch will search across
+    // all organizations the user is a member of (see GlobalSearch.tsx performSearch).
     if (!activeOrg) {
       return {
         resources: ['organizations', 'proposals'] as SearchableResource[],
@@ -76,7 +78,8 @@ export function useSearchContext(): SearchContextConfig {
     // Regular Member with active organization
     const memberResources: SearchableResource[] = ['organizations', 'proposals'];
     
-    // Only include members if the feature flag allows it
+    // Feature flag: MEMBERS_CAN_SEARCH_MEMBERS is currently false (see searchConfig.ts).
+    // This code path is intentionally retained so member search can be enabled in the future.
     if (MEMBERS_CAN_SEARCH_MEMBERS) {
       memberResources.push('members');
     }

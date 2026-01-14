@@ -143,7 +143,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         if (context.routeMode === 'orgAdmin') {
           navigate(`/admin/organizations/${member.organizationId}/memberships`);
         } else {
-          // Members can view the member list (but not edit)
+          // Navigate to organization overview page (members don't have a dedicated members list view)
           navigate(`/me/organizations/${member.organizationId}`);
         }
         break;
@@ -215,7 +215,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   .map(m => ({
                     id: m.organizationId,
                     name: m.organizationName,
-                    description: '', // Memberships don't include description
+                    // TODO: MembershipWithOrganizationDto doesn't include organization description.
+                    // Consider adding description to the DTO or fetching org details separately
+                    // if descriptions are important for search result display.
+                    description: '',
                   } as Organization));
               })
               .catch(() => { /* Ignore errors, keep empty */ })
@@ -240,6 +243,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           );
         } else {
           // Non-admin without active org - search proposals across all user's organizations
+          // TODO: Performance concern - this creates N API requests (one per organization).
+          // For users with many organization memberships, consider implementing a backend
+          // endpoint that can search across a user's organizations in a single query.
+          // See: POST /proposals/search-my-orgs or similar
           promises.push(
             membershipsApi.getMyOrganizations()
               .then(async memberships => {
