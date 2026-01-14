@@ -8,6 +8,7 @@ import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { HorizontalNav } from './HorizontalNav';
 import { GlobalSearch } from './GlobalSearch';
+import { useSearchContext } from '../hooks/useSearchContext';
 import { RecentsDropdown } from './RecentsDropdown';
 import { KeyboardShortcutOverlay } from './KeyboardShortcutOverlay';
 import { Tooltip } from './Tooltip';
@@ -30,6 +31,7 @@ export const PlatformAdminLayout: React.FC = () => {
   const [isShortcutOverlayOpen, setIsShortcutOverlayOpen] = useState(false);
   const mobileMenuLabel = 'Open navigation menu';
   const searchInputRef = useRef<HTMLDivElement>(null);
+  const searchContext = useSearchContext();
 
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
@@ -168,7 +170,7 @@ export const PlatformAdminLayout: React.FC = () => {
           </div>
           <div className="admin-header-center hide-md-down">
             <div ref={searchInputRef}>
-              <GlobalSearch />
+              <GlobalSearch context={searchContext} />
             </div>
           </div>
           <div className="admin-header-right">

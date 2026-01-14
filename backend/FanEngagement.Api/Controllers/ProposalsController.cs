@@ -1,4 +1,5 @@
 using FanEngagement.Application.Proposals;
+using FanEngagement.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,30 @@ namespace FanEngagement.Api.Controllers;
 [Authorize]
 public class ProposalsController(IProposalService proposalService) : ControllerBase
 {
+    /// <summary>
+    /// Search all proposals across all organizations.
+    /// Available only to Platform Admins.
+    /// </summary>
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> SearchAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? status = null,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Parse status if provided
+        ProposalStatus? proposalStatus = null;
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ProposalStatus>(status, ignoreCase: true, out var parsedStatus))
+        {
+            proposalStatus = parsedStatus;
+        }
+
+        var result = await proposalService.SearchAllAsync(page, pageSize, proposalStatus, search, cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet("{proposalId:guid}", Name = "GetProposalById")]
     [Authorize(Policy = "OrgMember")]
     public async Task<ActionResult> GetById(Guid proposalId, CancellationToken cancellationToken)

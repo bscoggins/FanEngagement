@@ -49,8 +49,8 @@ describe('recentsUtils', () => {
       expect(recents[2].id).toBe('1');
     });
 
-    it('should limit to 5 recents', () => {
-      const items: RecentItem[] = Array.from({ length: 10 }, (_, i) => ({
+    it('should limit to 10 recents', () => {
+      const items: RecentItem[] = Array.from({ length: 15 }, (_, i) => ({
         id: `${i}`,
         name: `Item ${i}`,
         type: 'user' as const,
@@ -59,7 +59,7 @@ describe('recentsUtils', () => {
       localStorageMock.setItem('fan_engagement_recents', JSON.stringify(items));
 
       const recents = getRecents();
-      expect(recents).toHaveLength(5);
+      expect(recents).toHaveLength(10);
     });
 
     it('should handle invalid JSON gracefully', () => {
@@ -91,15 +91,15 @@ describe('recentsUtils', () => {
       expect(recents[1].id).toBe('2');
     });
 
-    it('should limit to 5 items', () => {
-      for (let i = 0; i < 7; i++) {
+    it('should limit to 10 items', () => {
+      for (let i = 0; i < 12; i++) {
         addRecent({ id: `${i}`, name: `Item ${i}`, type: 'user' });
       }
 
       const recents = getRecents();
-      expect(recents).toHaveLength(5);
-      expect(recents[0].id).toBe('6');
-      expect(recents[4].id).toBe('2');
+      expect(recents).toHaveLength(10);
+      expect(recents[0].id).toBe('11');
+      expect(recents[9].id).toBe('2');
     });
 
     it('should add timestamp automatically', () => {

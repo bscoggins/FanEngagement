@@ -83,7 +83,7 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md), 0 10px 20px rgba(0, 0, 0, 0.1);
-  max-height: 400px;
+  max-height: 480px;
   overflow-y: auto;
   z-index: 1000;
 }
@@ -192,6 +192,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 .global-search-result-subtitle {
@@ -201,6 +204,73 @@
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: var(--spacing-0-5);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* Role badges for member results */
+.global-search-role-badge {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-0-5) var(--spacing-1);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  flex-shrink: 0;
+}
+
+.global-search-role-orgadmin {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.global-search-role-member {
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-600);
+}
+
+/* Status badges for proposal results */
+.global-search-status {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-0-5) var(--spacing-1);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.global-search-status-draft {
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-600);
+}
+
+.global-search-status-open {
+  background-color: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+.global-search-status-closed {
+  background-color: var(--color-warning-100);
+  color: var(--color-warning-700);
+}
+
+.global-search-status-finalized {
+  background-color: var(--color-info-100);
+  color: var(--color-info-700);
+}
+
+/* Symbol badge for share types */
+.global-search-symbol {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-0-5) var(--spacing-1);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-700);
+  font-family: var(--font-family-mono);
+  letter-spacing: var(--letter-spacing-normal);
+  flex-shrink: 0;
 }
 
 /* Responsive adjustments */

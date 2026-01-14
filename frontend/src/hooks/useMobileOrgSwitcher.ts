@@ -56,9 +56,9 @@ export function useMobileOrgSwitcher({
         role: membership.role,
       });
 
-      // Navigate based on role: OrgAdmin/platform admin → admin overview, else member view
+      // Navigate based on role: OrgAdmin/platform admin → admin dashboard, else member view
       if (isAdmin || membership.role === 'OrgAdmin') {
-        navigate(`/admin/organizations/${membership.organizationId}/edit`);
+        navigate(`/admin/organizations/${membership.organizationId}`);
       } else {
         navigate(`/me/organizations/${membership.organizationId}`);
       }

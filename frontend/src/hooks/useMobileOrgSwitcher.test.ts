@@ -100,7 +100,7 @@ describe('useMobileOrgSwitcher', () => {
       name: 'Org 1',
       role: 'OrgAdmin',
     });
-    expect(navigate).toHaveBeenCalledWith('/admin/organizations/org-1/edit');
+    expect(navigate).toHaveBeenCalledWith('/admin/organizations/org-1');
     expect(setIsMobileNavOpen).toHaveBeenCalledWith(false);
   });
 
@@ -152,7 +152,7 @@ describe('useMobileOrgSwitcher', () => {
     // Even if switching to a Member org, platform admin goes to admin overview
     result.current.handleMobileOrgChange('org-2');
 
-    expect(navigate).toHaveBeenCalledWith('/admin/organizations/org-2/edit');
+    expect(navigate).toHaveBeenCalledWith('/admin/organizations/org-2');
   });
 
   it('does nothing when org is not found', () => {

@@ -10,9 +10,32 @@ import type {
   Vote,
   CastVoteRequest,
   PagedResult,
+  ProposalWithOrganization,
 } from '../types/api';
 
 export const proposalsApi = {
+  /**
+   * Search all proposals across all organizations.
+   * Available only to Platform Admins.
+   */
+  async searchAll(
+    page: number,
+    pageSize: number,
+    search?: string
+  ): Promise<PagedResult<ProposalWithOrganization>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    if (search) {
+      params.append('search', search);
+    }
+    const response = await apiClient.get<PagedResult<ProposalWithOrganization>>(
+      `/proposals?${params.toString()}`
+    );
+    return response.data;
+  },
+
   /**
    * Create a new proposal for an organization
    */

@@ -1,14 +1,17 @@
-import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useMobileOrgSwitcher } from '../hooks/useMobileOrgSwitcher';
 import { useActiveOrganization } from '../contexts/OrgContext';
+import { useSearchContext } from '../hooks/useSearchContext';
 import { getDefaultHomeRoute, getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { HorizontalNav } from './HorizontalNav';
 import { OrganizationDropdown } from './OrganizationDropdown';
+import { GlobalSearch } from './GlobalSearch';
+import { RecentsDropdown } from './RecentsDropdown';
 import { PageTransition } from './PageTransition';
 import { Footer } from './Footer';
 import { type ResponsiveDisplayStyle } from '../types/styles';
@@ -24,6 +27,8 @@ export const Layout: React.FC = () => {
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const mobileMenuLabel = 'Open navigation menu';
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContext = useSearchContext();
 
   // Build navigation context
   const navContext: NavContext = useMemo(() => ({
@@ -74,9 +79,9 @@ export const Layout: React.FC = () => {
         role: membership.role,
       });
 
-      // Navigate based on role: OrgAdmin/platform admin → admin overview, else member view
+      // Navigate based on role: OrgAdmin/platform admin → admin dashboard, else member view
       if (isAdmin || membership.role === 'OrgAdmin') {
-        navigate(`/admin/organizations/${membership.organizationId}/edit`);
+        navigate(`/admin/organizations/${membership.organizationId}`);
       } else {
         navigate(`/me/organizations/${membership.organizationId}`);
       }
@@ -154,6 +159,29 @@ export const Layout: React.FC = () => {
     setIsMobileNavOpen,
   });
 
+  // Keyboard shortcut: Ctrl/Cmd+K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Handle organization selection from search results
+  const handleSearchOrgSelect = useCallback((orgId: string, orgName: string) => {
+    // Set active org and navigate to member view
+    setActiveOrg({
+      id: orgId,
+      name: orgName,
+      role: 'Member', // Will be updated when membership is verified
+    });
+    navigate(`/me/organizations/${orgId}`);
+  }, [setActiveOrg, navigate]);
+
   // For unauthenticated users, show simplified layout
   if (!isAuthenticated) {
     return (
@@ -204,7 +232,16 @@ export const Layout: React.FC = () => {
               className="hide-md-down"
             />
           </div>
+          {/* Global search - center section (desktop only) */}
+          <div className="unified-header-center hide-md-down">
+            <GlobalSearch
+              inputRef={searchInputRef}
+              context={searchContext}
+              onOrganizationSelect={handleSearchOrgSelect}
+            />
+          </div>
           <div className="unified-header-right">
+            <RecentsDropdown routeMode={searchContext.routeMode} />
             {isGlobalAdmin() && (
               <span className="unified-admin-badge" data-testid="platform-admin-badge">
                 Platform Admin

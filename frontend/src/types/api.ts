@@ -236,6 +236,14 @@ export interface Proposal {
   latestResultsHash?: string;
 }
 
+/**
+ * Proposal with organization info for global search results.
+ * Used by Platform Admins to search proposals across all organizations.
+ */
+export interface ProposalWithOrganization extends Proposal {
+  organizationName: string;
+}
+
 export interface ProposalOption {
   id: string;
   proposalId: string;

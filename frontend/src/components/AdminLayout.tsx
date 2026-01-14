@@ -4,14 +4,18 @@ import { useAuth } from '../auth/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useMobileOrgSwitcher } from '../hooks/useMobileOrgSwitcher';
 import { useActiveOrganization } from '../contexts/OrgContext';
+import { useSearchContext } from '../hooks/useSearchContext';
 import { getVisibleNavItems, getResolvedNavItem, type NavContext } from '../navigation';
 import { SkipLink } from './SkipLink';
 import { MobileNav, type MobileNavItem } from './MobileNav';
 import { HorizontalNav } from './HorizontalNav';
+import { GlobalSearch } from './GlobalSearch';
+import { RecentsDropdown } from './RecentsDropdown';
 import { OrganizationDropdown } from './OrganizationDropdown';
 import { Tooltip } from './Tooltip';
 import { PageTransition } from './PageTransition';
 import { Footer } from './Footer';
+import { isMacPlatform } from '../utils/platformUtils';
 import { type ResponsiveDisplayStyle } from '../types/styles';
 import './AdminLayout.css';
 import '../pages/AdminPage.css';
@@ -28,20 +32,11 @@ export const AdminLayout: React.FC = () => {
   const mobileMenuLabel = 'Open navigation menu';
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const keyboardHelpTimeoutRef = useRef<number | undefined>(undefined);
+  const searchInputRef = useRef<HTMLDivElement>(null);
+  const searchContext = useSearchContext();
 
   // Platform detection for keyboard shortcuts
-  const isMac = useMemo(() => {
-    // Prefer userAgentData if available, then platform, then userAgent as fallback
-    const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-    if (nav.userAgentData?.platform) {
-      return nav.userAgentData.platform.toUpperCase().includes('MAC');
-    }
-    if (navigator.platform) {
-      return navigator.platform.toUpperCase().includes('MAC');
-    }
-    // Fallback to userAgent regex for Mac/iOS devices
-    return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
-  }, []);
+  const isMac = useMemo(() => isMacPlatform(), []);
   const modifierKeyName = isMac ? 'Cmd' : 'Ctrl';
 
   // Build navigation context
@@ -92,11 +87,11 @@ export const AdminLayout: React.FC = () => {
       // Navigate based on role in the new org
       // Use direct membership role check since we already have the membership object
       if (isAdmin || membership.role === 'OrgAdmin') {
-        // Navigate to org admin overview
-        navigate(`/admin/organizations/${membership.organizationId}/edit`);
+        // Navigate to org admin dashboard
+        navigate(`/admin/organizations/${membership.organizationId}`);
       } else {
-        // Navigate to member dashboard (home page) for this org
-        navigate(`/me/home`);
+        // Navigate to member org view for this org
+        navigate(`/me/organizations/${membership.organizationId}`);
       }
     }
   }, [orgMemberships, setActiveOrg, isAdmin, navigate]);
@@ -125,16 +120,25 @@ export const AdminLayout: React.FC = () => {
   // Check if active org has admin role
   const activeOrgIsAdmin = !!(activeOrg && isOrgAdminForOrg(activeOrg.id));
 
-  // Keyboard shortcuts for org admin navigation (Ctrl+1 through Ctrl+6)
+  // Keyboard shortcuts for org admin navigation (Ctrl+1 through Ctrl+6) and search (Ctrl+K)
   useEffect(() => {
     const handleKeyboardShortcut = (e: KeyboardEvent) => {
-      // Only handle shortcuts when user has OrgAdmin role for active org
-      if (!activeOrg || !activeOrgIsAdmin || orgNavItems.length === 0) {
+      const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Focus search with Ctrl+K or Cmd+K
+      if (modifierKey && e.key === 'k' && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        const input = searchInputRef.current?.querySelector('input');
+        if (input) {
+          input.focus();
+        }
         return;
       }
 
-      // Check for modifier key + number keys 1-6
-      const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+      // Only handle org navigation shortcuts when user has OrgAdmin role for active org
+      if (!activeOrg || !activeOrgIsAdmin || orgNavItems.length === 0) {
+        return;
+      }
       
       if (modifierKey && !e.altKey && !e.shiftKey && e.key >= '1' && e.key <= '6') {
         const index = parseInt(e.key, 10) - 1;
@@ -249,7 +253,26 @@ export const AdminLayout: React.FC = () => {
               className="hide-md-down"
             />
           </div>
+          <div className="admin-header-center hide-md-down">
+            <div ref={searchInputRef}>
+              <GlobalSearch 
+                context={searchContext} 
+                onOrganizationSelect={(orgId, orgName) => {
+                  // Find membership to get role, or set as OrgAdmin if platform admin
+                  const membership = orgMemberships.find(m => m.organizationId === orgId);
+                  if (membership) {
+                    handleOrgSelect(orgId);
+                  } else if (isAdmin) {
+                    // Platform admin selecting an org they're not a member of
+                    setActiveOrg({ id: orgId, name: orgName, role: 'OrgAdmin' });
+                    navigate(`/admin/organizations/${orgId}`);
+                  }
+                }}
+              />
+            </div>
+          </div>
           <div className="admin-header-right">
+            <RecentsDropdown routeMode={searchContext.routeMode} />
             {isGlobalAdmin() && (
               <span className="admin-badge">
                 Platform Admin
