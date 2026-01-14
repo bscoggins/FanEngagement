@@ -53,12 +53,14 @@ describe('AdminLayout', () => {
                   <Route path="dashboard" element={<div>Dashboard Content</div>} />
                   <Route path="users" element={<div>Users Content</div>} />
                   <Route path="organizations" element={<div>Organizations Content</div>} />
+                  <Route path="organizations/:orgId" element={<div>Org Dashboard Content</div>} />
                   <Route path="organizations/:orgId/edit" element={<div>Org Edit Content</div>} />
                   <Route path="organizations/:orgId/memberships" element={<div>Memberships Content</div>} />
                   <Route path="dev-tools" element={<div>Dev Tools Content</div>} />
                 </Route>
                 <Route path="/" element={<div>Home Page</div>} />
                 <Route path="/me/home" element={<div>Member Home Page</div>} />
+                <Route path="/me/organizations/:orgId" element={<div data-testid="member-org-page">Member Org Page</div>} />
                 <Route path="/platform-admin/dashboard" element={<div>Platform Admin Dashboard</div>} />
                 <Route path="/platform-admin/my-account" element={<div>Platform My Account Content</div>} />
                 <Route path="/login" element={<div>Login Page</div>} />
@@ -543,9 +545,9 @@ describe('AdminLayout', () => {
       const memberOption = await screen.findByTestId('org-option-org-member');
       await user.click(memberOption);
 
-      // Should navigate to member home, not org detail page
+      // Should navigate to member org page, not admin org page
       await waitFor(() => {
-        expect(screen.getByText('Member Home Page')).toBeInTheDocument();
+        expect(screen.getByTestId('member-org-page')).toBeInTheDocument();
       });
     });
 
@@ -584,9 +586,9 @@ describe('AdminLayout', () => {
       const adminOption = await screen.findByTestId('org-option-org-admin');
       await user.click(adminOption);
 
-      // Should navigate to admin org edit page
+      // Should navigate to admin org dashboard page
       await waitFor(() => {
-        expect(screen.getByText('Org Edit Content')).toBeInTheDocument();
+        expect(screen.getByText('Org Dashboard Content')).toBeInTheDocument();
       });
     });
   });

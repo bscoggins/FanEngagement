@@ -4,8 +4,24 @@ import { BrowserRouter } from 'react-router-dom';
 import { RecentsDropdown } from './RecentsDropdown';
 import * as recentsUtils from '../utils/recentsUtils';
 
-// Mock the recents utils
-vi.mock('../utils/recentsUtils');
+// Mock only getRecents, use actual implementations for helper functions
+vi.mock('../utils/recentsUtils', async () => {
+  const actual = await vi.importActual('../utils/recentsUtils');
+  return {
+    ...actual,
+    getRecents: vi.fn(),
+  };
+});
+
+// Mock useAuth hook
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: () => ({
+    user: { userId: 'test-user-id', displayName: 'Test User', email: 'test@test.com', role: 'User' },
+    token: 'mock-token',
+    isAuthenticated: true,
+    isAdmin: false,
+  }),
+}));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -89,69 +105,6 @@ describe('RecentsDropdown', () => {
     expect(screen.getByText('Org Two')).toBeInTheDocument();
   });
 
-  it('should navigate to user detail when user item is clicked', () => {
-    const mockRecents = [
-      { id: 'user-1', name: 'Test User', type: 'user' as const, timestamp: Date.now() },
-    ];
-    vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
-    
-    render(
-      <BrowserRouter>
-        <RecentsDropdown />
-      </BrowserRouter>
-    );
-
-    const button = screen.getByLabelText(/recent items/i);
-    fireEvent.click(button);
-
-    const userItem = screen.getByText('Test User').closest('button');
-    fireEvent.click(userItem!);
-
-    expect(mockNavigate).toHaveBeenCalledWith('/admin/users/user-1');
-  });
-
-  it('should navigate to organization detail when org item is clicked', () => {
-    const mockRecents = [
-      { id: 'org-1', name: 'Test Org', type: 'organization' as const, timestamp: Date.now() },
-    ];
-    vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
-    
-    render(
-      <BrowserRouter>
-        <RecentsDropdown />
-      </BrowserRouter>
-    );
-
-    const button = screen.getByLabelText(/recent items/i);
-    fireEvent.click(button);
-
-    const orgItem = screen.getByText('Test Org').closest('button');
-    fireEvent.click(orgItem!);
-
-    expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/edit');
-  });
-
-  it('should close dropdown after clicking an item', () => {
-    const mockRecents = [
-      { id: 'user-1', name: 'Test User', type: 'user' as const, timestamp: Date.now() },
-    ];
-    vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
-    
-    render(
-      <BrowserRouter>
-        <RecentsDropdown />
-      </BrowserRouter>
-    );
-
-    const button = screen.getByLabelText(/recent items/i);
-    fireEvent.click(button);
-
-    const userItem = screen.getByText('Test User').closest('button');
-    fireEvent.click(userItem!);
-
-    expect(button).toHaveAttribute('aria-expanded', 'false');
-  });
-
   it('should close dropdown when clicking outside', async () => {
     vi.mocked(recentsUtils.getRecents).mockReturnValue([]);
     
@@ -217,5 +170,348 @@ describe('RecentsDropdown', () => {
     // Check for user and organization type labels
     expect(screen.getByText('User')).toBeInTheDocument();
     expect(screen.getByText('Organization')).toBeInTheDocument();
+  });
+
+  it('should always close dropdown after clicking an item', () => {
+    const mockRecents = [
+      { id: 'org-1', name: 'Test Org', type: 'organization' as const, timestamp: Date.now() },
+    ];
+    vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+    
+    render(
+      <BrowserRouter>
+        <RecentsDropdown />
+      </BrowserRouter>
+    );
+
+    const button = screen.getByLabelText(/recent items/i);
+    fireEvent.click(button);
+
+    const orgItem = screen.getByText('Test Org').closest('button');
+    fireEvent.click(orgItem!);
+
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  describe('Navigation with platformAdmin routeMode', () => {
+    it('should navigate to user detail when user item is clicked', () => {
+      const mockRecents = [
+        { id: 'user-1', name: 'Test User', type: 'user' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="platformAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const userItem = screen.getByText('Test User').closest('button');
+      fireEvent.click(userItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/users/user-1');
+    });
+
+    it('should navigate to organization edit when org item is clicked', () => {
+      const mockRecents = [
+        { id: 'org-1', name: 'Test Org', type: 'organization' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="platformAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const orgItem = screen.getByText('Test Org').closest('button');
+      fireEvent.click(orgItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/edit');
+    });
+
+    it('should navigate to proposal admin view when proposal item is clicked', () => {
+      const mockRecents = [
+        { id: 'prop-1', name: 'Test Proposal', type: 'proposal' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="platformAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const propItem = screen.getByText('Test Proposal').closest('button');
+      fireEvent.click(propItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/proposals/prop-1');
+    });
+
+    it('should navigate to memberships when member item is clicked', () => {
+      const mockRecents = [
+        { id: 'member-1', name: 'Test Member', type: 'member' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="platformAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const memberItem = screen.getByText('Test Member').closest('button');
+      fireEvent.click(memberItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/memberships');
+    });
+
+    it('should navigate to share types when share type item is clicked', () => {
+      const mockRecents = [
+        { id: 'st-1', name: 'Test Share Type', type: 'shareType' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="platformAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const stItem = screen.getByText('Test Share Type').closest('button');
+      fireEvent.click(stItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/share-types');
+    });
+  });
+
+  describe('Navigation with orgAdmin routeMode', () => {
+    it('should navigate to organization edit when org item is clicked', () => {
+      const mockRecents = [
+        { id: 'org-1', name: 'Test Org', type: 'organization' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="orgAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const orgItem = screen.getByText('Test Org').closest('button');
+      fireEvent.click(orgItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/edit');
+    });
+
+    it('should navigate to proposal admin view when proposal item is clicked', () => {
+      const mockRecents = [
+        { id: 'prop-1', name: 'Test Proposal', type: 'proposal' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="orgAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const propItem = screen.getByText('Test Proposal').closest('button');
+      fireEvent.click(propItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/proposals/prop-1');
+    });
+
+    it('should navigate to memberships when member item is clicked', () => {
+      const mockRecents = [
+        { id: 'member-1', name: 'Test Member', type: 'member' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="orgAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const memberItem = screen.getByText('Test Member').closest('button');
+      fireEvent.click(memberItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/admin/organizations/org-1/memberships');
+    });
+
+    it('should NOT navigate when user item is clicked (no access)', () => {
+      const mockRecents = [
+        { id: 'user-1', name: 'Test User', type: 'user' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="orgAdmin" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const userItem = screen.getByText('Test User').closest('button');
+      fireEvent.click(userItem!);
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Navigation with member routeMode (default)', () => {
+    it('should navigate to member organization view when org item is clicked', () => {
+      const mockRecents = [
+        { id: 'org-1', name: 'Test Org', type: 'organization' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="member" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const orgItem = screen.getByText('Test Org').closest('button');
+      fireEvent.click(orgItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/me/organizations/org-1');
+    });
+
+    it('should navigate to member proposal view when proposal item is clicked', () => {
+      const mockRecents = [
+        { id: 'prop-1', name: 'Test Proposal', type: 'proposal' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="member" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const propItem = screen.getByText('Test Proposal').closest('button');
+      fireEvent.click(propItem!);
+
+      expect(mockNavigate).toHaveBeenCalledWith('/me/proposals/prop-1');
+    });
+
+    it('should NOT navigate when user item is clicked (no access)', () => {
+      const mockRecents = [
+        { id: 'user-1', name: 'Test User', type: 'user' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="member" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const userItem = screen.getByText('Test User').closest('button');
+      fireEvent.click(userItem!);
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('should NOT navigate when member item is clicked (no access)', () => {
+      const mockRecents = [
+        { id: 'member-1', name: 'Test Member', type: 'member' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="member" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const memberItem = screen.getByText('Test Member').closest('button');
+      fireEvent.click(memberItem!);
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('should NOT navigate when share type item is clicked (no access)', () => {
+      const mockRecents = [
+        { id: 'st-1', name: 'Test Share Type', type: 'shareType' as const, organizationId: 'org-1', timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown routeMode="member" />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const stItem = screen.getByText('Test Share Type').closest('button');
+      fireEvent.click(stItem!);
+
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('should use member routeMode by default when no routeMode prop is provided', () => {
+      const mockRecents = [
+        { id: 'org-1', name: 'Test Org', type: 'organization' as const, timestamp: Date.now() },
+      ];
+      vi.mocked(recentsUtils.getRecents).mockReturnValue(mockRecents);
+      
+      render(
+        <BrowserRouter>
+          <RecentsDropdown />
+        </BrowserRouter>
+      );
+
+      const button = screen.getByLabelText(/recent items/i);
+      fireEvent.click(button);
+
+      const orgItem = screen.getByText('Test Org').closest('button');
+      fireEvent.click(orgItem!);
+
+      // Default is member mode, so should navigate to /me/organizations/...
+      expect(mockNavigate).toHaveBeenCalledWith('/me/organizations/org-1');
+    });
   });
 });

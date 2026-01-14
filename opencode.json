@@ -27,6 +27,11 @@
       "type": "local",
       "command": ["npx", "@playwright/mcp@latest"],
       "enabled": true
+    },
+    "github": {
+      "type": "local",
+      "command": ["sh", "-c", "GITHUB_PERSONAL_ACCESS_TOKEN=$(gh auth token) npx -y @modelcontextprotocol/server-github"],
+      "enabled": true
     }
   },
   "agent": {

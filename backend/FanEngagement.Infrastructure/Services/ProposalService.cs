@@ -165,6 +165,52 @@ public class ProposalService(
         };
     }
 
+    public async Task<PagedResult<ProposalWithOrganizationDto>> SearchAllAsync(
+        int page,
+        int pageSize,
+        ProposalStatus? status = null,
+        string? search = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.Proposals
+            .AsNoTracking()
+            .Include(p => p.Organization)
+            .AsQueryable();
+
+        // Apply status filter if provided
+        if (status.HasValue)
+        {
+            query = query.Where(p => p.Status == status.Value);
+        }
+
+        // Apply search filter if provided (case-insensitive)
+        // Note: PostgreSQL's ILIKE or case-insensitive collation handles case-insensitivity.
+        // We avoid ToLower() on columns to allow potential index usage.
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchPattern = $"%{search}%";
+            query = query.Where(p => EF.Functions.ILike(p.Title, searchPattern));
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply pagination
+        var proposals = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ProposalWithOrganizationDto>
+        {
+            Items = proposals.Select(p => MapToWithOrganizationDto(p)).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<ProposalDetailsDto?> GetByIdAsync(Guid proposalId, CancellationToken cancellationToken = default)
     {
         var proposal = await dbContext.Proposals
@@ -1124,6 +1170,29 @@ public class ProposalService(
             BlockchainTransactionId = blockchainTransactionId,
             BlockchainChainId = blockchainChainId,
             BlockchainExplorerUrl = blockchainExplorerUrl
+        };
+    }
+
+    private static ProposalWithOrganizationDto MapToWithOrganizationDto(Proposal proposal)
+    {
+        return new ProposalWithOrganizationDto
+        {
+            Id = proposal.Id,
+            OrganizationId = proposal.OrganizationId,
+            OrganizationName = proposal.Organization?.Name ?? string.Empty,
+            Title = proposal.Title,
+            Description = proposal.Description,
+            Status = proposal.Status,
+            StartAt = proposal.StartAt,
+            EndAt = proposal.EndAt,
+            QuorumRequirement = proposal.QuorumRequirement,
+            CreatedByUserId = proposal.CreatedByUserId,
+            CreatedAt = proposal.CreatedAt,
+            WinningOptionId = proposal.WinningOptionId,
+            QuorumMet = proposal.QuorumMet,
+            TotalVotesCast = proposal.TotalVotesCast,
+            ClosedAt = proposal.ClosedAt,
+            EligibleVotingPowerSnapshot = proposal.EligibleVotingPowerSnapshot
         };
     }
 

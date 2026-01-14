@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getRecents, type RecentItem } from '../utils/recentsUtils';
+import {
+  getRecents,
+  getRecentItemIcon,
+  getRecentItemLabel,
+  type RecentItem,
+} from '../utils/recentsUtils';
+import { useAuth } from '../auth/AuthContext';
+import type { SearchRouteMode } from '../search/searchConfig';
 import './RecentsDropdown.css';
 
 interface RecentsDropdownProps {
   className?: string;
+  /** Route mode determines how navigation works - defaults to 'member' */
+  routeMode?: SearchRouteMode;
 }
 
 const ClockIcon: React.FC = () => (
@@ -20,18 +29,19 @@ const ClockIcon: React.FC = () => (
   </svg>
 );
 
-export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className }) => {
+export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className, routeMode = 'member' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [recents, setRecents] = useState<RecentItem[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Load recents when dropdown opens
   useEffect(() => {
     if (isOpen) {
-      setRecents(getRecents());
+      setRecents(getRecents(user?.userId));
     }
-  }, [isOpen]);
+  }, [isOpen, user?.userId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -48,10 +58,58 @@ export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className }) =
   }, [isOpen]);
 
   const handleItemClick = (item: RecentItem) => {
-    if (item.type === 'user') {
-      navigate(`/admin/users/${item.id}`);
-    } else if (item.type === 'organization') {
-      navigate(`/admin/organizations/${item.id}/edit`);
+    // For non-admin modes, only proposals and organizations are valid
+    // Members should not have user, member, or shareType in their recents
+    // but if they do click on them, navigate safely
+    
+    switch (item.type) {
+      case 'user':
+        // Users are only accessible to platform admins
+        if (routeMode === 'platformAdmin') {
+          navigate(`/admin/users/${item.id}`);
+        }
+        // For other modes, do nothing (no valid route)
+        break;
+      case 'organization':
+        if (routeMode === 'platformAdmin') {
+          navigate(`/admin/organizations/${item.id}/edit`);
+        } else if (routeMode === 'orgAdmin' && item.id) {
+          // Defensive check: item.id should always exist per RecentItem type,
+          // but we verify it here to guard against malformed localStorage data.
+          navigate(`/admin/organizations/${item.id}/edit`);
+        } else if (item.id) {
+          // Member mode - navigate to member org view
+          navigate(`/me/organizations/${item.id}`);
+        }
+        break;
+      case 'proposal':
+        if (item.organizationId) {
+          if (routeMode === 'platformAdmin' || routeMode === 'orgAdmin') {
+            navigate(`/admin/organizations/${item.organizationId}/proposals/${item.id}`);
+          } else {
+            // Member mode - navigate to member proposal view
+            navigate(`/me/proposals/${item.id}`);
+          }
+        }
+        break;
+      case 'member':
+        // Members list is only accessible to platform admins and org admins
+        if (item.organizationId) {
+          if (routeMode === 'platformAdmin' || routeMode === 'orgAdmin') {
+            navigate(`/admin/organizations/${item.organizationId}/memberships`);
+          }
+          // For member mode, do nothing (no valid route for viewing members list)
+        }
+        break;
+      case 'shareType':
+        // Share types list is only accessible to platform admins and org admins
+        if (item.organizationId) {
+          if (routeMode === 'platformAdmin' || routeMode === 'orgAdmin') {
+            navigate(`/admin/organizations/${item.organizationId}/share-types`);
+          }
+          // For member mode, do nothing (no valid route for viewing share types)
+        }
+        break;
     }
     setIsOpen(false);
   };
@@ -94,12 +152,17 @@ export const RecentsDropdown: React.FC<RecentsDropdownProps> = ({ className }) =
                   role="menuitem"
                 >
                   <span className="recents-dropdown-item-icon" aria-hidden="true">
-                    {item.type === 'user' ? '👤' : '🏢'}
+                    {getRecentItemIcon(item.type)}
                   </span>
                   <div className="recents-dropdown-item-content">
                     <div className="recents-dropdown-item-name">{item.name}</div>
                     <div className="recents-dropdown-item-type">
-                      {item.type === 'user' ? 'User' : 'Organization'}
+                      {getRecentItemLabel(item.type)}
+                      {item.subtitle && (
+                        <span className="recents-dropdown-item-subtitle">
+                          {' · '}{item.subtitle}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>

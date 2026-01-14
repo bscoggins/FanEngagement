@@ -205,6 +205,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'organizations/:orgId',
+        element: (
+          <OrgAdminRoute>
+            <AdminOrganizationEditPage />
+          </OrgAdminRoute>
+        ),
+      },
+      {
         path: 'organizations/:orgId/edit',
         element: (
           <OrgAdminRoute>

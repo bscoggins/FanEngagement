@@ -153,6 +153,10 @@
   margin-top: var(--spacing-0-5);
 }
 
+.recents-dropdown-item-subtitle {
+  color: var(--color-neutral-500);
+}
+
 /* Dark theme adjustments */
 body.theme-dark .recents-dropdown-button {
   background: linear-gradient(135deg, rgba(26, 31, 43, 0.98), rgba(16, 19, 30, 0.95));
@@ -202,6 +206,10 @@ body.theme-dark .recents-dropdown-item-name {
 body.theme-dark .recents-dropdown-item-type,
 body.theme-dark .recents-dropdown-empty {
   color: var(--color-text-secondary);
+}
+
+body.theme-dark .recents-dropdown-item-subtitle {
+  color: var(--color-text-tertiary);
 }
 
 body.theme-dark .recents-dropdown-arrow {

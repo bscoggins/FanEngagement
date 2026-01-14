@@ -33,12 +33,14 @@ body.theme-dark {
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-md);
+  gap: var(--spacing-4);
 }
 
 .admin-header-left {
   display: flex;
   align-items: center;
   gap: var(--spacing-4);
+  flex-shrink: 0;
 }
 
 .admin-mobile-menu-button {
@@ -78,10 +80,24 @@ body.theme-dark {
   font-size: var(--font-size-2xl);
 }
 
+.admin-header-center {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-header-center > div {
+  width: 100%;
+}
+
 .admin-header-right {
   display: flex;
   gap: var(--spacing-4);
   align-items: center;
+  flex-shrink: 0;
 }
 
 .admin-badge {
@@ -307,6 +323,19 @@ body.theme-dark .admin-nav-link:hover {
   margin: 0 auto;
   width: 100%;
   overflow-y: auto;
+}
+
+@media (min-width: var(--bp-md)) {
+  .admin-header-center {
+    max-width: 600px;
+  }
+
+  .admin-header-center .global-search-input {
+    min-height: 48px;
+    padding-top: var(--spacing-3);
+    padding-bottom: var(--spacing-3);
+    font-size: var(--font-size-base);
+  }
 }
 
 /* Responsive design */

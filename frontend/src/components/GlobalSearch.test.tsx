@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { GlobalSearch } from './GlobalSearch';
+import { type SearchContextConfig } from '../search/searchConfig';
 
 // Mock the API modules
 vi.mock('../api/usersApi', () => ({
@@ -30,6 +31,16 @@ vi.mock('../utils/recentsUtils', () => ({
   addRecent: vi.fn(),
 }));
 
+// Mock useAuth hook
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: () => ({
+    user: { userId: 'test-user-id', displayName: 'Test User', email: 'test@test.com', role: 'User' },
+    token: 'mock-token',
+    isAuthenticated: true,
+    isAdmin: false,
+  }),
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -38,6 +49,13 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+// Default search context for Platform Admin
+const defaultContext: SearchContextConfig = {
+  resources: ['users', 'organizations'],
+  placeholder: 'Search users, organizations...',
+  routeMode: 'platformAdmin',
+};
 
 describe('GlobalSearch', () => {
   beforeEach(() => {
@@ -48,7 +66,7 @@ describe('GlobalSearch', () => {
     it('should render search input', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -59,7 +77,7 @@ describe('GlobalSearch', () => {
     it('should render with autoFocus when prop is true', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch autoFocus={true} />
+          <GlobalSearch context={defaultContext} autoFocus={true} />
         </BrowserRouter>
       );
 
@@ -70,7 +88,7 @@ describe('GlobalSearch', () => {
     it('should have proper ARIA attributes', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -83,7 +101,7 @@ describe('GlobalSearch', () => {
     it('should render search icon', () => {
       const { container } = render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -97,7 +115,7 @@ describe('GlobalSearch', () => {
     it('should show clear button when query is entered', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -111,7 +129,7 @@ describe('GlobalSearch', () => {
     it('should not show clear button when input is empty', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -122,7 +140,7 @@ describe('GlobalSearch', () => {
     it('should clear input when clear button is clicked', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -138,7 +156,7 @@ describe('GlobalSearch', () => {
     it('should update input value on change', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -151,7 +169,7 @@ describe('GlobalSearch', () => {
     it('should set aria-expanded to true when query is entered', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -168,7 +186,7 @@ describe('GlobalSearch', () => {
     it('should handle Escape key when dropdown is closed', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -184,7 +202,7 @@ describe('GlobalSearch', () => {
     it('should prevent default on ArrowDown when results exist', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -205,7 +223,7 @@ describe('GlobalSearch', () => {
     it('should have proper CSS classes', () => {
       const { container } = render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -218,7 +236,7 @@ describe('GlobalSearch', () => {
     it('should render results container with proper attributes when dropdown opens', () => {
       render(
         <BrowserRouter>
-          <GlobalSearch />
+          <GlobalSearch context={defaultContext} />
         </BrowserRouter>
       );
 
@@ -241,7 +259,7 @@ describe('GlobalSearch', () => {
       
       render(
         <BrowserRouter>
-          <GlobalSearch onClose={onClose} />
+          <GlobalSearch context={defaultContext} onClose={onClose} />
         </BrowserRouter>
       );
 
@@ -252,7 +270,7 @@ describe('GlobalSearch', () => {
       fireEvent.click(clearButton);
 
       // onClose is not called on clear, only on result selection or escape
-      expect(input.value).toBe('');
+      expect(input).toHaveValue('');
     });
 
     it('should handle Escape key with onClose callback', () => {
@@ -260,7 +278,7 @@ describe('GlobalSearch', () => {
       
       render(
         <BrowserRouter>
-          <GlobalSearch onClose={onClose} />
+          <GlobalSearch context={defaultContext} onClose={onClose} />
         </BrowserRouter>
       );
 
@@ -273,4 +291,3 @@ describe('GlobalSearch', () => {
     });
   });
 });
-

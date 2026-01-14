@@ -2,30 +2,71 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../api/usersApi';
 import { organizationsApi } from '../api/organizationsApi';
+import { proposalsApi } from '../api/proposalsApi';
+import { membershipsApi } from '../api/membershipsApi';
+import { shareTypesApi } from '../api/shareTypesApi';
 import { addRecent } from '../utils/recentsUtils';
-import type { User, Organization } from '../types/api';
+import { useAuth } from '../auth/AuthContext';
+import type { User, Organization, Proposal, MembershipWithUserDto, ShareType, ProposalWithOrganization } from '../types/api';
+import type { SearchContextConfig, SearchableResource } from '../search/searchConfig';
+import { SEARCH_LIMITS, SEARCH_RESOURCE_ICONS, SEARCH_RESOURCE_LABELS } from '../search/searchConfig';
 import './GlobalSearch.css';
 
 interface SearchResults {
   users: User[];
   organizations: Organization[];
+  proposals: (Proposal | ProposalWithOrganization)[];
+  members: MembershipWithUserDto[];
+  shareTypes: ShareType[];
 }
+
+type SearchResultItem =
+  | { type: 'user'; item: User }
+  | { type: 'organization'; item: Organization }
+  | { type: 'proposal'; item: Proposal }
+  | { type: 'member'; item: MembershipWithUserDto }
+  | { type: 'shareType'; item: ShareType };
 
 interface GlobalSearchProps {
+  /** Search context configuration - determines what can be searched and how navigation works */
+  context: SearchContextConfig;
+  /** Callback when an organization is selected (for setting active org) */
+  onOrganizationSelect?: (orgId: string, orgName: string) => void;
+  /** Callback when the search should be closed */
   onClose?: () => void;
+  /** Whether to auto-focus the input on mount */
   autoFocus?: boolean;
+  /** Optional ref to the search input for external focus control */
+  inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus = false }) => {
+const emptyResults: SearchResults = {
+  users: [],
+  organizations: [],
+  proposals: [],
+  members: [],
+  shareTypes: [],
+};
+
+export const GlobalSearch: React.FC<GlobalSearchProps> = ({
+  context,
+  onOrganizationSelect,
+  onClose,
+  autoFocus = false,
+  inputRef: externalInputRef,
+}) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResults>({ users: [], organizations: [] });
+  const [results, setResults] = useState<SearchResults>(emptyResults);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isOpen, setIsOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = externalInputRef || internalInputRef;
   const resultsRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
+  const userId = authUser?.userId;
 
   // Focus input on mount if autoFocus is true
   useEffect(() => {
@@ -34,36 +75,103 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
     }
   }, [autoFocus]);
 
-  // Memoize allResults to avoid unnecessary re-renders
-  const allResults = useMemo(() => [
-    ...results.users.map(u => ({ type: 'user' as const, item: u })),
-    ...results.organizations.map(o => ({ type: 'organization' as const, item: o })),
-  ], [results.users, results.organizations]);
+  // Build flat list of all results for keyboard navigation
+  const allResults = useMemo((): SearchResultItem[] => {
+    const items: SearchResultItem[] = [];
+    
+    // Add results in the order they appear in UI
+    results.users.forEach(u => items.push({ type: 'user', item: u }));
+    results.organizations.forEach(o => items.push({ type: 'organization', item: o }));
+    results.proposals.forEach(p => items.push({ type: 'proposal', item: p }));
+    results.members.forEach(m => items.push({ type: 'member', item: m }));
+    results.shareTypes.forEach(s => items.push({ type: 'shareType', item: s }));
+    
+    return items;
+  }, [results]);
 
   // Navigate to result and track in recents
-  const handleResultClick = useCallback((result: { type: 'user' | 'organization'; item: User | Organization }) => {
+  const handleResultClick = useCallback((result: SearchResultItem) => {
     const { type, item } = result;
 
-    if (type === 'user') {
-      const user = item as User;
-      addRecent({ id: user.id, name: user.displayName, type: 'user' });
-      navigate(`/admin/users/${user.id}`);
-    } else if (type === 'organization') {
-      const org = item as Organization;
-      addRecent({ id: org.id, name: org.name, type: 'organization' });
-      navigate(`/admin/organizations/${org.id}/edit`);
+    switch (type) {
+      case 'user': {
+        const user = item as User;
+        addRecent({ id: user.id, name: user.displayName, type: 'user' }, userId);
+        navigate(`/admin/users/${user.id}`);
+        break;
+      }
+      case 'organization': {
+        const org = item as Organization;
+        addRecent({ id: org.id, name: org.name, type: 'organization' }, userId);
+        
+        // Different navigation based on route mode
+        if (context.routeMode === 'platformAdmin') {
+          navigate(`/admin/organizations/${org.id}/edit`);
+        } else {
+          // For org admins and members, selecting an org sets it as active
+          onOrganizationSelect?.(org.id, org.name);
+        }
+        break;
+      }
+      case 'proposal': {
+        const proposal = item as Proposal;
+        addRecent({
+          id: proposal.id,
+          name: proposal.title,
+          type: 'proposal',
+          organizationId: proposal.organizationId,
+        }, userId);
+        
+        if (context.routeMode === 'platformAdmin' || context.routeMode === 'orgAdmin') {
+          navigate(`/admin/organizations/${proposal.organizationId}/proposals/${proposal.id}`);
+        } else {
+          // Member view - navigate to voting page
+          navigate(`/me/proposals/${proposal.id}`);
+        }
+        break;
+      }
+      case 'member': {
+        const member = item as MembershipWithUserDto;
+        addRecent({
+          id: member.userId,
+          name: member.userDisplayName,
+          type: 'member',
+          organizationId: member.organizationId,
+          subtitle: member.role,
+        }, userId);
+        
+        if (context.routeMode === 'orgAdmin') {
+          navigate(`/admin/organizations/${member.organizationId}/memberships`);
+        } else {
+          // Navigate to organization overview page (members don't have a dedicated members list view)
+          navigate(`/me/organizations/${member.organizationId}`);
+        }
+        break;
+      }
+      case 'shareType': {
+        const shareType = item as ShareType;
+        addRecent({
+          id: shareType.id,
+          name: shareType.name,
+          type: 'shareType',
+          organizationId: shareType.organizationId,
+          subtitle: shareType.symbol,
+        }, userId);
+        navigate(`/admin/organizations/${shareType.organizationId}/share-types`);
+        break;
+      }
     }
 
     setQuery('');
     setIsOpen(false);
     setSelectedIndex(-1);
     onClose?.();
-  }, [navigate, onClose]);
+  }, [navigate, onClose, context.routeMode, onOrganizationSelect, userId]);
 
   // Perform search
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
-      setResults({ users: [], organizations: [] });
+      setResults(emptyResults);
       setIsSearching(false);
       setIsOpen(false);
       return;
@@ -72,25 +180,133 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
     setIsSearching(true);
     setIsOpen(true);
 
-    try {
-      // Search in parallel across all endpoints
-      const [usersResult, orgsResult] = await Promise.all([
-        usersApi.getAllPaged(1, 5, searchQuery),
-        organizationsApi.getAllPaged(1, 5, searchQuery),
-      ]);
+    const { resources, organizationId } = context;
+    const newResults: SearchResults = { ...emptyResults };
 
-      setResults({
-        users: usersResult.items,
-        organizations: orgsResult.items,
-      });
+    try {
+      // Build promises for all requested resource types
+      const promises: Promise<void>[] = [];
+
+      if (resources.includes('users')) {
+        promises.push(
+          usersApi.getAllPaged(1, SEARCH_LIMITS.users, searchQuery)
+            .then(result => { newResults.users = result.items; })
+            .catch(() => { /* Ignore errors, keep empty */ })
+        );
+      }
+
+      if (resources.includes('organizations')) {
+        if (context.routeMode === 'platformAdmin') {
+          // Platform Admin - search all organizations
+          promises.push(
+            organizationsApi.getAllPaged(1, SEARCH_LIMITS.organizations, searchQuery)
+              .then(result => { newResults.organizations = result.items; })
+              .catch(() => { /* Ignore errors, keep empty */ })
+          );
+        } else {
+          // Non-admin users - only show organizations they're members of
+          promises.push(
+            membershipsApi.getMyOrganizations()
+              .then(memberships => {
+                const lowerQuery = searchQuery.toLowerCase();
+                newResults.organizations = memberships
+                  .filter(m => m.organizationName.toLowerCase().includes(lowerQuery))
+                  .slice(0, SEARCH_LIMITS.organizations)
+                  .map(m => ({
+                    id: m.organizationId,
+                    name: m.organizationName,
+                    // TODO: MembershipWithOrganizationDto doesn't include organization description.
+                    // Consider adding description to the DTO or fetching org details separately
+                    // if descriptions are important for search result display.
+                    description: '',
+                  } as Organization));
+              })
+              .catch(() => { /* Ignore errors, keep empty */ })
+          );
+        }
+      }
+
+      if (resources.includes('proposals')) {
+        if (context.routeMode === 'platformAdmin') {
+          // Platform Admin - search all proposals globally
+          promises.push(
+            proposalsApi.searchAll(1, SEARCH_LIMITS.proposals, searchQuery)
+              .then(result => { newResults.proposals = result.items; })
+              .catch(() => { /* Ignore errors, keep empty */ })
+          );
+        } else if (organizationId) {
+          // Org Admin or Member with active org - search within that organization
+          promises.push(
+            proposalsApi.getByOrganizationPaged(organizationId, 1, SEARCH_LIMITS.proposals, undefined, searchQuery)
+              .then(result => { newResults.proposals = result.items; })
+              .catch(() => { /* Ignore errors, keep empty */ })
+          );
+        } else {
+          // Non-admin without active org - search proposals across all user's organizations
+          // TODO: Performance concern - this creates N API requests (one per organization).
+          // For users with many organization memberships, consider implementing a backend
+          // endpoint that can search across a user's organizations in a single query.
+          // See: POST /proposals/search-my-orgs or similar
+          promises.push(
+            membershipsApi.getMyOrganizations()
+              .then(async memberships => {
+                const proposalPromises = memberships.map(m =>
+                  proposalsApi.getByOrganizationPaged(m.organizationId, 1, SEARCH_LIMITS.proposals, undefined, searchQuery)
+                    .then(result => result.items)
+                    .catch(() => [] as Proposal[])
+                );
+                const allProposals = await Promise.all(proposalPromises);
+                newResults.proposals = allProposals.flat().slice(0, SEARCH_LIMITS.proposals);
+              })
+              .catch(() => { /* Ignore errors, keep empty */ })
+          );
+        }
+      }
+
+      if (resources.includes('members') && organizationId) {
+        // Members don't have backend search - fetch all and filter client-side
+        promises.push(
+          membershipsApi.getByOrganizationWithUserDetails(organizationId)
+            .then(members => {
+              const lowerQuery = searchQuery.toLowerCase();
+              newResults.members = members
+                .filter(m =>
+                  m.userDisplayName.toLowerCase().includes(lowerQuery) ||
+                  m.userEmail.toLowerCase().includes(lowerQuery)
+                )
+                .slice(0, SEARCH_LIMITS.members);
+            })
+            .catch(() => { /* Ignore errors, keep empty */ })
+        );
+      }
+
+      if (resources.includes('shareTypes') && organizationId) {
+        // Share types don't have backend search - fetch all and filter client-side
+        promises.push(
+          shareTypesApi.getByOrganization(organizationId)
+            .then(shareTypes => {
+              const lowerQuery = searchQuery.toLowerCase();
+              newResults.shareTypes = shareTypes
+                .filter(s =>
+                  s.name.toLowerCase().includes(lowerQuery) ||
+                  s.symbol.toLowerCase().includes(lowerQuery)
+                )
+                .slice(0, SEARCH_LIMITS.shareTypes);
+            })
+            .catch(() => { /* Ignore errors, keep empty */ })
+        );
+      }
+
+      await Promise.all(promises);
+      setResults(newResults);
       setSelectedIndex(-1);
     } catch (error) {
       console.error('Search failed:', error);
-      setResults({ users: [], organizations: [] });
+      setResults(emptyResults);
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [context]);
 
   // Debounced search on query change
   useEffect(() => {
@@ -162,7 +378,34 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const hasResults = results.users.length > 0 || results.organizations.length > 0;
+  const hasResults =
+    results.users.length > 0 ||
+    results.organizations.length > 0 ||
+    results.proposals.length > 0 ||
+    results.members.length > 0 ||
+    results.shareTypes.length > 0;
+
+  // Render a result section
+  const renderSection = <T,>(
+    type: SearchableResource,
+    items: T[],
+    renderItem: (item: T, globalIndex: number) => React.ReactNode
+  ) => {
+    if (items.length === 0) return null;
+
+    let baseOffset = 0;
+    if (type === 'organizations') baseOffset = results.users.length;
+    if (type === 'proposals') baseOffset = results.users.length + results.organizations.length;
+    if (type === 'members') baseOffset = results.users.length + results.organizations.length + results.proposals.length;
+    if (type === 'shareTypes') baseOffset = results.users.length + results.organizations.length + results.proposals.length + results.members.length;
+
+    return (
+      <div className="global-search-section">
+        <div className="global-search-section-title">{SEARCH_RESOURCE_LABELS[type]}</div>
+        {items.map((item, index) => renderItem(item, baseOffset + index))}
+      </div>
+    );
+  };
 
   return (
     <div className="global-search">
@@ -172,7 +415,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
           ref={inputRef}
           type="text"
           className="global-search-input"
-          placeholder="Search users, organizations..."
+          placeholder={context.placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -219,57 +462,113 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, autoFocus =
             </div>
           )}
 
-          {!isSearching && results.users.length > 0 && (
-            <div className="global-search-section">
-              <div className="global-search-section-title">Users</div>
-              {results.users.map((user, index) => {
-                const globalIndex = index; // users come first in allResults
-                return (
-                  <button
-                    key={user.id}
-                    id={`search-result-${globalIndex}`}
-                    className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
-                    onClick={() => handleResultClick({ type: 'user', item: user })}
-                    role="option"
-                    aria-selected={selectedIndex === globalIndex}
-                    type="button"
-                  >
-                    <div className="global-search-result-icon">👤</div>
-                    <div className="global-search-result-content">
-                      <div className="global-search-result-title">{user.displayName}</div>
-                      <div className="global-search-result-subtitle">{user.email}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {!isSearching && renderSection('users', results.users, (user, globalIndex) => (
+            <button
+              key={user.id}
+              id={`search-result-${globalIndex}`}
+              className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
+              onClick={() => handleResultClick({ type: 'user', item: user })}
+              role="option"
+              aria-selected={selectedIndex === globalIndex}
+              type="button"
+            >
+              <div className="global-search-result-icon">{SEARCH_RESOURCE_ICONS.users}</div>
+              <div className="global-search-result-content">
+                <div className="global-search-result-title">{user.displayName}</div>
+                <div className="global-search-result-subtitle">{user.email}</div>
+              </div>
+            </button>
+          ))}
 
-          {!isSearching && results.organizations.length > 0 && (
-            <div className="global-search-section">
-              <div className="global-search-section-title">Organizations</div>
-              {results.organizations.map((org, index) => {
-                const globalIndex = results.users.length + index; // orgs come after users
-                return (
-                  <button
-                    key={org.id}
-                    id={`search-result-${globalIndex}`}
-                    className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
-                    onClick={() => handleResultClick({ type: 'organization', item: org })}
-                    role="option"
-                    aria-selected={selectedIndex === globalIndex}
-                    type="button"
-                  >
-                    <div className="global-search-result-icon">🏢</div>
-                    <div className="global-search-result-content">
-                      <div className="global-search-result-title">{org.name}</div>
-                      <div className="global-search-result-subtitle">{org.description || 'Organization'}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {!isSearching && renderSection('organizations', results.organizations, (org, globalIndex) => (
+            <button
+              key={org.id}
+              id={`search-result-${globalIndex}`}
+              className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
+              onClick={() => handleResultClick({ type: 'organization', item: org })}
+              role="option"
+              aria-selected={selectedIndex === globalIndex}
+              type="button"
+            >
+              <div className="global-search-result-icon">{SEARCH_RESOURCE_ICONS.organizations}</div>
+              <div className="global-search-result-content">
+                <div className="global-search-result-title">{org.name}</div>
+                <div className="global-search-result-subtitle">{org.description || 'Organization'}</div>
+              </div>
+            </button>
+          ))}
+
+          {!isSearching && renderSection('proposals', results.proposals, (proposal, globalIndex) => (
+            <button
+              key={proposal.id}
+              id={`search-result-${globalIndex}`}
+              className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
+              onClick={() => handleResultClick({ type: 'proposal', item: proposal })}
+              role="option"
+              aria-selected={selectedIndex === globalIndex}
+              type="button"
+            >
+              <div className="global-search-result-icon">{SEARCH_RESOURCE_ICONS.proposals}</div>
+              <div className="global-search-result-content">
+                <div className="global-search-result-title">{proposal.title}</div>
+                <div className="global-search-result-subtitle">
+                  <span className={`global-search-status global-search-status-${proposal.status.toLowerCase()}`}>
+                    {proposal.status}
+                  </span>
+                  {'organizationName' in proposal && proposal.organizationName && (
+                    <span className="global-search-org-name"> • {proposal.organizationName}</span>
+                  )}
+                </div>
+              </div>
+            </button>
+          ))}
+
+          {!isSearching && renderSection('members', results.members, (member, globalIndex) => (
+            <button
+              key={member.id}
+              id={`search-result-${globalIndex}`}
+              className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
+              onClick={() => handleResultClick({ type: 'member', item: member })}
+              role="option"
+              aria-selected={selectedIndex === globalIndex}
+              type="button"
+            >
+              <div className="global-search-result-icon">{SEARCH_RESOURCE_ICONS.members}</div>
+              <div className="global-search-result-content">
+                <div className="global-search-result-title">
+                  {member.userDisplayName}
+                  <span className={`global-search-role-badge global-search-role-${member.role.toLowerCase()}`}>
+                    {member.role}
+                  </span>
+                </div>
+                <div className="global-search-result-subtitle">{member.userEmail}</div>
+              </div>
+            </button>
+          ))}
+
+          {!isSearching && renderSection('shareTypes', results.shareTypes, (shareType, globalIndex) => (
+            <button
+              key={shareType.id}
+              id={`search-result-${globalIndex}`}
+              className={`global-search-result ${selectedIndex === globalIndex ? 'selected' : ''}`}
+              onClick={() => handleResultClick({ type: 'shareType', item: shareType })}
+              role="option"
+              aria-selected={selectedIndex === globalIndex}
+              type="button"
+            >
+              <div className="global-search-result-icon">{SEARCH_RESOURCE_ICONS.shareTypes}</div>
+              <div className="global-search-result-content">
+                <div className="global-search-result-title">
+                  {shareType.name}
+                  <span className="global-search-symbol">{shareType.symbol}</span>
+                </div>
+                <div className="global-search-result-subtitle">
+                  Weight: {shareType.votingWeight}
+                  {shareType.maxSupply && ` • Max: ${shareType.maxSupply}`}
+                </div>
+              </div>
+            </button>
+          ))}
         </div>
       )}
     </div>

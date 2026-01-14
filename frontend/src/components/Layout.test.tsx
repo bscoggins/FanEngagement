@@ -451,7 +451,7 @@ describe('Layout', () => {
                   <Route path="/" element={<Layout />}>
                     <Route index element={<div>Home Content</div>} />
                   </Route>
-                  <Route path="/admin/organizations/:orgId/edit" element={<div data-testid="admin-org-edit">Admin Org Edit Page</div>} />
+                  <Route path="/admin/organizations/:orgId" element={<div data-testid="admin-org-dashboard">Admin Org Dashboard</div>} />
                   <Route path="/me/organizations/:orgId" element={<div data-testid="member-org-view">Member Org View</div>} />
                 </Routes>
               </OrgProvider>
@@ -473,9 +473,9 @@ describe('Layout', () => {
       const adminOption = await screen.findByTestId('org-option-org-1');
       await user.click(adminOption);
 
-      // Should navigate to admin overview for OrgAdmin
+      // Should navigate to admin dashboard for OrgAdmin
       await waitFor(() => {
-        expect(screen.getByTestId('admin-org-edit')).toBeInTheDocument();
+        expect(screen.getByTestId('admin-org-dashboard')).toBeInTheDocument();
       });
     });
 

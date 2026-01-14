@@ -160,6 +160,20 @@
   opacity: 0.9;
 }
 
+/* Global search - center section */
+.unified-header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 var(--spacing-4);
+}
+
+.unified-header-center > div {
+  width: 100%;
+}
+
 .unified-header-right {
   display: flex;
   gap: var(--spacing-4);
